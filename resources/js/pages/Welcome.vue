@@ -1,246 +1,412 @@
 <!-- resources/js/pages/Welcome.vue -->
 <script setup lang="ts">
+import { router } from '@inertiajs/vue3'
 import Head from '@/components/layouts/Head.vue'
-import PageHeader from '@/components/reusables/PageHeader.vue'
-import AppLayout from '@/components/layouts/AppLayout.vue'
-import BlueBackgroundLayout from '@/components/layouts/BlueBackgroundLayout.vue'
-import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
+import Navbar from '@/components/layouts/Navbar.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
+import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
+import MyRunnerListTextInfo from '@/components/reusables/MyRunnerListTextInfo.vue'
+import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
 
 const pageMeta = {
-  title: 'Book Your Trinity Music Exam',
-  description: 'A simple step-by-step guide to booking your Trinity music exam using referral code 120.',
+  title: 'musicexams.help',
+  description:
+    'Simple music exam guidance from Trinity Registered Exam Centre 120.',
 }
 
-const breadcrumbPages = [
-  { name: 'Home', href: '/', current: true },
+const referralCode = '120'
+const bookingUrl = 'https://booking.trinitycollege.com/?larCode=120'
+
+const heroLogo =
+  'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/logo.png'
+
+const trinityCentreLogo =
+  'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/Trinity_Centre_120_logo_purple.png'
+
+const whyCards = [
+  {
+    id: 1,
+    title: 'Clear booking path',
+    subTitle: 'A simpler route through the process, without extra clutter.',
+    showIcon: false,
+  },
+  {
+    id: 2,
+    title: 'Code 120 kept visible',
+    subTitle: 'The centre code stays prominent so it is easier to remember at the right time.',
+    showIcon: false,
+  },
+  {
+    id: 3,
+    title: 'Support, not competition',
+    subTitle: 'Designed to help teachers, parents and students while keeping teachers central.',
+    showIcon: false,
+  },
 ]
 
-const referralCode = '120'
-
-// Replace this later with your actual Trinity booking / referral / guide URL
-const bookingUrl = 'https://www.trinitycollege.com/'
-
-const steps = [
-  {
-    number: '01',
-    title: 'Read the guide',
-    text: 'Understand the Trinity booking process quickly and clearly.',
-  },
-  {
-    number: '02',
-    title: 'Use code 120',
-    text: 'Keep referral code 120 visible before you start booking.',
-  },
-  {
-    number: '03',
-    title: 'Book your exam',
-    text: 'Move through the official booking process with more confidence and less confusion.',
-  },
+const incentives = [
+  'Quarterly prize draws for entries using code 120',
+  'Recognition for teachers and students',
+  'Hall of Fame features, shout-outs and more',
 ]
 
 const faqs = [
   {
-    question: 'What is MusicExams.help?',
-    answer: 'MusicExams.help is an independent guide that makes Trinity music exam booking easier to understand.',
-  },
-  {
     question: 'Do I book through this website?',
-    answer: 'No. This site helps explain the process, then points you to the official booking route.',
+    answer:
+      'No. This site gives guidance and then points you to the official booking route.',
   },
   {
     question: 'Who is this for?',
-    answer: 'Teachers, parents, and students who want the simplest way to book a Trinity music exam.',
+    answer:
+      'Teachers, parents and students who want a simpler route through music exam booking.',
+  },
+  {
+    question: 'Is this only for Trinity?',
+    answer:
+      'Trinity is the current focus, but the wider musicexams.help brand leaves room for other exam boards later.',
   },
 ]
+
+const usefulLinks = [
+  {
+    id: 1,
+    title: 'Go to official booking',
+    subTitle: 'Continue to the Trinity booking route when you are ready.',
+    url: bookingUrl,
+  },
+  {
+    id: 2,
+    title: 'Why use code 120',
+    subTitle: 'See why keeping the centre code visible matters before booking.',
+    url: '#why',
+  },
+  {
+    id: 3,
+    title: 'Incentives and recognition',
+    subTitle: 'See how code 120 may later connect to draws, recognition and Hall of Fame features.',
+    url: '#incentives',
+  },
+]
+
+const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
+  if (!card.url) return
+
+  if (card.url.startsWith('#')) {
+    const element = document.querySelector(card.url)
+    element?.scrollIntoView({ behavior: 'smooth' })
+    return
+  }
+
+  if (card.isExternal) {
+    window.open(card.url, '_blank', 'noopener,noreferrer')
+    return
+  }
+
+  router.visit(card.url)
+}
 </script>
 
 <template>
   <Head :title="pageMeta.title" :description="pageMeta.description" />
 
-  <AppLayout :breadcrumbs="breadcrumbPages">
-    <template #header>
-      <PageHeader
-        :title="pageMeta.title"
-        :subtitle="pageMeta.description"
-        eyebrow="musicexams.help"
-        size="hero"
-      />
-    </template>
+  <div class="min-h-screen bg-[#f7f8fb] text-slate-900">
+    <Navbar />
 
-    <BlueBackgroundLayout variant="subtle" contained>
-      <div class="mx-auto max-w-7xl space-y-8 px-4 py-8 md:px-6 md:py-10">
-        <!-- Hero -->
-        <section class="grid gap-8 lg:grid-cols-2 lg:items-center">
-          <div class="rounded-3xl border border-brand-border bg-brand-surface p-6 shadow-sm md:p-8">
-            <MyTextConstructor variant="heading" fontFamily="display" spacing="tight">
-              <template #myTitle>
-                Book your Trinity music exam without the confusion
-              </template>
+    <!-- HERO -->
+<!-- HERO -->
+<section class="relative flex justify-center bg-white">
+  <div class="mx-auto flex w-full max-w-6xl flex-col items-center px-4 pt-14 pb-10 text-center sm:px-6 md:pt-18 lg:pt-20">
+    <img
+      :src="heroLogo"
+      alt="musicexams.help"
+      class="h-44 w-auto sm:h-56 md:h-72 lg:h-80 xl:h-[26rem]"
+    />
 
-              <template #mySubTitle>
-                A simple guide for teachers, parents, and students.
-                Use referral code
-                <span class="font-semibold text-brand-primary">{{ referralCode }}</span>
-                when you book.
-              </template>
-            </MyTextConstructor>
+    <MyTextConstructor
+      variant="display"
+      alignment="center"
+      fontFamily="display"
+      spacing="tight"
+      class="mt-6 max-w-4xl"
+    >
+      <template #myTitle>
+        Music exam booking made clearer
+      </template>
+    </MyTextConstructor>
 
-            <div class="mt-6 flex flex-wrap gap-3">
-              <a :href="bookingUrl" target="_blank" rel="noopener noreferrer">
-                <MyButtonConstructor variant="primary" size="large">
-                  Book Your Exam
-                </MyButtonConstructor>
-              </a>
+    <MyTextConstructor
+      alignment="center"
+      bodyVariant="body"
+      spacing="none"
+      class="mt-4 max-w-3xl text-slate-700"
+    >
+      Simple guidance for teachers, parents and students. Keep
+      <span class="font-semibold text-slate-950">code {{ referralCode }}</span>
+      ready before booking.
+    </MyTextConstructor>
 
-              <a href="#how-it-works">
-                <MyButtonConstructor variant="outline" size="large">
-                  See How It Works
-                </MyButtonConstructor>
-              </a>
-            </div>
+    <div class="mt-6 flex flex-wrap items-center justify-center gap-4">
+      <a
+        :href="bookingUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <MyButtonConstructor variant="primary" size="large">
+          Book Your Exam
+        </MyButtonConstructor>
+      </a>
 
-            <div class="mt-6 rounded-2xl border border-brand-border bg-brand-bg p-5">
-              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-brand-accent">
-                Referral Code
-              </p>
-              <p class="mt-2 font-display text-4xl font-bold tracking-tight text-brand-primary">
-                {{ referralCode }}
-              </p>
-              <p class="mt-2 text-sm leading-6 text-brand-text-soft">
-                Keep this code ready when booking your Trinity music exam.
-              </p>
-            </div>
-          </div>
+      <a href="#why">
+        <MyButtonConstructor variant="outline" size="large">
+          Why use this page
+        </MyButtonConstructor>
+      </a>
+    </div>
+  </div>
+</section>
 
-          <div class="rounded-3xl border border-brand-border bg-brand-surface p-6 shadow-sm md:p-8">
-            <MyTextConstructor variant="subheading" fontFamily="display">
-              <template #myTitle>
-                Why use this page
-              </template>
-            </MyTextConstructor>
+<!-- INCENTIVES -->
+<section id="incentives" class="border-t border-slate-200 bg-[#f7f8fb]">
+  <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+    <div class="grid items-center gap-12 lg:grid-cols-[0.9fr_1.1fr]">
+      <!-- LEFT COPY -->
+      <div>
+        <MyTextConstructor variant="eyebrow" spacing="tight">
+          <template #myTitle>
+            Incentives
+          </template>
+        </MyTextConstructor>
 
-            <div class="mt-6 space-y-4">
-              <div class="rounded-2xl bg-brand-bg p-4">
-                <p class="font-semibold text-brand-primary">Clear booking path</p>
-                <p class="mt-1 text-sm leading-6 text-brand-text-soft">
-                  No unnecessary clutter, just the steps that matter.
-                </p>
-              </div>
-
-              <div class="rounded-2xl bg-brand-bg p-4">
-                <p class="font-semibold text-brand-primary">Code 120 kept visible</p>
-                <p class="mt-1 text-sm leading-6 text-brand-text-soft">
-                  The referral code is easy to spot and remember.
-                </p>
-              </div>
-
-              <div class="rounded-2xl bg-brand-bg p-4">
-                <p class="font-semibold text-brand-primary">Built for Trinity first</p>
-                <p class="mt-1 text-sm leading-6 text-brand-text-soft">
-                  Start with Trinity now, with room later to expand to other exam boards.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- How it works -->
-        <section
-          id="how-it-works"
-          class="rounded-3xl border border-brand-border bg-brand-surface p-6 shadow-sm md:p-8"
+        <MyTextConstructor
+          variant="heading"
+          fontFamily="display"
+          spacing="tight"
+          class="mt-3 max-w-2xl"
         >
-          <MyTextConstructor variant="heading" fontFamily="display">
-            <template #myTitle>
-              How it works
-            </template>
+          <template #myTitle>
+            Your students work hard. So do you.
+          </template>
+        </MyTextConstructor>
 
-            <template #mySubTitle>
-              The quickest way to understand the process and move to booking.
+        <MyTextConstructor
+          bodyVariant="body"
+          spacing="none"
+          class="mt-5 max-w-2xl text-slate-700"
+        >
+          Students put in the practice. Teachers put in the time. Code {{ referralCode }}
+          is designed to do more than help with booking — it can support quarterly
+          prize draws, recognition, shout-outs and future rewards.
+        </MyTextConstructor>
+
+        <div class="mt-8 space-y-4">
+          <div
+            v-for="item in incentives"
+            :key="item"
+            class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+          >
+            <MyTextConstructor bodyVariant="body" spacing="none">
+              {{ item }}
+            </MyTextConstructor>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT PROMO -->
+      <div class="relative">
+        <div class="overflow-hidden rounded-[2rem] bg-white p-3 shadow-xl ring-1 ring-slate-200">
+          <img
+            src="/images/rewards_add.png"
+            alt="Trinity exam rewards and recognition using code 120"
+            class="block w-full rounded-[1.5rem]"
+          />
+        </div>
+
+        <div class="mt-6">
+          <a
+            :href="bookingUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="block"
+          >
+            <MyButtonConstructor variant="primary" size="large" fullWidth>
+              Continue to Official Booking
+            </MyButtonConstructor>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+    <!-- TRUST STRIP -->
+    <div class="-mt-4 w-full border-y border-slate-200 bg-slate-50 py-12">
+      <div class="mx-auto max-w-5xl px-6 py-5">
+        <div class="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
+          <MyTextConstructor
+            alignment="left"
+            bodyVariant="body"
+            spacing="none"
+            class="text-center sm:text-left text-slate-700"
+          >
+            Run independently with guidance built around
+            <span class="font-semibold text-slate-950">
+              Trinity Registered Exam Centre 120
+            </span>
+          </MyTextConstructor>
+
+          <img
+            :src="trinityCentreLogo"
+            alt="Trinity Registered Exam Centre 120"
+            class="h-24 w-auto sm:h-28 md:h-32 lg:h-36 xl:h-40"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- WHY -->
+    <section id="why" class="border-b border-slate-200 bg-white">
+      <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
+        <div class="max-w-3xl">
+          <MyTextConstructor variant="eyebrow" spacing="tight">
+            <template #myTitle>
+              Why use this page
             </template>
           </MyTextConstructor>
 
-          <div class="mt-8 grid gap-4 md:grid-cols-3">
-            <div
-              v-for="step in steps"
-              :key="step.number"
-              class="rounded-2xl border border-brand-border bg-brand-bg p-5"
+          <MyTextConstructor
+            variant="heading"
+            fontFamily="display"
+            spacing="tight"
+            class="mt-3"
+          >
+            <template #myTitle>
+              Built to save time and reduce confusion
+            </template>
+          </MyTextConstructor>
+
+          <MyTextConstructor
+            bodyVariant="body"
+            spacing="none"
+            class="mt-4 max-w-2xl text-slate-700"
+          >
+            The goal is simple: make music exam booking easier to understand, keep code
+            {{ referralCode }} visible, and guide people to the official booking route with more confidence.
+          </MyTextConstructor>
+        </div>
+
+        <div class="mt-10 grid gap-5 md:grid-cols-3">
+          <div
+            v-for="card in whyCards"
+            :key="card.id"
+            class="rounded-2xl border-6 border-[#1e3a8a] bg-gradient-to-br from-[#dbeafe] via-[#eff6ff] to-[#bfdbfe] p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
+          >
+            <MyTextConstructor
+              variant="subheading"
+              spacing="tight"
+              textColor="text-blue-900"
             >
-              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-brand-accent">
-                {{ step.number }}
-              </p>
-              <h3 class="mt-3 text-xl font-semibold text-brand-primary">
-                {{ step.title }}
-              </h3>
-              <p class="mt-2 text-sm leading-6 text-brand-text-soft">
-                {{ step.text }}
-              </p>
-            </div>
+              <template #myTitle>
+                {{ card.title }}
+              </template>
+            </MyTextConstructor>
+
+            <MyTextConstructor
+              subTitleVariant="muted"
+              spacing="none"
+              textColor="text-blue-950/80"
+              class="mt-2"
+            >
+              <template #mySubTitle>
+                {{ card.subTitle }}
+              </template>
+            </MyTextConstructor>
           </div>
-        </section>
+        </div>
 
-        <!-- CTA band -->
-        <section class="rounded-3xl bg-brand-primary px-6 py-8 text-center shadow-sm md:px-8">
-          <p class="text-sm font-semibold uppercase tracking-[0.2em] text-white/80">
-            Booking reminder
-          </p>
-          <p class="mt-3 font-display text-4xl font-bold tracking-tight text-white md:text-5xl">
-            Use Code {{ referralCode }}
-          </p>
-          <p class="mt-3 text-base leading-7 text-white/80">
-            MusicExams.help is an independent guide that helps make Trinity booking simpler.
-          </p>
-        </section>
+      </div>
+    </section>
 
-        <!-- FAQ -->
-        <section class="rounded-3xl border border-brand-border bg-brand-surface p-6 shadow-sm md:p-8">
-          <MyTextConstructor variant="heading" fontFamily="display">
+
+    <!-- <div class="flex flex-col items-center justify-center"> -->
+
+
+
+    <!-- USEFUL LINKS -->
+    <section class="border-t border-slate-200 bg-white">
+      <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
+        <MyTextConstructor
+          variant="heading"
+          fontFamily="display"
+          alignment="center"
+          spacing="tight"
+        >
+          <template #myTitle>
+            Useful next steps
+          </template>
+        </MyTextConstructor>
+
+        <MyTextConstructor
+          variant="muted"
+          alignment="center"
+          spacing="none"
+          class="mt-3"
+        >
+          <template #mySubTitle>
+            Quick routes to the most useful parts of this page and the official booking process.
+          </template>
+        </MyTextConstructor>
+
+        <div class="mt-8">
+          <MyRunnerListTextInfo
+            :theArray="usefulLinks"
+            maxWidth="4xl"
+            @cardClick="handleRunnerClick"
+          />
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <!-- FAQ -->
+    <section id="faq" class="border-t border-slate-200 bg-white">
+      <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
+        <div class="max-w-3xl">
+          <MyTextConstructor variant="eyebrow" spacing="tight">
+            <template #myTitle>
+              FAQ
+            </template>
+          </MyTextConstructor>
+
+          <MyTextConstructor
+            variant="heading"
+            fontFamily="display"
+            spacing="tight"
+            class="mt-3"
+          >
             <template #myTitle>
               Common questions
             </template>
           </MyTextConstructor>
+        </div>
 
-          <div class="mt-8 space-y-4">
-            <div
-              v-for="faq in faqs"
-              :key="faq.question"
-              class="rounded-2xl border border-brand-border bg-brand-bg p-5"
-            >
-              <h3 class="text-lg font-semibold text-brand-primary">
-                {{ faq.question }}
-              </h3>
-              <p class="mt-2 text-sm leading-6 text-brand-text-soft">
-                {{ faq.answer }}
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <!-- Final CTA -->
-        <section class="rounded-3xl border border-brand-border bg-brand-surface p-8 text-center shadow-sm">
-          <MyTextConstructor
-            variant="heading"
-            fontFamily="display"
-            alignment="center"
-          >
-            <template #myTitle>
-              Ready to book your Trinity music exam?
-            </template>
-
-            <template #mySubTitle>
-              Use referral code {{ referralCode }} and continue to the official booking process.
-            </template>
-          </MyTextConstructor>
-
-          <div class="mt-6 flex justify-center">
-            <a :href="bookingUrl" target="_blank" rel="noopener noreferrer">
-              <MyButtonConstructor variant="primary" size="large">
-                Book Your Exam
-              </MyButtonConstructor>
-            </a>
-          </div>
-        </section>
+        <div class="mt-10">
+          <MyAccordionConstructor
+            :items="faqs.map((faq, index) => ({
+              id: index + 1,
+              question: faq.question,
+              answer: faq.answer,
+            }))"
+            size="medium"
+            header-bg-color="bg-white"
+            header-text-color="text-brand-primary"
+            header-hover-bg-color="hover:bg-brand-bg"
+            border-color="border-brand-border"
+            content-bg-color="bg-brand-surface"
+          />
+        </div>
       </div>
-    </BlueBackgroundLayout>
-  </AppLayout>
+    </section>
+
+  </div>
 </template>

@@ -1,267 +1,100 @@
 <!-- resources/js/components/layouts/Navbar.vue -->
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { router } from '@inertiajs/vue3'
-import { route } from 'ziggy-js'
-import { Bars3Icon, XMarkIcon } from '@heroicons/vue/20/solid'
-
+import { ref } from 'vue'
+import { Link } from '@inertiajs/vue3'
+import { Bars3Icon, XMarkIcon } from '@heroicons/vue/24/outline'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
-import MySocials from '@/components/layouts/MySocials.vue'
-import { mainNavigation, type NavigationLink } from '@/data/navigation'
-
-interface Props {
-  fixed?: boolean
-  brandName?: string
-  homeRouteName?: string
-  showSocials?: boolean
-  logoSrc?: string
-  logoAlt?: string
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  fixed: true,
-  brandName: 'musicexams.help',
-  homeRouteName: 'home',
-  showSocials: true,
-  logoSrc: '',
-  logoAlt: 'musicexams.help',
-})
 
 const isOpen = ref(false)
-const navigation: NavigationLink[] = mainNavigation
 
-const toggleMenu = () => {
-  isOpen.value = !isOpen.value
-}
+const navigation = [
+  { name: 'Why use this page', href: '#why' },
+  { name: 'Incentives', href: '#incentives' },
+  { name: 'FAQ', href: '#faq' },
+]
 
-const goHome = () => {
-  try {
-    router.get(route(props.homeRouteName))
-  } catch {
-    router.get('/')
-  }
-}
+const navIcon =
+  'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/icon_64x64.png'
 
-const hrefFor = (item: NavigationLink): string => {
-  const routeName = item.routeName ?? item.route
-
-  if (routeName) {
-    try {
-      return route(routeName, item.params ?? {}) as unknown as string
-    } catch (e) {
-      console.warn('Navbar: invalid route', routeName, e)
-    }
-  }
-
-  return item.url ?? '#'
-}
-
-const isExternal = (item: NavigationLink): boolean => {
-  if (item.external) return true
-
-  const href = hrefFor(item)
-
-  if (href.startsWith('/') || href.startsWith('./') || href.startsWith('../')) {
-    return false
-  }
-
-  try {
-    const u = new URL(href, window.location.origin)
-    return u.origin !== window.location.origin
-  } catch {
-    return false
-  }
-}
-
-const handleNavClick = (item: NavigationLink) => {
-  const href = hrefFor(item)
-  if (href && href !== '#') {
-    router.get(href)
-    isOpen.value = false
-  }
-}
-
-const navWrapperClasses = computed(() => [
-  'z-40 w-full border-b border-brand-border bg-brand-surface/95 backdrop-blur shadow-sm',
-  props.fixed ? 'fixed top-0' : 'relative',
-])
-
-const desktopNavVisible = computed(() => navigation.length > 0)
+const bookingUrl = 'https://www.trinitycollege.com/'
 </script>
 
 <template>
-  <nav :class="navWrapperClasses">
+  <nav class="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="flex h-18 items-center justify-between gap-4 py-3">
-        <!-- Left: Brand -->
-        <button
-          type="button"
-          @click="goHome"
-          class="flex shrink-0 items-center gap-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2"
-        >
-          <div
-            class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-brand-border bg-brand-primary text-white shadow-sm"
-          >
-            <img
-              v-if="props.logoSrc"
-              :src="props.logoSrc"
-              :alt="props.logoAlt"
-              class="h-full w-full object-cover"
-            />
-            <span
-              v-else
-              class="font-display text-lg font-semibold tracking-tight"
-            >
-              M
-            </span>
-          </div>
+      <div class="flex h-20 items-center justify-between">
+        <Link href="/" class="flex shrink-0 items-center">
+          <img
+            :src="navIcon"
+            alt="musicexams.help"
+            class="h-10 w-10 rounded-xl sm:h-11 sm:w-11"
+          />
+        </Link>
 
-          <div class="hidden sm:block text-left">
-            <MyTextConstructor
-              variant="subheading"
-              fontFamily="display"
-              textColor="text-brand-primary"
-              spacing="none"
-            >
-              <template #myTitle>{{ props.brandName }}</template>
-            </MyTextConstructor>
-
-            <div class="text-xs uppercase tracking-[0.2em] text-brand-text-soft">
-              Trinity booking help
-            </div>
-          </div>
-        </button>
-
-        <!-- Desktop Nav -->
-        <div
-          v-if="desktopNavVisible"
-          class="hidden items-center gap-2 md:flex"
-        >
-          <template
+        <div class="hidden items-center gap-8 md:flex">
+          <a
             v-for="item in navigation"
             :key="item.name"
+            :href="item.href"
+            class="transition hover:opacity-70"
           >
-            <a
-              v-if="isExternal(item)"
-              :href="hrefFor(item)"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <MyButtonConstructor
-                variant="ghost"
-                size="small"
-                rounded="full"
-              >
+            <MyTextConstructor variant="button" textColor="text-slate-700" spacing="none">
+              <template #myTitle>
                 {{ item.name }}
-              </MyButtonConstructor>
-            </a>
+              </template>
+            </MyTextConstructor>
+          </a>
 
-            <button
-              v-else
-              type="button"
-              @click="handleNavClick(item)"
-            >
-              <MyButtonConstructor
-                variant="ghost"
-                size="small"
-                rounded="full"
-              >
-                {{ item.name }}
-              </MyButtonConstructor>
-            </button>
-          </template>
+          <a
+            :href="bookingUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <MyButtonConstructor variant="primary" size="medium">
+              Book Your Exam
+            </MyButtonConstructor>
+          </a>
         </div>
 
-        <!-- Right: Socials + Mobile toggle -->
-        <div class="flex items-center gap-3">
-          <div
-            v-if="props.showSocials"
-            class="hidden lg:flex"
-          >
-            <MySocials
-              size="small"
-              iconColor="text-brand-primary"
-              hoverColor="hover:text-brand-accent"
-            />
-          </div>
-
-          <button
-            type="button"
-            @click="toggleMenu"
-            class="inline-flex items-center justify-center rounded-xl border border-brand-border bg-brand-surface p-2 text-brand-primary transition-colors hover:bg-brand-bg focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 md:hidden"
-            :aria-expanded="isOpen"
-            aria-controls="mobile-menu"
-          >
-            <span class="sr-only">Open main menu</span>
-            <Bars3Icon
-              v-if="!isOpen"
-              class="h-6 w-6"
-            />
-            <XMarkIcon
-              v-else
-              class="h-6 w-6"
-            />
-          </button>
-        </div>
+        <button
+          type="button"
+          class="inline-flex items-center justify-center rounded-xl p-2 text-slate-700 transition hover:bg-slate-100 hover:text-slate-950 md:hidden"
+          @click="isOpen = !isOpen"
+        >
+          <span class="sr-only">Toggle menu</span>
+          <Bars3Icon v-if="!isOpen" class="h-6 w-6" />
+          <XMarkIcon v-else class="h-6 w-6" />
+        </button>
       </div>
     </div>
 
-    <!-- Mobile menu -->
-    <div
-      v-if="isOpen"
-      id="mobile-menu"
-      class="border-t border-brand-border bg-brand-surface md:hidden"
-    >
-      <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-        <div class="flex flex-col gap-3">
-          <template
-            v-for="item in navigation"
-            :key="item.name"
-          >
-            <a
-              v-if="isExternal(item)"
-              :href="hrefFor(item)"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <MyButtonConstructor
-                variant="outline"
-                size="medium"
-                rounded="xl"
-                fullWidth
-              >
-                {{ item.name }}
-              </MyButtonConstructor>
-            </a>
+    <div v-if="isOpen" class="border-t border-slate-200 bg-white md:hidden">
+      <div class="space-y-1 px-4 py-4 sm:px-6">
+        <a
+          v-for="item in navigation"
+          :key="item.name"
+          :href="item.href"
+          class="block rounded-xl px-3 py-3 hover:bg-slate-50"
+          @click="isOpen = false"
+        >
+          <MyTextConstructor variant="button" textColor="text-slate-700" spacing="none">
+            <template #myTitle>
+              {{ item.name }}
+            </template>
+          </MyTextConstructor>
+        </a>
 
-            <button
-              v-else
-              type="button"
-              @click="handleNavClick(item)"
-            >
-              <MyButtonConstructor
-                variant="outline"
-                size="medium"
-                rounded="xl"
-                fullWidth
-              >
-                {{ item.name }}
-              </MyButtonConstructor>
-            </button>
-          </template>
-
-          <div
-            v-if="props.showSocials"
-            class="pt-2"
-          >
-            <MySocials
-              size="small"
-              iconColor="text-brand-primary"
-              hoverColor="hover:text-brand-accent"
-            />
-          </div>
-        </div>
+        <a
+          :href="bookingUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="mt-3 block"
+        >
+          <MyButtonConstructor variant="primary" size="medium" full-width>
+            Book Your Exam
+          </MyButtonConstructor>
+        </a>
       </div>
     </div>
   </nav>

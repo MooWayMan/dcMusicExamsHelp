@@ -29,9 +29,10 @@ createInertiaApp({
         // ===============================
         // Layout switching
         // ===============================
+        
         if (name === 'Welcome') {
             // Landing page → clean marketing layout (no breadcrumbs)
-            page.default.layout = page.default.layout || MarketingLayout
+    page.default.layout = undefined
 
         } else if (name.startsWith('auth/')) {
             page.default.layout = page.default.layout || AuthLayout

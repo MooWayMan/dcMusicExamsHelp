@@ -126,13 +126,19 @@ const hasActions = computed(() => Boolean(slots.actions))
             </template>
           </MyTextConstructor>
 
-          <div
+          <MyTextConstructor
             v-if="subtitle"
-            class="mt-3 text-base leading-7 md:text-lg"
-            :class="subtitleColor"
+            :alignment="alignment"
+            :text-color="subtitleColor"
+            sub-title-variant="body"
+            spacing="none"
+            class="mt-3"
           >
-            {{ subtitle }}
-          </div>
+            <template #mySubTitle>
+              {{ subtitle }}
+            </template>
+          </MyTextConstructor>
+
         </div>
 
         <div v-if="hasActions" class="mt-6">

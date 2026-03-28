@@ -83,7 +83,7 @@ const badges = (card: CardData) => {
       >
         <div
           @click="handleCardClick(card)"
-          class="group cursor-pointer rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
+          class="group cursor-pointer rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
           role="button"
           tabindex="0"
           @keydown.enter="handleCardClick(card)"

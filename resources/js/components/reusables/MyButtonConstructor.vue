@@ -5,7 +5,7 @@ import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 
 interface Props {
   size?: 'small' | 'medium' | 'large'
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'success' | 'danger'
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'success' | 'danger' | 'light'
   icon?: Component
   iconPosition?: 'left' | 'right'
   fullWidth?: boolean
@@ -51,9 +51,11 @@ const roundedClasses: Record<NonNullable<Props['rounded']>, string> = {
   full: 'rounded-full',
 }
 
+
+
 const variantClasses: Record<NonNullable<Props['variant']>, string> = {
   primary:
-    'bg-brand-cta text-white hover:bg-brand-cta-dark border border-transparent shadow-sm',
+    'bg-black text-white hover:bg-slate-800 border border-transparent shadow-sm',
   secondary:
     'bg-brand-primary text-white hover:bg-brand-primary-dark border border-transparent shadow-sm',
   outline:
@@ -64,6 +66,8 @@ const variantClasses: Record<NonNullable<Props['variant']>, string> = {
     'bg-brand-accent text-white hover:bg-brand-accent-dark border border-transparent shadow-sm',
   danger:
     'bg-red-600 text-white hover:bg-red-700 border border-transparent shadow-sm',
+  light:
+    'bg-white text-black hover:bg-slate-200 border border-transparent shadow-sm',
 }
 
 const buttonClasses = computed(() => [
