@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import MyFooter from './MyFooter.vue'
-import BreadCrumbs from '@/components/layouts/BreadCrumbs.vue'
+import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
 
 interface BreadcrumbItem {
@@ -62,7 +62,7 @@ onMounted(() => {
           <div
             class="mx-auto max-w-7xl rounded-xl border border-brand-border bg-brand-surface px-4 py-3 shadow-sm overflow-x-auto"
           >
-            <BreadCrumbs
+            <Breadcrumbs
               :pages="props.breadcrumbs"
               :homeHref="props.breadcrumbHomeHref"
             />
