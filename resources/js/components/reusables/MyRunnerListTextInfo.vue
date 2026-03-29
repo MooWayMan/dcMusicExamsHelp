@@ -1,4 +1,4 @@
-<!-- File: src/components/reusables/MyRunnerListTextInfo.vue -->
+<!-- resources/js/components/reusables/MyRunnerListTextInfo.vue -->
 <script setup lang="ts">
 import { computed } from 'vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
@@ -31,7 +31,7 @@ const emit = defineEmits<{
   cardClick: [card: CardData & { isExternal: boolean }]
 }>()
 
-const widthMap: Record<string, string> = {
+const widthMap: Record<NonNullable<Props['maxWidth']>, string> = {
   sm: 'max-w-sm',
   md: 'max-w-md',
   lg: 'max-w-lg',
@@ -39,16 +39,17 @@ const widthMap: Record<string, string> = {
   '2xl': 'max-w-2xl',
   '3xl': 'max-w-3xl',
   '4xl': 'max-w-4xl',
-  full: 'max-w-full'
+  full: 'max-w-full',
 }
-const maxWidthClass = computed(() => widthMap[props.maxWidth])
 
-// ------------------ Helpers ------------------
+const maxWidthClass = computed(() => widthMap[props.maxWidth])
 
 const isExternalLink = (url: string) => {
   try {
     if (!url) return false
-    if (url.startsWith('/') || url.startsWith('./') || url.startsWith('../')) return false
+    if (url.startsWith('/') || url.startsWith('./') || url.startsWith('../')) {
+      return false
+    }
     const urlObj = url.startsWith('//') ? new URL(`https:${url}`) : new URL(url)
     return urlObj.hostname !== window.location.hostname
   } catch {
@@ -56,13 +57,11 @@ const isExternalLink = (url: string) => {
   }
 }
 
-const getIsExternal = (card: CardData) => card.url ? isExternalLink(card.url) : false
+const getIsExternal = (card: CardData) => (card.url ? isExternalLink(card.url) : false)
 
 const handleCardClick = (card: CardData) => {
   emit('cardClick', { ...card, isExternal: getIsExternal(card) })
 }
-
-// ------------------ Badge logic (simplified + styled) ------------------
 
 const badges = (card: CardData) => {
   const result: { label: string }[] = []
@@ -82,38 +81,39 @@ const badges = (card: CardData) => {
         :key="card.id ?? index"
       >
         <div
-          @click="handleCardClick(card)"
-          class="group cursor-pointer rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
           role="button"
           tabindex="0"
+          class="group cursor-pointer rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
+          @click="handleCardClick(card)"
           @keydown.enter="handleCardClick(card)"
           @keydown.space.prevent="handleCardClick(card)"
         >
-          <!-- Top row -->
           <div class="flex items-start gap-4">
-            <!-- Icon -->
             <div
               v-if="card.showIcon !== false"
               class="mt-1 flex h-8 w-8 items-center justify-center rounded-lg bg-brand-bg text-brand-primary transition-colors group-hover:bg-brand-accent group-hover:text-white"
             >
               <ArrowUpRightIcon v-if="getIsExternal(card)" class="h-4 w-4" />
               <svg v-else class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
             </div>
 
-            <!-- Title -->
             <div class="flex-1">
-              <MyTextConstructor variant="subheading">
+              <MyTextConstructor variant="subheading" spacing="tight">
                 <template #myTitle>
-                  <span class="group-hover:text-brand-accent transition-colors">
+                  <span class="transition-colors group-hover:text-brand-accent">
                     {{ card.title }}
                   </span>
                 </template>
               </MyTextConstructor>
 
-              <!-- Subtitle -->
-              <MyTextConstructor v-if="card.subTitle" variant="muted">
+              <MyTextConstructor
+                v-if="card.subTitle"
+                subTitleVariant="muted"
+                spacing="none"
+                class="mt-2"
+              >
                 <template #mySubTitle>
                   {{ card.subTitle }}
                 </template>
@@ -121,8 +121,10 @@ const badges = (card: CardData) => {
             </div>
           </div>
 
-          <!-- Bottom row -->
-          <div class="mt-4 flex flex-wrap items-center gap-2">
+          <div
+            v-if="badges(card).length > 0"
+            class="mt-4 flex flex-wrap items-center gap-2"
+          >
             <div
               v-for="(badge, i) in badges(card)"
               :key="i"

@@ -30,7 +30,7 @@ createInertiaApp({
         // Layout switching
         // ===============================
         
-        if (name === 'Welcome') {
+        if (name === 'Welcome' || name === 'ConstructorsDemo') {
             // Landing page → clean marketing layout (no breadcrumbs)
     page.default.layout = undefined
 

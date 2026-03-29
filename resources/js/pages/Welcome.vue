@@ -114,133 +114,59 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
     <Navbar />
 
     <!-- HERO -->
-<!-- HERO -->
-<section class="relative flex justify-center bg-white">
-  <div class="mx-auto flex w-full max-w-6xl flex-col items-center px-4 pt-14 pb-10 text-center sm:px-6 md:pt-18 lg:pt-20">
-    <img
-      :src="heroLogo"
-      alt="musicexams.help"
-      class="h-44 w-auto sm:h-56 md:h-72 lg:h-80 xl:h-[26rem]"
-    />
-
-    <MyTextConstructor
-      variant="display"
-      alignment="center"
-      fontFamily="display"
-      spacing="tight"
-      class="mt-6 max-w-4xl"
-    >
-      <template #myTitle>
-        Music exam booking made clearer
-      </template>
-    </MyTextConstructor>
-
-    <MyTextConstructor
-      alignment="center"
-      bodyVariant="body"
-      spacing="none"
-      class="mt-4 max-w-3xl text-slate-700"
-    >
-      Simple guidance for teachers, parents and students. Keep
-      <span class="font-semibold text-slate-950">code {{ referralCode }}</span>
-      ready before booking.
-    </MyTextConstructor>
-
-    <div class="mt-6 flex flex-wrap items-center justify-center gap-4">
-      <a
-        :href="bookingUrl"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <MyButtonConstructor variant="primary" size="large">
-          Book Your Exam
-        </MyButtonConstructor>
-      </a>
-
-      <a href="#why">
-        <MyButtonConstructor variant="outline" size="large">
-          Why use this page
-        </MyButtonConstructor>
-      </a>
-    </div>
-  </div>
-</section>
-
-<!-- INCENTIVES -->
-<section id="incentives" class="border-t border-slate-200 bg-[#f7f8fb]">
-  <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
-    <div class="grid items-center gap-12 lg:grid-cols-[0.9fr_1.1fr]">
-      <!-- LEFT COPY -->
-      <div>
-        <MyTextConstructor variant="eyebrow" spacing="tight">
-          <template #myTitle>
-            Incentives
-          </template>
-        </MyTextConstructor>
+    <section class="relative flex justify-center bg-white">
+      <div class="mx-auto flex w-full max-w-6xl flex-col items-center px-4 pt-14 pb-10 text-center sm:px-6 md:pt-20 lg:pt-20">
+        <img
+          :src="heroLogo"
+          alt="musicexams.help"
+          class="h-44 w-auto sm:h-56 md:h-72 lg:h-80 xl:h-[26rem]"
+        />
 
         <MyTextConstructor
-          variant="heading"
+          variant="display"
+          alignment="center"
           fontFamily="display"
           spacing="tight"
-          class="mt-3 max-w-2xl"
+          class="mt-6 max-w-4xl"
         >
           <template #myTitle>
-            Your students work hard. So do you.
+            Music exam booking made clearer
           </template>
         </MyTextConstructor>
 
         <MyTextConstructor
+          alignment="center"
           bodyVariant="body"
           spacing="none"
-          class="mt-5 max-w-2xl text-slate-700"
+          class="mt-4 max-w-3xl text-slate-700"
         >
-          Students put in the practice. Teachers put in the time. Code {{ referralCode }}
-          is designed to do more than help with booking — it can support quarterly
-          prize draws, recognition, shout-outs and future rewards.
+          Simple guidance for teachers, parents and students. Keep
+          <span class="font-semibold text-slate-950">code {{ referralCode }}</span>
+          ready before booking.
         </MyTextConstructor>
 
-        <div class="mt-8 space-y-4">
-          <div
-            v-for="item in incentives"
-            :key="item"
-            class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-          >
-            <MyTextConstructor bodyVariant="body" spacing="none">
-              {{ item }}
-            </MyTextConstructor>
-          </div>
-        </div>
-      </div>
-
-      <!-- RIGHT PROMO -->
-      <div class="relative">
-        <div class="overflow-hidden rounded-[2rem] bg-white p-3 shadow-xl ring-1 ring-slate-200">
-          <img
-            src="/images/rewards_add.png"
-            alt="Trinity exam rewards and recognition using code 120"
-            class="block w-full rounded-[1.5rem]"
-          />
-        </div>
-
-        <div class="mt-6">
+        <div class="mt-6 flex flex-wrap items-center justify-center gap-4">
           <a
             :href="bookingUrl"
             target="_blank"
             rel="noopener noreferrer"
-            class="block"
           >
-            <MyButtonConstructor variant="primary" size="large" fullWidth>
-              Continue to Official Booking
+            <MyButtonConstructor variant="primary" size="large">
+              Book Your Exam
+            </MyButtonConstructor>
+          </a>
+
+          <a href="#why">
+            <MyButtonConstructor variant="outline" size="large">
+              Why use this page
             </MyButtonConstructor>
           </a>
         </div>
       </div>
-    </div>
-  </div>
-</section>
+    </section>
 
     <!-- TRUST STRIP -->
-    <div class="-mt-4 w-full border-y border-slate-200 bg-slate-50 py-12">
+    <div class="w-full border-y border-slate-200 bg-slate-50 py-6 md:py-12">
       <div class="mx-auto max-w-5xl px-6 py-5">
         <div class="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
           <MyTextConstructor
@@ -299,7 +225,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
           <div
             v-for="card in whyCards"
             :key="card.id"
-            class="rounded-2xl border-6 border-[#1e3a8a] bg-gradient-to-br from-[#dbeafe] via-[#eff6ff] to-[#bfdbfe] p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
+            class="rounded-2xl border-[6px] border-[#1e3a8a] bg-gradient-to-br from-[#dbeafe] via-[#eff6ff] to-[#bfdbfe] p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
           >
             <MyTextConstructor
               variant="subheading"
@@ -323,14 +249,87 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             </MyTextConstructor>
           </div>
         </div>
-
       </div>
     </section>
 
+    <!-- INCENTIVES -->
+    <section id="incentives" class="border-t border-slate-200 bg-[#f7f8fb]">
+      <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+        <!-- TOP ROW -->
+        <div class="grid gap-10 lg:grid-cols-2 lg:gap-12">
+          <!-- LEFT -->
+          <div>
+            <MyTextConstructor variant="eyebrow" spacing="tight">
+              <template #myTitle>
+                Incentives
+              </template>
+            </MyTextConstructor>
 
-    <!-- <div class="flex flex-col items-center justify-center"> -->
+            <MyTextConstructor
+              variant="heading"
+              fontFamily="display"
+              spacing="tight"
+              class="mt-3 max-w-2xl"
+            >
+              <template #myTitle>
+                Your students work hard. So do you.
+              </template>
+            </MyTextConstructor>
 
+            <MyTextConstructor
+              bodyVariant="body"
+              spacing="none"
+              class="mt-5 max-w-2xl text-slate-700"
+            >
+              Students put in the practice. Teachers put in the time. Code {{ referralCode }}
+              is designed to do more than help with booking — it can support quarterly
+              prize draws, recognition, shout-outs and future rewards.
+            </MyTextConstructor>
+          </div>
 
+          <!-- RIGHT -->
+          <div class="lg:pt-12">
+            <div class="space-y-4">
+              <div
+                v-for="item in incentives"
+                :key="item"
+                class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+              >
+                <MyTextConstructor bodyVariant="body" spacing="none">
+                  {{ item }}
+                </MyTextConstructor>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOTTOM ROW -->
+        <div class="mt-10">
+          <div class="mx-auto max-w-7xl">
+            <div class="overflow-hidden rounded-[2rem] bg-white p-3 shadow-xl ring-1 ring-slate-200">
+              <img
+                src="/images/rewards_add.png"
+                alt="Trinity exam rewards and recognition using code 120"
+                class="block w-full rounded-[1.5rem]"
+              />
+            </div>
+
+            <div class="mt-6">
+              <a
+                :href="bookingUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="block"
+              >
+                <MyButtonConstructor variant="primary" size="large" fullWidth>
+                  Continue to Official Booking
+                </MyButtonConstructor>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- USEFUL LINKS -->
     <section class="border-t border-slate-200 bg-white">
@@ -347,7 +346,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
         </MyTextConstructor>
 
         <MyTextConstructor
-          variant="muted"
+          subTitleVariant="muted"
           alignment="center"
           spacing="none"
           class="mt-3"
@@ -367,7 +366,6 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
       </div>
     </section>
 
-    <!-- FAQ -->
     <!-- FAQ -->
     <section id="faq" class="border-t border-slate-200 bg-white">
       <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
@@ -407,6 +405,5 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
         </div>
       </div>
     </section>
-
   </div>
 </template>

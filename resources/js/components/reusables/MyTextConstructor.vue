@@ -65,15 +65,15 @@ const fontFamilyClass = computed(() => {
 })
 
 const variantClasses: Record<NonNullable<Props['variant']>, string> = {
-  display: 'text-5xl font-bold tracking-tight text-brand-primary md:text-6xl lg:text-7xl',
-  heading: 'text-4xl font-bold tracking-tight text-brand-primary md:text-5xl',
-  subheading: 'text-2xl font-semibold text-brand-primary md:text-3xl',
-  body: 'text-xl leading-9 text-brand-text',
-  muted: 'text-lg leading-8 text-brand-text-soft',
-  eyebrow: 'text-sm font-semibold uppercase tracking-[0.08em] text-blue-700',
-  button: 'text-base font-semibold leading-none',
-  'button-sm': 'text-sm font-semibold leading-none',
-  'button-lg': 'text-lg font-semibold leading-none',
+  display: 'text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight text-brand-primary',
+  heading: 'text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight text-brand-primary',
+  subheading: 'text-xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold leading-tight text-brand-primary',
+  body: 'text-lg sm:text-xl md:text-2xl lg:text-3xl leading-relaxed text-brand-text',
+  muted: 'text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed text-brand-text-soft',
+  eyebrow: 'text-sm sm:text-base font-semibold uppercase tracking-[0.08em] text-brand-accent',
+  button: 'text-base sm:text-lg font-semibold leading-none',
+  'button-sm': 'text-sm sm:text-base font-semibold leading-none',
+  'button-lg': 'text-lg sm:text-xl md:text-2xl font-semibold leading-none',
 }
 
 const resolvedTextColor = computed(() => {
@@ -91,9 +91,9 @@ const titleClasses = computed(() => {
 
 const subTitleClasses = computed(() => {
   const map = {
-    body: 'text-xl leading-9 text-brand-text-soft',
-    muted: 'text-lg leading-8 text-brand-text-soft',
-    subheading: 'text-2xl font-medium text-brand-text-soft',
+    body: 'text-lg sm:text-xl md:text-2xl lg:text-3xl leading-relaxed text-brand-text-soft',
+    muted: 'text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed text-brand-text-soft',
+    subheading: 'text-xl sm:text-2xl md:text-3xl lg:text-4xl font-medium leading-tight text-brand-text-soft',
   } as const
 
   return [
@@ -106,8 +106,8 @@ const subTitleClasses = computed(() => {
 
 const bodyClasses = computed(() => {
   const map = {
-    body: 'text-xl leading-9 text-brand-text',
-    muted: 'text-lg leading-8 text-brand-text-soft',
+    body: 'text-lg sm:text-xl md:text-2xl lg:text-3xl leading-relaxed text-brand-text',
+    muted: 'text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed text-brand-text-soft',
   } as const
 
   return [
@@ -119,11 +119,7 @@ const bodyClasses = computed(() => {
 })
 
 const wrapperClasses = computed(() => {
-  return [
-    alignmentClasses.value,
-    spacingClasses.value,
-    props.bgColor,
-  ]
+  return [alignmentClasses.value, spacingClasses.value, props.bgColor]
 })
 
 const underlineClasses = computed(() => {

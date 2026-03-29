@@ -51,23 +51,21 @@ const roundedClasses: Record<NonNullable<Props['rounded']>, string> = {
   full: 'rounded-full',
 }
 
-
-
 const variantClasses: Record<NonNullable<Props['variant']>, string> = {
   primary:
-    'bg-black text-white hover:bg-slate-800 border border-transparent shadow-sm',
+    'bg-brand-primary text-brand-text-inverse hover:bg-brand-primary-dark border border-transparent shadow-sm',
   secondary:
-    'bg-brand-primary text-white hover:bg-brand-primary-dark border border-transparent shadow-sm',
+    'bg-brand-accent text-brand-text-inverse hover:bg-brand-accent-dark border border-transparent shadow-sm',
   outline:
     'bg-brand-surface text-brand-primary hover:bg-brand-bg border border-brand-border',
   ghost:
     'bg-transparent text-brand-primary hover:bg-brand-bg border border-transparent',
   success:
-    'bg-brand-accent text-white hover:bg-brand-accent-dark border border-transparent shadow-sm',
+    'bg-brand-success text-brand-text-inverse hover:opacity-90 border border-transparent shadow-sm',
   danger:
-    'bg-red-600 text-white hover:bg-red-700 border border-transparent shadow-sm',
+    'bg-brand-danger text-brand-text-inverse hover:opacity-90 border border-transparent shadow-sm',
   light:
-    'bg-white text-black hover:bg-slate-200 border border-transparent shadow-sm',
+    'bg-brand-surface text-brand-primary hover:bg-brand-surface-soft border border-brand-border shadow-sm',
 }
 
 const buttonClasses = computed(() => [
@@ -90,9 +88,9 @@ const textVariant = computed(() => {
   return 'button'
 })
 
-const handleClick = (e: MouseEvent) => {
+const handleClick = (event: MouseEvent) => {
   if (props.disabled) return
-  emit('click', e)
+  emit('click', event)
   emit('clicked')
 }
 </script>
