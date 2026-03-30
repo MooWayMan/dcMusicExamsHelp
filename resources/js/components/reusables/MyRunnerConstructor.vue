@@ -178,7 +178,7 @@ const badges = (card: RunnerItem) => {
             </div>
 
             <div class="flex-1">
-              <MyTextConstructor variant="subheading" spacing="tight">
+              <MyTextConstructor variant="button-lg" spacing="tight">
                 <template #myTitle>
                   <span class="transition-colors group-hover:text-brand-accent">
                     {{ card.title }}
@@ -227,7 +227,7 @@ const badges = (card: RunnerItem) => {
           </div>
 
           <MyTextConstructor
-            variant="subheading"
+            variant="button-lg"
             alignment="center"
             spacing="tight"
             textColor="text-brand-primary"
@@ -239,7 +239,7 @@ const badges = (card: RunnerItem) => {
 
           <MyTextConstructor
             v-if="card.subTitle"
-            subTitleVariant="subheading"
+            subTitleVariant="muted"
             alignment="center"
             spacing="none"
             textColor="text-brand-accent"
@@ -271,11 +271,11 @@ const badges = (card: RunnerItem) => {
         >
           <div
             v-if="props.showHeader && card.header"
-            class="flex items-center justify-center px-4 py-3 text-center whitespace-nowrap"
+            class="flex w-full items-center justify-center overflow-hidden px-4 py-3 text-center"
             :class="card.headerBgColor ?? 'bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary'"
           >
             <MyTextConstructor
-              variant="heading"
+              variant="subheading"
               alignment="center"
               spacing="none"
               :textColor="card.headerTextColor ?? 'text-brand-text-inverse'"
@@ -302,7 +302,7 @@ const badges = (card: RunnerItem) => {
           <div class="flex flex-1 flex-col p-4 sm:p-5">
             <div class="flex-1 space-y-3 text-left">
               <MyTextConstructor
-                variant="heading"
+                variant="button-lg"
                 alignment="left"
                 spacing="tight"
                 textColor="text-brand-primary"
@@ -338,11 +338,11 @@ const badges = (card: RunnerItem) => {
 
           <div
             v-if="props.showFooter && card.footer"
-            class="flex items-center justify-center px-4 py-3 text-center whitespace-nowrap"
+            class="flex w-full items-center justify-center overflow-hidden px-4 py-3 text-center"
             :class="card.footerBgColor ?? 'bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary'"
           >
             <MyTextConstructor
-              variant="heading"
+              variant="subheading"
               alignment="center"
               spacing="none"
               :textColor="card.footerTextColor ?? 'text-brand-text-inverse'"
