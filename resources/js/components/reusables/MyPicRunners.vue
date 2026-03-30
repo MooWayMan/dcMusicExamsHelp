@@ -81,20 +81,20 @@ const gapClassMap: Record<NonNullable<Props['spacing']>, string> = {
     >
       <button
         type="button"
-        class="group flex h-full w-full max-w-md flex-col overflow-hidden rounded-2xl border-2 border-brand-border bg-brand-surface shadow-md transition-all duration-300"
+        class="group flex h-full w-full max-w-md flex-col overflow-hidden rounded-2xl border-2 border-gray-200 bg-white shadow-md transition-all duration-300"
         :class="props.enableHover ? 'hover:-translate-y-1 hover:shadow-xl' : ''"
         @click="handleCardClick(card)"
       >
         <div
           v-if="props.showHeader && card.header"
           class="px-4 py-2 text-center"
-          :class="card.headerBgColor ?? 'bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary'"
+          :class="card.headerBgColor ?? 'bg-gradient-to-r from-blue-700 via-blue-900 to-blue-700'"
         >
           <MyTextConstructor
             variant="button"
             alignment="center"
             spacing="none"
-            :textColor="card.headerTextColor ?? 'text-brand-text-inverse'"
+            :textColor="card.headerTextColor ?? 'text-white'"
           >
             <template #myTitle>
               {{ card.header }}
@@ -104,7 +104,7 @@ const gapClassMap: Record<NonNullable<Props['spacing']>, string> = {
 
         <div
           v-if="card.image"
-          class="relative aspect-video w-full overflow-hidden bg-brand-surface-soft"
+          class="relative aspect-video w-full overflow-hidden bg-gray-200"
         >
           <img
             :src="card.image"
@@ -155,13 +155,13 @@ const gapClassMap: Record<NonNullable<Props['spacing']>, string> = {
         <div
           v-if="props.showFooter && card.footer"
           class="px-4 py-2 text-center"
-          :class="card.footerBgColor ?? 'bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary'"
+          :class="card.footerBgColor ?? 'bg-gradient-to-r from-gray-600 to-gray-900'"
         >
           <MyTextConstructor
             variant="button"
             alignment="center"
             spacing="none"
-            :textColor="card.footerTextColor ?? 'text-brand-text-inverse'"
+            :textColor="card.footerTextColor ?? 'text-white'"
           >
             <template #myTitle>
               {{ card.footer }}

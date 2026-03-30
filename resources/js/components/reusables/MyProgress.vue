@@ -24,9 +24,9 @@ const props = withDefaults(defineProps<Props>(), {
 const colorMap = {
   blue: 'bg-brand-accent',
   green: 'bg-brand-success',
-  amber: 'bg-amber-500',
+  amber: 'bg-yellow-500',
   red: 'bg-brand-danger',
-  purple: 'bg-brand-primary',
+  purple: 'bg-purple-500',
 }
 
 const barClasses = computed(() => [

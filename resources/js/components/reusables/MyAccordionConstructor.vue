@@ -24,7 +24,7 @@ const props = withDefaults(defineProps<Props>(), {
   items: () => [] as AccordionItem[],
   allowMultiple: false,
   size: 'medium',
-  headerBgColor: 'bg-brand-surface',
+  headerBgColor: 'bg-white',
   headerTextColor: 'text-brand-primary',
   headerHoverBgColor: 'hover:bg-brand-bg',
   borderColor: 'border-brand-border',
@@ -144,7 +144,7 @@ const chevronSize = computed(() => {
 
     <div
       v-if="props.items.length === 0"
-      class="rounded-2xl bg-brand-surface py-12 text-center shadow-sm"
+      class="rounded-2xl bg-white py-12 text-center shadow-sm"
     >
       <MyTextConstructor variant="subheading" alignment="center" spacing="tight">
         <template #myTitle>No FAQ items yet</template>
