@@ -171,7 +171,7 @@ onUnmounted(stopSlideshow)
 
 <template>
   <div class="w-full">
-    <div class="w-full bg-white">
+    <div class="w-full bg-brand-surface">
       <div :class="gridClasses" @mouseenter="stopSlideshow" @mouseleave="startSlideshow">
         <div
           v-for="(image, idx) in displayedImages"
@@ -196,13 +196,13 @@ onUnmounted(stopSlideshow)
 
             <div
               v-if="image.title"
-              class="absolute bottom-0 left-0 right-0 bg-blue-900/80 p-3 text-white"
+              class="absolute bottom-0 left-0 right-0 bg-brand-primary/80 p-3"
               :class="{ 'rounded-b-lg': props.imageRounded && props.spacing === 'gaps' }"
             >
               <MyTextConstructor
                 variant="button"
                 alignment="center"
-                textColor="text-white"
+                textColor="text-brand-text-inverse"
                 spacing="none"
               >
                 <template #myTitle>

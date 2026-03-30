@@ -10,6 +10,9 @@ import MyAlert from '@/components/reusables/MyAlert.vue'
 import MyInputConstructor from '@/components/reusables/MyInputConstructor.vue'
 import MyTextareaConstructor from '@/components/reusables/MyTextareaConstructor.vue'
 import MyProgress from '@/components/reusables/MyProgress.vue'
+import MyTableConstructor from '@/components/reusables/MyTableConstructor.vue'
+import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
+import MyBanner from '@/components/reusables/MyBanner.vue'
 
 import { BookOpenIcon, MusicalNoteIcon, TrophyIcon } from '@heroicons/vue/24/outline'
 import MyRunnerConstructor from '@/components/reusables/MyRunnerConstructor.vue'
@@ -109,6 +112,28 @@ const progressSuccess = ref(72)
 const progressWarning = ref(54)
 const progressDanger = ref(88)
 
+const tableColumns = [
+  { key: 'name', title: 'Student Name', sortable: true },
+  { key: 'instrument', title: 'Instrument', sortable: true },
+  { key: 'grade', title: 'Grade', sortable: true, align: 'center' as const },
+  { key: 'status', title: 'Status', sortable: true },
+]
+
+const tableData = [
+  { name: 'Emily Turner', instrument: 'Piano', grade: 5, status: 'Booked' },
+  { name: 'Jack Whitfield', instrument: 'Violin', grade: 3, status: 'Pending' },
+  { name: 'Sophie Reeves', instrument: 'Flute', grade: 7, status: 'Booked' },
+  { name: 'Oliver Chen', instrument: 'Guitar', grade: 2, status: 'Cancelled' },
+  { name: 'Amara Osei', instrument: 'Voice', grade: 6, status: 'Booked' },
+]
+
+const accordionItems = [
+  { id: 1, question: 'What is centre code 120?', answer: 'Centre code 120 is the unique identifier for Music Exams Help when booking Trinity College London exams. It ensures your booking is linked to our support system.' },
+  { id: 2, question: 'How do I book a Trinity exam?', answer: 'Visit the official Trinity booking page, enter your details, and make sure centre code 120 is visible. We provide step-by-step guidance to make the process easier.' },
+  { id: 3, question: 'Are there any incentives for using code 120?', answer: 'Yes! We plan to offer quarterly prize draws, recognition features, and a Hall of Fame for students and teachers who book through centre code 120.' },
+  { id: 4, question: 'Can teachers use this platform?', answer: 'Absolutely. Music Exams Help is designed to support both teachers and students. Teachers can guide their students through the booking process with confidence.' },
+]
+
 const breadcrumbPages = [
   { name: 'Demo', href: '/demo', current: false },
   { name: 'Constructors', href: '/demo/constructors', current: true },
@@ -136,7 +161,7 @@ const breadcrumbPages = [
       <div class="space-y-12">
 
         <!-- TYPOGRAPHY -->
-        <section class="rounded-3xl border border-brand-border bg-white p-6 shadow-sm sm:p-8">
+        <section class="rounded-3xl border border-brand-border bg-brand-surface p-6 shadow-sm sm:p-8">
           <MyTextConstructor variant="eyebrow" spacing="tight">
             <template #myTitle>Typography</template>
           </MyTextConstructor>
@@ -167,7 +192,7 @@ const breadcrumbPages = [
         </section>
 
         <!-- BUTTONS -->
-        <section class="rounded-3xl border border-brand-border bg-white p-6 shadow-sm sm:p-8">
+        <section class="rounded-3xl border border-brand-border bg-brand-surface p-6 shadow-sm sm:p-8">
           <MyTextConstructor variant="eyebrow" spacing="tight">
             <template #myTitle>Buttons</template>
           </MyTextConstructor>
@@ -212,7 +237,7 @@ const breadcrumbPages = [
         </section>
 
         <!-- ALERTS -->
-        <section class="rounded-3xl border border-brand-border bg-white p-6 shadow-sm sm:p-8">
+        <section class="rounded-3xl border border-brand-border bg-brand-surface p-6 shadow-sm sm:p-8">
           <MyTextConstructor variant="eyebrow" spacing="tight">
             <template #myTitle>Alerts</template>
           </MyTextConstructor>
@@ -249,7 +274,7 @@ const breadcrumbPages = [
         </section>
 
         <!-- INPUTS -->
-        <section class="rounded-3xl border border-brand-border bg-white p-6 shadow-sm sm:p-8">
+        <section class="rounded-3xl border border-brand-border bg-brand-surface p-6 shadow-sm sm:p-8">
           <MyTextConstructor variant="eyebrow" spacing="tight">
             <template #myTitle>Inputs</template>
           </MyTextConstructor>
@@ -298,7 +323,7 @@ const breadcrumbPages = [
         </section>
 
         <!-- TEXTAREA -->
-        <section class="rounded-3xl border border-brand-border bg-white p-6 shadow-sm sm:p-8">
+        <section class="rounded-3xl border border-brand-border bg-brand-surface p-6 shadow-sm sm:p-8">
           <MyTextConstructor variant="eyebrow" spacing="tight">
             <template #myTitle>Textarea</template>
           </MyTextConstructor>
@@ -329,7 +354,7 @@ const breadcrumbPages = [
         </section>
 
         <!-- PROGRESS -->
-        <section class="rounded-3xl border border-brand-border bg-white p-6 shadow-sm sm:p-8">
+        <section class="rounded-3xl border border-brand-border bg-brand-surface p-6 shadow-sm sm:p-8">
           <MyTextConstructor variant="eyebrow" spacing="tight">
             <template #myTitle>Progress</template>
           </MyTextConstructor>
@@ -381,7 +406,7 @@ const breadcrumbPages = [
         </section>
 
         <!-- RUNNERS -->
-        <section class="rounded-3xl border border-brand-border bg-white p-6 shadow-sm sm:p-8">
+        <section class="rounded-3xl border border-brand-border bg-brand-surface p-6 shadow-sm sm:p-8">
           <MyTextConstructor variant="eyebrow" spacing="tight">
             <template #myTitle>Runner Constructor</template>
           </MyTextConstructor>
@@ -430,6 +455,71 @@ const breadcrumbPages = [
                 />
               </div>
             </div>
+          </div>
+        </section>
+
+        <!-- TABLE -->
+        <section class="rounded-3xl border border-brand-border bg-brand-surface p-6 shadow-sm sm:p-8">
+          <MyTextConstructor variant="eyebrow" spacing="tight">
+            <template #myTitle>Table Constructor</template>
+          </MyTextConstructor>
+
+          <div class="mt-6">
+            <MyTableConstructor
+              :data="tableData"
+              :columns="tableColumns"
+              title="Exam Bookings"
+              subtitle="Sample student booking data for centre code 120"
+              :striped="true"
+              :bordered="true"
+              :hoverable="true"
+              :clickableRows="true"
+              size="medium"
+            />
+          </div>
+        </section>
+
+        <!-- ACCORDION -->
+        <section class="rounded-3xl border border-brand-border bg-brand-surface p-6 shadow-sm sm:p-8">
+          <MyTextConstructor variant="eyebrow" spacing="tight">
+            <template #myTitle>Accordion Constructor</template>
+          </MyTextConstructor>
+
+          <div class="mt-6">
+            <MyAccordionConstructor
+              :items="accordionItems"
+              size="medium"
+            />
+          </div>
+        </section>
+
+        <!-- BANNER -->
+        <section class="rounded-3xl border border-brand-border bg-brand-surface p-6 shadow-sm sm:p-8">
+          <MyTextConstructor variant="eyebrow" spacing="tight">
+            <template #myTitle>Banner</template>
+          </MyTextConstructor>
+
+          <div class="mt-6 space-y-6">
+            <MyBanner
+              text="Book your Trinity exam with centre code 120 today"
+              button-text="Book Now"
+              variant="dark"
+              rounded
+            />
+
+            <MyBanner
+              text="Need help with the booking process?"
+              button-text="Get Support"
+              variant="primary"
+              rounded
+            />
+
+            <MyBanner
+              text="Join our quarterly prize draw for students and teachers"
+              button-text="Learn More"
+              variant="default"
+              rounded
+            />
           </div>
         </section>
 

@@ -130,10 +130,9 @@
     --brand-accent: hsl(217 91% 60%);
     --brand-accent-dark: hsl(217 91% 50%);
 
-/*    --brand-cta: hsl(38 92% 50%);
-    --brand-cta-dark: hsl(32 95% 44%);*/
-    --brand-cta: hsl(222 47% 11%);
-    --brand-cta-dark: hsl(222 47% 8%);
+    /* CTA = bright blue (Option B — matches accent for a clean, cohesive palette) */
+    --brand-cta: hsl(217 91% 60%);
+    --brand-cta-dark: hsl(217 91% 50%);
 
     --brand-bg: hsl(210 40% 98%);
     --brand-surface: hsl(0 0% 100%);

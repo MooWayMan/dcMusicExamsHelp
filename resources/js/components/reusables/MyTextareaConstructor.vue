@@ -12,6 +12,7 @@ interface Props {
   disabled?: boolean
   readonly?: boolean
   rows?: number
+  size?: 'small' | 'medium' | 'large'
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -23,6 +24,18 @@ const props = withDefaults(defineProps<Props>(), {
   disabled: false,
   readonly: false,
   rows: 4,
+  size: 'medium',
+})
+
+const sizeClass = computed(() => {
+  switch (props.size) {
+    case 'small':
+      return 'px-3 py-2 text-lg sm:text-xl'
+    case 'large':
+      return 'px-5 py-3.5 text-2xl sm:text-3xl md:text-4xl'
+    default:
+      return 'px-4 py-3 text-xl sm:text-2xl md:text-3xl'
+  }
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -37,7 +50,13 @@ const stateClass = computed(() => {
 <template>
   <div class="space-y-2">
     <!-- LABEL -->
-    <MyTextConstructor v-if="label" variant="label">
+    <MyTextConstructor
+      v-if="label"
+      variant="button-lg"
+      alignment="left"
+      textColor="text-brand-text"
+      spacing="none"
+    >
       <template #myTitle>{{ label }}</template>
     </MyTextConstructor>
 
@@ -49,18 +68,32 @@ const stateClass = computed(() => {
       :rows="rows"
       :disabled="disabled"
       :readonly="readonly"
-      class="w-full rounded-xl border bg-brand-surface px-4 py-3 text-base text-brand-text transition focus:outline-none focus:ring-2"
-      :class="stateClass"
+      class="w-full rounded-xl border bg-brand-surface text-brand-text transition focus:outline-none focus:ring-2"
+      :class="[sizeClass, stateClass]"
     />
 
     <!-- ERROR -->
-    <MyTextConstructor v-if="error" variant="caption" textColor="danger">
-      <template #myTitle>{{ error }}</template>
-    </MyTextConstructor>
+    <div v-if="error" class="mt-2">
+      <MyTextConstructor
+        subTitleVariant="muted"
+        alignment="left"
+        textColor="text-brand-danger"
+        spacing="none"
+      >
+        <template #mySubTitle>{{ error }}</template>
+      </MyTextConstructor>
+    </div>
 
     <!-- SUCCESS -->
-    <MyTextConstructor v-if="success" variant="caption" textColor="success">
-      <template #myTitle>{{ success }}</template>
-    </MyTextConstructor>
+    <div v-if="success" class="mt-2">
+      <MyTextConstructor
+        subTitleVariant="muted"
+        alignment="left"
+        textColor="text-brand-success"
+        spacing="none"
+      >
+        <template #mySubTitle>{{ success }}</template>
+      </MyTextConstructor>
+    </div>
   </div>
 </template>
