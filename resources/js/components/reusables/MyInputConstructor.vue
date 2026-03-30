@@ -47,11 +47,11 @@ const inputId = `input-${Math.random().toString(36).slice(2, 11)}`
 const sizeClasses = computed(() => {
   switch (props.size) {
     case 'small':
-      return 'min-h-9 px-3 py-2 text-base sm:text-lg'
+      return 'min-h-9 px-3 py-2 text-lg sm:text-xl'
     case 'large':
-      return 'min-h-12 px-4 py-3 text-xl sm:text-2xl'
+      return 'min-h-14 px-5 py-3.5 text-2xl sm:text-3xl md:text-4xl'
     default:
-      return 'min-h-10 px-4 py-2.5 text-lg sm:text-xl'
+      return 'min-h-12 px-4 py-3 text-xl sm:text-2xl md:text-3xl'
   }
 })
 
@@ -124,7 +124,7 @@ const handleKeydown = (event: KeyboardEvent) => emit('keydown', event)
   <div class="w-full">
     <div v-if="label" class="mb-2">
       <MyTextConstructor
-        variant="button"
+        variant="button-lg"
         alignment="left"
         textColor="text-brand-text"
         spacing="none"

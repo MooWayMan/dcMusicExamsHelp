@@ -85,14 +85,14 @@ const gridClasses = computed(() => {
       v-for="(card, index) in theArray"
       :key="card.id || index"
       type="button"
-      class="mx-auto flex min-h-[280px] w-full max-w-sm flex-col items-center rounded-2xl border-[6px] border-blue-800 bg-white p-4 text-center shadow-lg transition-all duration-300"
-      :class="props.enableHover ? 'hover:-translate-y-1 hover:scale-[1.02] hover:border-blue-600 hover:bg-blue-50 hover:shadow-xl' : ''"
+      class="mx-auto flex min-h-[280px] w-full max-w-sm flex-col items-center rounded-2xl border-[6px] border-brand-primary bg-brand-surface p-4 text-center shadow-lg transition-all duration-300"
+      :class="props.enableHover ? 'hover:-translate-y-1 hover:scale-[1.02] hover:border-brand-accent hover:bg-brand-surface-soft hover:shadow-xl' : ''"
       @click="handleCardClick(card)"
     >
       <div class="mb-4 flex justify-center">
         <component
           :is="card.icon"
-          class="h-8 w-8 text-blue-500 transition-transform duration-300 sm:h-10 sm:w-10 lg:h-12 lg:w-12"
+          class="h-8 w-8 text-brand-accent transition-transform duration-300 sm:h-10 sm:w-10 lg:h-12 lg:w-12"
           :class="props.enableHover ? 'group-hover:scale-110' : ''"
           aria-hidden="true"
         />
@@ -103,7 +103,7 @@ const gridClasses = computed(() => {
           variant="subheading"
           alignment="center"
           spacing="tight"
-          textColor="text-black"
+          textColor="text-brand-primary"
         >
           <template #myTitle>
             {{ card.title }}
@@ -114,7 +114,7 @@ const gridClasses = computed(() => {
           subTitleVariant="muted"
           alignment="center"
           spacing="none"
-          textColor="text-blue-700"
+          textColor="text-brand-accent"
           class="mt-3"
         >
           <template #mySubTitle>
@@ -126,7 +126,7 @@ const gridClasses = computed(() => {
           bodyVariant="muted"
           alignment="center"
           spacing="none"
-          textColor="text-gray-600"
+          textColor="text-brand-text-soft"
           class="mt-3"
         >
           {{ card.descript }}
