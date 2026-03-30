@@ -118,7 +118,7 @@ const textCardClass = computed(() => [
 ])
 
 const iconCardClass = computed(() => [
-  'group cursor-pointer rounded-2xl border-[4px] border-brand-primary bg-brand-surface p-5 shadow-lg transition-all duration-300',
+  'group flex h-full cursor-pointer flex-col items-center rounded-2xl border-[4px] border-brand-primary bg-brand-surface p-5 shadow-lg transition-all duration-300',
   props.enableHover ? 'hover:-translate-y-1 hover:scale-[1.02] hover:border-brand-accent hover:bg-brand-surface-soft hover:shadow-xl' : '',
 ])
 
@@ -275,7 +275,7 @@ const badges = (card: RunnerItem) => {
             :class="card.headerBgColor ?? 'bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary'"
           >
             <MyTextConstructor
-              variant="subheading"
+              variant="button-lg"
               alignment="center"
               spacing="none"
               :textColor="card.headerTextColor ?? 'text-brand-text-inverse'"
@@ -342,7 +342,7 @@ const badges = (card: RunnerItem) => {
             :class="card.footerBgColor ?? 'bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary'"
           >
             <MyTextConstructor
-              variant="subheading"
+              variant="button-lg"
               alignment="center"
               spacing="none"
               :textColor="card.footerTextColor ?? 'text-brand-text-inverse'"
