@@ -35,8 +35,8 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   title: '',
   subtitle: '',
-  headerColor: 'bg-blue-900',
-  headerTextColor: 'text-white',
+  headerColor: 'bg-brand-primary',
+  headerTextColor: 'text-brand-text-inverse',
   size: 'medium',
   striped: true,
   bordered: true,
@@ -94,11 +94,11 @@ const cellPadding = {
 }
 
 const wrapperClasses = computed(() =>
-  'my-4 rounded-xl border border-black/10 bg-white px-3 py-6 sm:my-8 sm:px-4 sm:py-8 md:my-10 md:px-6 md:py-10'
+  'my-4 rounded-xl border border-brand-border bg-brand-surface px-3 py-6 sm:my-8 sm:px-4 sm:py-8 md:my-10 md:px-6 md:py-10'
 )
 
 const tableBoxClasses = computed(() =>
-  ['inline-block overflow-hidden rounded-lg', props.bordered ? 'border-4 border-blue-900' : 'border-0'].join(' ')
+  ['inline-block overflow-hidden rounded-lg', props.bordered ? 'border-4 border-brand-primary' : 'border-0'].join(' ')
 )
 
 const tableClasses = computed(() => ['w-full min-w-[720px]', sizeClasses[props.size]].join(' '))
@@ -112,8 +112,8 @@ const headerClickableClasses = 'cursor-pointer select-none hover:opacity-90'
 const cellClasses = computed(() =>
   [
     cellPadding[props.size],
-    'whitespace-nowrap border-b border-r border-gray-200 text-gray-900 last:border-r-0',
-    props.clickableCells ? 'cursor-pointer transition-colors duration-150 hover:bg-blue-100 hover:text-blue-900' : '',
+    'whitespace-nowrap border-b border-r border-brand-border text-brand-text last:border-r-0',
+    props.clickableCells ? 'cursor-pointer transition-colors duration-150 hover:bg-brand-surface-soft hover:text-brand-primary' : '',
   ]
     .filter(Boolean)
     .join(' ')
@@ -121,8 +121,8 @@ const cellClasses = computed(() =>
 
 const rowClasses = computed(() =>
   [
-    'bg-white last:border-b-0',
-    props.hoverable && props.clickableRows ? 'cursor-pointer transition-colors duration-200 hover:bg-blue-50' : '',
+    'bg-brand-surface last:border-b-0',
+    props.hoverable && props.clickableRows ? 'cursor-pointer transition-colors duration-200 hover:bg-brand-surface-soft' : '',
   ]
     .filter(Boolean)
     .join(' ')
@@ -130,8 +130,8 @@ const rowClasses = computed(() =>
 
 const stripedRowClasses = computed(() =>
   [
-    'bg-gray-50',
-    props.hoverable && props.clickableRows ? 'cursor-pointer transition-colors duration-200 hover:bg-blue-50' : '',
+    'bg-brand-bg',
+    props.hoverable && props.clickableRows ? 'cursor-pointer transition-colors duration-200 hover:bg-brand-surface-soft' : '',
   ]
     .filter(Boolean)
     .join(' ')
@@ -225,7 +225,7 @@ function sortIndicator(column: Column) {
         variant="heading"
         alignment="center"
         spacing="tight"
-        textColor="text-gray-800"
+        textColor="text-brand-primary"
       >
         <template #myTitle>
           {{ props.title }}
@@ -237,7 +237,7 @@ function sortIndicator(column: Column) {
         subTitleVariant="muted"
         alignment="center"
         spacing="none"
-        textColor="text-gray-500"
+        textColor="text-brand-text-soft"
         class="mt-2"
       >
         <template #mySubTitle>
@@ -317,7 +317,7 @@ function sortIndicator(column: Column) {
                       bodyVariant="muted"
                       alignment="left"
                       spacing="none"
-                      textColor="text-gray-900"
+                      textColor="text-brand-text"
                     >
                       {{ row[column.key] }}
                     </MyTextConstructor>
@@ -330,13 +330,13 @@ function sortIndicator(column: Column) {
 
         <div
           v-if="(data?.length ?? 0) === 0"
-          class="rounded-lg bg-white py-8 text-center text-gray-500"
+          class="rounded-lg bg-brand-surface py-8 text-center"
         >
           <MyTextConstructor
             variant="subheading"
             alignment="center"
             spacing="tight"
-            textColor="text-gray-500"
+            textColor="text-brand-text-soft"
           >
             <template #myTitle>
               No data available
@@ -347,7 +347,7 @@ function sortIndicator(column: Column) {
             subTitleVariant="muted"
             alignment="center"
             spacing="none"
-            textColor="text-gray-500"
+            textColor="text-brand-text-soft"
             class="mt-2"
           >
             <template #mySubTitle>

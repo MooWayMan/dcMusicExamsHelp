@@ -29,8 +29,8 @@ const goHome = () => router.get('/')
       :description="props.description"
     />
 
-    <div class="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4 sm:px-6 lg:px-8">
-      <div class="w-full max-w-3xl rounded-3xl border border-brand-border bg-white p-8 text-center shadow-2xl sm:p-12">
+    <div class="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-bg to-brand-surface-soft px-4 sm:px-6 lg:px-8">
+      <div class="w-full max-w-3xl rounded-3xl border border-brand-border bg-brand-surface p-8 text-center shadow-2xl sm:p-12">
         <MyTextConstructor
           variant="display"
           alignment="center"
