@@ -1,9 +1,10 @@
 <?php
 
+// database/seeders/DatabaseSeeder.php
+
 namespace Database\Seeders;
 
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -13,11 +14,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
+        // Create Paul's admin account
         User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'name' => 'Paul Sheridan',
+            'email' => 'musicexams@musicexams.help',
+            'role' => 'admin',
+        ]);
+
+        // Seed lookup tables (instruments, subject areas)
+        $this->call([
+            LookupSeeder::class,
         ]);
     }
 }
