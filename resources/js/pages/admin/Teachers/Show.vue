@@ -107,7 +107,7 @@ const studentColumns = [
 </script>
 
 <template>
-    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-screen-2xl px-4 py-6 sm:px-6 lg:px-8">
         <!-- Header -->
         <div class="mb-6 flex items-center justify-between">
             <div class="flex items-center gap-4">
@@ -115,24 +115,24 @@ const studentColumns = [
                     <ArrowLeft class="h-5 w-5" />
                 </Link>
                 <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-brand-text-soft">Teacher Profile</p>
+                    <p class="text-sm font-semibold uppercase tracking-wider text-brand-text-soft">Teacher Profile</p>
                     <h1 class="text-2xl font-bold text-brand-text sm:text-3xl">{{ teacher.name }}</h1>
                 </div>
             </div>
             <div class="flex gap-2">
                 <Link :href="`/admin/teachers/${teacher.id}/edit`">
-                    <MyButtonConstructor variant="outline" size="small" :icon="Pencil">
+                    <MyButtonConstructor variant="outline" size="medium" :icon="Pencil">
                         Edit
                     </MyButtonConstructor>
                 </Link>
-                <MyButtonConstructor variant="danger" size="small" :icon="Trash2" @click="deleteTeacher">
+                <MyButtonConstructor variant="danger" size="medium" :icon="Trash2" @click="deleteTeacher">
                     Delete
                 </MyButtonConstructor>
             </div>
         </div>
 
-        <!-- Info Cards Row -->
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <!-- Info Cards Row: Contact + Schools side by side -->
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <!-- Contact & Status Card -->
             <div class="rounded-xl border border-brand-border bg-brand-surface p-5">
                 <MyTextConstructor variant="button-lg">
@@ -140,78 +140,78 @@ const studentColumns = [
                 </MyTextConstructor>
                 <div class="mt-4 space-y-3">
                     <div class="flex items-center gap-3">
-                        <Mail class="h-4 w-4 text-brand-text-soft" />
-                        <a :href="`mailto:${teacher.email}`" class="text-sm text-brand-accent hover:underline">{{ teacher.email }}</a>
+                        <Mail class="h-6 w-6 text-brand-text-soft" />
+                        <a :href="`mailto:${teacher.email}`" class="text-lg text-brand-accent hover:underline">{{ teacher.email }}</a>
                     </div>
                     <div v-if="teacher.phone" class="flex items-center gap-3">
-                        <Phone class="h-4 w-4 text-brand-text-soft" />
-                        <a :href="`tel:${teacher.phone}`" class="text-sm text-brand-text">{{ teacher.phone }}</a>
+                        <Phone class="h-6 w-6 text-brand-text-soft" />
+                        <a :href="`tel:${teacher.phone}`" class="text-lg text-brand-text">{{ teacher.phone }}</a>
                     </div>
                     <div class="flex items-center gap-3">
-                        <UserCheck class="h-4 w-4 text-brand-text-soft" />
-                        <span class="text-sm text-brand-text-soft">Found us via: {{ teacher.how_they_found_us ?? '—' }}</span>
+                        <UserCheck class="h-6 w-6 text-brand-text-soft" />
+                        <span class="text-lg text-brand-text-soft">Found us via: {{ teacher.how_they_found_us ?? '—' }}</span>
                     </div>
                 </div>
 
                 <div class="mt-5 border-t border-brand-border pt-4">
-                    <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-brand-text-soft">Contact Status</p>
+                    <p class="mb-2 text-base font-semibold uppercase tracking-wider text-brand-text-soft">Contact Status</p>
                     <div class="flex gap-3">
-                        <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium"
+                        <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium"
                             :class="teacher.contacted_by_email ? 'bg-brand-success-soft text-brand-success' : 'bg-brand-surface-soft text-brand-text-soft'">
-                            <Mail class="h-3 w-3" /> Email
+                            <Mail class="h-4 w-4" /> Email
                         </span>
-                        <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium"
+                        <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium"
                             :class="teacher.spoken_on_phone ? 'bg-brand-success-soft text-brand-success' : 'bg-brand-surface-soft text-brand-text-soft'">
-                            <Phone class="h-3 w-3" /> Phone
+                            <Phone class="h-4 w-4" /> Phone
                         </span>
-                        <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium"
+                        <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium"
                             :class="teacher.met_face_to_face ? 'bg-brand-success-soft text-brand-success' : 'bg-brand-surface-soft text-brand-text-soft'">
-                            <UserCheck class="h-3 w-3" /> F2F
+                            <UserCheck class="h-4 w-4" /> F2F
                         </span>
                     </div>
                 </div>
 
                 <div v-if="teacher.notes" class="mt-5 border-t border-brand-border pt-4">
-                    <p class="mb-1 text-xs font-semibold uppercase tracking-wider text-brand-text-soft">Notes</p>
-                    <p class="text-sm text-brand-text">{{ teacher.notes }}</p>
+                    <p class="mb-1 text-base font-semibold uppercase tracking-wider text-brand-text-soft">Notes</p>
+                    <p class="text-lg text-brand-text">{{ teacher.notes }}</p>
                 </div>
 
-                <p class="mt-4 text-xs text-brand-text-soft">Added {{ teacher.created_at }}</p>
+                <p class="mt-4 text-base text-brand-text-soft">Added {{ teacher.created_at }}</p>
             </div>
 
             <!-- Schools & Instruments Card -->
             <div class="rounded-xl border border-brand-border bg-brand-surface p-5">
                 <div class="mb-4">
                     <div class="flex items-center gap-2">
-                        <School class="h-4 w-4 text-brand-text-soft" />
+                        <School class="h-6 w-6 text-brand-text-soft" />
                         <MyTextConstructor variant="button-lg">
                             <template #myTitle>Schools</template>
                         </MyTextConstructor>
                     </div>
                     <div class="mt-2 space-y-1">
-                        <p v-for="school in teacher.schools" :key="school.id" class="text-sm text-brand-text">
+                        <p v-for="school in teacher.schools" :key="school.id" class="text-lg text-brand-text">
                             {{ school.name }} <span class="text-brand-text-soft">— {{ school.city }}</span>
                         </p>
-                        <p v-if="!teacher.schools.length" class="text-sm text-brand-text-soft">No schools assigned</p>
+                        <p v-if="!teacher.schools.length" class="text-lg text-brand-text-soft">No schools assigned</p>
                     </div>
                 </div>
 
                 <div class="mb-4 border-t border-brand-border pt-4">
                     <div class="flex items-center gap-2">
-                        <Music class="h-4 w-4 text-brand-text-soft" />
+                        <Music class="h-6 w-6 text-brand-text-soft" />
                         <MyTextConstructor variant="button-lg">
                             <template #myTitle>Instruments</template>
                         </MyTextConstructor>
                     </div>
-                    <div class="mt-2 flex flex-wrap gap-1.5">
+                    <div class="mt-2 flex flex-wrap gap-2">
                         <span
                             v-for="instrument in teacher.instruments"
                             :key="instrument.id"
-                            class="rounded-full bg-brand-surface-soft px-2.5 py-1 text-xs font-medium text-brand-text"
+                            class="rounded-full bg-brand-surface-soft px-3 py-1.5 text-sm font-medium text-brand-text"
                         >
                             {{ instrument.name }}
                         </span>
-                        <p v-if="!teacher.instruments.length" class="text-sm text-brand-text-soft">No instruments assigned</p>
+                        <p v-if="!teacher.instruments.length" class="text-lg text-brand-text-soft">No instruments assigned</p>
                     </div>
                 </div>
 
@@ -219,47 +219,47 @@ const studentColumns = [
                     <MyTextConstructor variant="button-lg">
                         <template #myTitle>Subject Areas</template>
                     </MyTextConstructor>
-                    <div class="mt-2 flex flex-wrap gap-1.5">
+                    <div class="mt-2 flex flex-wrap gap-2">
                         <span
                             v-for="area in teacher.subject_areas"
                             :key="area.id"
-                            class="rounded-full bg-brand-accent/10 px-2.5 py-1 text-xs font-medium text-brand-accent"
+                            class="rounded-full bg-brand-accent/10 px-3 py-1.5 text-sm font-medium text-brand-accent"
                         >
                             {{ area.name }}
                         </span>
-                        <p v-if="!teacher.subject_areas.length" class="text-sm text-brand-text-soft">None assigned</p>
+                        <p v-if="!teacher.subject_areas.length" class="text-lg text-brand-text-soft">None assigned</p>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Students Card -->
-            <div class="rounded-xl border border-brand-border bg-brand-surface p-5">
-                <div class="flex items-center gap-2">
-                    <GraduationCap class="h-4 w-4 text-brand-text-soft" />
-                    <MyTextConstructor variant="button-lg">
-                        <template #myTitle>Students ({{ teacher.students.length }})</template>
-                    </MyTextConstructor>
-                </div>
-                <div class="mt-3">
-                    <MyTableConstructor
-                        v-if="teacher.students.length"
-                        :data="teacher.students"
-                        :columns="studentColumns"
-                        row-key="id"
-                        size="small"
-                        :sortable="false"
-                        :bordered="false"
-                        :striped="true"
-                    />
-                    <p v-else class="py-4 text-center text-sm text-brand-text-soft">No students registered</p>
-                </div>
+        <!-- Students Card (full width, stacked below) -->
+        <div class="mt-6 rounded-xl border border-brand-border bg-brand-surface">
+            <div class="flex items-center gap-2 border-b border-brand-border p-4">
+                <GraduationCap class="h-6 w-6 text-brand-text-soft" />
+                <MyTextConstructor variant="button-lg">
+                    <template #myTitle>Students ({{ teacher.students.length }})</template>
+                </MyTextConstructor>
+            </div>
+            <div class="p-4">
+                <MyTableConstructor
+                    v-if="teacher.students.length"
+                    :data="teacher.students"
+                    :columns="studentColumns"
+                    row-key="id"
+                    size="medium"
+                    :sortable="false"
+                    :bordered="false"
+                    :striped="true"
+                />
+                <p v-else class="py-4 text-center text-lg text-brand-text-soft">No students registered</p>
             </div>
         </div>
 
         <!-- Orders Table -->
         <div class="mt-6 rounded-xl border border-brand-border bg-brand-surface">
             <div class="flex items-center gap-2 border-b border-brand-border p-4">
-                <ClipboardList class="h-4 w-4 text-brand-text-soft" />
+                <ClipboardList class="h-5 w-5 text-brand-text-soft" />
                 <MyTextConstructor variant="button-lg">
                     <template #myTitle>Orders ({{ teacher.orders.length }})</template>
                 </MyTextConstructor>
@@ -270,18 +270,18 @@ const studentColumns = [
                     :data="teacher.orders"
                     :columns="orderColumns"
                     row-key="id"
-                    size="small"
+                    size="medium"
                     :striped="true"
                     :bordered="false"
                 />
-                <p v-else class="py-4 text-center text-sm text-brand-text-soft">No orders yet</p>
+                <p v-else class="py-4 text-center text-base text-brand-text-soft">No orders yet</p>
             </div>
         </div>
 
         <!-- Contact Logs Table -->
         <div class="mt-6 rounded-xl border border-brand-border bg-brand-surface">
             <div class="flex items-center gap-2 border-b border-brand-border p-4">
-                <MessageSquare class="h-4 w-4 text-brand-text-soft" />
+                <MessageSquare class="h-5 w-5 text-brand-text-soft" />
                 <MyTextConstructor variant="button-lg">
                     <template #myTitle>Contact History ({{ teacher.contact_logs.length }})</template>
                 </MyTextConstructor>
@@ -292,11 +292,11 @@ const studentColumns = [
                     :data="teacher.contact_logs"
                     :columns="contactColumns"
                     row-key="id"
-                    size="small"
+                    size="medium"
                     :striped="true"
                     :bordered="false"
                 />
-                <p v-else class="py-4 text-center text-sm text-brand-text-soft">No contact history</p>
+                <p v-else class="py-4 text-center text-base text-brand-text-soft">No contact history</p>
             </div>
         </div>
     </div>

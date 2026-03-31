@@ -21,78 +21,78 @@ function submit() {
 </script>
 
 <template>
-    <div class="mx-auto max-w-3xl px-4 py-6 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-screen-md px-4 py-6 sm:px-6 lg:px-8">
         <div class="mb-6 flex items-center gap-4">
             <Link href="/admin/schools" class="rounded-lg p-2 text-brand-text-soft hover:bg-brand-surface-soft hover:text-brand-accent">
                 <ArrowLeft class="h-5 w-5" />
             </Link>
             <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-brand-text-soft">Admin</p>
+                <p class="text-sm font-semibold uppercase tracking-wider text-brand-text-soft">Admin</p>
                 <h1 class="text-2xl font-bold text-brand-text">Add New School</h1>
             </div>
         </div>
 
         <form @submit.prevent="submit" class="space-y-6">
             <div class="rounded-xl border border-brand-border bg-brand-surface p-5">
-                <h3 class="mb-4 text-lg font-semibold text-brand-text">School Details</h3>
+                <h3 class="mb-4 text-xl font-semibold text-brand-text">School Details</h3>
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div class="sm:col-span-2">
-                        <label class="mb-1 block text-sm font-medium text-brand-text">School Name *</label>
+                        <label class="mb-1 block text-lg font-medium text-brand-text">School Name *</label>
                         <input v-model="form.name" type="text" required
-                            class="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-sm text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                            class="w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3 text-lg text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
                             placeholder="School name" />
-                        <p v-if="form.errors.name" class="mt-1 text-xs text-brand-danger">{{ form.errors.name }}</p>
+                        <p v-if="form.errors.name" class="mt-1 text-sm text-brand-danger">{{ form.errors.name }}</p>
                     </div>
                     <div class="sm:col-span-2">
-                        <label class="mb-1 block text-sm font-medium text-brand-text">Address</label>
+                        <label class="mb-1 block text-lg font-medium text-brand-text">Address</label>
                         <input v-model="form.address" type="text"
-                            class="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-sm text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                            class="w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3 text-lg text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
                             placeholder="Street address" />
                     </div>
                     <div>
-                        <label class="mb-1 block text-sm font-medium text-brand-text">City</label>
+                        <label class="mb-1 block text-lg font-medium text-brand-text">City</label>
                         <input v-model="form.city" type="text"
-                            class="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-sm text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                            class="w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3 text-lg text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
                             placeholder="City" />
                     </div>
                     <div>
-                        <label class="mb-1 block text-sm font-medium text-brand-text">Postcode</label>
+                        <label class="mb-1 block text-lg font-medium text-brand-text">Postcode</label>
                         <input v-model="form.postcode" type="text"
-                            class="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-sm text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                            class="w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3 text-lg text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
                             placeholder="e.g. CH43 2JD" />
                     </div>
                     <div>
-                        <label class="mb-1 block text-sm font-medium text-brand-text">Phone</label>
+                        <label class="mb-1 block text-lg font-medium text-brand-text">Phone</label>
                         <input v-model="form.phone" type="text"
-                            class="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-sm text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                            class="w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3 text-lg text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
                             placeholder="Phone number" />
                     </div>
                     <div>
-                        <label class="mb-1 block text-sm font-medium text-brand-text">Email</label>
+                        <label class="mb-1 block text-lg font-medium text-brand-text">Email</label>
                         <input v-model="form.email" type="email"
-                            class="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-sm text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                            class="w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3 text-lg text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
                             placeholder="School email" />
                     </div>
                     <div>
-                        <label class="mb-1 block text-sm font-medium text-brand-text">Contact Name</label>
+                        <label class="mb-1 block text-lg font-medium text-brand-text">Contact Name</label>
                         <input v-model="form.contact_name" type="text"
-                            class="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-sm text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                            class="w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3 text-lg text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
                             placeholder="e.g. Mrs Thompson" />
                     </div>
                 </div>
                 <div class="mt-4">
-                    <label class="mb-1 block text-sm font-medium text-brand-text">Notes</label>
+                    <label class="mb-1 block text-lg font-medium text-brand-text">Notes</label>
                     <textarea v-model="form.notes" rows="3"
-                        class="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-sm text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                        class="w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3 text-lg text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
                         placeholder="Any notes about this school..."></textarea>
                 </div>
             </div>
 
             <div class="flex items-center justify-end gap-3">
                 <Link href="/admin/schools">
-                    <MyButtonConstructor variant="ghost" size="medium" :icon="X">Cancel</MyButtonConstructor>
+                    <MyButtonConstructor variant="ghost" size="large" :icon="X">Cancel</MyButtonConstructor>
                 </Link>
-                <MyButtonConstructor variant="primary" size="medium" :icon="Save" type="submit" :disabled="form.processing">
+                <MyButtonConstructor variant="primary" size="large" :icon="Save" type="submit" :disabled="form.processing">
                     {{ form.processing ? 'Saving...' : 'Add School' }}
                 </MyButtonConstructor>
             </div>

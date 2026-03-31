@@ -1,6 +1,6 @@
 <!-- resources/js/pages/admin/Dashboard.vue -->
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3'
+import { Link, router } from '@inertiajs/vue3'
 import {
     Users,
     GraduationCap,
@@ -11,11 +11,9 @@ import {
     MapPin,
     Phone,
     Mail,
-    UserCheck,
     AlertCircle,
 } from 'lucide-vue-next'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
-import MyTableConstructor from '@/components/reusables/MyTableConstructor.vue'
 import PageHeader from '@/components/reusables/PageHeader.vue'
 
 interface Stats {
@@ -34,6 +32,7 @@ interface Stats {
 interface RecentOrder {
     id: number
     trinity_order_number: string
+    teacher_id: number
     teacher_name: string
     school_name: string
     delivery_method: string
@@ -45,6 +44,7 @@ interface RecentOrder {
 
 interface RecentContact {
     id: number
+    teacher_id: number
     teacher_name: string
     contact_type: string
     direction: string
@@ -66,26 +66,10 @@ const props = defineProps<{
     staleTeachers: StaleTeacher[]
 }>()
 
-const orderColumns = [
-    { key: 'trinity_order_number', title: 'Order #', sortable: false },
-    { key: 'teacher_name', title: 'Teacher', sortable: false },
-    { key: 'delivery_method', title: 'Type', sortable: false },
-    { key: 'candidates', title: 'Candidates', sortable: false },
-    { key: 'commission_amount', title: 'Commission', sortable: false },
-    { key: 'order_status', title: 'Status', sortable: false },
-]
-
-const contactColumns = [
-    { key: 'teacher_name', title: 'Teacher', sortable: false },
-    { key: 'contact_type', title: 'Type', sortable: false },
-    { key: 'direction', title: 'Direction', sortable: false },
-    { key: 'subject', title: 'Subject', sortable: false },
-    { key: 'contacted_at', title: 'Date', sortable: false },
-]
 </script>
 
 <template>
-    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-screen-2xl px-4 py-6 sm:px-6 lg:px-8">
         <!-- Page Header -->
         <PageHeader
             title="Admin Dashboard"
@@ -101,8 +85,8 @@ const contactColumns = [
                 <div class="rounded-xl border border-brand-border bg-brand-surface p-5 transition-shadow hover:shadow-md">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm font-medium text-brand-text-soft">Teachers</p>
-                            <p class="mt-1 text-3xl font-bold text-brand-text">{{ stats.totalTeachers }}</p>
+                            <p class="text-base font-medium text-brand-text-soft">Teachers</p>
+                            <p class="mt-1 text-4xl font-bold text-brand-text">{{ stats.totalTeachers }}</p>
                         </div>
                         <div class="rounded-lg bg-brand-accent/10 p-3">
                             <Users class="h-6 w-6 text-brand-accent" />
@@ -115,8 +99,8 @@ const contactColumns = [
             <div class="rounded-xl border border-brand-border bg-brand-surface p-5">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-brand-text-soft">Students</p>
-                        <p class="mt-1 text-3xl font-bold text-brand-text">{{ stats.totalStudents }}</p>
+                        <p class="text-base font-medium text-brand-text-soft">Students</p>
+                        <p class="mt-1 text-4xl font-bold text-brand-text">{{ stats.totalStudents }}</p>
                     </div>
                     <div class="rounded-lg bg-brand-success/10 p-3">
                         <GraduationCap class="h-6 w-6 text-brand-success" />
@@ -128,8 +112,8 @@ const contactColumns = [
             <div class="rounded-xl border border-brand-border bg-brand-surface p-5">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-brand-text-soft">Total Orders</p>
-                        <p class="mt-1 text-3xl font-bold text-brand-text">{{ stats.totalOrders }}</p>
+                        <p class="text-base font-medium text-brand-text-soft">Total Orders</p>
+                        <p class="mt-1 text-4xl font-bold text-brand-text">{{ stats.totalOrders }}</p>
                     </div>
                     <div class="rounded-lg bg-brand-cta/10 p-3">
                         <ClipboardList class="h-6 w-6 text-brand-cta" />
@@ -141,8 +125,8 @@ const contactColumns = [
             <div class="rounded-xl border border-brand-border bg-brand-surface p-5">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-brand-text-soft">Schools</p>
-                        <p class="mt-1 text-3xl font-bold text-brand-text">{{ stats.totalSchools }}</p>
+                        <p class="text-base font-medium text-brand-text-soft">Schools</p>
+                        <p class="mt-1 text-4xl font-bold text-brand-text">{{ stats.totalSchools }}</p>
                     </div>
                     <div class="rounded-lg bg-brand-primary/10 p-3">
                         <School class="h-6 w-6 text-brand-primary" />
@@ -157,47 +141,47 @@ const contactColumns = [
             <div class="rounded-xl border border-brand-border bg-brand-surface p-5">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-brand-text-soft">Total Commission</p>
-                        <p class="mt-1 text-3xl font-bold text-brand-success">&pound;{{ stats.totalCommission }}</p>
+                        <p class="text-base font-medium text-brand-text-soft">Total Commission</p>
+                        <p class="mt-1 text-4xl font-bold text-brand-success">&pound;{{ stats.totalCommission }}</p>
                     </div>
                     <div class="rounded-lg bg-brand-success/10 p-3">
                         <TrendingUp class="h-6 w-6 text-brand-success" />
                     </div>
                 </div>
-                <p class="mt-2 text-xs text-brand-text-soft">{{ stats.totalCandidates }} total candidates</p>
+                <p class="mt-2 text-base text-brand-text-soft">{{ stats.totalCandidates }} total candidates</p>
             </div>
 
             <!-- DG Commission -->
             <div class="rounded-xl border border-brand-border bg-brand-surface p-5">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-brand-text-soft">Digital (DG) — 20%</p>
-                        <p class="mt-1 text-2xl font-bold text-brand-text">&pound;{{ stats.dgCommission }}</p>
+                        <p class="text-base font-medium text-brand-text-soft">Digital (DG) — 20%</p>
+                        <p class="mt-1 text-3xl font-bold text-brand-text">&pound;{{ stats.dgCommission }}</p>
                     </div>
                     <div class="rounded-lg bg-brand-accent/10 p-3">
                         <Monitor class="h-6 w-6 text-brand-accent" />
                     </div>
                 </div>
-                <p class="mt-2 text-xs text-brand-text-soft">{{ stats.dgOrders }} orders</p>
+                <p class="mt-2 text-base text-brand-text-soft">{{ stats.dgOrders }} orders</p>
             </div>
 
             <!-- F2F Commission -->
             <div class="rounded-xl border border-brand-border bg-brand-surface p-5">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-brand-text-soft">Face to Face (F2F) — 28%</p>
-                        <p class="mt-1 text-2xl font-bold text-brand-text">&pound;{{ stats.f2fCommission }}</p>
+                        <p class="text-base font-medium text-brand-text-soft">Face to Face (F2F) — 28%</p>
+                        <p class="mt-1 text-3xl font-bold text-brand-text">&pound;{{ stats.f2fCommission }}</p>
                     </div>
                     <div class="rounded-lg bg-brand-primary/10 p-3">
                         <MapPin class="h-6 w-6 text-brand-primary" />
                     </div>
                 </div>
-                <p class="mt-2 text-xs text-brand-text-soft">{{ stats.f2fOrders }} orders</p>
+                <p class="mt-2 text-base text-brand-text-soft">{{ stats.f2fOrders }} orders</p>
             </div>
         </div>
 
-        <!-- Two-column layout: Recent Orders + Contacts -->
-        <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <!-- Recent Orders + Contacts (stacked full width) -->
+        <div class="mt-8 space-y-6">
             <!-- Recent Orders -->
             <div class="rounded-xl border border-brand-border bg-brand-surface">
                 <div class="border-b border-brand-border p-4">
@@ -205,18 +189,33 @@ const contactColumns = [
                         <template #myTitle>Recent Orders</template>
                     </MyTextConstructor>
                 </div>
-                <div class="p-4">
-                    <MyTableConstructor
-                        v-if="recentOrders.length"
-                        :data="recentOrders"
-                        :columns="orderColumns"
-                        row-key="id"
-                        size="small"
-                        :sortable="false"
-                        :striped="true"
-                        :bordered="false"
-                    />
-                    <p v-else class="py-4 text-center text-brand-text-soft">No orders yet</p>
+                <div class="overflow-x-auto">
+                    <table v-if="recentOrders.length" class="w-full text-left">
+                        <thead>
+                            <tr class="border-b border-brand-border bg-brand-primary text-brand-text-inverse">
+                                <th class="px-4 py-3 text-base font-semibold">Order #</th>
+                                <th class="px-4 py-3 text-base font-semibold">Teacher</th>
+                                <th class="px-4 py-3 text-base font-semibold">Type</th>
+                                <th class="px-4 py-3 text-base font-semibold">Candidates</th>
+                                <th class="px-4 py-3 text-base font-semibold">Commission</th>
+                                <th class="px-4 py-3 text-base font-semibold">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(order, idx) in recentOrders" :key="order.id"
+                                class="cursor-pointer border-b border-brand-border transition-colors hover:bg-brand-surface-soft"
+                                :class="idx % 2 === 1 ? 'bg-brand-surface-soft/50' : ''"
+                                @click="router.visit(`/admin/orders/${order.id}`)">
+                                <td class="px-4 py-3 text-base font-medium text-brand-accent">{{ order.trinity_order_number }}</td>
+                                <td class="px-4 py-3 text-base text-brand-text">{{ order.teacher_name }}</td>
+                                <td class="px-4 py-3 text-base text-brand-text">{{ order.delivery_method }}</td>
+                                <td class="px-4 py-3 text-base text-brand-text">{{ order.candidates }}</td>
+                                <td class="px-4 py-3 text-base text-brand-text">&pound;{{ order.commission_amount }}</td>
+                                <td class="px-4 py-3 text-base text-brand-text">{{ order.order_status }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p v-else class="px-4 py-6 text-center text-lg text-brand-text-soft">No orders yet</p>
                 </div>
             </div>
 
@@ -227,18 +226,31 @@ const contactColumns = [
                         <template #myTitle>Recent Contact Activity</template>
                     </MyTextConstructor>
                 </div>
-                <div class="p-4">
-                    <MyTableConstructor
-                        v-if="recentContacts.length"
-                        :data="recentContacts"
-                        :columns="contactColumns"
-                        row-key="id"
-                        size="small"
-                        :sortable="false"
-                        :striped="true"
-                        :bordered="false"
-                    />
-                    <p v-else class="py-4 text-center text-brand-text-soft">No contacts logged</p>
+                <div class="overflow-x-auto">
+                    <table v-if="recentContacts.length" class="w-full text-left">
+                        <thead>
+                            <tr class="border-b border-brand-border bg-brand-primary text-brand-text-inverse">
+                                <th class="px-4 py-3 text-base font-semibold">Teacher</th>
+                                <th class="px-4 py-3 text-base font-semibold">Type</th>
+                                <th class="px-4 py-3 text-base font-semibold">Direction</th>
+                                <th class="px-4 py-3 text-base font-semibold">Subject</th>
+                                <th class="px-4 py-3 text-base font-semibold">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(contact, idx) in recentContacts" :key="contact.id"
+                                class="cursor-pointer border-b border-brand-border transition-colors hover:bg-brand-surface-soft"
+                                :class="idx % 2 === 1 ? 'bg-brand-surface-soft/50' : ''"
+                                @click="router.visit(`/admin/teachers/${contact.teacher_id}`)">
+                                <td class="px-4 py-3 text-base font-medium text-brand-accent">{{ contact.teacher_name }}</td>
+                                <td class="px-4 py-3 text-base text-brand-text">{{ contact.contact_type }}</td>
+                                <td class="px-4 py-3 text-base text-brand-text">{{ contact.direction }}</td>
+                                <td class="px-4 py-3 text-base text-brand-text">{{ contact.subject }}</td>
+                                <td class="px-4 py-3 text-base text-brand-text">{{ contact.contacted_at }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p v-else class="px-4 py-6 text-center text-lg text-brand-text-soft">No contacts logged</p>
                 </div>
             </div>
         </div>
@@ -252,23 +264,23 @@ const contactColumns = [
                         <template #myTitle>Teachers Needing Follow-up</template>
                     </MyTextConstructor>
                 </div>
-                <p class="mb-4 text-sm text-brand-text-soft">
+                <p class="mb-4 text-lg text-brand-text-soft">
                     These teachers haven't been contacted in the last 30 days.
                 </p>
-                <div class="space-y-2">
+                <div class="space-y-3">
                     <Link
                         v-for="teacher in staleTeachers"
                         :key="teacher.id"
                         :href="`/admin/teachers/${teacher.id}`"
-                        class="flex items-center justify-between rounded-lg border border-brand-border bg-brand-surface p-3 transition-colors hover:bg-brand-surface-soft"
+                        class="flex items-center justify-between rounded-lg border border-brand-border bg-brand-surface p-4 transition-colors hover:bg-brand-surface-soft"
                     >
                         <div>
-                            <p class="font-semibold text-brand-text">{{ teacher.name }}</p>
-                            <p class="text-sm text-brand-text-soft">{{ teacher.email }}</p>
+                            <p class="text-lg font-semibold text-brand-text">{{ teacher.name }}</p>
+                            <p class="text-base text-brand-text-soft">{{ teacher.email }}</p>
                         </div>
-                        <div class="flex items-center gap-2 text-brand-text-soft">
-                            <Phone v-if="teacher.phone" class="h-4 w-4" />
-                            <Mail class="h-4 w-4" />
+                        <div class="flex items-center gap-3 text-brand-text-soft">
+                            <Phone v-if="teacher.phone" class="h-5 w-5" />
+                            <Mail class="h-5 w-5" />
                         </div>
                     </Link>
                 </div>

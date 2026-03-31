@@ -65,22 +65,22 @@ const orderColumns = [
 </script>
 
 <template>
-    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-screen-2xl px-4 py-6 sm:px-6 lg:px-8">
         <div class="mb-6 flex items-center justify-between">
             <div class="flex items-center gap-4">
                 <Link href="/admin/schools" class="rounded-lg p-2 text-brand-text-soft hover:bg-brand-surface-soft hover:text-brand-accent">
                     <ArrowLeft class="h-5 w-5" />
                 </Link>
                 <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-brand-text-soft">School</p>
+                    <p class="text-sm font-semibold uppercase tracking-wider text-brand-text-soft">School</p>
                     <h1 class="text-2xl font-bold text-brand-text sm:text-3xl">{{ school.name }}</h1>
                 </div>
             </div>
             <div class="flex gap-2">
                 <Link :href="`/admin/schools/${school.id}/edit`">
-                    <MyButtonConstructor variant="outline" size="small" :icon="Pencil">Edit</MyButtonConstructor>
+                    <MyButtonConstructor variant="outline" size="medium" :icon="Pencil">Edit</MyButtonConstructor>
                 </Link>
-                <MyButtonConstructor variant="danger" size="small" :icon="Trash2" @click="deleteSchool">Archive</MyButtonConstructor>
+                <MyButtonConstructor variant="danger" size="medium" :icon="Trash2" @click="deleteSchool">Archive</MyButtonConstructor>
             </div>
         </div>
 
@@ -92,30 +92,30 @@ const orderColumns = [
                 </MyTextConstructor>
                 <div class="mt-4 space-y-3">
                     <div v-if="school.address" class="flex items-start gap-3">
-                        <MapPin class="mt-0.5 h-4 w-4 text-brand-text-soft" />
-                        <div class="text-sm text-brand-text">
+                        <MapPin class="mt-0.5 h-5 w-5 text-brand-text-soft" />
+                        <div class="text-base text-brand-text">
                             <p>{{ school.address }}</p>
                             <p v-if="school.city || school.postcode">{{ school.city }}<span v-if="school.postcode">, {{ school.postcode }}</span></p>
                         </div>
                     </div>
                     <div v-if="school.phone" class="flex items-center gap-3">
-                        <Phone class="h-4 w-4 text-brand-text-soft" />
-                        <a :href="`tel:${school.phone}`" class="text-sm text-brand-text">{{ school.phone }}</a>
+                        <Phone class="h-5 w-5 text-brand-text-soft" />
+                        <a :href="`tel:${school.phone}`" class="text-base text-brand-text">{{ school.phone }}</a>
                     </div>
                     <div v-if="school.email" class="flex items-center gap-3">
-                        <Mail class="h-4 w-4 text-brand-text-soft" />
-                        <a :href="`mailto:${school.email}`" class="text-sm text-brand-accent hover:underline">{{ school.email }}</a>
+                        <Mail class="h-5 w-5 text-brand-text-soft" />
+                        <a :href="`mailto:${school.email}`" class="text-base text-brand-accent hover:underline">{{ school.email }}</a>
                     </div>
                     <div v-if="school.contact_name" class="flex items-center gap-3">
-                        <User class="h-4 w-4 text-brand-text-soft" />
-                        <span class="text-sm text-brand-text">{{ school.contact_name }}</span>
+                        <User class="h-5 w-5 text-brand-text-soft" />
+                        <span class="text-base text-brand-text">{{ school.contact_name }}</span>
                     </div>
                 </div>
                 <div v-if="school.notes" class="mt-5 border-t border-brand-border pt-4">
-                    <p class="mb-1 text-xs font-semibold uppercase tracking-wider text-brand-text-soft">Notes</p>
-                    <p class="text-sm text-brand-text">{{ school.notes }}</p>
+                    <p class="mb-1 text-sm font-semibold uppercase tracking-wider text-brand-text-soft">Notes</p>
+                    <p class="text-base text-brand-text">{{ school.notes }}</p>
                 </div>
-                <p class="mt-4 text-xs text-brand-text-soft">Added {{ school.created_at }}</p>
+                <p class="mt-4 text-sm text-brand-text-soft">Added {{ school.created_at }}</p>
             </div>
 
             <!-- Teachers at this school -->
@@ -129,13 +129,13 @@ const orderColumns = [
                         :data="school.teachers"
                         :columns="teacherColumns"
                         row-key="id"
-                        size="small"
+                        size="medium"
                         :striped="true"
                         :bordered="false"
                         :clickable-rows="true"
                         @row-click="(row: any) => router.visit(`/admin/teachers/${row.id}`)"
                     />
-                    <p v-else class="py-4 text-center text-sm text-brand-text-soft">No teachers linked to this school</p>
+                    <p v-else class="py-4 text-center text-base text-brand-text-soft">No teachers linked to this school</p>
                 </div>
             </div>
         </div>
@@ -153,11 +153,11 @@ const orderColumns = [
                     :data="school.orders"
                     :columns="orderColumns"
                     row-key="id"
-                    size="small"
+                    size="medium"
                     :striped="true"
                     :bordered="false"
                 />
-                <p v-else class="py-4 text-center text-sm text-brand-text-soft">No orders for this school</p>
+                <p v-else class="py-4 text-center text-base text-brand-text-soft">No orders for this school</p>
             </div>
         </div>
     </div>

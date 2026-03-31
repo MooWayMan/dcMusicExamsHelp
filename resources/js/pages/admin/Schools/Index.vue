@@ -65,7 +65,7 @@ function deleteSchool(school: School) {
 </script>
 
 <template>
-    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-screen-2xl px-4 py-6 sm:px-6 lg:px-8">
         <PageHeader title="Schools" subtitle="Manage exam venues and teaching locations" eyebrow="Admin" size="compact">
             <template #actions>
                 <Link href="/admin/schools/create">
@@ -78,14 +78,14 @@ function deleteSchool(school: School) {
             <div class="relative max-w-md flex-1">
                 <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-text-soft" />
                 <input v-model="search" type="text" placeholder="Search by name, city, postcode, or contact..."
-                    class="w-full rounded-lg border border-brand-border bg-brand-surface py-2 pl-10 pr-4 text-sm text-brand-text placeholder:text-brand-text-soft focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent" />
+                    class="w-full rounded-lg border border-brand-border bg-brand-surface py-2 pl-10 pr-4 text-base text-brand-text placeholder:text-brand-text-soft focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent" />
             </div>
-            <p class="text-sm text-brand-text-soft">{{ schools.total }} school{{ schools.total !== 1 ? 's' : '' }}</p>
+            <p class="text-base text-brand-text-soft">{{ schools.total }} school{{ schools.total !== 1 ? 's' : '' }}</p>
         </div>
 
         <div class="mt-4 overflow-hidden rounded-xl border border-brand-border bg-brand-surface">
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
+                <table class="w-full text-left text-base">
                     <thead class="border-b border-brand-border bg-brand-surface-soft">
                         <tr>
                             <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('name')">
@@ -110,17 +110,17 @@ function deleteSchool(school: School) {
                                 </Link>
                             </td>
                             <td class="hidden px-4 py-3 md:table-cell">
-                                <div class="flex items-center gap-1.5 text-sm text-brand-text-soft">
-                                    <MapPin class="h-3.5 w-3.5" />
+                                <div class="flex items-center gap-1.5 text-base text-brand-text-soft">
+                                    <MapPin class="h-5 w-5" />
                                     {{ school.city || '—' }}<span v-if="school.postcode">, {{ school.postcode }}</span>
                                 </div>
                             </td>
                             <td class="hidden px-4 py-3 lg:table-cell">
-                                <p class="text-sm text-brand-text">{{ school.contact_name || '—' }}</p>
-                                <p v-if="school.phone" class="text-xs text-brand-text-soft">{{ school.phone }}</p>
+                                <p class="text-base text-brand-text">{{ school.contact_name || '—' }}</p>
+                                <p v-if="school.phone" class="text-sm text-brand-text-soft">{{ school.phone }}</p>
                             </td>
-                            <td class="px-4 py-3 text-center text-sm text-brand-text">{{ school.teachers_count }}</td>
-                            <td class="px-4 py-3 text-center text-sm text-brand-text">{{ school.orders_count }}</td>
+                            <td class="px-4 py-3 text-center text-base text-brand-text">{{ school.teachers_count }}</td>
+                            <td class="px-4 py-3 text-center text-base text-brand-text">{{ school.orders_count }}</td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center justify-end gap-1">
                                     <Link :href="`/admin/schools/${school.id}`" class="rounded p-1.5 text-brand-text-soft hover:bg-brand-surface-soft hover:text-brand-accent">
@@ -136,7 +136,7 @@ function deleteSchool(school: School) {
                             </td>
                         </tr>
                         <tr v-if="!schools.data.length">
-                            <td colspan="6" class="px-4 py-8 text-center text-brand-text-soft">
+                            <td colspan="6" class="px-4 py-8 text-center text-base text-brand-text-soft">
                                 No schools found{{ search ? ' matching your search' : '' }}.
                             </td>
                         </tr>
@@ -145,14 +145,14 @@ function deleteSchool(school: School) {
             </div>
 
             <div v-if="schools.last_page > 1" class="flex items-center justify-between border-t border-brand-border px-4 py-3">
-                <p class="text-sm text-brand-text-soft">Page {{ schools.current_page }} of {{ schools.last_page }}</p>
+                <p class="text-base text-brand-text-soft">Page {{ schools.current_page }} of {{ schools.last_page }}</p>
                 <div class="flex gap-1">
                     <template v-for="link in schools.links" :key="link.label">
                         <Link v-if="link.url" :href="link.url"
-                            class="rounded px-3 py-1 text-sm transition-colors"
+                            class="rounded px-3 py-1 text-base transition-colors"
                             :class="link.active ? 'bg-brand-accent text-brand-text-inverse font-semibold' : 'text-brand-text-soft hover:bg-brand-surface-soft'"
                             v-html="link.label" preserve-state />
-                        <span v-else class="rounded px-3 py-1 text-sm text-brand-border" v-html="link.label" />
+                        <span v-else class="rounded px-3 py-1 text-base text-brand-border" v-html="link.label" />
                     </template>
                 </div>
             </div>

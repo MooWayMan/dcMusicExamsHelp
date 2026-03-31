@@ -62,13 +62,13 @@ function submit() {
 </script>
 
 <template>
-    <div class="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-screen-lg px-4 py-6 sm:px-6 lg:px-8">
         <div class="mb-6 flex items-center gap-4">
             <Link :href="`/admin/teachers/${teacher.id}`" class="rounded-lg p-2 text-brand-text-soft hover:bg-brand-surface-soft hover:text-brand-accent">
                 <ArrowLeft class="h-5 w-5" />
             </Link>
             <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-brand-text-soft">Admin</p>
+                <p class="text-sm font-semibold uppercase tracking-wider text-brand-text-soft">Admin</p>
                 <h1 class="text-2xl font-bold text-brand-text">Edit {{ teacher.name }}</h1>
             </div>
         </div>

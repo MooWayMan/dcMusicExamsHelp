@@ -46,7 +46,7 @@ function submit() {
 </script>
 
 <template>
-    <div class="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-screen-lg px-4 py-6 sm:px-6 lg:px-8">
         <div class="mb-6 flex items-center gap-4">
             <Link href="/admin/teachers" class="rounded-lg p-2 text-brand-text-soft hover:bg-brand-surface-soft hover:text-brand-accent">
                 <ArrowLeft class="h-5 w-5" />

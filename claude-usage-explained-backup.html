@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Claude Usage Limits Work - Paul's Guide</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; color: #1a1a2e; padding: 2rem; line-height: 1.7; }
+  .container { max-width: 800px; margin: 0 auto; }
+  h1 { font-size: 1.8rem; margin-bottom: 0.5rem; color: #1a1a2e; }
+  h2 { font-size: 1.3rem; margin: 2rem 0 1rem; color: #1a1a2e; border-bottom: 3px solid #3b82f6; padding-bottom: 0.3rem; display: inline-block; }
+  p { margin-bottom: 1rem; font-size: 1.05rem; }
+  .subtitle { color: #666; font-size: 1.1rem; margin-bottom: 2rem; }
+
+  /* Timeline visual */
+  .timeline { background: white; border-radius: 12px; padding: 2rem; margin: 1.5rem 0; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .timeline-title { font-weight: 700; font-size: 1.1rem; margin-bottom: 1rem; }
+  .time-row { display: flex; align-items: center; margin: 0.6rem 0; }
+  .time-label { width: 80px; font-weight: 600; font-size: 0.95rem; color: #555; flex-shrink: 0; }
+  .time-bar-container { flex: 1; height: 36px; background: #e8e8e8; border-radius: 8px; position: relative; overflow: hidden; }
+  .time-bar { height: 100%; border-radius: 8px; display: flex; align-items: center; padding-left: 12px; font-size: 0.85rem; font-weight: 600; color: white; transition: width 0.3s; }
+  .time-bar.working { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+  .time-bar.blocked { background: linear-gradient(90deg, #ef4444, #dc2626); }
+  .time-bar.refilling { background: repeating-linear-gradient(45deg, #f59e0b, #f59e0b 10px, #fbbf24 10px, #fbbf24 20px); }
+  .time-bar.empty { background: #d1d5db; }
+  .time-bar.extra { background: linear-gradient(90deg, #8b5cf6, #7c3aed); }
+
+  /* Bucket visual */
+  .buckets { display: flex; gap: 2rem; margin: 1.5rem 0; flex-wrap: wrap; }
+  .bucket { flex: 1; min-width: 220px; background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); text-align: center; }
+  .bucket-icon { font-size: 3rem; margin-bottom: 0.5rem; }
+  .bucket h3 { font-size: 1.1rem; margin-bottom: 0.3rem; }
+  .bucket .resets { color: #888; font-size: 0.9rem; margin-bottom: 1rem; }
+  .bucket-bar-bg { height: 24px; background: #e8e8e8; border-radius: 12px; overflow: hidden; margin: 0.5rem 0; }
+  .bucket-bar-fill { height: 100%; border-radius: 12px; }
+  .bucket-bar-fill.blue { background: #3b82f6; }
+  .bucket-bar-fill.green { background: #22c55e; }
+  .bucket-bar-fill.purple { background: #8b5cf6; }
+  .bucket-label { font-size: 0.9rem; color: #666; }
+
+  /* What happened box */
+  .what-happened { background: #fef2f2; border: 2px solid #fca5a5; border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; }
+  .what-happened h3 { color: #dc2626; margin-bottom: 0.5rem; }
+
+  .good-news { background: #f0fdf4; border: 2px solid #86efac; border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; }
+  .good-news h3 { color: #16a34a; margin-bottom: 0.5rem; }
+
+  .tip { background: #eff6ff; border: 2px solid #93c5fd; border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; }
+  .tip h3 { color: #2563eb; margin-bottom: 0.5rem; }
+
+  /* Legend */
+  .legend { display: flex; gap: 1.5rem; flex-wrap: wrap; margin: 1rem 0; }
+  .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; }
+  .legend-swatch { width: 20px; height: 20px; border-radius: 4px; }
+
+  /* Key numbers */
+  .key-numbers { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+  .key-number { background: white; border-radius: 12px; padding: 1.2rem; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .key-number .number { font-size: 2rem; font-weight: 800; color: #3b82f6; }
+  .key-number .label { font-size: 0.85rem; color: #666; margin-top: 0.2rem; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>How Claude's Usage Limits Work</h1>
+  <p class="subtitle">A plain-English guide for Paul — Max 5x Plan (£90/month)</p>
+
+  <h2>Your 3 Limits — Think of Them as Buckets</h2>
+
+  <div class="buckets">
+    <div class="bucket">
+      <div class="bucket-icon">🪣</div>
+      <h3>Session Bucket</h3>
+      <div class="resets">Refills every 5 hours</div>
+      <div class="bucket-bar-bg"><div class="bucket-bar-fill blue" style="width: 29%"></div></div>
+      <div class="bucket-label">You used 29% today in one session</div>
+      <p style="margin-top:0.8rem; font-size:0.9rem; color:#555;">This is the one that stopped you last night. When it hits 100%, you wait for the 5-hour refill.</p>
+    </div>
+    <div class="bucket">
+      <div class="bucket-icon">🛢️</div>
+      <h3>Weekly Bucket</h3>
+      <div class="resets">Refills every Monday 1pm</div>
+      <div class="bucket-bar-bg"><div class="bucket-bar-fill green" style="width: 16%"></div></div>
+      <div class="bucket-label">You've used 16% this week</div>
+      <p style="margin-top:0.8rem; font-size:0.9rem; color:#555;">Your big tank. If this hits 100%, you'd need to wait until Monday. Very unlikely on Max plan.</p>
+    </div>
+    <div class="bucket">
+      <div class="bucket-icon">💰</div>
+      <h3>Extra Usage (Pay-as-you-go)</h3>
+      <div class="resets">Resets 1st of each month</div>
+      <div class="bucket-bar-bg"><div class="bucket-bar-fill purple" style="width: 26%"></div></div>
+      <div class="bucket-label">£5.14 of £20 used this month</div>
+      <p style="margin-top:0.8rem; font-size:0.9rem; color:#555;">Safety net. IF enabled, when session bucket is empty, this pays to keep you going instead of waiting.</p>
+    </div>
+  </div>
+
+  <h2>What Happened Last Night (8:30pm → 11pm)</h2>
+
+  <div class="what-happened">
+    <h3>Why you got stopped</h3>
+    <p>Your <strong>session bucket</strong> ran out. You'd been working hard and used it all up in one 5-hour window. Even though your weekly bucket had loads left, the session bucket is a separate, smaller limit.</p>
+    <p>The session bucket started refilling the moment it ran out. It takes up to 5 hours to fully refill. That's why you could work again around 11pm — it had refilled enough by then.</p>
+    <p>Think of it like a water cooler at work. The big tank (weekly) has plenty of water. But the cup (session) can only hold so much. When the cup is empty, you have to wait for it to refill before you can drink again — even though the big tank is full.</p>
+  </div>
+
+  <h2>What a Typical 10-Hour Work Day Looks Like</h2>
+
+  <div class="timeline">
+    <div class="timeline-title">Example: 11:45am → 8:30pm (with dinner break)</div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-swatch" style="background:#3b82f6"></div> Working normally</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#f59e0b"></div> Session refilling (might slow down)</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#d1d5db"></div> Break / not using Claude</div>
+    </div>
+
+    <div class="time-row"><div class="time-label">11:45</div><div class="time-bar-container"><div class="time-bar working" style="width:100%">Session 1 starts — full bucket</div></div></div>
+    <div class="time-row"><div class="time-label">12:00</div><div class="time-bar-container"><div class="time-bar working" style="width:100%">Working — new chat: admin panel</div></div></div>
+    <div class="time-row"><div class="time-label">1:00</div><div class="time-bar-container"><div class="time-bar working" style="width:100%">Working — using maybe 20% per hour</div></div></div>
+    <div class="time-row"><div class="time-label">2:00</div><div class="time-bar-container"><div class="time-bar working" style="width:100%">Working — new chat: data import</div></div></div>
+    <div class="time-row"><div class="time-label">3:00</div><div class="time-bar-container"><div class="time-bar working" style="width:85%">Working — bucket getting lower</div></div></div>
+    <div class="time-row"><div class="time-label">4:00</div><div class="time-bar-container"><div class="time-bar working" style="width:70%">Working — still going fine</div></div></div>
+    <div class="time-row"><div class="time-label">4:45</div><div class="time-bar-container"><div class="time-bar refilling" style="width:100%">⟳ Session 1 refills (5 hours since 11:45) — back to full!</div></div></div>
+    <div class="time-row"><div class="time-label">5:00</div><div class="time-bar-container"><div class="time-bar empty" style="width:100%">Dinner break</div></div></div>
+    <div class="time-row"><div class="time-label">6:00</div><div class="time-bar-container"><div class="time-bar empty" style="width:100%">Dinner break — bucket sitting full, not being used</div></div></div>
+    <div class="time-row"><div class="time-label">6:30</div><div class="time-bar-container"><div class="time-bar working" style="width:100%">Session 2 starts — full bucket again</div></div></div>
+    <div class="time-row"><div class="time-label">7:00</div><div class="time-bar-container"><div class="time-bar working" style="width:100%">Working — new chat: teacher dashboard</div></div></div>
+    <div class="time-row"><div class="time-label">8:00</div><div class="time-bar-container"><div class="time-bar working" style="width:80%">Working — plenty left</div></div></div>
+    <div class="time-row"><div class="time-label">8:30</div><div class="time-bar-container"><div class="time-bar working" style="width:70%">Stop for the evening — bucket still has loads left</div></div></div>
+  </div>
+
+  <div class="good-news">
+    <h3>Why last night was probably a one-off</h3>
+    <p>Last night you were likely in one very long chat doing lots of heavy work (brand tokens, constructors, lots of code). Long conversations use more of your session bucket because Claude has to re-read the entire conversation history with every message you send.</p>
+    <p>Today's session (building the schema) used only 29% — because we kept it focused on one topic. <strong>Starting new chats for each piece of work is the single best thing you can do</strong> to avoid hitting the session limit.</p>
+  </div>
+
+  <h2>3 Simple Rules to Never Get Stopped Again</h2>
+
+  <div class="tip">
+    <h3>Rule 1: Start a new chat for each task</h3>
+    <p>Don't keep one mega-conversation going for hours. Each new chat starts with a fresh, empty session. I remember everything through my memory system anyway.</p>
+  </div>
+
+  <div class="tip">
+    <h3>Rule 2: Your dinner break is perfectly timed</h3>
+    <p>If you start at 11:45, your session refills around 4:45pm. Your dinner at 5pm means you come back to a completely full bucket. It's like a natural reset.</p>
+  </div>
+
+  <div class="tip">
+    <h3>Rule 3: If you do get stopped, check the timer</h3>
+    <p>Your settings page shows "Resets in X hr Y min". You don't always have to wait the full 5 hours — it might only be 30 minutes away from refilling. Last night you may have only needed to wait an hour, not until 11pm.</p>
+  </div>
+
+  <h2>Your Max Plan at a Glance</h2>
+
+  <div class="key-numbers">
+    <div class="key-number"><div class="number">£90</div><div class="label">Monthly cost</div></div>
+    <div class="key-number"><div class="number">5×</div><div class="label">More usage than Pro</div></div>
+    <div class="key-number"><div class="number">5hr</div><div class="label">Session refill time</div></div>
+    <div class="key-number"><div class="number">£20</div><div class="label">Extra usage safety net</div></div>
+  </div>
+
+</div>
+</body>
+</html>

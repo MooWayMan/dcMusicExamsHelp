@@ -112,7 +112,7 @@ function sortIcon(column: string): string {
 </script>
 
 <template>
-    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-screen-2xl px-4 py-6 sm:px-6 lg:px-8">
         <!-- Page Header -->
         <PageHeader
             title="Teachers"
@@ -137,16 +137,16 @@ function sortIcon(column: string): string {
                     v-model="search"
                     type="text"
                     placeholder="Search by name, email, or phone..."
-                    class="w-full rounded-lg border border-brand-border bg-brand-surface py-2 pl-10 pr-4 text-sm text-brand-text placeholder:text-brand-text-soft focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                    class="w-full rounded-lg border border-brand-border bg-brand-surface py-3 pl-10 pr-4 text-lg text-brand-text placeholder:text-brand-text-soft focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
                 />
             </div>
-            <p class="text-sm text-brand-text-soft">{{ teachers.total }} teacher{{ teachers.total !== 1 ? 's' : '' }}</p>
+            <p class="text-base text-brand-text-soft">{{ teachers.total }} teacher{{ teachers.total !== 1 ? 's' : '' }}</p>
         </div>
 
         <!-- Table -->
         <div class="mt-4 overflow-hidden rounded-xl border border-brand-border bg-brand-surface">
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
+                <table class="w-full text-left text-base">
                     <thead class="border-b border-brand-border bg-brand-surface-soft">
                         <tr>
                             <th
@@ -187,26 +187,26 @@ function sortIcon(column: string): string {
                                 >
                                     {{ teacher.name }}
                                 </Link>
-                                <p class="text-xs text-brand-text-soft">{{ teacher.how_they_found_us ?? '—' }}</p>
+                                <p class="text-sm text-brand-text-soft">{{ teacher.how_they_found_us ?? '—' }}</p>
                             </td>
                             <td class="px-4 py-3">
-                                <p class="text-sm text-brand-text">{{ teacher.email }}</p>
-                                <p v-if="teacher.phone" class="text-xs text-brand-text-soft">{{ teacher.phone }}</p>
+                                <p class="text-base text-brand-text">{{ teacher.email }}</p>
+                                <p v-if="teacher.phone" class="text-sm text-brand-text-soft">{{ teacher.phone }}</p>
                             </td>
                             <td class="hidden px-4 py-3 lg:table-cell">
-                                <p class="max-w-[200px] truncate text-sm text-brand-text-soft">
+                                <p class="max-w-[200px] truncate text-base text-brand-text-soft">
                                     {{ teacher.schools || '—' }}
                                 </p>
                             </td>
                             <td class="hidden px-4 py-3 md:table-cell">
-                                <p class="max-w-[200px] truncate text-sm text-brand-text-soft">
+                                <p class="max-w-[200px] truncate text-base text-brand-text-soft">
                                     {{ teacher.instruments || '—' }}
                                 </p>
                             </td>
-                            <td class="px-4 py-3 text-center text-sm text-brand-text">
+                            <td class="px-4 py-3 text-center text-base text-brand-text">
                                 {{ teacher.students_count }}
                             </td>
-                            <td class="px-4 py-3 text-center text-sm text-brand-text">
+                            <td class="px-4 py-3 text-center text-base text-brand-text">
                                 {{ teacher.orders_count }}
                             </td>
                             <td class="px-4 py-3">
@@ -249,7 +249,7 @@ function sortIcon(column: string): string {
                             </td>
                         </tr>
                         <tr v-if="!teachers.data.length">
-                            <td colspan="8" class="px-4 py-8 text-center text-brand-text-soft">
+                            <td colspan="8" class="px-4 py-8 text-center text-base text-brand-text-soft">
                                 No teachers found{{ search ? ' matching your search' : '' }}.
                             </td>
                         </tr>
@@ -259,7 +259,7 @@ function sortIcon(column: string): string {
 
             <!-- Pagination -->
             <div v-if="teachers.last_page > 1" class="flex items-center justify-between border-t border-brand-border px-4 py-3">
-                <p class="text-sm text-brand-text-soft">
+                <p class="text-base text-brand-text-soft">
                     Page {{ teachers.current_page }} of {{ teachers.last_page }}
                 </p>
                 <div class="flex gap-1">
@@ -267,7 +267,7 @@ function sortIcon(column: string): string {
                         <Link
                             v-if="link.url"
                             :href="link.url"
-                            class="rounded px-3 py-1 text-sm transition-colors"
+                            class="rounded px-3 py-1 text-base transition-colors"
                             :class="link.active
                                 ? 'bg-brand-accent text-brand-text-inverse font-semibold'
                                 : 'text-brand-text-soft hover:bg-brand-surface-soft'"
@@ -276,7 +276,7 @@ function sortIcon(column: string): string {
                         />
                         <span
                             v-else
-                            class="rounded px-3 py-1 text-sm text-brand-border"
+                            class="rounded px-3 py-1 text-base text-brand-border"
                             v-html="link.label"
                         />
                     </template>
