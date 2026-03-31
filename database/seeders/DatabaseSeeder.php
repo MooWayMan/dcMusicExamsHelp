@@ -15,9 +15,11 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Create Paul's admin account
-        User::factory()->create([
+        User::create([
             'name' => 'Paul Sheridan',
             'email' => 'musicexams@musicexams.help',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now(),
             'role' => 'admin',
         ]);
 

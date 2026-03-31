@@ -1,7 +1,7 @@
 <!-- resources/js/components/layouts/Navbar.vue -->
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { Link } from '@inertiajs/vue3'
+import { Link, usePage } from '@inertiajs/vue3'
 import { Bars3Icon, XMarkIcon } from '@heroicons/vue/24/outline'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
@@ -13,6 +13,10 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   fixed: true,
 })
+
+const page = usePage()
+const user = computed(() => (page.props.auth as any)?.user)
+const isAdmin = computed(() => user.value?.role === 'admin')
 
 const isOpen = ref(false)
 
@@ -64,6 +68,23 @@ const navClasses = computed(() =>
             </MyTextConstructor>
           </a>
 
+          <!-- Auth links -->
+          <Link v-if="isAdmin" href="/admin" class="transition hover:opacity-70">
+            <MyTextConstructor variant="button" textColor="text-brand-accent" spacing="none">
+              <template #myTitle>Admin</template>
+            </MyTextConstructor>
+          </Link>
+          <Link v-else-if="user" href="/dashboard" class="transition hover:opacity-70">
+            <MyTextConstructor variant="button" textColor="text-slate-700" spacing="none">
+              <template #myTitle>Dashboard</template>
+            </MyTextConstructor>
+          </Link>
+          <Link v-else href="/login" class="transition hover:opacity-70">
+            <MyTextConstructor variant="button" textColor="text-slate-700" spacing="none">
+              <template #myTitle>Sign In</template>
+            </MyTextConstructor>
+          </Link>
+
           <a
             :href="bookingUrl"
             target="_blank"
@@ -106,6 +127,23 @@ const navClasses = computed(() =>
             </template>
           </MyTextConstructor>
         </a>
+
+        <!-- Auth links (mobile) -->
+        <Link v-if="isAdmin" href="/admin" class="block rounded-xl px-3 py-3 hover:bg-slate-50" @click="isOpen = false">
+          <MyTextConstructor variant="button" textColor="text-brand-accent" spacing="none">
+            <template #myTitle>Admin</template>
+          </MyTextConstructor>
+        </Link>
+        <Link v-else-if="user" href="/dashboard" class="block rounded-xl px-3 py-3 hover:bg-slate-50" @click="isOpen = false">
+          <MyTextConstructor variant="button" textColor="text-slate-700" spacing="none">
+            <template #myTitle>Dashboard</template>
+          </MyTextConstructor>
+        </Link>
+        <Link v-else href="/login" class="block rounded-xl px-3 py-3 hover:bg-slate-50" @click="isOpen = false">
+          <MyTextConstructor variant="button" textColor="text-slate-700" spacing="none">
+            <template #myTitle>Sign In</template>
+          </MyTextConstructor>
+        </Link>
 
         <a
           :href="bookingUrl"
