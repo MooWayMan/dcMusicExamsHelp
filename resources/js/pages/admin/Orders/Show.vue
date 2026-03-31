@@ -35,6 +35,9 @@ interface Order {
 
 const props = defineProps<{ order: Order }>()
 
+import { usePageAnimation } from '@/composables/usePageAnimation'
+const { animClass } = usePageAnimation()
+
 const examColumns = [
     { key: 'student_name', title: 'Student' },
     { key: 'instrument', title: 'Instrument' },
@@ -45,8 +48,8 @@ const examColumns = [
 </script>
 
 <template>
-    <div class="mx-auto max-w-screen-2xl px-4 py-6 sm:px-6 lg:px-8">
-        <div class="mb-6 flex items-center gap-4">
+    <div class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <div :class="['mb-6 flex items-center gap-4', animClass('fade-up', 0)]">
             <Link href="/admin/orders" class="rounded-lg p-2 text-brand-text-soft hover:bg-brand-surface-soft hover:text-brand-accent">
                 <ArrowLeft class="h-5 w-5" />
             </Link>
@@ -70,7 +73,7 @@ const examColumns = [
             </span>
         </div>
 
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div :class="['grid grid-cols-1 gap-6 lg:grid-cols-3', animClass('fade-up', 1)]">
             <!-- Order Details -->
             <div class="rounded-xl border border-brand-border bg-brand-surface p-5">
                 <MyTextConstructor variant="button-lg">
@@ -148,7 +151,7 @@ const examColumns = [
         </div>
 
         <!-- Exam Entries -->
-        <div class="mt-6 rounded-xl border border-brand-border bg-brand-surface">
+        <div :class="['mt-6 rounded-xl border border-brand-border bg-brand-surface', animClass('fade-up', 2)]">
             <div class="flex items-center gap-2 border-b border-brand-border p-4">
                 <Music class="h-5 w-5 text-brand-text-soft" />
                 <MyTextConstructor variant="button-lg">
@@ -164,6 +167,8 @@ const examColumns = [
                     size="medium"
                     :striped="true"
                     :bordered="false"
+                    :full-width="true"
+                    :bare="true"
                 />
                 <p v-else class="py-4 text-center text-base text-brand-text-soft">No exam entries recorded</p>
             </div>

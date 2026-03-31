@@ -70,7 +70,7 @@ const variantClasses: Record<NonNullable<Props['variant']>, string> = {
 
 const buttonClasses = computed(() => [
   'inline-flex items-center justify-center gap-2',
-  'font-medium transition-all duration-200',
+  'cursor-pointer font-medium transition-all duration-200',
   'disabled:cursor-not-allowed disabled:opacity-60',
   'active:scale-[0.99]',
   sizeClasses[props.size],

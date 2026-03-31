@@ -5,7 +5,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Instrument;
 use App\Models\Student;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -38,7 +40,28 @@ class StudentController extends Controller
         $sortDir = $request->input('direction', 'asc');
         $allowedSorts = ['first_name', 'last_name', 'exam_entries_count', 'created_at'];
 
-        if (in_array($sortBy, $allowedSorts)) {
+        if ($sortBy === 'teacher') {
+            $query->orderBy(
+                User::select('name')
+                    ->whereColumn('users.id', 'students.user_id')
+                    ->limit(1),
+                $sortDir
+            );
+        } elseif ($sortBy === 'instrument') {
+            $query->orderBy(
+                Instrument::select('name')
+                    ->whereColumn('instruments.id', 'students.instrument_id')
+                    ->limit(1),
+                $sortDir
+            );
+        } elseif ($sortBy === 'instrument_family') {
+            $query->orderBy(
+                Instrument::select('family')
+                    ->whereColumn('instruments.id', 'students.instrument_id')
+                    ->limit(1),
+                $sortDir
+            );
+        } elseif (in_array($sortBy, $allowedSorts)) {
             $query->orderBy($sortBy, $sortDir);
         }
 

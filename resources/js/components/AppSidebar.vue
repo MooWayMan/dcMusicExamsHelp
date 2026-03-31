@@ -48,11 +48,19 @@ const adminNavItems: NavItem[] = [
         title: 'Teachers',
         href: '/admin/teachers',
         icon: Users,
+        children: [
+            { title: 'All Teachers', href: '/admin/teachers' },
+            { title: 'Add Teacher', href: '/admin/teachers/create' },
+        ],
     },
     {
         title: 'Schools',
         href: '/admin/schools',
         icon: School,
+        children: [
+            { title: 'All Schools', href: '/admin/schools' },
+            { title: 'Add School', href: '/admin/schools/create' },
+        ],
     },
     {
         title: 'Orders',

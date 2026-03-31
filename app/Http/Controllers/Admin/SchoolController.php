@@ -28,7 +28,7 @@ class SchoolController extends Controller
 
         $sortBy = $request->input('sort', 'name');
         $sortDir = $request->input('direction', 'asc');
-        $allowedSorts = ['name', 'city', 'teachers_count', 'orders_count', 'created_at'];
+        $allowedSorts = ['name', 'city', 'contact_name', 'teachers_count', 'orders_count', 'created_at'];
 
         if (in_array($sortBy, $allowedSorts)) {
             $query->orderBy($sortBy, $sortDir);

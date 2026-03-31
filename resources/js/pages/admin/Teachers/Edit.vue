@@ -59,11 +59,14 @@ const form = useForm({
 function submit() {
     form.put(`/admin/teachers/${props.teacher.id}`)
 }
+
+import { usePageAnimation } from '@/composables/usePageAnimation'
+const { animClass } = usePageAnimation()
 </script>
 
 <template>
-    <div class="mx-auto max-w-screen-lg px-4 py-6 sm:px-6 lg:px-8">
-        <div class="mb-6 flex items-center gap-4">
+    <div class="mx-auto w-full max-w-screen-lg px-4 py-6 sm:px-6 lg:px-8">
+        <div :class="['mb-6 flex items-center gap-4', animClass('fade-up', 0)]">
             <Link :href="`/admin/teachers/${teacher.id}`" class="rounded-lg p-2 text-brand-text-soft hover:bg-brand-surface-soft hover:text-brand-accent">
                 <ArrowLeft class="h-5 w-5" />
             </Link>
@@ -73,13 +76,15 @@ function submit() {
             </div>
         </div>
 
-        <TeacherForm
-            :form="form"
-            :instruments="instruments"
-            :schools="schools"
-            :subject-areas="subjectAreas"
-            submit-label="Save Changes"
-            @submit="submit"
-        />
+        <div :class="animClass('fade-up', 1)">
+            <TeacherForm
+                :form="form"
+                :instruments="instruments"
+                :schools="schools"
+                :subject-areas="subjectAreas"
+                submit-label="Save Changes"
+                @submit="submit"
+            />
+        </div>
     </div>
 </template>

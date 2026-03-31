@@ -27,6 +27,8 @@ interface Props {
   responsive?: boolean
   clickableRows?: boolean
   clickableCells?: boolean
+  fullWidth?: boolean
+  bare?: boolean
   sortable?: boolean
   defaultSortKey?: string | null
   defaultSortDir?: 'asc' | 'desc'
@@ -44,6 +46,8 @@ const props = withDefaults(defineProps<Props>(), {
   responsive: true,
   clickableRows: false,
   clickableCells: false,
+  fullWidth: true,
+  bare: false,
   sortable: true,
   defaultSortKey: null,
   defaultSortDir: 'asc',
@@ -98,7 +102,7 @@ const wrapperClasses = computed(() =>
 )
 
 const tableBoxClasses = computed(() =>
-  ['inline-block overflow-hidden rounded-lg', props.bordered ? 'border-4 border-brand-primary' : 'border-0'].join(' ')
+  [props.fullWidth ? 'block' : 'inline-block', 'overflow-x-auto rounded-lg', props.bordered ? 'border-4 border-brand-primary' : 'border-0'].join(' ')
 )
 
 const tableClasses = computed(() => ['w-full min-w-[720px]', sizeClasses[props.size]].join(' '))
@@ -218,8 +222,9 @@ function sortIndicator(column: Column) {
 </script>
 
 <template>
-  <div :class="wrapperClasses">
-    <div v-if="props.title || props.subtitle" class="mb-4 text-center">
+  <!-- When bare=true, skip the card wrapper and render the table directly -->
+  <component :is="props.bare ? 'div' : 'div'" :class="props.bare ? 'w-full' : wrapperClasses">
+    <div v-if="!props.bare && (props.title || props.subtitle)" class="mb-4 text-center">
       <MyTextConstructor
         v-if="props.title"
         variant="heading"
@@ -247,7 +252,7 @@ function sortIndicator(column: Column) {
     </div>
 
     <div :class="props.responsive ? 'w-full overflow-x-auto' : ''">
-      <div class="mx-auto w-max">
+      <div :class="props.fullWidth ? 'w-full' : 'mx-auto w-max'">
         <div :class="tableBoxClasses">
           <table :class="tableClasses">
             <thead>
@@ -357,7 +362,7 @@ function sortIndicator(column: Column) {
         </div>
       </div>
     </div>
-  </div>
+  </component>
 </template>
 
 <style scoped>

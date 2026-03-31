@@ -39,7 +39,17 @@ class TeacherController extends Controller
         $sortDir = $request->input('direction', 'asc');
         $allowedSorts = ['name', 'email', 'created_at', 'students_count', 'orders_count'];
 
-        if (in_array($sortBy, $allowedSorts)) {
+        if ($sortBy === 'schools') {
+            // Sort by first school name via subquery (many-to-many)
+            $query->orderBy(
+                School::select('name')
+                    ->join('teacher_school', 'schools.id', '=', 'teacher_school.school_id')
+                    ->whereColumn('teacher_school.user_id', 'users.id')
+                    ->orderBy('name')
+                    ->limit(1),
+                $sortDir
+            );
+        } elseif (in_array($sortBy, $allowedSorts)) {
             $query->orderBy($sortBy, $sortDir);
         }
 

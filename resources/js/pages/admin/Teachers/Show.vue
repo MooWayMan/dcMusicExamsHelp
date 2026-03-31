@@ -82,6 +82,9 @@ async function deleteTeacher() {
     }
 }
 
+import { usePageAnimation } from '@/composables/usePageAnimation'
+const { animClass } = usePageAnimation()
+
 const orderColumns = [
     { key: 'trinity_order_number', title: 'Order #' },
     { key: 'school_name', title: 'School' },
@@ -107,9 +110,9 @@ const studentColumns = [
 </script>
 
 <template>
-    <div class="mx-auto max-w-screen-2xl px-4 py-6 sm:px-6 lg:px-8">
+    <div class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <!-- Header -->
-        <div class="mb-6 flex items-center justify-between">
+        <div :class="['mb-6 flex items-center justify-between', animClass('fade-up', 0)]">
             <div class="flex items-center gap-4">
                 <Link href="/admin/teachers" class="rounded-lg p-2 text-brand-text-soft hover:bg-brand-surface-soft hover:text-brand-accent">
                     <ArrowLeft class="h-5 w-5" />
@@ -125,14 +128,14 @@ const studentColumns = [
                         Edit
                     </MyButtonConstructor>
                 </Link>
-                <MyButtonConstructor variant="danger" size="medium" :icon="Trash2" @click="deleteTeacher">
-                    Delete
+                <MyButtonConstructor variant="outline" size="medium" :icon="Trash2" @click="deleteTeacher">
+                    Archive
                 </MyButtonConstructor>
             </div>
         </div>
 
         <!-- Info Cards Row: Contact + Schools side by side -->
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div :class="['grid grid-cols-1 gap-6 lg:grid-cols-2', animClass('fade-up', 1)]">
             <!-- Contact & Status Card -->
             <div class="rounded-xl border border-brand-border bg-brand-surface p-5">
                 <MyTextConstructor variant="button-lg">
@@ -234,7 +237,7 @@ const studentColumns = [
         </div>
 
         <!-- Students Card (full width, stacked below) -->
-        <div class="mt-6 rounded-xl border border-brand-border bg-brand-surface">
+        <div :class="['mt-6 rounded-xl border border-brand-border bg-brand-surface', animClass('fade-up', 2)]">
             <div class="flex items-center gap-2 border-b border-brand-border p-4">
                 <GraduationCap class="h-6 w-6 text-brand-text-soft" />
                 <MyTextConstructor variant="button-lg">
@@ -251,13 +254,15 @@ const studentColumns = [
                     :sortable="false"
                     :bordered="false"
                     :striped="true"
+                    :full-width="true"
+                    :bare="true"
                 />
                 <p v-else class="py-4 text-center text-lg text-brand-text-soft">No students registered</p>
             </div>
         </div>
 
         <!-- Orders Table -->
-        <div class="mt-6 rounded-xl border border-brand-border bg-brand-surface">
+        <div :class="['mt-6 rounded-xl border border-brand-border bg-brand-surface', animClass('fade-up', 3)]">
             <div class="flex items-center gap-2 border-b border-brand-border p-4">
                 <ClipboardList class="h-5 w-5 text-brand-text-soft" />
                 <MyTextConstructor variant="button-lg">
@@ -273,13 +278,15 @@ const studentColumns = [
                     size="medium"
                     :striped="true"
                     :bordered="false"
+                    :full-width="true"
+                    :bare="true"
                 />
                 <p v-else class="py-4 text-center text-base text-brand-text-soft">No orders yet</p>
             </div>
         </div>
 
         <!-- Contact Logs Table -->
-        <div class="mt-6 rounded-xl border border-brand-border bg-brand-surface">
+        <div :class="['mt-6 rounded-xl border border-brand-border bg-brand-surface', animClass('fade-up', 4)]">
             <div class="flex items-center gap-2 border-b border-brand-border p-4">
                 <MessageSquare class="h-5 w-5 text-brand-text-soft" />
                 <MyTextConstructor variant="button-lg">
@@ -295,6 +302,8 @@ const studentColumns = [
                     size="medium"
                     :striped="true"
                     :bordered="false"
+                    :full-width="true"
+                    :bare="true"
                 />
                 <p v-else class="py-4 text-center text-base text-brand-text-soft">No contact history</p>
             </div>

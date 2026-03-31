@@ -53,6 +53,9 @@ const teacherColumns = [
     { key: 'orders_count', title: 'Orders', align: 'center' as const },
 ]
 
+import { usePageAnimation } from '@/composables/usePageAnimation'
+const { animClass } = usePageAnimation()
+
 const orderColumns = [
     { key: 'trinity_order_number', title: 'Order #' },
     { key: 'teacher_name', title: 'Teacher' },
@@ -65,8 +68,8 @@ const orderColumns = [
 </script>
 
 <template>
-    <div class="mx-auto max-w-screen-2xl px-4 py-6 sm:px-6 lg:px-8">
-        <div class="mb-6 flex items-center justify-between">
+    <div class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <div :class="['mb-6 flex items-center justify-between', animClass('fade-up', 0)]">
             <div class="flex items-center gap-4">
                 <Link href="/admin/schools" class="rounded-lg p-2 text-brand-text-soft hover:bg-brand-surface-soft hover:text-brand-accent">
                     <ArrowLeft class="h-5 w-5" />
@@ -80,11 +83,11 @@ const orderColumns = [
                 <Link :href="`/admin/schools/${school.id}/edit`">
                     <MyButtonConstructor variant="outline" size="medium" :icon="Pencil">Edit</MyButtonConstructor>
                 </Link>
-                <MyButtonConstructor variant="danger" size="medium" :icon="Trash2" @click="deleteSchool">Archive</MyButtonConstructor>
+                <MyButtonConstructor variant="outline" size="medium" :icon="Trash2" @click="deleteSchool">Archive</MyButtonConstructor>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div :class="['grid grid-cols-1 gap-6 lg:grid-cols-3', animClass('fade-up', 1)]">
             <!-- Details Card -->
             <div class="rounded-xl border border-brand-border bg-brand-surface p-5">
                 <MyTextConstructor variant="button-lg">
@@ -132,6 +135,8 @@ const orderColumns = [
                         size="medium"
                         :striped="true"
                         :bordered="false"
+                        :full-width="true"
+                        :bare="true"
                         :clickable-rows="true"
                         @row-click="(row: any) => router.visit(`/admin/teachers/${row.id}`)"
                     />
@@ -141,7 +146,7 @@ const orderColumns = [
         </div>
 
         <!-- Orders at this school -->
-        <div class="mt-6 rounded-xl border border-brand-border bg-brand-surface">
+        <div :class="['mt-6 rounded-xl border border-brand-border bg-brand-surface', animClass('fade-up', 2)]">
             <div class="border-b border-brand-border p-4">
                 <MyTextConstructor variant="button-lg">
                     <template #myTitle>Orders ({{ school.orders.length }})</template>
@@ -156,6 +161,8 @@ const orderColumns = [
                     size="medium"
                     :striped="true"
                     :bordered="false"
+                    :full-width="true"
+                    :bare="true"
                 />
                 <p v-else class="py-4 text-center text-base text-brand-text-soft">No orders for this school</p>
             </div>

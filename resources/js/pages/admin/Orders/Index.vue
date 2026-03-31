@@ -82,14 +82,17 @@ function sortIcon(column: string): string {
     if (props.filters.sort !== column) return ''
     return props.filters.direction === 'asc' ? ' ↑' : ' ↓'
 }
+
+import { usePageAnimation } from '@/composables/usePageAnimation'
+const { animClass } = usePageAnimation()
 </script>
 
 <template>
-    <div class="mx-auto max-w-screen-2xl px-4 py-6 sm:px-6 lg:px-8">
+    <div class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <PageHeader title="Orders" subtitle="Trinity exam orders and commission tracking" eyebrow="Admin" size="compact" />
 
         <!-- Summary cards -->
-        <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div :class="['mt-6 grid grid-cols-1 gap-4 md:grid-cols-3', animClass('fade-up', 1)]">
             <div class="rounded-xl border border-brand-border bg-brand-surface p-4">
                 <p class="text-base font-medium text-brand-text-soft">Orders</p>
                 <p class="mt-1 text-3xl font-bold text-brand-text">{{ summary.total_orders }}</p>
@@ -105,7 +108,7 @@ function sortIcon(column: string): string {
         </div>
 
         <!-- Filters -->
-        <div class="mt-6 flex flex-wrap items-center gap-4">
+        <div :class="['mt-6 flex flex-wrap items-center gap-4', animClass('fade-up', 2)]">
             <div class="relative max-w-md flex-1">
                 <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-text-soft" />
                 <input v-model="search" type="text" placeholder="Search by order #, teacher, or school..."
@@ -148,25 +151,48 @@ function sortIcon(column: string): string {
         </div>
 
         <!-- Table -->
-        <div class="mt-4 overflow-hidden rounded-xl border border-brand-border bg-brand-surface">
+        <div :class="['mt-4 rounded-xl border border-brand-border bg-brand-surface', animClass('fade-up', 3)]">
+            <!-- Top Pagination -->
+            <div v-if="orders.last_page > 1" class="flex items-center justify-between border-b border-brand-border px-4 py-3">
+                <p class="text-base text-brand-text-soft">Page {{ orders.current_page }} of {{ orders.last_page }}</p>
+                <div class="flex gap-1">
+                    <template v-for="link in orders.links" :key="'top-' + link.label">
+                        <Link v-if="link.url" :href="link.url"
+                            class="rounded px-3 py-1 text-base transition-colors"
+                            :class="link.active ? 'bg-brand-accent text-brand-text-inverse font-semibold' : 'text-brand-text-soft hover:bg-brand-surface-soft'"
+                            v-html="link.label" preserve-state />
+                        <span v-else class="rounded px-3 py-1 text-base text-brand-border" v-html="link.label" />
+                    </template>
+                </div>
+            </div>
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-base">
+                <table class="min-w-[800px] w-full text-left text-base">
                     <thead class="border-b border-brand-border bg-brand-surface-soft">
                         <tr>
                             <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('trinity_order_number')">
                                 Order #{{ sortIcon('trinity_order_number') }}
                             </th>
-                            <th class="px-4 py-3 font-semibold text-brand-text">Teacher</th>
-                            <th class="hidden px-4 py-3 font-semibold text-brand-text lg:table-cell">School</th>
-                            <th class="px-4 py-3 text-center font-semibold text-brand-text">Type</th>
-                            <th class="hidden px-4 py-3 font-semibold text-brand-text md:table-cell">Subject</th>
+                            <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('teacher')">
+                                Teacher{{ sortIcon('teacher') }}
+                            </th>
+                            <th class="hidden cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent lg:table-cell" @click="sortBy('school')">
+                                School{{ sortIcon('school') }}
+                            </th>
+                            <th class="cursor-pointer px-4 py-3 text-center font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('delivery_method')">
+                                Type{{ sortIcon('delivery_method') }}
+                            </th>
+                            <th class="hidden cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent md:table-cell" @click="sortBy('subject_area')">
+                                Subject{{ sortIcon('subject_area') }}
+                            </th>
                             <th class="cursor-pointer px-4 py-3 text-center font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('candidates')">
                                 Cands{{ sortIcon('candidates') }}
                             </th>
                             <th class="cursor-pointer px-4 py-3 text-right font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('commission_amount')">
                                 Commission{{ sortIcon('commission_amount') }}
                             </th>
-                            <th class="px-4 py-3 text-center font-semibold text-brand-text">Status</th>
+                            <th class="cursor-pointer px-4 py-3 text-center font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('order_status')">
+                                Status{{ sortIcon('order_status') }}
+                            </th>
                             <th class="px-4 py-3 text-right font-semibold text-brand-text">Actions</th>
                         </tr>
                     </thead>

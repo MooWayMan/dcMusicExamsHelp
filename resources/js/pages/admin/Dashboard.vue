@@ -66,10 +66,12 @@ const props = defineProps<{
     staleTeachers: StaleTeacher[]
 }>()
 
+import { usePageAnimation } from '@/composables/usePageAnimation'
+const { animClass } = usePageAnimation()
 </script>
 
 <template>
-    <div class="mx-auto max-w-screen-2xl px-4 py-6 sm:px-6 lg:px-8">
+    <div class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <!-- Page Header -->
         <PageHeader
             title="Admin Dashboard"
@@ -79,7 +81,7 @@ const props = defineProps<{
         />
 
         <!-- Stat Cards Row 1: Counts -->
-        <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div :class="['mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4', animClass('fade-up', 1)]">
             <!-- Teachers -->
             <Link href="/admin/teachers" class="group">
                 <div class="rounded-xl border border-brand-border bg-brand-surface p-5 transition-shadow hover:shadow-md">
@@ -136,7 +138,7 @@ const props = defineProps<{
         </div>
 
         <!-- Stat Cards Row 2: Commission -->
-        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div :class="['mt-4 grid grid-cols-1 gap-4 md:grid-cols-3', animClass('fade-up', 2)]">
             <!-- Total Commission -->
             <div class="rounded-xl border border-brand-border bg-brand-surface p-5">
                 <div class="flex items-center justify-between">
@@ -181,7 +183,7 @@ const props = defineProps<{
         </div>
 
         <!-- Recent Orders + Contacts (stacked full width) -->
-        <div class="mt-8 space-y-6">
+        <div :class="['mt-8 space-y-6', animClass('fade-up', 3)]">
             <!-- Recent Orders -->
             <div class="rounded-xl border border-brand-border bg-brand-surface">
                 <div class="border-b border-brand-border p-4">
@@ -256,11 +258,11 @@ const props = defineProps<{
         </div>
 
         <!-- Stale Teachers Alert -->
-        <div v-if="staleTeachers.length" class="mt-8">
-            <div class="rounded-xl border border-brand-danger/30 bg-brand-danger-soft p-5">
+        <div v-if="staleTeachers.length" :class="['mt-8', animClass('fade-up', 4)]">
+            <div class="rounded-xl border border-brand-accent/30 bg-brand-surface-soft p-5">
                 <div class="mb-3 flex items-center gap-2">
-                    <AlertCircle class="h-5 w-5 text-brand-danger" />
-                    <MyTextConstructor variant="button-lg" textColor="text-brand-danger">
+                    <AlertCircle class="h-5 w-5 text-brand-accent" />
+                    <MyTextConstructor variant="button-lg" textColor="text-brand-accent">
                         <template #myTitle>Teachers Needing Follow-up</template>
                     </MyTextConstructor>
                 </div>

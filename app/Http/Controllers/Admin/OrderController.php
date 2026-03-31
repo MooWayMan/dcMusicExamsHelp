@@ -6,6 +6,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\School;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -38,9 +40,23 @@ class OrderController extends Controller
 
         $sortBy = $request->input('sort', 'created_at');
         $sortDir = $request->input('direction', 'desc');
-        $allowedSorts = ['trinity_order_number', 'candidates', 'commission_amount', 'order_status', 'requested_start_date', 'created_at'];
+        $allowedSorts = ['trinity_order_number', 'candidates', 'commission_amount', 'order_status', 'delivery_method', 'subject_area', 'requested_start_date', 'created_at'];
 
-        if (in_array($sortBy, $allowedSorts)) {
+        if ($sortBy === 'teacher') {
+            $query->orderBy(
+                User::select('name')
+                    ->whereColumn('users.id', 'orders.user_id')
+                    ->limit(1),
+                $sortDir
+            );
+        } elseif ($sortBy === 'school') {
+            $query->orderBy(
+                School::select('name')
+                    ->whereColumn('schools.id', 'orders.school_id')
+                    ->limit(1),
+                $sortDir
+            );
+        } elseif (in_array($sortBy, $allowedSorts)) {
             $query->orderBy($sortBy, $sortDir);
         }
 

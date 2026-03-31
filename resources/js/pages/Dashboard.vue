@@ -1,7 +1,14 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
-import PlaceholderPattern from '@/components/PlaceholderPattern.vue';
-import { dashboard } from '@/routes';
+import { Head, Link, usePage } from '@inertiajs/vue3'
+import { computed } from 'vue'
+import { LayoutDashboard } from 'lucide-vue-next'
+import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
+import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
+import { dashboard } from '@/routes'
+
+const page = usePage()
+const user = computed(() => (page.props.auth as any)?.user)
+const isAdmin = computed(() => user.value?.role === 'admin')
 
 defineOptions({
     layout: {
@@ -12,36 +19,25 @@ defineOptions({
             },
         ],
     },
-});
+})
 </script>
 
 <template>
     <Head title="Dashboard" />
 
-    <div
-        class="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4"
-    >
-        <div class="grid auto-rows-min gap-4 md:grid-cols-3">
-            <div
-                class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border"
-            >
-                <PlaceholderPattern />
-            </div>
-            <div
-                class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border"
-            >
-                <PlaceholderPattern />
-            </div>
-            <div
-                class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border"
-            >
-                <PlaceholderPattern />
-            </div>
-        </div>
-        <div
-            class="relative min-h-[100vh] flex-1 rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border"
-        >
-            <PlaceholderPattern />
-        </div>
+    <div class="flex h-full flex-1 flex-col items-center justify-center gap-6 p-8">
+        <MyTextConstructor variant="heading" alignment="center">
+            <template #myTitle>Welcome, {{ user?.name }}</template>
+        </MyTextConstructor>
+
+        <Link v-if="isAdmin" href="/admin">
+            <MyButtonConstructor variant="primary" size="large" :icon="LayoutDashboard">
+                Go to Admin Dashboard
+            </MyButtonConstructor>
+        </Link>
+
+        <p v-else class="text-lg text-brand-text-soft">
+            Your dashboard is being set up. Check back soon.
+        </p>
     </div>
 </template>

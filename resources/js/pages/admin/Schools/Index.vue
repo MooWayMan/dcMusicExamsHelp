@@ -62,10 +62,13 @@ function deleteSchool(school: School) {
         router.delete(`/admin/schools/${school.id}`)
     }
 }
+
+import { usePageAnimation } from '@/composables/usePageAnimation'
+const { animClass } = usePageAnimation()
 </script>
 
 <template>
-    <div class="mx-auto max-w-screen-2xl px-4 py-6 sm:px-6 lg:px-8">
+    <div class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <PageHeader title="Schools" subtitle="Manage exam venues and teaching locations" eyebrow="Admin" size="compact">
             <template #actions>
                 <Link href="/admin/schools/create">
@@ -74,25 +77,42 @@ function deleteSchool(school: School) {
             </template>
         </PageHeader>
 
-        <div class="mt-6 flex items-center gap-4">
+        <div :class="['mt-6 flex items-center gap-4', animClass('fade-up', 1)]">
             <div class="relative max-w-md flex-1">
                 <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-text-soft" />
                 <input v-model="search" type="text" placeholder="Search by name, city, postcode, or contact..."
-                    class="w-full rounded-lg border border-brand-border bg-brand-surface py-2 pl-10 pr-4 text-base text-brand-text placeholder:text-brand-text-soft focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent" />
+                    class="w-full rounded-lg border border-brand-border bg-brand-surface py-3 pl-10 pr-4 text-lg text-brand-text placeholder:text-brand-text-soft focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent" />
             </div>
             <p class="text-base text-brand-text-soft">{{ schools.total }} school{{ schools.total !== 1 ? 's' : '' }}</p>
         </div>
 
-        <div class="mt-4 overflow-hidden rounded-xl border border-brand-border bg-brand-surface">
+        <div :class="['mt-4 rounded-xl border border-brand-border bg-brand-surface', animClass('fade-up', 2)]">
+            <!-- Top Pagination -->
+            <div v-if="schools.last_page > 1" class="flex items-center justify-between border-b border-brand-border px-4 py-3">
+                <p class="text-base text-brand-text-soft">Page {{ schools.current_page }} of {{ schools.last_page }}</p>
+                <div class="flex gap-1">
+                    <template v-for="link in schools.links" :key="'top-' + link.label">
+                        <Link v-if="link.url" :href="link.url"
+                            class="rounded px-3 py-1 text-base transition-colors"
+                            :class="link.active ? 'bg-brand-accent text-brand-text-inverse font-semibold' : 'text-brand-text-soft hover:bg-brand-surface-soft'"
+                            v-html="link.label" preserve-state />
+                        <span v-else class="rounded px-3 py-1 text-base text-brand-border" v-html="link.label" />
+                    </template>
+                </div>
+            </div>
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-base">
+                <table class="min-w-[700px] w-full text-left text-base">
                     <thead class="border-b border-brand-border bg-brand-surface-soft">
                         <tr>
                             <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('name')">
                                 School{{ sortIcon('name') }}
                             </th>
-                            <th class="hidden px-4 py-3 font-semibold text-brand-text md:table-cell">Location</th>
-                            <th class="hidden px-4 py-3 font-semibold text-brand-text lg:table-cell">Contact</th>
+                            <th class="hidden cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent md:table-cell" @click="sortBy('city')">
+                                Location{{ sortIcon('city') }}
+                            </th>
+                            <th class="hidden cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent lg:table-cell" @click="sortBy('contact_name')">
+                                Contact{{ sortIcon('contact_name') }}
+                            </th>
                             <th class="cursor-pointer px-4 py-3 text-center font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('teachers_count')">
                                 Teachers{{ sortIcon('teachers_count') }}
                             </th>
