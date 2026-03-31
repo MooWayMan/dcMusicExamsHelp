@@ -66,9 +66,10 @@ class FakeDataSeeder extends Seeder
 
         $teachers = collect();
         foreach ($teachersData as $data) {
-            $teacher = User::factory()->create(array_merge($data, [
+            $teacher = User::create(array_merge($data, [
                 'role' => 'teacher',
                 'password' => bcrypt('password'),
+                'email_verified_at' => now(),
             ]));
             $teachers->push($teacher);
         }
