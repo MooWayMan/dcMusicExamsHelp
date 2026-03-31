@@ -1,6 +1,16 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-vue-next';
+import { Link, usePage } from '@inertiajs/vue3';
+import {
+    BookOpen,
+    FolderGit2,
+    LayoutGrid,
+    Users,
+    School,
+    ClipboardList,
+    GraduationCap,
+    BarChart3,
+} from 'lucide-vue-next';
+import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -17,11 +27,42 @@ import {
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
+const page = usePage();
+const isAdmin = computed(() => page.props.auth?.user?.role === 'admin');
+
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
+    },
+];
+
+const adminNavItems: NavItem[] = [
+    {
+        title: 'Admin Dashboard',
+        href: '/admin',
+        icon: BarChart3,
+    },
+    {
+        title: 'Teachers',
+        href: '/admin/teachers',
+        icon: Users,
+    },
+    {
+        title: 'Schools',
+        href: '/admin/schools',
+        icon: School,
+    },
+    {
+        title: 'Orders',
+        href: '/admin/orders',
+        icon: ClipboardList,
+    },
+    {
+        title: 'Students',
+        href: '/admin/students',
+        icon: GraduationCap,
     },
 ];
 
@@ -55,6 +96,7 @@ const footerNavItems: NavItem[] = [
 
         <SidebarContent>
             <NavMain :items="mainNavItems" />
+            <NavMain v-if="isAdmin" :items="adminNavItems" label="Admin" />
         </SidebarContent>
 
         <SidebarFooter>

@@ -25,5 +25,10 @@ class DatabaseSeeder extends Seeder
         $this->call([
             LookupSeeder::class,
         ]);
+
+        // Seed fake data for admin panel development
+        $this->call([
+            FakeDataSeeder::class,
+        ]);
     }
 }
