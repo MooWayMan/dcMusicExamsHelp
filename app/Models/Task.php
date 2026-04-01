@@ -19,6 +19,7 @@ class Task extends Model
         'status',
         'assigned_to',
         'category',
+        'calendar_event_id',
         'sort_order',
         'completed_at',
     ];

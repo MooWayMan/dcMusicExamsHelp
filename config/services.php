@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'task_api' => [
+        'token' => env('TASK_API_TOKEN'),
+    ],
+
 ];
