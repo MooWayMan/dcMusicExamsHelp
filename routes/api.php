@@ -1,22 +1,11 @@
 <?php
 
-// routes/api.php
-
 use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes – used by automated integrations (e.g. Google Calendar sync)
-|--------------------------------------------------------------------------
-| Protected by a simple bearer token stored in TASK_API_TOKEN env var.
-*/
-
 Route::middleware('throttle:30,1')->group(function () {
-
     Route::post('/tasks/from-calendar', function (Request $request) {
-        // Verify bearer token
         $token = $request->bearerToken();
         $expected = config('services.task_api.token');
 
@@ -33,29 +22,16 @@ Route::middleware('throttle:30,1')->group(function () {
             'calendar_event_id' => 'nullable|string|max:255',
         ]);
 
-        // Skip if a task with the same calendar_event_id already exists
         if (! empty($validated['calendar_event_id'])) {
             $existing = Task::where('calendar_event_id', $validated['calendar_event_id'])->first();
             if ($existing) {
-                return response()->json([
-                    'message' => 'Task already exists',
-                    'task_id' => $existing->id,
-                    'skipped' => true,
-                ]);
+                return response()->json(['message' => 'Task already exists', 'task_id' => $existing->id, 'skipped' => true]);
             }
         }
 
-        // Also skip if an identical title exists and was created today
-        $duplicate = Task::where('title', $validated['title'])
-            ->whereDate('created_at', now()->toDateString())
-            ->first();
-
+        $duplicate = Task::where('title', $validated['title'])->whereDate('created_at', now()->toDateString())->first();
         if ($duplicate) {
-            return response()->json([
-                'message' => 'Duplicate task found for today',
-                'task_id' => $duplicate->id,
-                'skipped' => true,
-            ]);
+            return response()->json(['message' => 'Duplicate task found', 'task_id' => $duplicate->id, 'skipped' => true]);
         }
 
         $task = Task::create([
@@ -68,12 +44,6 @@ Route::middleware('throttle:30,1')->group(function () {
             'sort_order' => Task::max('sort_order') + 1,
         ]);
 
-        return response()->json([
-            'message' => 'Task created',
-            'task_id' => $task->id,
-            'title' => $task->title,
-            'skipped' => false,
-        ], 201);
+        return response()->json(['message' => 'Task created', 'task_id' => $task->id, 'title' => $task->title, 'skipped' => false], 201);
     })->name('api.tasks.from-calendar');
-
 });
