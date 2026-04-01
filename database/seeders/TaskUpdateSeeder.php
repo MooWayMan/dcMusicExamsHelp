@@ -9,12 +9,53 @@ class TaskUpdateSeeder extends Seeder
 {
     public function run(): void
     {
+        // -------------------------------------------------------
+        // 1. Mark completed tasks (using the ACTUAL titles in DB)
+        // -------------------------------------------------------
         $completed = [
+            // From original TaskSeeder
+            'Add footer to Welcome page',
+            'Fix hardcoded colours on Welcome page',
+            'Remove /demo/constructors route',
+            'Fix footer navigation (only shows Home)',
+            // From TodayTasksSeeder
+            'Build task management system in admin panel',
+            'Add musicexams.help email to Apple Mail on Mac',
+            'Add smooth toggle animations to task list',
+            'Add today-completed highlighting to task list',
+            // From previous TaskUpdateSeeder run (different titles)
             'Add branded footer with gradient bar and social links',
             'Apply brand colour tokens to all components',
             'Set up /constructors-demo route for testing',
             'Build responsive nav with mobile hamburger menu',
-            'Build task management system in admin panel',
+            'Add page transition animations (fade-up stagger)',
+            'Configure Postmark transactional email',
+            'Restyle auth pages with brand constructors',
+            'Fix auth layout rendering (authConfig composable)',
+            'Set up Google Calendar voice-to-task sync',
+            'Configure iPhone calendar sync with Google',
+            'Build API endpoint for calendar task creation',
+            'Add Gmail to Apple Mail',
+        ];
+
+        $markedDone = 0;
+        foreach ($completed as $title) {
+            $updated = Task::where('title', $title)->update([
+                'status' => 'completed',
+                'completed_at' => now(),
+            ]);
+            $markedDone += $updated;
+        }
+
+        // -------------------------------------------------------
+        // 2. Remove duplicates created by previous seeder run
+        //    (these have different titles for the same work)
+        // -------------------------------------------------------
+        $duplicates = [
+            'Add branded footer with gradient bar and social links',
+            'Apply brand colour tokens to all components',
+            'Set up /constructors-demo route for testing',
+            'Build responsive nav with mobile hamburger menu',
             'Add page transition animations (fade-up stagger)',
             'Configure Postmark transactional email',
             'Restyle auth pages with brand constructors',
@@ -24,17 +65,11 @@ class TaskUpdateSeeder extends Seeder
             'Build API endpoint for calendar task creation',
         ];
 
-        foreach ($completed as $title) {
-            Task::updateOrCreate(
-                ['title' => $title],
-                [
-                    'status' => 'completed',
-                    'completed_at' => now(),
-                    'assigned_to' => 'Paul',
-                ]
-            );
-        }
+        $deleted = Task::whereIn('title', $duplicates)->delete();
 
+        // -------------------------------------------------------
+        // 3. Ensure pending tasks exist with correct priorities
+        // -------------------------------------------------------
         $pending = [
             ['title' => 'Set up S3 bucket for file uploads', 'priority' => 'high', 'category' => 'technical'],
             ['title' => 'Set MAIL_FROM_ADDRESS in production', 'priority' => 'high', 'category' => 'technical'],
@@ -62,6 +97,6 @@ class TaskUpdateSeeder extends Seeder
             );
         }
 
-        $this->command->info('Task statuses updated: ' . count($completed) . ' completed, ' . count($pending) . ' pending.');
+        $this->command->info("Done: {$markedDone} marked completed, {$deleted} duplicates removed, " . count($pending) . ' pending ensured.');
     }
 }
