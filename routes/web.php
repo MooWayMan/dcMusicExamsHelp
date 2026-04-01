@@ -11,7 +11,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
 });
 
-Route::inertia('/demo/constructors', 'ConstructorsDemo');
-
 require __DIR__.'/settings.php';
 require __DIR__.'/admin.php';

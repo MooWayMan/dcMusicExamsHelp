@@ -9,6 +9,7 @@ import {
     ClipboardList,
     GraduationCap,
     BarChart3,
+    CheckSquare,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
@@ -71,6 +72,15 @@ const adminNavItems: NavItem[] = [
         title: 'Students',
         href: '/admin/students',
         icon: GraduationCap,
+    },
+    {
+        title: 'Tasks',
+        href: '/admin/tasks',
+        icon: CheckSquare,
+        children: [
+            { title: 'All Tasks', href: '/admin/tasks' },
+            { title: 'Add Task', href: '/admin/tasks/create' },
+        ],
     },
 ];
 

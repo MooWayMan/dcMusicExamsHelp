@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\SchoolController;
 use App\Http\Controllers\Admin\StudentController;
+use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\TeacherController;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
@@ -37,6 +38,10 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
 
     // Students (read-only — managed via teacher profiles)
     Route::get('students', [StudentController::class, 'index'])->name('students.index');
+
+    // Tasks — launch checklist and ongoing task management
+    Route::resource('tasks', TaskController::class)->except(['show']);
+    Route::patch('tasks/{task}/toggle', [TaskController::class, 'toggle'])->name('tasks.toggle');
 });
 
 // Explicit model binding: 'teacher' param resolves to User model (teachers are users with role=teacher)

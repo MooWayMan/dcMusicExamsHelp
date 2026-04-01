@@ -7,6 +7,7 @@ import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyRunnerListTextInfo from '@/components/reusables/MyRunnerListTextInfo.vue'
 import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
+import MyFooter from '@/components/layouts/MyFooter.vue'
 
 const pageMeta = {
   title: 'musicexams.help',
@@ -110,11 +111,11 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
 <template>
   <Head :title="pageMeta.title" :description="pageMeta.description" />
 
-  <div class="min-h-screen bg-[#f7f8fb] text-slate-900">
+  <div class="min-h-screen bg-brand-bg text-brand-text">
     <Navbar />
 
     <!-- HERO -->
-    <section class="relative flex justify-center bg-white">
+    <section class="relative flex justify-center bg-brand-surface">
       <div class="mx-auto flex w-full max-w-6xl flex-col items-center px-4 pt-14 pb-10 text-center sm:px-6 md:pt-20 lg:pt-20">
         <img
           :src="heroLogo"
@@ -138,10 +139,10 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
           alignment="center"
           bodyVariant="body"
           spacing="none"
-          class="mt-4 max-w-3xl text-slate-700"
+          class="mt-4 max-w-3xl text-brand-text-soft"
         >
           Simple guidance for teachers, parents and students. Keep
-          <span class="font-semibold text-slate-950">code {{ referralCode }}</span>
+          <span class="font-semibold text-brand-text">code {{ referralCode }}</span>
           ready before booking.
         </MyTextConstructor>
 
@@ -166,17 +167,17 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
     </section>
 
     <!-- TRUST STRIP -->
-    <div class="w-full border-y border-slate-200 bg-slate-50 py-6 md:py-12">
+    <div class="w-full border-y border-brand-border bg-brand-surface-soft py-6 md:py-12">
       <div class="mx-auto max-w-5xl px-6 py-5">
         <div class="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
           <MyTextConstructor
             alignment="left"
             bodyVariant="body"
             spacing="none"
-            class="text-center sm:text-left text-slate-700"
+            class="text-center sm:text-left text-brand-text-soft"
           >
             Run independently with guidance built around
-            <span class="font-semibold text-slate-950">
+            <span class="font-semibold text-brand-text">
               Trinity Registered Exam Centre 120
             </span>
           </MyTextConstructor>
@@ -191,7 +192,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
     </div>
 
     <!-- WHY -->
-    <section id="why" class="border-b border-slate-200 bg-white">
+    <section id="why" class="border-b border-brand-border bg-brand-surface">
       <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
         <div class="max-w-3xl">
           <MyTextConstructor variant="eyebrow" spacing="tight">
@@ -214,7 +215,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
           <MyTextConstructor
             bodyVariant="body"
             spacing="none"
-            class="mt-4 max-w-2xl text-slate-700"
+            class="mt-4 max-w-2xl text-brand-text-soft"
           >
             The goal is simple: make music exam booking easier to understand, keep code
             {{ referralCode }} visible, and guide people to the official booking route with more confidence.
@@ -225,12 +226,12 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
           <div
             v-for="card in whyCards"
             :key="card.id"
-            class="rounded-2xl border-[6px] border-[#1e3a8a] bg-gradient-to-br from-[#dbeafe] via-[#eff6ff] to-[#bfdbfe] p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
+            class="rounded-2xl border-[6px] border-brand-primary bg-brand-surface-soft p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
           >
             <MyTextConstructor
               variant="subheading"
               spacing="tight"
-              textColor="text-blue-900"
+              textColor="text-brand-primary"
             >
               <template #myTitle>
                 {{ card.title }}
@@ -240,7 +241,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             <MyTextConstructor
               subTitleVariant="muted"
               spacing="none"
-              textColor="text-blue-950/80"
+              textColor="text-brand-text-soft"
               class="mt-2"
             >
               <template #mySubTitle>
@@ -253,7 +254,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
     </section>
 
     <!-- INCENTIVES -->
-    <section id="incentives" class="border-t border-slate-200 bg-[#f7f8fb]">
+    <section id="incentives" class="border-t border-brand-border bg-brand-bg">
       <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
         <!-- TOP ROW -->
         <div class="grid gap-10 lg:grid-cols-2 lg:gap-12">
@@ -279,7 +280,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             <MyTextConstructor
               bodyVariant="body"
               spacing="none"
-              class="mt-5 max-w-2xl text-slate-700"
+              class="mt-5 max-w-2xl text-brand-text-soft"
             >
               Students put in the practice. Teachers put in the time. Code {{ referralCode }}
               is designed to do more than help with booking — it can support quarterly
@@ -293,7 +294,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
               <div
                 v-for="item in incentives"
                 :key="item"
-                class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+                class="rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm"
               >
                 <MyTextConstructor bodyVariant="body" spacing="none">
                   {{ item }}
@@ -306,13 +307,14 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
         <!-- BOTTOM ROW -->
         <div class="mt-10">
           <div class="mx-auto max-w-7xl">
-            <div class="overflow-hidden rounded-[2rem] bg-white p-3 shadow-xl ring-1 ring-slate-200">
+            <div class="overflow-hidden rounded-[2rem] bg-brand-surface p-3 shadow-xl ring-1 ring-brand-border">
               <img
                 src="/images/rewards_add.png"
                 alt="Trinity exam rewards and recognition using code 120"
                 class="block w-full rounded-[1.5rem]"
               />
             </div>
+
 
             <div class="mt-6">
               <a
@@ -332,7 +334,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
     </section>
 
     <!-- USEFUL LINKS -->
-    <section class="border-t border-slate-200 bg-white">
+    <section class="border-t border-brand-border bg-brand-surface">
       <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
         <MyTextConstructor
           variant="heading"
@@ -367,7 +369,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
     </section>
 
     <!-- FAQ -->
-    <section id="faq" class="border-t border-slate-200 bg-white">
+    <section id="faq" class="border-t border-brand-border bg-brand-surface">
       <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
         <div class="max-w-3xl">
           <MyTextConstructor variant="eyebrow" spacing="tight">
@@ -396,7 +398,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
               answer: faq.answer,
             }))"
             size="medium"
-            header-bg-color="bg-white"
+            header-bg-color="bg-brand-surface"
             header-text-color="text-brand-primary"
             header-hover-bg-color="hover:bg-brand-bg"
             border-color="border-brand-border"
@@ -405,5 +407,8 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
         </div>
       </div>
     </section>
+
+    <!-- FOOTER -->
+    <MyFooter />
   </div>
 </template>

@@ -3,6 +3,7 @@
 export type NavigationLink = {
   name: string
   route?: string
+  routeName?: string
   params?: Record<string, any>
   url?: string
   external?: boolean
@@ -10,27 +11,8 @@ export type NavigationLink = {
 
 export const mainNavigation: NavigationLink[] = [
   { name: 'Home', url: '/' },
+  { name: 'Why Use This Page', url: '/#why' },
+  { name: 'Incentives', url: '/#incentives' },
+  { name: 'FAQ', url: '/#faq' },
+  { name: 'Book Your Exam', url: 'https://booking.trinitycollege.com/?larCode=120', external: true },
 ]
-
-// export const mainNavigation: NavigationLink[] = [
-//   {
-//     name: 'Home',
-//     route: 'home',
-//   },
-//   {
-//     name: 'Trinity Exams',
-//     route: 'trinity.index', // create later if needed
-//   },
-//   {
-//     name: 'Pieces',
-//     route: 'pieces.index', // future
-//   },
-//   {
-//     name: 'Guides',
-//     route: 'guides.index', // future
-//   },
-//   {
-//     name: 'Contact',
-//     route: 'contact', // future
-//   },
-// ]
