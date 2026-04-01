@@ -1,27 +1,25 @@
+<!-- resources/js/pages/auth/ResetPassword.vue -->
 <script setup lang="ts">
-import { Form, Head } from '@inertiajs/vue3';
-import { ref } from 'vue';
-import InputError from '@/components/InputError.vue';
-import PasswordInput from '@/components/PasswordInput.vue';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
-import { update } from '@/routes/password';
+import { Form, Head } from '@inertiajs/vue3'
+import { ref } from 'vue'
+import MyInputConstructor from '@/components/reusables/MyInputConstructor.vue'
+import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
+import { Spinner } from '@/components/ui/spinner'
+import { update } from '@/routes/password'
 
 defineOptions({
     layout: {
         title: 'Reset password',
         description: 'Please enter your new password below',
     },
-});
+})
 
 const props = defineProps<{
-    token: string;
-    email: string;
-}>();
+    token: string
+    email: string
+}>()
 
-const inputEmail = ref(props.email);
+const inputEmail = ref(props.email)
 </script>
 
 <template>
@@ -34,54 +32,56 @@ const inputEmail = ref(props.email);
         v-slot="{ errors, processing }"
     >
         <div class="grid gap-6">
-            <div class="grid gap-2">
-                <Label for="email">Email</Label>
-                <Input
-                    id="email"
+            <div>
+                <MyInputConstructor
                     type="email"
                     name="email"
-                    autocomplete="email"
+                    label="Email"
+                    size="small"
                     v-model="inputEmail"
-                    class="mt-1 block w-full"
                     readonly
+                    autocomplete="email"
+                    :error="errors.email"
                 />
-                <InputError :message="errors.email" class="mt-2" />
             </div>
 
-            <div class="grid gap-2">
-                <Label for="password">Password</Label>
-                <PasswordInput
-                    id="password"
+            <div>
+                <label class="mb-2 block text-lg font-semibold text-brand-text sm:text-xl">Password</label>
+                <input
+                    type="password"
                     name="password"
-                    autocomplete="new-password"
-                    class="mt-1 block w-full"
+                    required
                     autofocus
-                    placeholder="Password"
-                />
-                <InputError :message="errors.password" />
-            </div>
-
-            <div class="grid gap-2">
-                <Label for="password_confirmation"> Confirm password </Label>
-                <PasswordInput
-                    id="password_confirmation"
-                    name="password_confirmation"
                     autocomplete="new-password"
-                    class="mt-1 block w-full"
-                    placeholder="Confirm password"
+                    placeholder="Password"
+                    class="w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3 text-lg text-brand-text placeholder:text-brand-text-soft focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent sm:text-xl"
                 />
-                <InputError :message="errors.password_confirmation" />
+                <p v-if="errors.password" class="mt-1 text-sm text-brand-danger">{{ errors.password }}</p>
             </div>
 
-            <Button
+            <div>
+                <label class="mb-2 block text-lg font-semibold text-brand-text sm:text-xl">Confirm password</label>
+                <input
+                    type="password"
+                    name="password_confirmation"
+                    required
+                    autocomplete="new-password"
+                    placeholder="Confirm password"
+                    class="w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3 text-lg text-brand-text placeholder:text-brand-text-soft focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent sm:text-xl"
+                />
+                <p v-if="errors.password_confirmation" class="mt-1 text-sm text-brand-danger">{{ errors.password_confirmation }}</p>
+            </div>
+
+            <MyButtonConstructor
                 type="submit"
-                class="mt-4 w-full"
+                variant="primary"
+                size="large"
+                fullWidth
                 :disabled="processing"
-                data-test="reset-password-button"
             >
-                <Spinner v-if="processing" />
+                <Spinner v-if="processing" class="mr-2" />
                 Reset password
-            </Button>
+            </MyButtonConstructor>
         </div>
     </Form>
 </template>

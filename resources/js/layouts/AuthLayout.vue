@@ -1,14 +1,10 @@
 <script setup lang="ts">
-import AuthLayout from '@/layouts/auth/AuthSimpleLayout.vue';
-
-const { title = '', description = '' } = defineProps<{
-    title?: string;
-    description?: string;
-}>();
+import AuthSimpleLayout from '@/layouts/auth/AuthSimpleLayout.vue'
+import { authConfig } from '@/composables/useAuthConfig'
 </script>
 
 <template>
-    <AuthLayout :title="title" :description="description">
+    <AuthSimpleLayout :title="authConfig.title" :description="authConfig.description">
         <slot />
-    </AuthLayout>
+    </AuthSimpleLayout>
 </template>

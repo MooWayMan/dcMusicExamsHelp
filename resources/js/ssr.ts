@@ -9,6 +9,7 @@ import { ZiggyVue } from 'ziggy-js'
 import AppLayout from '@/layouts/AppLayout.vue'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 import SettingsLayout from '@/layouts/settings/Layout.vue'
+import { authConfig } from '@/composables/useAuthConfig'
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel'
 
@@ -27,7 +28,12 @@ createServer((page) =>
             if (name === 'Welcome') {
                 resolvedPage.default.layout = resolvedPage.default.layout || undefined
             } else if (name.startsWith('auth/')) {
-                resolvedPage.default.layout = resolvedPage.default.layout || AuthLayout
+                const opt = resolvedPage.default.layout
+                if (opt && typeof opt === 'object' && !('setup' in opt) && !('render' in opt)) {
+                    authConfig.title = (opt as any).title || ''
+                    authConfig.description = (opt as any).description || ''
+                }
+                resolvedPage.default.layout = AuthLayout
             } else if (name.startsWith('settings/')) {
                 resolvedPage.default.layout = resolvedPage.default.layout || [AppLayout, SettingsLayout]
             } else if (!resolvedPage.default.layout) {

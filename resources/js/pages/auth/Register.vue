@@ -1,21 +1,20 @@
+<!-- resources/js/pages/auth/Register.vue -->
 <script setup lang="ts">
-import { Form, Head } from '@inertiajs/vue3';
-import InputError from '@/components/InputError.vue';
-import PasswordInput from '@/components/PasswordInput.vue';
-import TextLink from '@/components/TextLink.vue';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
-import { login } from '@/routes';
-import { store } from '@/routes/register';
+import { Form, Head } from '@inertiajs/vue3'
+import InputError from '@/components/InputError.vue'
+import TextLink from '@/components/TextLink.vue'
+import MyInputConstructor from '@/components/reusables/MyInputConstructor.vue'
+import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
+import { Spinner } from '@/components/ui/spinner'
+import { login } from '@/routes'
+import { store } from '@/routes/register'
 
 defineOptions({
     layout: {
         title: 'Create an account',
         description: 'Enter your details below to create your account',
     },
-});
+})
 </script>
 
 <template>
@@ -28,81 +27,74 @@ defineOptions({
         class="flex flex-col gap-6"
     >
         <div class="grid gap-6">
-            <div class="grid gap-2">
-                <Label for="name">Name</Label>
-                <Input
-                    id="name"
+            <div>
+                <MyInputConstructor
                     type="text"
+                    name="name"
+                    label="Name"
+                    placeholder="Full name"
+                    size="small"
                     required
                     autofocus
-                    :tabindex="1"
                     autocomplete="name"
-                    name="name"
-                    placeholder="Full name"
+                    :error="errors.name"
                 />
-                <InputError :message="errors.name" />
             </div>
 
-            <div class="grid gap-2">
-                <Label for="email">Email address</Label>
-                <Input
-                    id="email"
+            <div>
+                <MyInputConstructor
                     type="email"
-                    required
-                    :tabindex="2"
-                    autocomplete="email"
                     name="email"
+                    label="Email address"
                     placeholder="email@example.com"
+                    size="small"
+                    required
+                    autocomplete="email"
+                    :error="errors.email"
                 />
-                <InputError :message="errors.email" />
             </div>
 
-            <div class="grid gap-2">
-                <Label for="password">Password</Label>
-                <PasswordInput
-                    id="password"
-                    required
-                    :tabindex="3"
-                    autocomplete="new-password"
+            <div>
+                <label class="mb-2 block text-lg font-semibold text-brand-text sm:text-xl">Password</label>
+                <input
+                    type="password"
                     name="password"
-                    placeholder="Password"
-                />
-                <InputError :message="errors.password" />
-            </div>
-
-            <div class="grid gap-2">
-                <Label for="password_confirmation">Confirm password</Label>
-                <PasswordInput
-                    id="password_confirmation"
                     required
-                    :tabindex="4"
                     autocomplete="new-password"
-                    name="password_confirmation"
-                    placeholder="Confirm password"
+                    placeholder="Password"
+                    class="w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3 text-lg text-brand-text placeholder:text-brand-text-soft focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent sm:text-xl"
                 />
-                <InputError :message="errors.password_confirmation" />
+                <p v-if="errors.password" class="mt-1 text-sm text-brand-danger">{{ errors.password }}</p>
             </div>
 
-            <Button
+            <div>
+                <label class="mb-2 block text-lg font-semibold text-brand-text sm:text-xl">Confirm password</label>
+                <input
+                    type="password"
+                    name="password_confirmation"
+                    required
+                    autocomplete="new-password"
+                    placeholder="Confirm password"
+                    class="w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3 text-lg text-brand-text placeholder:text-brand-text-soft focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent sm:text-xl"
+                />
+                <p v-if="errors.password_confirmation" class="mt-1 text-sm text-brand-danger">{{ errors.password_confirmation }}</p>
+            </div>
+
+            <MyButtonConstructor
                 type="submit"
-                class="mt-2 w-full"
-                tabindex="5"
+                variant="primary"
+                size="large"
+                fullWidth
                 :disabled="processing"
-                data-test="register-user-button"
             >
-                <Spinner v-if="processing" />
+                <Spinner v-if="processing" class="mr-2" />
                 Create account
-            </Button>
+            </MyButtonConstructor>
         </div>
 
-        <div class="text-center text-sm text-muted-foreground">
+        <div class="text-center text-base text-brand-text-soft sm:text-lg">
             Already have an account?
-            <TextLink
-                :href="login()"
-                class="underline underline-offset-4"
-                :tabindex="6"
-                >Log in</TextLink
-            >
+            <TextLink :href="login()" class="font-semibold text-brand-accent hover:underline">Log in</TextLink>
         </div>
     </Form>
 </template>

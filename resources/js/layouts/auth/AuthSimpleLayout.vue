@@ -1,42 +1,60 @@
+<!-- resources/js/layouts/auth/AuthSimpleLayout.vue -->
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import AppLogoIcon from '@/components/AppLogoIcon.vue';
-import { home } from '@/routes';
+import { Link } from '@inertiajs/vue3'
+import { home } from '@/routes'
+import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
+
+const heroLogo =
+  'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/musicexamshelp_logo2.png'
 
 defineProps<{
-    title?: string;
-    description?: string;
-}>();
+    title?: string
+    description?: string
+}>()
 </script>
 
 <template>
-    <div
-        class="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10"
-    >
-        <div class="w-full max-w-sm">
+    <div class="flex min-h-svh flex-col items-center justify-center bg-brand-bg px-4 py-10 sm:px-6 md:px-10">
+        <div class="w-full max-w-lg">
             <div class="flex flex-col gap-8">
-                <div class="flex flex-col items-center gap-4">
-                    <Link
-                        :href="home()"
-                        class="flex flex-col items-center gap-2 font-medium"
-                    >
-                        <div
-                            class="mb-1 flex h-9 w-9 items-center justify-center rounded-md"
-                        >
-                            <AppLogoIcon
-                                class="size-9 fill-current text-[var(--foreground)] dark:text-white"
-                            />
-                        </div>
-                        <span class="sr-only">{{ title }}</span>
+                <!-- Logo + Title -->
+                <div class="flex flex-col items-center gap-6">
+                    <Link :href="home()" class="flex flex-col items-center">
+                        <img
+                            :src="heroLogo"
+                            alt="musicexams.help"
+                            class="h-20 w-auto sm:h-24"
+                        />
                     </Link>
-                    <div class="space-y-2 text-center">
-                        <h1 class="text-xl font-medium">{{ title }}</h1>
-                        <p class="text-center text-sm text-muted-foreground">
+
+                    <div class="w-full text-center">
+                        <MyTextConstructor
+                            variant="subheading"
+                            alignment="center"
+                            fontFamily="display"
+                            spacing="tight"
+                        >
+                            <template #myTitle>
+                                {{ title }}
+                            </template>
+                        </MyTextConstructor>
+
+                        <MyTextConstructor
+                            v-if="description"
+                            bodyVariant="muted"
+                            alignment="center"
+                            spacing="none"
+                            class="mt-2"
+                        >
                             {{ description }}
-                        </p>
+                        </MyTextConstructor>
                     </div>
                 </div>
-                <slot />
+
+                <!-- Form content -->
+                <div class="rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-sm sm:p-8">
+                    <slot />
+                </div>
             </div>
         </div>
     </div>

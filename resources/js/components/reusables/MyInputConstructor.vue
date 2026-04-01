@@ -3,6 +3,8 @@
 import { computed } from 'vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 
+defineOptions({ inheritAttrs: false })
+
 interface Props {
   modelValue?: string | number
   type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search'
@@ -13,6 +15,8 @@ interface Props {
   readonly?: boolean
   required?: boolean
   autofocus?: boolean
+  name?: string
+  autocomplete?: string
   label?: string
   error?: string
   success?: string
@@ -28,6 +32,8 @@ const props = withDefaults(defineProps<Props>(), {
   readonly: false,
   required: false,
   autofocus: false,
+  name: '',
+  autocomplete: '',
   label: '',
   error: '',
   success: '',
@@ -139,12 +145,14 @@ const handleKeydown = (event: KeyboardEvent) => emit('keydown', event)
     <input
       :id="inputId"
       :type="type"
+      :name="name || undefined"
       :value="modelValue"
       :placeholder="placeholder"
       :disabled="disabled"
       :readonly="readonly"
       :required="required"
       :autofocus="autofocus"
+      :autocomplete="autocomplete || undefined"
       :class="inputClasses"
       :aria-invalid="!!error"
       :aria-describedby="error || success ? `${inputId}-message` : undefined"

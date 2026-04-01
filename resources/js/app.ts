@@ -8,6 +8,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers'
 import { ZiggyVue } from 'ziggy-js'
 
 import { initializeTheme } from '@/composables/useAppearance'
+import { authConfig } from '@/composables/useAuthConfig'
 
 // Layouts
 import AppLayout from '@/layouts/AppLayout.vue'
@@ -35,7 +36,16 @@ createInertiaApp({
     page.default.layout = undefined
 
         } else if (name.startsWith('auth/')) {
-            page.default.layout = page.default.layout || AuthLayout
+            // defineOptions({ layout: { title, description } }) sets
+            // page.default.layout to a plain object, NOT a component.
+            // Extract that config so AuthLayout can use it, then always
+            // assign the real AuthLayout component.
+            const opt = page.default.layout
+            if (opt && typeof opt === 'object' && !('setup' in opt) && !('render' in opt)) {
+                authConfig.title = (opt as any).title || ''
+                authConfig.description = (opt as any).description || ''
+            }
+            page.default.layout = AuthLayout
 
         } else if (name.startsWith('settings/')) {
             page.default.layout = page.default.layout || [AppLayout, SettingsLayout]
