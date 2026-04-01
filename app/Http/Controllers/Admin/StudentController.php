@@ -23,11 +23,11 @@ class StudentController extends Controller
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhereHas('teacher', fn ($tq) => $tq->where('name', 'like', "%{$search}%"))
-                  ->orWhereHas('instrument', fn ($iq) => $iq->where('name', 'like', "%{$search}%"));
+                $q->where('first_name', 'ilike', "%{$search}%")
+                  ->orWhere('last_name', 'ilike', "%{$search}%")
+                  ->orWhere('email', 'ilike', "%{$search}%")
+                  ->orWhereHas('teacher', fn ($tq) => $tq->where('name', 'ilike', "%{$search}%"))
+                  ->orWhereHas('instrument', fn ($iq) => $iq->where('name', 'ilike', "%{$search}%"));
             });
         }
 

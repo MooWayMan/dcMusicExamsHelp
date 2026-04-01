@@ -91,15 +91,11 @@ const footerNavItems: NavItem[] = [
 <template>
     <Sidebar collapsible="icon" variant="inset">
         <SidebarHeader>
-            <SidebarMenu>
-                <SidebarMenuItem>
-                    <SidebarMenuButton size="lg" as-child>
-                        <Link :href="dashboard()">
-                            <AppLogo />
-                        </Link>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-            </SidebarMenu>
+            <div class="px-2 py-3">
+                <Link :href="dashboard()">
+                    <AppLogo />
+                </Link>
+            </div>
         </SidebarHeader>
 
         <SidebarContent>

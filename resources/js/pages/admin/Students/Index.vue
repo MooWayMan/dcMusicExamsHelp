@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3'
 import { ref, watch } from 'vue'
-import { Search, Music } from 'lucide-vue-next'
+import { Search, Music, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import PageHeader from '@/components/reusables/PageHeader.vue'
 
 interface Student {
@@ -106,7 +106,17 @@ const { animClass } = usePageAnimation()
             <!-- Top Pagination -->
             <div v-if="students.last_page > 1" class="flex items-center justify-between border-b border-brand-border px-4 py-3">
                 <p class="text-base text-brand-text-soft">Page {{ students.current_page }} of {{ students.last_page }}</p>
-                <div class="flex gap-1">
+                <div class="flex items-center gap-2 sm:hidden">
+                    <Link v-if="students.current_page > 1" :href="students.links[0].url!" class="rounded p-2 text-brand-text-soft hover:bg-brand-surface-soft" preserve-state>
+                        <ChevronLeft class="h-5 w-5" />
+                    </Link>
+                    <span v-else class="rounded p-2 text-brand-border"><ChevronLeft class="h-5 w-5" /></span>
+                    <Link v-if="students.current_page < students.last_page" :href="students.links[students.links.length - 1].url!" class="rounded p-2 text-brand-text-soft hover:bg-brand-surface-soft" preserve-state>
+                        <ChevronRight class="h-5 w-5" />
+                    </Link>
+                    <span v-else class="rounded p-2 text-brand-border"><ChevronRight class="h-5 w-5" /></span>
+                </div>
+                <div class="hidden gap-1 sm:flex">
                     <template v-for="link in students.links" :key="'top-' + link.label">
                         <Link v-if="link.url" :href="link.url"
                             class="rounded px-3 py-1 text-base transition-colors"
@@ -129,7 +139,7 @@ const { animClass } = usePageAnimation()
                             <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('instrument')">
                                 Instrument{{ sortIcon('instrument') }}
                             </th>
-                            <th class="hidden cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent md:table-cell" @click="sortBy('instrument_family')">
+                            <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('instrument_family')">
                                 Family{{ sortIcon('instrument_family') }}
                             </th>
                             <th class="cursor-pointer px-4 py-3 text-center font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('exam_entries_count')">
@@ -154,7 +164,7 @@ const { animClass } = usePageAnimation()
                                     <span class="text-base text-brand-text">{{ student.instrument }}</span>
                                 </div>
                             </td>
-                            <td class="hidden px-4 py-3 md:table-cell">
+                            <td class="px-4 py-3">
                                 <span class="rounded-full bg-brand-surface-soft px-2.5 py-1 text-sm font-medium text-brand-text-soft">
                                     {{ student.instrument_family }}
                                 </span>
@@ -172,7 +182,17 @@ const { animClass } = usePageAnimation()
 
             <div v-if="students.last_page > 1" class="flex items-center justify-between border-t border-brand-border px-4 py-3">
                 <p class="text-base text-brand-text-soft">Page {{ students.current_page }} of {{ students.last_page }}</p>
-                <div class="flex gap-1">
+                <div class="flex items-center gap-2 sm:hidden">
+                    <Link v-if="students.current_page > 1" :href="students.links[0].url!" class="rounded p-2 text-brand-text-soft hover:bg-brand-surface-soft" preserve-state>
+                        <ChevronLeft class="h-5 w-5" />
+                    </Link>
+                    <span v-else class="rounded p-2 text-brand-border"><ChevronLeft class="h-5 w-5" /></span>
+                    <Link v-if="students.current_page < students.last_page" :href="students.links[students.links.length - 1].url!" class="rounded p-2 text-brand-text-soft hover:bg-brand-surface-soft" preserve-state>
+                        <ChevronRight class="h-5 w-5" />
+                    </Link>
+                    <span v-else class="rounded p-2 text-brand-border"><ChevronRight class="h-5 w-5" /></span>
+                </div>
+                <div class="hidden gap-1 sm:flex">
                     <template v-for="link in students.links" :key="link.label">
                         <Link v-if="link.url" :href="link.url"
                             class="rounded px-3 py-1 text-base transition-colors"

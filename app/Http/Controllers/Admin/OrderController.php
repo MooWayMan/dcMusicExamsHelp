@@ -21,10 +21,10 @@ class OrderController extends Controller
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
-                $q->where('trinity_order_number', 'like', "%{$search}%")
-                  ->orWhere('venue', 'like', "%{$search}%")
-                  ->orWhereHas('teacher', fn ($tq) => $tq->where('name', 'like', "%{$search}%"))
-                  ->orWhereHas('school', fn ($sq) => $sq->where('name', 'like', "%{$search}%"));
+                $q->where('trinity_order_number', 'ilike', "%{$search}%")
+                  ->orWhere('venue', 'ilike', "%{$search}%")
+                  ->orWhereHas('teacher', fn ($tq) => $tq->where('name', 'ilike', "%{$search}%"))
+                  ->orWhereHas('school', fn ($sq) => $sq->where('name', 'ilike', "%{$search}%"));
             });
         }
 
@@ -68,6 +68,7 @@ class OrderController extends Controller
             'teacher_name' => $order->teacher->name ?? '—',
             'teacher_id' => $order->user_id,
             'school_name' => $order->school->name ?? '—',
+            'school_id' => $order->school_id,
             'delivery_method' => $order->isDigital() ? 'DG' : 'F2F',
             'subject_area' => $order->subject_area,
             'candidates' => $order->candidates,
@@ -83,8 +84,8 @@ class OrderController extends Controller
         $summaryQuery = Order::query();
         if ($search) {
             $summaryQuery->where(function ($q) use ($search) {
-                $q->where('trinity_order_number', 'like', "%{$search}%")
-                  ->orWhereHas('teacher', fn ($tq) => $tq->where('name', 'like', "%{$search}%"));
+                $q->where('trinity_order_number', 'ilike', "%{$search}%")
+                  ->orWhereHas('teacher', fn ($tq) => $tq->where('name', 'ilike', "%{$search}%"));
             });
         }
         if ($method) $summaryQuery->where('delivery_method', $method);

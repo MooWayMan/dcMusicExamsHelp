@@ -26,8 +26,8 @@ const navigation = [
   { name: 'FAQ', href: '#faq' },
 ]
 
-const navIcon =
-  'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/icon_64x64.png'
+const brandWordmark = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/musicexamshelp_logo2.png'
+const navIcon = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/FAVICONmusicexamshelp_logo2+(512+x+512+px)_2.png'
 
 const bookingUrl = 'https://booking.trinitycollege.com/?larCode=120'
 
@@ -43,10 +43,17 @@ const navClasses = computed(() =>
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="flex h-20 items-center justify-between">
         <Link href="/" class="flex shrink-0 items-center">
+          <!-- Small icon on mobile -->
           <img
             :src="navIcon"
             alt="musicexams.help"
-            class="h-10 w-10 rounded-xl sm:h-11 sm:w-11"
+            class="h-10 w-10 rounded-xl sm:hidden"
+          />
+          <!-- Full wordmark on larger screens -->
+          <img
+            :src="brandWordmark"
+            alt="musicexams.help"
+            class="hidden h-14 w-auto sm:block xl:h-20"
           />
         </Link>
 

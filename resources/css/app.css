@@ -67,8 +67,20 @@
 
     --color-brand-success: var(--brand-success);
     --color-brand-success-soft: var(--brand-success-soft);
+    --color-brand-teal: var(--brand-teal);
+    --color-brand-teal-soft: var(--brand-teal-soft);
     --color-brand-danger: var(--brand-danger);
     --color-brand-danger-soft: var(--brand-danger-soft);
+
+    /* SIDEBAR */
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
 }
 
 /* ===============================
@@ -144,10 +156,22 @@
 
     --brand-border: hsl(214 32% 91%);
 
-    --brand-success: hsl(142 71% 45%);
-    --brand-success-soft: hsl(138 76% 97%);
+    --brand-success: hsl(350 65% 35%);
+    --brand-success-soft: hsl(350 65% 95%);
+    --brand-teal: hsl(175 65% 32%);
+    --brand-teal-soft: hsl(175 65% 95%);
     --brand-danger: hsl(0 84% 60%);
     --brand-danger-soft: hsl(0 93% 97%);
+
+    /* SIDEBAR */
+    --sidebar: hsl(0 0% 100%);
+    --sidebar-foreground: hsl(222 47% 11%);
+    --sidebar-border: hsl(214 32% 91%);
+    --sidebar-ring: hsl(217 91% 60%);
+    --sidebar-primary: hsl(217 91% 60%);
+    --sidebar-primary-foreground: hsl(0 0% 100%);
+    --sidebar-accent: hsl(210 40% 96%);
+    --sidebar-accent-foreground: hsl(222 47% 11%);
 }
 
 /* ===============================
@@ -185,10 +209,22 @@
 
     --brand-border: hsl(217 19% 27%);
 
-    --brand-success: hsl(142 70% 50%);
-    --brand-success-soft: hsl(142 35% 18%);
+    --brand-success: hsl(350 65% 45%);
+    --brand-success-soft: hsl(350 40% 18%);
+    --brand-teal: hsl(175 65% 42%);
+    --brand-teal-soft: hsl(175 35% 18%);
     --brand-danger: hsl(0 84% 65%);
     --brand-danger-soft: hsl(0 35% 18%);
+
+    /* SIDEBAR DARK */
+    --sidebar: hsl(224 36% 14%);
+    --sidebar-foreground: hsl(210 40% 98%);
+    --sidebar-border: hsl(217 19% 27%);
+    --sidebar-ring: hsl(217 91% 60%);
+    --sidebar-primary: hsl(217 91% 60%);
+    --sidebar-primary-foreground: hsl(0 0% 100%);
+    --sidebar-accent: hsl(223 30% 18%);
+    --sidebar-accent-foreground: hsl(210 40% 98%);
 }
 
 /* ===============================

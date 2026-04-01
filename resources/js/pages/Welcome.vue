@@ -18,7 +18,7 @@ const referralCode = '120'
 const bookingUrl = 'https://booking.trinitycollege.com/?larCode=120'
 
 const heroLogo =
-  'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/logo.png'
+  'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/musicexamshelp_logo2.png'
 
 const trinityCentreLogo =
   'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/Trinity_Centre_120_logo_purple.png'

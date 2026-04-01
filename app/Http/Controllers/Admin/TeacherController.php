@@ -25,12 +25,18 @@ class TeacherController extends Controller
             ->with(['schools:id,name', 'instruments:id,name,family', 'subjectAreas:id,name'])
             ->withCount(['students', 'orders']);
 
-        // Search filter
+        // Search filter (ilike for case-insensitive search on PostgreSQL)
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
+                $q->where('users.name', 'ilike', "%{$search}%")
+                  ->orWhere('users.email', 'ilike', "%{$search}%")
+                  ->orWhere('users.phone', 'ilike', "%{$search}%")
+                  ->orWhereHas('schools', function ($sq) use ($search) {
+                      $sq->where('schools.name', 'ilike', "%{$search}%");
+                  })
+                  ->orWhereHas('instruments', function ($iq) use ($search) {
+                      $iq->where('instruments.name', 'ilike', "%{$search}%");
+                  });
             });
         }
 
@@ -61,7 +67,7 @@ class TeacherController extends Controller
             'name' => $teacher->name,
             'email' => $teacher->email,
             'phone' => $teacher->phone,
-            'schools' => $teacher->schools->pluck('name')->implode(', '),
+            'schools' => $teacher->schools->map(fn ($s) => ['id' => $s->id, 'name' => $s->name])->values()->all(),
             'instruments' => $teacher->instruments->pluck('name')->implode(', '),
             'subject_areas' => $teacher->subjectAreas->pluck('name')->implode(', '),
             'students_count' => $teacher->students_count,

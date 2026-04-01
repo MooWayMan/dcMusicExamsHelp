@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3'
 import { ref, watch } from 'vue'
-import { Search, Eye, Monitor, MapPin, TrendingUp } from 'lucide-vue-next'
+import { Search, Eye, Monitor, MapPin, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import PageHeader from '@/components/reusables/PageHeader.vue'
 
@@ -12,6 +12,7 @@ interface Order {
     teacher_name: string
     teacher_id: number | null
     school_name: string
+    school_id: number | null
     delivery_method: string
     subject_area: string
     candidates: number
@@ -155,7 +156,19 @@ const { animClass } = usePageAnimation()
             <!-- Top Pagination -->
             <div v-if="orders.last_page > 1" class="flex items-center justify-between border-b border-brand-border px-4 py-3">
                 <p class="text-base text-brand-text-soft">Page {{ orders.current_page }} of {{ orders.last_page }}</p>
-                <div class="flex gap-1">
+                <!-- Mobile: just prev/next arrows -->
+                <div class="flex items-center gap-2 sm:hidden">
+                    <Link v-if="orders.current_page > 1" :href="orders.links[0].url!" class="rounded p-2 text-brand-text-soft hover:bg-brand-surface-soft" preserve-state>
+                        <ChevronLeft class="h-5 w-5" />
+                    </Link>
+                    <span v-else class="rounded p-2 text-brand-border"><ChevronLeft class="h-5 w-5" /></span>
+                    <Link v-if="orders.current_page < orders.last_page" :href="orders.links[orders.links.length - 1].url!" class="rounded p-2 text-brand-text-soft hover:bg-brand-surface-soft" preserve-state>
+                        <ChevronRight class="h-5 w-5" />
+                    </Link>
+                    <span v-else class="rounded p-2 text-brand-border"><ChevronRight class="h-5 w-5" /></span>
+                </div>
+                <!-- Desktop: full pagination -->
+                <div class="hidden gap-1 sm:flex">
                     <template v-for="link in orders.links" :key="'top-' + link.label">
                         <Link v-if="link.url" :href="link.url"
                             class="rounded px-3 py-1 text-base transition-colors"
@@ -175,13 +188,13 @@ const { animClass } = usePageAnimation()
                             <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('teacher')">
                                 Teacher{{ sortIcon('teacher') }}
                             </th>
-                            <th class="hidden cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent lg:table-cell" @click="sortBy('school')">
+                            <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('school')">
                                 School{{ sortIcon('school') }}
                             </th>
                             <th class="cursor-pointer px-4 py-3 text-center font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('delivery_method')">
                                 Type{{ sortIcon('delivery_method') }}
                             </th>
-                            <th class="hidden cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent md:table-cell" @click="sortBy('subject_area')">
+                            <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('subject_area')">
                                 Subject{{ sortIcon('subject_area') }}
                             </th>
                             <th class="cursor-pointer px-4 py-3 text-center font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('candidates')">
@@ -209,7 +222,12 @@ const { animClass } = usePageAnimation()
                                 </Link>
                                 <span v-else class="text-base text-brand-text-soft">{{ order.teacher_name }}</span>
                             </td>
-                            <td class="hidden px-4 py-3 text-base text-brand-text-soft lg:table-cell">{{ order.school_name }}</td>
+                            <td class="px-4 py-3 text-base">
+                                <Link v-if="order.school_id" :href="`/admin/schools/${order.school_id}`" class="text-brand-text-soft hover:text-brand-accent hover:underline">
+                                    {{ order.school_name }}
+                                </Link>
+                                <span v-else class="text-brand-text-soft">{{ order.school_name }}</span>
+                            </td>
                             <td class="px-4 py-3 text-center">
                                 <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-sm font-medium"
                                     :class="order.delivery_method === 'DG' ? 'bg-brand-accent/10 text-brand-accent' : 'bg-brand-primary/10 text-brand-primary'">
@@ -218,7 +236,7 @@ const { animClass } = usePageAnimation()
                                     {{ order.delivery_method }}
                                 </span>
                             </td>
-                            <td class="hidden px-4 py-3 text-base text-brand-text-soft md:table-cell">{{ order.subject_area }}</td>
+                            <td class="px-4 py-3 text-base text-brand-text-soft">{{ order.subject_area }}</td>
                             <td class="px-4 py-3 text-center text-base text-brand-text">{{ order.candidates }}</td>
                             <td class="px-4 py-3 text-right text-base font-medium text-brand-success">&pound;{{ order.commission_amount }}</td>
                             <td class="px-4 py-3 text-center">
@@ -246,7 +264,19 @@ const { animClass } = usePageAnimation()
 
             <div v-if="orders.last_page > 1" class="flex items-center justify-between border-t border-brand-border px-4 py-3">
                 <p class="text-base text-brand-text-soft">Page {{ orders.current_page }} of {{ orders.last_page }}</p>
-                <div class="flex gap-1">
+                <!-- Mobile: just prev/next arrows -->
+                <div class="flex items-center gap-2 sm:hidden">
+                    <Link v-if="orders.current_page > 1" :href="orders.links[0].url!" class="rounded p-2 text-brand-text-soft hover:bg-brand-surface-soft" preserve-state>
+                        <ChevronLeft class="h-5 w-5" />
+                    </Link>
+                    <span v-else class="rounded p-2 text-brand-border"><ChevronLeft class="h-5 w-5" /></span>
+                    <Link v-if="orders.current_page < orders.last_page" :href="orders.links[orders.links.length - 1].url!" class="rounded p-2 text-brand-text-soft hover:bg-brand-surface-soft" preserve-state>
+                        <ChevronRight class="h-5 w-5" />
+                    </Link>
+                    <span v-else class="rounded p-2 text-brand-border"><ChevronRight class="h-5 w-5" /></span>
+                </div>
+                <!-- Desktop: full pagination -->
+                <div class="hidden gap-1 sm:flex">
                     <template v-for="link in orders.links" :key="link.label">
                         <Link v-if="link.url" :href="link.url"
                             class="rounded px-3 py-1 text-base transition-colors"

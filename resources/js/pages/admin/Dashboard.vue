@@ -209,7 +209,9 @@ const { animClass } = usePageAnimation()
                                 :class="idx % 2 === 1 ? 'bg-brand-surface-soft/50' : ''"
                                 @click="router.visit(`/admin/orders/${order.id}`)">
                                 <td class="px-4 py-3 text-base font-medium text-brand-accent">{{ order.trinity_order_number }}</td>
-                                <td class="px-4 py-3 text-base text-brand-text">{{ order.teacher_name }}</td>
+                                <td class="px-4 py-3 text-base text-brand-text">
+                                    <Link :href="`/admin/teachers/${order.teacher_id}`" class="text-brand-text hover:text-brand-accent hover:underline" @click.stop>{{ order.teacher_name }}</Link>
+                                </td>
                                 <td class="px-4 py-3 text-base text-brand-text">{{ order.delivery_method }}</td>
                                 <td class="px-4 py-3 text-base text-brand-text">{{ order.candidates }}</td>
                                 <td class="px-4 py-3 text-base text-brand-text">&pound;{{ order.commission_amount }}</td>

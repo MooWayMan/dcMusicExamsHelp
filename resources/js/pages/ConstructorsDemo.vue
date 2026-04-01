@@ -68,7 +68,7 @@ const runnerImageItems = [
     title: 'Trinity booking help',
     subTitle: 'Step-by-step support',
     paragraph: 'Clear guidance before going through to the official booking page.',
-    image: 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/logo.png',
+    image: 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/noTagICONmusicexamshelp_logo2.png',
     header: 'Featured',
     footer: 'Learn More',
   },

@@ -38,6 +38,8 @@ const props = defineProps<{ order: Order }>()
 import { usePageAnimation } from '@/composables/usePageAnimation'
 const { animClass } = usePageAnimation()
 
+function goBack() { window.history.back() }
+
 const examColumns = [
     { key: 'student_name', title: 'Student' },
     { key: 'instrument', title: 'Instrument' },
@@ -50,9 +52,9 @@ const examColumns = [
 <template>
     <div class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <div :class="['mb-6 flex items-center gap-4', animClass('fade-up', 0)]">
-            <Link href="/admin/orders" class="rounded-lg p-2 text-brand-text-soft hover:bg-brand-surface-soft hover:text-brand-accent">
+            <button @click="goBack" class="cursor-pointer rounded-lg p-2 text-brand-text-soft hover:bg-brand-surface-soft hover:text-brand-accent">
                 <ArrowLeft class="h-5 w-5" />
-            </Link>
+            </button>
             <div>
                 <p class="text-sm font-semibold uppercase tracking-wider text-brand-text-soft">Order</p>
                 <h1 class="text-2xl font-bold text-brand-text sm:text-3xl">{{ order.trinity_order_number }}</h1>
@@ -126,7 +128,7 @@ const examColumns = [
                     <Link :href="`/admin/teachers/${order.teacher.id}`" class="text-xl font-semibold text-brand-accent hover:underline">
                         {{ order.teacher.name }}
                     </Link>
-                    <p class="mt-1 text-base text-brand-text-soft">{{ order.teacher.email }}</p>
+                    <p class="mt-1 truncate text-base text-brand-text-soft">{{ order.teacher.email }}</p>
                     <p v-if="order.teacher.phone" class="text-base text-brand-text-soft">{{ order.teacher.phone }}</p>
                 </div>
                 <p v-else class="mt-4 text-base text-brand-text-soft">Teacher removed or unlinked</p>

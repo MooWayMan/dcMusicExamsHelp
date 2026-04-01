@@ -19,10 +19,10 @@ class SchoolController extends Controller
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('city', 'like', "%{$search}%")
-                  ->orWhere('postcode', 'like', "%{$search}%")
-                  ->orWhere('contact_name', 'like', "%{$search}%");
+                $q->where('name', 'ilike', "%{$search}%")
+                  ->orWhere('city', 'ilike', "%{$search}%")
+                  ->orWhere('postcode', 'ilike', "%{$search}%")
+                  ->orWhere('contact_name', 'ilike', "%{$search}%");
             });
         }
 

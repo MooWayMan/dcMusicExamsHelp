@@ -17,6 +17,7 @@ import {
     SidebarMenuSubButton,
     SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
+import { useSidebar } from '@/components/ui/sidebar/utils';
 import type { NavItem } from '@/types';
 
 const props = withDefaults(defineProps<{
@@ -28,6 +29,14 @@ const props = withDefaults(defineProps<{
 
 const page = usePage();
 const currentPath = computed(() => new URL(page.url, 'http://localhost').pathname);
+
+const { isMobile, setOpenMobile } = useSidebar();
+
+function closeMobileSidebar() {
+    if (isMobile.value) {
+        setOpenMobile(false);
+    }
+}
 
 function isActive(href: string): boolean {
     const current = currentPath.value;
@@ -69,7 +78,7 @@ props.items.forEach(item => {
                             :is-active="isActive(item.href) || hasActiveChild(item)"
                             :tooltip="item.title"
                         >
-                            <Link :href="item.href" @click="openState[item.title] = true">
+                            <Link :href="item.href" @click="openState[item.title] = true; closeMobileSidebar()">
                                 <component :is="item.icon" />
                                 <span>{{ item.title }}</span>
                                 <CollapsibleTrigger as-child @click.prevent.stop>
@@ -85,7 +94,7 @@ props.items.forEach(item => {
                                         :is-active="isActive(child.href)"
                                         size="md"
                                     >
-                                        <Link :href="child.href">
+                                        <Link :href="child.href" @click="closeMobileSidebar">
                                             <span>{{ child.title }}</span>
                                         </Link>
                                     </SidebarMenuSubButton>
@@ -102,7 +111,7 @@ props.items.forEach(item => {
                         :is-active="isActive(item.href)"
                         :tooltip="item.title"
                     >
-                        <Link :href="item.href">
+                        <Link :href="item.href" @click="closeMobileSidebar">
                             <component :is="item.icon" />
                             <span>{{ item.title }}</span>
                         </Link>

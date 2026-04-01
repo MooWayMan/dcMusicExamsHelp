@@ -107,10 +107,10 @@ const { animClass } = usePageAnimation()
                             <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('name')">
                                 School{{ sortIcon('name') }}
                             </th>
-                            <th class="hidden cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent md:table-cell" @click="sortBy('city')">
+                            <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('city')">
                                 Location{{ sortIcon('city') }}
                             </th>
-                            <th class="hidden cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent lg:table-cell" @click="sortBy('contact_name')">
+                            <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('contact_name')">
                                 Contact{{ sortIcon('contact_name') }}
                             </th>
                             <th class="cursor-pointer px-4 py-3 text-center font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('teachers_count')">
@@ -129,13 +129,13 @@ const { animClass } = usePageAnimation()
                                     {{ school.name }}
                                 </Link>
                             </td>
-                            <td class="hidden px-4 py-3 md:table-cell">
+                            <td class="px-4 py-3">
                                 <div class="flex items-center gap-1.5 text-base text-brand-text-soft">
                                     <MapPin class="h-5 w-5" />
                                     {{ school.city || '—' }}<span v-if="school.postcode">, {{ school.postcode }}</span>
                                 </div>
                             </td>
-                            <td class="hidden px-4 py-3 lg:table-cell">
+                            <td class="px-4 py-3">
                                 <p class="text-base text-brand-text">{{ school.contact_name || '—' }}</p>
                                 <p v-if="school.phone" class="text-sm text-brand-text-soft">{{ school.phone }}</p>
                             </td>

@@ -2,6 +2,7 @@
 
 // routes/admin.php
 
+use App\Http\Controllers\Admin\ContactLogController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\SchoolController;
@@ -22,6 +23,10 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     // Teacher extras: restore from archive, deletion impact warning
     Route::post('teachers/{id}/restore', [TeacherController::class, 'restore'])->name('teachers.restore');
     Route::get('teachers/{teacher}/deletion-impact', [TeacherController::class, 'deletionImpact'])->name('teachers.deletion-impact');
+
+    // Contact logs for teachers
+    Route::post('teachers/{teacher}/contact-logs', [ContactLogController::class, 'store'])->name('teachers.contact-logs.store');
+    Route::delete('teachers/{teacher}/contact-logs/{contactLog}', [ContactLogController::class, 'destroy'])->name('teachers.contact-logs.destroy');
 
     // Schools CRUD
     Route::resource('schools', SchoolController::class);

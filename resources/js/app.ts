@@ -3,7 +3,7 @@ import '../css/app.css'
 import '../css/fonts.css'
 
 import { createApp, h, type DefineComponent } from 'vue'
-import { createInertiaApp } from '@inertiajs/vue3'
+import { createInertiaApp, router } from '@inertiajs/vue3'
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers'
 import { ZiggyVue } from 'ziggy-js'
 
@@ -65,4 +65,39 @@ createInertiaApp({
 // ===============================
 if (typeof window !== 'undefined') {
     initializeTheme()
+
+    // ===============================
+    // Session expiry handler
+    // ===============================
+    // When the session expires, Inertia requests return a non-Inertia
+    // response (419 CSRF mismatch or a redirect to /login). This catches
+    // those and shows a clear message instead of silently failing.
+    router.on('invalid', (event) => {
+        const status = event.detail.response?.status
+
+        // 419 = CSRF token expired (session gone)
+        // 401 = Unauthenticated
+        if (status === 419 || status === 401) {
+            event.preventDefault()
+            alert('Your session has expired. You will be redirected to log in again.')
+            window.location.href = '/login'
+            return
+        }
+
+        // Any other non-Inertia response likely means session expired
+        // (Laravel redirects to /login which returns HTML, not Inertia JSON)
+        if (!status || status === 302 || status === 200) {
+            event.preventDefault()
+            alert('Your session has expired. You will be redirected to log in again.')
+            window.location.href = '/login'
+            return
+        }
+
+        // For other non-Inertia responses (500 etc), let Inertia handle normally
+    })
+
+    // Also catch failed responses (network errors, server errors)
+    router.on('error', () => {
+        // Don't interfere — just let the user know if it's persistent
+    })
 }

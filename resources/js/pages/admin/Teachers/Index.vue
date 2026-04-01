@@ -23,7 +23,7 @@ interface Teacher {
     name: string
     email: string
     phone: string | null
-    schools: string
+    schools: Array<{ id: number; name: string }>
     instruments: string
     subject_areas: string
     students_count: number
@@ -139,7 +139,7 @@ const { animClass } = usePageAnimation()
                 <input
                     v-model="search"
                     type="text"
-                    placeholder="Search by name, email, or phone..."
+                    placeholder="Search by name, email, phone, school, or instrument..."
                     class="w-full rounded-lg border border-brand-border bg-brand-surface py-3 pl-10 pr-4 text-lg text-brand-text placeholder:text-brand-text-soft focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
                 />
             </div>
@@ -151,7 +151,19 @@ const { animClass } = usePageAnimation()
             <!-- Top Pagination -->
             <div v-if="teachers.last_page > 1" class="flex items-center justify-between border-b border-brand-border px-4 py-3">
                 <p class="text-base text-brand-text-soft">Page {{ teachers.current_page }} of {{ teachers.last_page }}</p>
-                <div class="flex gap-1">
+                <!-- Mobile: just prev/next arrows -->
+                <div class="flex items-center gap-2 sm:hidden">
+                    <Link v-if="teachers.current_page > 1" :href="teachers.links[0].url!" class="rounded p-2 text-brand-text-soft hover:bg-brand-surface-soft" preserve-state>
+                        <ChevronLeft class="h-5 w-5" />
+                    </Link>
+                    <span v-else class="rounded p-2 text-brand-border"><ChevronLeft class="h-5 w-5" /></span>
+                    <Link v-if="teachers.current_page < teachers.last_page" :href="teachers.links[teachers.links.length - 1].url!" class="rounded p-2 text-brand-text-soft hover:bg-brand-surface-soft" preserve-state>
+                        <ChevronRight class="h-5 w-5" />
+                    </Link>
+                    <span v-else class="rounded p-2 text-brand-border"><ChevronRight class="h-5 w-5" /></span>
+                </div>
+                <!-- Desktop: full pagination -->
+                <div class="hidden gap-1 sm:flex">
                     <template v-for="link in teachers.links" :key="'top-' + link.label">
                         <Link v-if="link.url" :href="link.url"
                             class="rounded px-3 py-1 text-base transition-colors"
@@ -175,12 +187,12 @@ const { animClass } = usePageAnimation()
                                 Contact{{ sortIcon('email') }}
                             </th>
                             <th
-                                class="hidden cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent lg:table-cell"
+                                class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent"
                                 @click="sortBy('schools')"
                             >
                                 Schools{{ sortIcon('schools') }}
                             </th>
-                            <th class="hidden px-4 py-3 font-semibold text-brand-text md:table-cell">Instruments</th>
+                            <th class="px-4 py-3 font-semibold text-brand-text">Instruments</th>
                             <th
                                 class="cursor-pointer px-4 py-3 text-center font-semibold text-brand-text hover:text-brand-accent"
                                 @click="sortBy('students_count')"
@@ -216,12 +228,14 @@ const { animClass } = usePageAnimation()
                                 <p class="text-base text-brand-text">{{ teacher.email }}</p>
                                 <p v-if="teacher.phone" class="text-sm text-brand-text-soft">{{ teacher.phone }}</p>
                             </td>
-                            <td class="hidden px-4 py-3 lg:table-cell">
-                                <p class="max-w-[200px] truncate text-base text-brand-text-soft">
-                                    {{ teacher.schools || '—' }}
-                                </p>
+                            <td class="px-4 py-3">
+                                <div v-if="teacher.schools.length" class="flex max-w-[200px] items-center gap-1 truncate">
+                                    <Link :href="`/admin/schools/${teacher.schools[0].id}`" class="truncate text-base text-brand-text-soft hover:text-brand-accent hover:underline">{{ teacher.schools[0].name }}</Link>
+                                    <span v-if="teacher.schools.length > 1" class="shrink-0 rounded-full bg-brand-surface-soft px-1.5 py-0.5 text-xs font-medium text-brand-text-soft">+{{ teacher.schools.length - 1 }}</span>
+                                </div>
+                                <span v-else class="text-base text-brand-text-soft">—</span>
                             </td>
-                            <td class="hidden px-4 py-3 md:table-cell">
+                            <td class="px-4 py-3">
                                 <p class="max-w-[200px] truncate text-base text-brand-text-soft">
                                     {{ teacher.instruments || '—' }}
                                 </p>
@@ -236,15 +250,15 @@ const { animClass } = usePageAnimation()
                                 <div class="flex items-center justify-center gap-1">
                                     <Mail
                                         class="h-4 w-4"
-                                        :class="teacher.contacted_by_email ? 'text-brand-success' : 'text-brand-border'"
+                                        :class="teacher.contacted_by_email ? 'text-brand-teal' : 'text-brand-border'"
                                     />
                                     <Phone
                                         class="h-4 w-4"
-                                        :class="teacher.spoken_on_phone ? 'text-brand-success' : 'text-brand-border'"
+                                        :class="teacher.spoken_on_phone ? 'text-brand-teal' : 'text-brand-border'"
                                     />
                                     <UserCheck
                                         class="h-4 w-4"
-                                        :class="teacher.met_face_to_face ? 'text-brand-success' : 'text-brand-border'"
+                                        :class="teacher.met_face_to_face ? 'text-brand-teal' : 'text-brand-border'"
                                     />
                                 </div>
                             </td>
@@ -280,12 +294,24 @@ const { animClass } = usePageAnimation()
                 </table>
             </div>
 
-            <!-- Pagination -->
+            <!-- Bottom Pagination -->
             <div v-if="teachers.last_page > 1" class="flex items-center justify-between border-t border-brand-border px-4 py-3">
                 <p class="text-base text-brand-text-soft">
                     Page {{ teachers.current_page }} of {{ teachers.last_page }}
                 </p>
-                <div class="flex gap-1">
+                <!-- Mobile: just prev/next arrows -->
+                <div class="flex items-center gap-2 sm:hidden">
+                    <Link v-if="teachers.current_page > 1" :href="teachers.links[0].url!" class="rounded p-2 text-brand-text-soft hover:bg-brand-surface-soft" preserve-state>
+                        <ChevronLeft class="h-5 w-5" />
+                    </Link>
+                    <span v-else class="rounded p-2 text-brand-border"><ChevronLeft class="h-5 w-5" /></span>
+                    <Link v-if="teachers.current_page < teachers.last_page" :href="teachers.links[teachers.links.length - 1].url!" class="rounded p-2 text-brand-text-soft hover:bg-brand-surface-soft" preserve-state>
+                        <ChevronRight class="h-5 w-5" />
+                    </Link>
+                    <span v-else class="rounded p-2 text-brand-border"><ChevronRight class="h-5 w-5" /></span>
+                </div>
+                <!-- Desktop: full pagination -->
+                <div class="hidden gap-1 sm:flex">
                     <template v-for="link in teachers.links" :key="link.label">
                         <Link
                             v-if="link.url"

@@ -1,6 +1,7 @@
 <!-- resources/js/pages/admin/Teachers/Show.vue -->
 <script setup lang="ts">
-import { Link, router } from '@inertiajs/vue3'
+import { Link, router, useForm } from '@inertiajs/vue3'
+import { ref } from 'vue'
 import {
     ArrowLeft,
     Pencil,
@@ -13,6 +14,8 @@ import {
     GraduationCap,
     ClipboardList,
     MessageSquare,
+    Plus,
+    X,
 } from 'lucide-vue-next'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
@@ -56,6 +59,36 @@ interface Teacher {
 
 const props = defineProps<{ teacher: Teacher }>()
 
+// Contact log form
+const showContactForm = ref(false)
+const contactForm = useForm({
+    contact_type: 'email',
+    direction: 'outbound',
+    subject: '',
+    summary: '',
+    contacted_at: new Date().toISOString().split('T')[0],
+    notes: '',
+})
+
+function submitContactLog() {
+    contactForm.post(`/admin/teachers/${props.teacher.id}/contact-logs`, {
+        preserveScroll: true,
+        onSuccess: () => {
+            showContactForm.value = false
+            contactForm.reset()
+            contactForm.contacted_at = new Date().toISOString().split('T')[0]
+        },
+    })
+}
+
+function deleteContactLog(logId: number) {
+    if (confirm('Remove this contact log entry?')) {
+        router.delete(`/admin/teachers/${props.teacher.id}/contact-logs/${logId}`, {
+            preserveScroll: true,
+        })
+    }
+}
+
 async function deleteTeacher() {
     try {
         const response = await fetch(`/admin/teachers/${props.teacher.id}/deletion-impact`)
@@ -84,6 +117,8 @@ async function deleteTeacher() {
 
 import { usePageAnimation } from '@/composables/usePageAnimation'
 const { animClass } = usePageAnimation()
+
+function goBack() { window.history.back() }
 
 const orderColumns = [
     { key: 'trinity_order_number', title: 'Order #' },
@@ -114,9 +149,9 @@ const studentColumns = [
         <!-- Header -->
         <div :class="['mb-6 flex items-center justify-between', animClass('fade-up', 0)]">
             <div class="flex items-center gap-4">
-                <Link href="/admin/teachers" class="rounded-lg p-2 text-brand-text-soft hover:bg-brand-surface-soft hover:text-brand-accent">
+                <button @click="goBack" class="cursor-pointer rounded-lg p-2 text-brand-text-soft hover:bg-brand-surface-soft hover:text-brand-accent">
                     <ArrowLeft class="h-5 w-5" />
-                </Link>
+                </button>
                 <div>
                     <p class="text-sm font-semibold uppercase tracking-wider text-brand-text-soft">Teacher Profile</p>
                     <h1 class="text-2xl font-bold text-brand-text sm:text-3xl">{{ teacher.name }}</h1>
@@ -160,15 +195,15 @@ const studentColumns = [
                     <p class="mb-2 text-base font-semibold uppercase tracking-wider text-brand-text-soft">Contact Status</p>
                     <div class="flex gap-3">
                         <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium"
-                            :class="teacher.contacted_by_email ? 'bg-brand-success-soft text-brand-success' : 'bg-brand-surface-soft text-brand-text-soft'">
+                            :class="teacher.contacted_by_email ? 'bg-brand-teal-soft text-brand-teal' : 'bg-brand-surface-soft text-brand-text-soft'">
                             <Mail class="h-4 w-4" /> Email
                         </span>
                         <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium"
-                            :class="teacher.spoken_on_phone ? 'bg-brand-success-soft text-brand-success' : 'bg-brand-surface-soft text-brand-text-soft'">
+                            :class="teacher.spoken_on_phone ? 'bg-brand-teal-soft text-brand-teal' : 'bg-brand-surface-soft text-brand-text-soft'">
                             <Phone class="h-4 w-4" /> Phone
                         </span>
                         <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium"
-                            :class="teacher.met_face_to_face ? 'bg-brand-success-soft text-brand-success' : 'bg-brand-surface-soft text-brand-text-soft'">
+                            :class="teacher.met_face_to_face ? 'bg-brand-teal-soft text-brand-teal' : 'bg-brand-surface-soft text-brand-text-soft'">
                             <UserCheck class="h-4 w-4" /> F2F
                         </span>
                     </div>
@@ -287,12 +322,69 @@ const studentColumns = [
 
         <!-- Contact Logs Table -->
         <div :class="['mt-6 rounded-xl border border-brand-border bg-brand-surface', animClass('fade-up', 4)]">
-            <div class="flex items-center gap-2 border-b border-brand-border p-4">
-                <MessageSquare class="h-5 w-5 text-brand-text-soft" />
-                <MyTextConstructor variant="button-lg">
-                    <template #myTitle>Contact History ({{ teacher.contact_logs.length }})</template>
-                </MyTextConstructor>
+            <div class="flex items-center justify-between border-b border-brand-border p-4">
+                <div class="flex items-center gap-2">
+                    <MessageSquare class="h-5 w-5 text-brand-text-soft" />
+                    <MyTextConstructor variant="button-lg">
+                        <template #myTitle>Contact History ({{ teacher.contact_logs.length }})</template>
+                    </MyTextConstructor>
+                </div>
+                <MyButtonConstructor
+                    :variant="showContactForm ? 'ghost' : 'primary'"
+                    size="small"
+                    :icon="showContactForm ? X : Plus"
+                    @click="showContactForm = !showContactForm"
+                >
+                    {{ showContactForm ? 'Cancel' : 'Add' }}
+                </MyButtonConstructor>
             </div>
+
+            <!-- Add Contact Log Form -->
+            <div v-if="showContactForm" class="border-b border-brand-border bg-brand-surface-soft p-4">
+                <form @submit.prevent="submitContactLog" class="space-y-4">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                        <div>
+                            <label class="mb-1 block text-sm font-semibold text-brand-text">Type</label>
+                            <select v-model="contactForm.contact_type" class="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-base text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent">
+                                <option value="email">Email</option>
+                                <option value="phone">Phone</option>
+                                <option value="face_to_face">Face to Face</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-sm font-semibold text-brand-text">Direction</label>
+                            <select v-model="contactForm.direction" class="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-base text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent">
+                                <option value="outbound">Outbound (I contacted them)</option>
+                                <option value="inbound">Inbound (They contacted me)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-sm font-semibold text-brand-text">Date</label>
+                            <input v-model="contactForm.contacted_at" type="date" class="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-base text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent" />
+                        </div>
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-semibold text-brand-text">Subject</label>
+                        <input v-model="contactForm.subject" type="text" placeholder="e.g. Follow-up on exam entries" class="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-base text-brand-text placeholder:text-brand-text-soft focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent" />
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-semibold text-brand-text">Summary</label>
+                        <textarea v-model="contactForm.summary" rows="3" placeholder="Brief notes on what was discussed..." class="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-base text-brand-text placeholder:text-brand-text-soft focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent" />
+                    </div>
+                    <div class="flex justify-end gap-2">
+                        <MyButtonConstructor variant="ghost" size="small" @click="showContactForm = false">
+                            Cancel
+                        </MyButtonConstructor>
+                        <MyButtonConstructor variant="primary" size="small" type="submit" :disabled="contactForm.processing">
+                            Save Contact Log
+                        </MyButtonConstructor>
+                    </div>
+                    <p v-if="contactForm.errors.contact_type" class="text-sm text-brand-danger">{{ contactForm.errors.contact_type }}</p>
+                    <p v-if="contactForm.errors.contacted_at" class="text-sm text-brand-danger">{{ contactForm.errors.contacted_at }}</p>
+                </form>
+            </div>
+
             <div class="p-4">
                 <MyTableConstructor
                     v-if="teacher.contact_logs.length"
@@ -305,7 +397,7 @@ const studentColumns = [
                     :full-width="true"
                     :bare="true"
                 />
-                <p v-else class="py-4 text-center text-base text-brand-text-soft">No contact history</p>
+                <p v-else class="py-4 text-center text-base text-brand-text-soft">No contact history yet — add your first entry above</p>
             </div>
         </div>
     </div>

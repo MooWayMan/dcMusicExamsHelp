@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Instrument;
 use App\Models\School;
 use App\Models\Student;
 use App\Models\User;
@@ -60,6 +61,69 @@ test('teachers index can be searched by name', function () {
         ->assertInertia(fn ($page) => $page
             ->has('teachers.data', 1)
             ->where('teachers.data.0.name', 'Alice Strings')
+        );
+});
+
+test('teachers index search is case-insensitive', function () {
+    $admin = adminUser();
+    teacherUser(['name' => 'David Chen']);
+
+    $this->actingAs($admin)
+        ->get(route('admin.teachers.index', ['search' => 'chen']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('teachers.data', 1)
+            ->where('teachers.data.0.name', 'David Chen')
+        );
+});
+
+test('teachers index can be searched by school name', function () {
+    $admin = adminUser();
+    $teacher = teacherUser(['name' => 'Helen Wright']);
+    $otherTeacher = teacherUser(['name' => 'Bob Nobody']);
+
+    $school = School::factory()->create(['name' => 'Wirral Grammar School']);
+    $teacher->schools()->attach($school);
+
+    $this->actingAs($admin)
+        ->get(route('admin.teachers.index', ['search' => 'Wirral']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('teachers.data', 1)
+            ->where('teachers.data.0.name', 'Helen Wright')
+        );
+});
+
+test('teachers index school search is case-insensitive', function () {
+    $admin = adminUser();
+    $teacher = teacherUser(['name' => 'Helen Wright']);
+
+    $school = School::factory()->create(['name' => 'Wirral Grammar School']);
+    $teacher->schools()->attach($school);
+
+    $this->actingAs($admin)
+        ->get(route('admin.teachers.index', ['search' => 'wirral']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('teachers.data', 1)
+            ->where('teachers.data.0.name', 'Helen Wright')
+        );
+});
+
+test('teachers index can be searched by instrument name', function () {
+    $admin = adminUser();
+    $teacher = teacherUser(['name' => 'Sarah Flute']);
+    $otherTeacher = teacherUser(['name' => 'Tom Drums']);
+
+    $flute = Instrument::create(['name' => 'Flute', 'family' => 'Woodwind']);
+    $teacher->instruments()->attach($flute);
+
+    $this->actingAs($admin)
+        ->get(route('admin.teachers.index', ['search' => 'flute']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('teachers.data', 1)
+            ->where('teachers.data.0.name', 'Sarah Flute')
         );
 });
 
