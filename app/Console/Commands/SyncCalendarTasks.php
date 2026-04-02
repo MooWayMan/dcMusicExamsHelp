@@ -62,7 +62,17 @@ class SyncCalendarTasks extends Command
             $client->setClientSecret($clientSecret);
             $client->setAccessType('offline');
             $client->addScope(GoogleCalendar::CALENDAR);
-            $client->fetchAccessTokenWithRefreshToken($refreshToken);
+
+            $accessToken = $client->fetchAccessTokenWithRefreshToken($refreshToken);
+
+            if (isset($accessToken['error'])) {
+                $this->error('Failed to get access token: ' . ($accessToken['error_description'] ?? $accessToken['error']));
+                Log::error('SyncCalendarTasks: Token refresh failed', $accessToken);
+
+                return Command::FAILURE;
+            }
+
+            $client->setAccessToken($accessToken);
 
             $calendarService = new GoogleCalendar($client);
 
