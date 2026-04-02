@@ -95,6 +95,10 @@ const editingNotes = reactive<Record<number, string>>({})
 const savingNotes = reactive<Record<number, boolean>>({})
 const savedNotes = reactive<Record<number, boolean>>({})
 
+// Notes prompt modal
+const showNotesPrompt = ref(false)
+const notesPromptTask = ref<Task | null>(null)
+
 function toggleNotes(task: Task) {
     if (expandedNotes[task.id]) {
         expandedNotes[task.id] = false
@@ -128,7 +132,44 @@ async function saveNotes(task: Task) {
     }
 }
 
-async function toggleTask(task: Task) {
+function toggleTask(task: Task) {
+    const wasCompleted = task.status === 'completed'
+
+    // If completing (not reopening) and notes are empty, show the prompt
+    if (!wasCompleted && !task.notes) {
+        notesPromptTask.value = task
+        showNotesPrompt.value = true
+        return
+    }
+
+    performToggle(task)
+}
+
+function handleNotesPromptAddNotes() {
+    const task = notesPromptTask.value
+    showNotesPrompt.value = false
+    notesPromptTask.value = null
+    if (task) {
+        expandedNotes[task.id] = true
+        editingNotes[task.id] = task.notes ?? ''
+    }
+}
+
+function handleNotesPromptSkip() {
+    const task = notesPromptTask.value
+    showNotesPrompt.value = false
+    notesPromptTask.value = null
+    if (task) {
+        performToggle(task)
+    }
+}
+
+function handleNotesPromptCancel() {
+    showNotesPrompt.value = false
+    notesPromptTask.value = null
+}
+
+async function performToggle(task: Task) {
     try {
         const response = await fetch(`/admin/tasks/${task.id}/toggle`, {
             method: 'PATCH',
@@ -521,5 +562,34 @@ function statusLabel(status: string): string {
                 </div>
             </div>
         </div>
+        <!-- Notes prompt modal -->
+        <Teleport to="body">
+            <div v-if="showNotesPrompt" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="handleNotesPromptCancel">
+                <div class="mx-4 w-full max-w-md rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-xl">
+                    <div class="flex items-start gap-3">
+                        <div class="rounded-full bg-brand-accent/10 p-2">
+                            <FileText class="h-5 w-5 text-brand-accent" />
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-brand-text">Add notes first?</h3>
+                            <p class="mt-1 text-base text-brand-text-soft">
+                                This task has no notes yet. Want to record what went into it before marking it done?
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex gap-3">
+                        <MyButtonConstructor variant="success" size="small" fullWidth @click="handleNotesPromptSkip">
+                            Complete
+                        </MyButtonConstructor>
+                        <MyButtonConstructor variant="primary" size="small" fullWidth @click="handleNotesPromptAddNotes">
+                            Add Notes
+                        </MyButtonConstructor>
+                        <MyButtonConstructor variant="ghost" size="small" fullWidth @click="handleNotesPromptCancel">
+                            Cancel
+                        </MyButtonConstructor>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
     </div>
 </template>

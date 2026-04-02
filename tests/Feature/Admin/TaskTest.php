@@ -283,3 +283,131 @@ test('admin can delete a task', function () {
     expect(Task::find($task->id))->toBeNull();
     expect(Task::withTrashed()->find($task->id))->not->toBeNull(); // soft deleted
 });
+
+// ──────────────────────────────────────────
+// Toggle with/without notes (prompt behaviour)
+// ──────────────────────────────────────────
+
+test('task with notes can be toggled to completed', function () {
+    $admin = taskAdmin();
+    $task = Task::factory()->create(['status' => 'pending', 'notes' => 'Has notes']);
+
+    $this->actingAs($admin)
+        ->patchJson(route('admin.tasks.toggle', $task))
+        ->assertOk()
+        ->assertJson(['status' => 'completed']);
+
+    $task->refresh();
+    expect($task->status)->toBe('completed');
+});
+
+test('task without notes can still be toggled to completed via API', function () {
+    $admin = taskAdmin();
+    $task = Task::factory()->create(['status' => 'pending', 'notes' => null]);
+
+    // The prompt is frontend-only — the API toggle always works
+    $this->actingAs($admin)
+        ->patchJson(route('admin.tasks.toggle', $task))
+        ->assertOk()
+        ->assertJson(['status' => 'completed']);
+
+    $task->refresh();
+    expect($task->status)->toBe('completed');
+});
+
+// ──────────────────────────────────────────
+// task:notes Artisan Command
+// ──────────────────────────────────────────
+
+test('task:notes --list shows all tasks', function () {
+    Task::factory()->count(3)->create();
+
+    $this->artisan('task:notes', ['--list' => true])
+        ->expectsOutputToContain('3 tasks total.')
+        ->assertSuccessful();
+});
+
+test('task:notes can update by ID', function () {
+    $task = Task::factory()->create(['notes' => null]);
+
+    $this->artisan('task:notes', ['id' => $task->id, '--notes' => 'Updated via CLI'])
+        ->assertSuccessful();
+
+    $task->refresh();
+    expect($task->notes)->toBe('Updated via CLI');
+});
+
+test('task:notes can search by title', function () {
+    $task = Task::factory()->create(['title' => 'Fix OAuth Token', 'notes' => null]);
+
+    $this->artisan('task:notes', ['--search' => 'OAuth', '--notes' => 'Took 5 hours'])
+        ->assertSuccessful();
+
+    $task->refresh();
+    expect($task->notes)->toBe('Took 5 hours');
+});
+
+test('task:notes can append to existing notes', function () {
+    $task = Task::factory()->create(['notes' => 'First line']);
+
+    $this->artisan('task:notes', ['id' => $task->id, '--append' => 'Second line'])
+        ->assertSuccessful();
+
+    $task->refresh();
+    expect($task->notes)->toBe("First line\n\nSecond line");
+});
+
+test('task:notes can clear notes', function () {
+    $task = Task::factory()->create(['notes' => 'Should be cleared']);
+
+    $this->artisan('task:notes', ['id' => $task->id, '--clear' => true])
+        ->assertSuccessful();
+
+    $task->refresh();
+    expect($task->notes)->toBeNull();
+});
+
+test('task:notes --bulk updates multiple tasks', function () {
+    Task::factory()->create(['title' => 'Build landing page', 'notes' => null]);
+    Task::factory()->create(['title' => 'Fix accessibility', 'notes' => null]);
+
+    $json = json_encode([
+        'landing page' => 'Rewrote the whole thing',
+        'accessibility' => 'Fixed 7 issues across 8 files',
+    ]);
+
+    $this->artisan('task:notes', ['--bulk' => $json])
+        ->expectsOutputToContain('2 updated, 0 not found.')
+        ->assertSuccessful();
+
+    expect(Task::where('title', 'Build landing page')->first()->notes)->toBe('Rewrote the whole thing');
+    expect(Task::where('title', 'Fix accessibility')->first()->notes)->toBe('Fixed 7 issues across 8 files');
+});
+
+test('task:notes --bulk reports not found titles', function () {
+    $json = json_encode(['nonexistent task' => 'Some notes']);
+
+    $this->artisan('task:notes', ['--bulk' => $json])
+        ->expectsOutputToContain('0 updated, 1 not found.')
+        ->assertSuccessful();
+});
+
+test('task:notes --bulk rejects invalid JSON', function () {
+    $this->artisan('task:notes', ['--bulk' => 'not json'])
+        ->expectsOutputToContain('Invalid JSON')
+        ->assertFailed();
+});
+
+test('task:notes shows current notes when no option given', function () {
+    $task = Task::factory()->create(['title' => 'My task', 'notes' => 'Current notes here']);
+
+    $this->artisan('task:notes', ['id' => $task->id])
+        ->expectsOutputToContain('Current notes here')
+        ->assertSuccessful();
+});
+
+test('task:notes fails when task not found', function () {
+    $this->artisan('task:notes', ['id' => 9999])
+        ->expectsOutputToContain('Task not found')
+        ->assertFailed();
+});
