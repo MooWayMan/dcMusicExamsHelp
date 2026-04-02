@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3'
 import { ref, reactive, watch } from 'vue'
-import { Search, Plus, Pencil, Trash2, CheckCircle2, Circle, ChevronLeft, ChevronRight, Clock } from 'lucide-vue-next'
+import { Search, Plus, Pencil, Trash2, CheckCircle2, Circle, ChevronLeft, ChevronRight, Clock, X } from 'lucide-vue-next'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import PageHeader from '@/components/reusables/PageHeader.vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
@@ -174,7 +174,10 @@ function statusLabel(status: string): string {
             <div class="relative max-w-md flex-1">
                 <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-text-soft" />
                 <input v-model="search" type="text" placeholder="Search tasks..."
-                    class="w-full rounded-lg border border-brand-border bg-brand-surface py-3 pl-10 pr-4 text-lg text-brand-text placeholder:text-brand-text-soft focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent" />
+                    class="w-full rounded-lg border border-brand-border bg-brand-surface py-3 pl-10 pr-10 text-lg text-brand-text placeholder:text-brand-text-soft focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent" />
+                <button v-if="search" @click="search = ''" class="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer rounded-full p-0.5 text-brand-text-soft hover:bg-brand-surface-soft hover:text-brand-text transition-colors">
+                    <X class="h-4 w-4" />
+                </button>
             </div>
 
             <!-- Status filter -->
