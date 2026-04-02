@@ -1,7 +1,7 @@
 <!-- resources/js/pages/Welcome.vue -->
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3'
-import { GraduationCap, Users, Trophy } from 'lucide-vue-next'
+import { GraduationCap, Users, Trophy, Gift, Award, HeartHandshake, BookOpen } from 'lucide-vue-next'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
@@ -54,18 +54,26 @@ const incentives = [
   {
     title: 'Quarterly prize draws',
     detail: 'Every exam entry through code 120 earns an automatic entry into our quarterly prize draw. The more students you enter, the more chances to win.',
+    icon: Gift,
+    iconBg: 'bg-brand-accent/10',
+    iconColor: 'text-brand-accent',
+    borderColor: 'border-l-brand-accent',
   },
   {
-    title: 'Teacher recognition',
-    detail: 'Hall of Fame features, shout-outs and certificates for teachers whose students achieve outstanding results.',
+    title: 'Teacher rewards',
+    detail: 'Teachers who book through centre 120 are part of our rewards programme — expect surprises and thank-yous throughout the year.',
+    icon: Award,
+    iconBg: 'bg-brand-success-soft',
+    iconColor: 'text-brand-success',
+    borderColor: 'border-l-brand-success',
   },
   {
-    title: 'Access Fund support',
-    detail: 'Trinity offers grants of up to £300 per candidate for students facing financial barriers. We help teachers find and apply for funding their students deserve.',
-  },
-  {
-    title: 'Exam book discounts',
-    detail: 'Exclusive discounts on Faber Music publications and exam materials, available to teachers booking through centre 120.',
+    title: 'Exam material guidance',
+    detail: 'We help you find the right books and resources for each syllabus, including where to access discounted digital and print exam materials from Faber Music.',
+    icon: BookOpen,
+    iconBg: 'bg-brand-primary/10',
+    iconColor: 'text-brand-primary',
+    borderColor: 'border-l-brand-primary',
   },
 ]
 
@@ -283,53 +291,75 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
     <!-- INCENTIVES -->
     <section id="incentives" class="border-t border-brand-border bg-brand-bg">
       <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
-        <!-- TOP ROW -->
-        <div class="grid gap-10 lg:grid-cols-2 lg:gap-12">
-          <!-- LEFT -->
-          <div>
-            <MyTextConstructor variant="eyebrow" spacing="tight">
-              <template #myTitle>
-                Incentives
-              </template>
-            </MyTextConstructor>
+        <!-- Section header -->
+        <div class="text-center">
+          <MyTextConstructor variant="eyebrow" alignment="center" spacing="tight">
+            <template #myTitle>
+              Incentives
+            </template>
+          </MyTextConstructor>
 
-            <MyTextConstructor
-              variant="heading"
-              fontFamily="display"
-              spacing="tight"
-              class="mt-3 max-w-2xl md:!text-3xl lg:!text-4xl"
-            >
-              <template #myTitle>
-                Hard work deserves more than a certificate
-              </template>
-            </MyTextConstructor>
+          <MyTextConstructor
+            variant="heading"
+            fontFamily="display"
+            alignment="center"
+            spacing="tight"
+            class="mt-3 md:!text-3xl lg:!text-4xl"
+          >
+            <template #myTitle>
+              Hard work deserves more than a certificate
+            </template>
+          </MyTextConstructor>
 
-            <MyTextConstructor
-              bodyVariant="body"
-              spacing="none"
-              class="mt-5 max-w-2xl text-brand-text-soft md:!text-xl lg:!text-2xl"
-            >
-              Students put in the practice. Teachers put in the hours. Centre code {{ referralCode }}
-              connects you to real benefits — prize draws, recognition, funding support and
-              discounts on exam materials.
-            </MyTextConstructor>
+          <MyTextConstructor
+            bodyVariant="body"
+            alignment="center"
+            spacing="none"
+            class="mx-auto mt-5 max-w-3xl text-brand-text-soft md:!text-xl lg:!text-2xl"
+          >
+            Real benefits for everyone who books through centre code {{ referralCode }} — whether you enter online or through our face-to-face centres in Liverpool and Wirral.
+          </MyTextConstructor>
+        </div>
+
+        <!-- Incentive cards — 2x2 grid with icons and colour accents -->
+        <div class="mt-10 grid gap-5 sm:grid-cols-2">
+          <div
+            v-for="item in incentives"
+            :key="item.title"
+            class="flex gap-4 rounded-2xl border border-brand-border border-l-4 bg-brand-surface p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
+            :class="item.borderColor"
+          >
+            <div class="shrink-0 rounded-xl p-3" :class="item.iconBg">
+              <component :is="item.icon" class="h-7 w-7" :class="item.iconColor" />
+            </div>
+            <div>
+              <MyTextConstructor variant="button-lg" spacing="tight" textColor="text-brand-primary" class="md:!text-xl lg:!text-xl">
+                <template #myTitle>{{ item.title }}</template>
+              </MyTextConstructor>
+              <MyTextConstructor bodyVariant="muted" spacing="none" class="mt-2 text-brand-text-soft md:!text-base lg:!text-lg">
+                {{ item.detail }}
+              </MyTextConstructor>
+            </div>
           </div>
+        </div>
 
-          <!-- RIGHT -->
-          <div class="lg:pt-12">
-            <div class="space-y-4">
-              <div
-                v-for="item in incentives"
-                :key="item.title"
-                class="rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm"
-              >
-                <MyTextConstructor variant="button-lg" spacing="tight" textColor="text-brand-primary" class="md:!text-xl lg:!text-xl">
-                  <template #myTitle>{{ item.title }}</template>
-                </MyTextConstructor>
-                <MyTextConstructor bodyVariant="muted" spacing="none" class="mt-2 text-brand-text-soft md:!text-base lg:!text-lg">
-                  {{ item.detail }}
-                </MyTextConstructor>
+        <!-- Student Hall of Fame — featured card -->
+        <div class="mt-10 overflow-hidden rounded-2xl bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary shadow-xl">
+          <div class="flex flex-col items-center gap-6 px-6 py-10 text-center sm:px-10 md:flex-row md:text-left lg:px-14 lg:py-12">
+            <!-- Trophy icon with glow -->
+            <div class="shrink-0">
+              <div class="rounded-2xl bg-white/10 p-5 ring-2 ring-white/20">
+                <Trophy class="h-12 w-12 text-white md:h-16 md:w-16" />
               </div>
+            </div>
+            <!-- Content -->
+            <div>
+              <MyTextConstructor variant="button-lg" spacing="tight" textColor="text-brand-text-inverse" class="md:!text-2xl lg:!text-3xl">
+                <template #myTitle>Student Hall of Fame</template>
+              </MyTextConstructor>
+              <MyTextConstructor bodyVariant="muted" spacing="none" class="mt-3 text-white/80 md:!text-lg lg:!text-xl">
+                Every student who passes an exam through centre 120 gets celebrated on our Hall of Fame — your name, instrument, grade and result, all displayed for the world to see. Your hard work deserves to be recognised.
+              </MyTextConstructor>
             </div>
           </div>
         </div>
