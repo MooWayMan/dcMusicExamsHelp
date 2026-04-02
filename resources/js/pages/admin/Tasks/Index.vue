@@ -204,6 +204,21 @@ function statusLabel(status: string): string {
                     {{ p.charAt(0).toUpperCase() + p.slice(1) }}
                 </button>
             </div>
+
+            <!-- Category filter -->
+            <div class="flex flex-wrap gap-1">
+                <button @click="filterByCategory(null)"
+                    class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
+                    :class="!filters.category ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
+                    All Categories
+                </button>
+                <button v-for="c in categories" :key="c"
+                    @click="filterByCategory(c)"
+                    class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
+                    :class="filters.category === c ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
+                    {{ c.charAt(0).toUpperCase() + c.slice(1) }}
+                </button>
+            </div>
         </div>
 
         <!-- Task list -->
