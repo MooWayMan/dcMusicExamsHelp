@@ -9,6 +9,9 @@ use App\Models\Task;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -16,6 +19,15 @@ class TaskController extends Controller
 {
     public function index(Request $request): Response
     {
+        // Sync Google Calendar REMINDER events (throttled to once every 5 minutes)
+        if (Cache::add('gcal_sync_lock', true, 300)) {
+            try {
+                Artisan::call('calendar:sync-tasks');
+            } catch (\Exception $e) {
+                Log::warning('GCal sync on page load failed: ' . $e->getMessage());
+            }
+        }
+
         $query = Task::query();
 
         // Search
