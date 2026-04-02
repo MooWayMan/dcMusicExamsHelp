@@ -14,7 +14,7 @@ class AddTask extends Command
         {--category=technical : launch, admin, content, marketing, technical, or other}
         {--assigned=Paul & Spider-Man : Who is assigned}
         {--done : Mark as completed immediately}
-        {--batch= : Add multiple tasks at once, pipe-separated e.g. "Task one|Task two|Task three"}';
+        {--batch= : Add multiple tasks at once, separated by :: e.g. "Task one::Task two::Task three"}';
 
     protected $description = 'Quickly add one or more tasks to the task manager';
 
@@ -23,7 +23,7 @@ class AddTask extends Command
         $titles = [];
 
         if ($this->option('batch')) {
-            $titles = array_filter(array_map('trim', explode('|', $this->option('batch'))));
+            $titles = array_filter(array_map('trim', explode('::', $this->option('batch'))));
         } elseif ($this->argument('title')) {
             $titles = [$this->argument('title')];
         } else {
