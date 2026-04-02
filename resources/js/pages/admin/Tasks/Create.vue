@@ -15,6 +15,7 @@ const { animClass } = usePageAnimation()
 const form = useForm({
     title: '',
     detail: '',
+    notes: '',
     priority: 'medium',
     assigned_to: 'Paul',
     category: '',

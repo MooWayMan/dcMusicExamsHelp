@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3'
 import { ref, reactive, watch, computed } from 'vue'
-import { Search, Plus, Pencil, Trash2, CheckCircle2, Circle, ChevronLeft, ChevronRight, Clock, X, SlidersHorizontal } from 'lucide-vue-next'
+import { Search, Plus, Pencil, Trash2, CheckCircle2, Circle, ChevronLeft, ChevronRight, Clock, X, SlidersHorizontal, FileText, ChevronDown } from 'lucide-vue-next'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import PageHeader from '@/components/reusables/PageHeader.vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
@@ -11,6 +11,7 @@ interface Task {
     id: number
     title: string
     detail: string | null
+    notes: string | null
     priority: string
     status: string
     assigned_to: string
@@ -87,6 +88,45 @@ function filterByCategory(category: string | null) {
 // Track which tasks are in the "just completed" transition state
 const justCompleted = reactive<Record<number, boolean>>({})
 const justReopened = reactive<Record<number, boolean>>({})
+
+// Notes expansion and inline editing
+const expandedNotes = reactive<Record<number, boolean>>({})
+const editingNotes = reactive<Record<number, string>>({})
+const savingNotes = reactive<Record<number, boolean>>({})
+const savedNotes = reactive<Record<number, boolean>>({})
+
+function toggleNotes(task: Task) {
+    if (expandedNotes[task.id]) {
+        expandedNotes[task.id] = false
+    } else {
+        expandedNotes[task.id] = true
+        editingNotes[task.id] = task.notes ?? ''
+    }
+}
+
+async function saveNotes(task: Task) {
+    savingNotes[task.id] = true
+    try {
+        const response = await fetch(`/admin/tasks/${task.id}/notes`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({ notes: editingNotes[task.id] || null }),
+        })
+        if (response.ok) {
+            task.notes = editingNotes[task.id] || null
+            savedNotes[task.id] = true
+            setTimeout(() => { delete savedNotes[task.id] }, 2000)
+        }
+    } catch (e) {
+        console.error('Notes save failed', e)
+    } finally {
+        savingNotes[task.id] = false
+    }
+}
 
 async function toggleTask(task: Task) {
     try {
@@ -412,6 +452,32 @@ function statusLabel(status: string): string {
                             <span>{{ task.assigned_to }}</span>
                             <span v-if="task.completed_at">Completed {{ task.completed_at }}</span>
                             <span v-else>Added {{ task.created_at }}</span>
+                            <button @click="toggleNotes(task)"
+                                class="inline-flex cursor-pointer items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium transition-colors"
+                                :class="task.notes ? 'bg-brand-accent/10 text-brand-accent hover:bg-brand-accent/20' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
+                                <FileText class="h-3 w-3" />
+                                {{ task.notes ? 'Notes' : 'Add notes' }}
+                                <ChevronDown class="h-3 w-3 transition-transform duration-200" :class="{ 'rotate-180': expandedNotes[task.id] }" />
+                            </button>
+                        </div>
+
+                        <!-- Expandable notes panel -->
+                        <div v-if="expandedNotes[task.id]" class="mt-3 rounded-lg border border-brand-border bg-brand-surface-soft/50 p-3 transition-all">
+                            <textarea v-model="editingNotes[task.id]" rows="4"
+                                class="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-base text-brand-text placeholder:text-brand-text-soft focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                                placeholder="What happened? Time spent, decisions, context..."
+                                @blur="saveNotes(task)" />
+                            <div class="mt-2 flex items-center justify-between">
+                                <p class="text-xs text-brand-text-soft">Auto-saves when you click away</p>
+                                <div class="flex items-center gap-2">
+                                    <span v-if="savingNotes[task.id]" class="text-xs text-brand-text-soft">Saving...</span>
+                                    <span v-if="savedNotes[task.id]" class="text-xs font-medium text-brand-success">Saved!</span>
+                                    <button @click="saveNotes(task)"
+                                        class="cursor-pointer rounded-md bg-brand-accent px-3 py-1 text-xs font-medium text-brand-text-inverse hover:bg-brand-accent-dark transition-colors">
+                                        Save
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

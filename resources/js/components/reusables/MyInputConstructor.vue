@@ -128,7 +128,7 @@ const handleKeydown = (event: KeyboardEvent) => emit('keydown', event)
 
 <template>
   <div class="w-full">
-    <div v-if="label" class="mb-2">
+    <label v-if="label" :for="inputId" class="mb-2 block">
       <MyTextConstructor
         variant="button-lg"
         alignment="left"
@@ -140,7 +140,7 @@ const handleKeydown = (event: KeyboardEvent) => emit('keydown', event)
           <span v-if="required" class="ml-1 text-brand-danger">*</span>
         </template>
       </MyTextConstructor>
-    </div>
+    </label>
 
     <input
       :id="inputId"

@@ -35,48 +35,44 @@ interface PaginatedData {
 const props = defineProps<{
     orders: PaginatedData
     summary: { total_orders: number; total_commission: string; total_candidates: number }
-    filters: { search: string | null; method: string | null; status: string | null; sort: string; direction: string }
+    filters: { search: string | null; method: string | null; status: string | null; period: string | null; sort: string; direction: string }
 }>()
 
 const search = ref(props.filters.search ?? '')
 let searchTimeout: ReturnType<typeof setTimeout>
 
+function currentFilters(overrides: Record<string, string | undefined> = {}) {
+    return {
+        search: search.value || undefined,
+        method: props.filters.method || undefined,
+        status: props.filters.status || undefined,
+        period: props.filters.period || undefined,
+        ...overrides,
+    }
+}
+
 watch(search, (value) => {
     clearTimeout(searchTimeout)
     searchTimeout = setTimeout(() => {
-        router.get('/admin/orders', {
-            search: value || undefined,
-            method: props.filters.method || undefined,
-            status: props.filters.status || undefined,
-        }, { preserveState: true, replace: true })
+        router.get('/admin/orders', currentFilters({ search: value || undefined }), { preserveState: true, replace: true })
     }, 300)
 })
 
 function filterByMethod(method: string | null) {
-    router.get('/admin/orders', {
-        search: search.value || undefined,
-        method: method || undefined,
-        status: props.filters.status || undefined,
-    }, { preserveState: true, replace: true })
+    router.get('/admin/orders', currentFilters({ method: method || undefined }), { preserveState: true, replace: true })
 }
 
 function filterByStatus(status: string | null) {
-    router.get('/admin/orders', {
-        search: search.value || undefined,
-        method: props.filters.method || undefined,
-        status: status || undefined,
-    }, { preserveState: true, replace: true })
+    router.get('/admin/orders', currentFilters({ status: status || undefined }), { preserveState: true, replace: true })
+}
+
+function filterByPeriod(period: string | null) {
+    router.get('/admin/orders', currentFilters({ period: period || undefined }), { preserveState: true, replace: true })
 }
 
 function sortBy(column: string) {
     const direction = props.filters.sort === column && props.filters.direction === 'asc' ? 'desc' : 'asc'
-    router.get('/admin/orders', {
-        search: search.value || undefined,
-        method: props.filters.method || undefined,
-        status: props.filters.status || undefined,
-        sort: column,
-        direction,
-    }, { preserveState: true, replace: true })
+    router.get('/admin/orders', currentFilters({ sort: column, direction }), { preserveState: true, replace: true })
 }
 
 function sortIcon(column: string): string {
@@ -92,44 +88,47 @@ const { animClass } = usePageAnimation()
     <div class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <PageHeader title="Orders" subtitle="Trinity exam orders and commission tracking" eyebrow="Admin" size="compact" />
 
-        <!-- Summary cards -->
-        <div :class="['mt-6 grid grid-cols-1 gap-4 md:grid-cols-3', animClass('fade-up', 1)]">
-            <div class="rounded-xl border border-brand-border bg-brand-surface p-4">
-                <p class="text-base font-medium text-brand-text-soft">Orders</p>
-                <p class="mt-1 text-3xl font-bold text-brand-text">{{ summary.total_orders }}</p>
+        <!-- Summary pills -->
+        <div :class="['mt-6 flex flex-wrap gap-3', animClass('fade-up', 1)]">
+            <div class="inline-flex items-center gap-2 rounded-xl border border-brand-border bg-brand-surface px-4 py-2">
+                <span class="text-sm font-medium text-brand-text-soft">Orders</span>
+                <span class="text-xl font-bold text-brand-text">{{ summary.total_orders }}</span>
             </div>
-            <div class="rounded-xl border border-brand-border bg-brand-surface p-4">
-                <p class="text-base font-medium text-brand-text-soft">Total Commission</p>
-                <p class="mt-1 text-3xl font-bold text-brand-success">&pound;{{ summary.total_commission }}</p>
+            <div class="inline-flex items-center gap-2 rounded-xl border border-brand-border bg-brand-surface px-4 py-2">
+                <span class="text-sm font-medium text-brand-text-soft">Commission</span>
+                <span class="text-xl font-bold text-brand-success">&pound;{{ summary.total_commission }}</span>
             </div>
-            <div class="rounded-xl border border-brand-border bg-brand-surface p-4">
-                <p class="text-base font-medium text-brand-text-soft">Total Candidates</p>
-                <p class="mt-1 text-3xl font-bold text-brand-text">{{ summary.total_candidates }}</p>
+            <div class="inline-flex items-center gap-2 rounded-xl border border-brand-border bg-brand-surface px-4 py-2">
+                <span class="text-sm font-medium text-brand-text-soft">Candidates</span>
+                <span class="text-xl font-bold text-brand-text">{{ summary.total_candidates }}</span>
             </div>
         </div>
 
-        <!-- Filters -->
-        <div :class="['mt-6 flex flex-wrap items-center gap-4', animClass('fade-up', 2)]">
-            <div class="relative max-w-md flex-1">
+        <!-- Search -->
+        <div :class="['mt-4', animClass('fade-up', 2)]">
+            <div class="relative">
                 <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-text-soft" />
                 <input v-model="search" type="text" placeholder="Search by order #, teacher, or school..."
                     class="w-full rounded-lg border border-brand-border bg-brand-surface py-3 pl-10 pr-4 text-lg text-brand-text placeholder:text-brand-text-soft focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent" />
             </div>
+        </div>
 
+        <!-- Filters -->
+        <div :class="['mt-3 flex flex-wrap items-center gap-4', animClass('fade-up', 2)]">
             <!-- Method filter -->
             <div class="flex gap-1">
                 <button @click="filterByMethod(null)"
-                    class="rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
+                    class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
                     :class="!filters.method ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
                     All
                 </button>
                 <button @click="filterByMethod('Digital')"
-                    class="rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
+                    class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
                     :class="filters.method === 'Digital' ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
                     DG
                 </button>
                 <button @click="filterByMethod('Default')"
-                    class="rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
+                    class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
                     :class="filters.method === 'Default' ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
                     F2F
                 </button>
@@ -138,15 +137,31 @@ const { animClass } = usePageAnimation()
             <!-- Status filter -->
             <div class="flex gap-1">
                 <button @click="filterByStatus(null)"
-                    class="rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
+                    class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
                     :class="!filters.status ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
                     All Status
                 </button>
                 <button v-for="s in ['Submitted', 'Confirmed', 'Completed']" :key="s"
                     @click="filterByStatus(s)"
-                    class="rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
+                    class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
                     :class="filters.status === s ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
                     {{ s }}
+                </button>
+            </div>
+
+            <!-- Time period filter -->
+            <div class="flex flex-wrap gap-1">
+                <button v-for="p in [
+                    { label: 'All Time', value: null },
+                    { label: 'This Quarter', value: 'this_quarter' },
+                    { label: 'Last Quarter', value: 'last_quarter' },
+                    { label: 'This Year', value: 'this_year' },
+                    { label: 'Last 12 Months', value: 'last_12' },
+                ]" :key="p.label"
+                    @click="filterByPeriod(p.value)"
+                    class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
+                    :class="(filters.period ?? null) === p.value ? 'bg-brand-success text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
+                    {{ p.label }}
                 </button>
             </div>
         </div>

@@ -44,6 +44,7 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])->pref
     // Tasks — launch checklist and ongoing task management
     Route::resource('tasks', TaskController::class)->except(['show']);
     Route::patch('tasks/{task}/toggle', [TaskController::class, 'toggle'])->name('tasks.toggle');
+    Route::patch('tasks/{task}/notes', [TaskController::class, 'updateNotes'])->name('tasks.notes');
 
     // AJAX: sync calendar + return fresh active task count (for sidebar polling)
     Route::post('tasks/sync', [TaskController::class, 'sync'])->name('tasks.sync');

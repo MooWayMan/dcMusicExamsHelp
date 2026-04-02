@@ -260,6 +260,7 @@ function sortIndicator(column: Column) {
                 <th
                   v-for="column in columns"
                   :key="column.key"
+                  scope="col"
                   :class="[headerBaseClasses, props.sortable && column.sortable !== false ? headerClickableClasses : '']"
                   :style="column.width ? { width: column.width } : {}"
                   :aria-sort="state.sortKey === column.key ? (state.sortDir === 'asc' ? 'ascending' : 'descending') : 'none'"

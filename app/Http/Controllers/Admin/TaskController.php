@@ -23,6 +23,7 @@ class TaskController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'ilike', "%{$search}%")
                   ->orWhere('detail', 'ilike', "%{$search}%")
+                  ->orWhere('notes', 'ilike', "%{$search}%")
                   ->orWhere('assigned_to', 'ilike', "%{$search}%");
             });
         }
@@ -62,6 +63,7 @@ class TaskController extends Controller
             'id' => $task->id,
             'title' => $task->title,
             'detail' => $task->detail,
+            'notes' => $task->notes,
             'priority' => $task->priority,
             'status' => $task->status,
             'assigned_to' => $task->assigned_to,
@@ -109,6 +111,7 @@ class TaskController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'detail' => 'nullable|string',
+            'notes' => 'nullable|string',
             'priority' => 'required|in:high,medium,low',
             'assigned_to' => 'nullable|string|max:100',
             'category' => 'nullable|in:' . implode(',', Task::CATEGORIES),
@@ -117,6 +120,7 @@ class TaskController extends Controller
         $task = Task::create([
             'title' => $validated['title'],
             'detail' => $validated['detail'] ?? null,
+            'notes' => $validated['notes'] ?? null,
             'priority' => $validated['priority'],
             'assigned_to' => $validated['assigned_to'] ?? 'Paul',
             'category' => $validated['category'] ?? null,
@@ -134,6 +138,7 @@ class TaskController extends Controller
                 'id' => $task->id,
                 'title' => $task->title,
                 'detail' => $task->detail,
+                'notes' => $task->notes,
                 'priority' => $task->priority,
                 'status' => $task->status,
                 'assigned_to' => $task->assigned_to,
@@ -150,6 +155,7 @@ class TaskController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'detail' => 'nullable|string',
+            'notes' => 'nullable|string',
             'priority' => 'required|in:high,medium,low',
             'status' => 'required|in:pending,in_progress,completed',
             'assigned_to' => 'nullable|string|max:100',
@@ -195,6 +201,20 @@ class TaskController extends Controller
             'in_progress' => Task::where('status', 'in_progress')->count(),
             'total_active' => Task::where('status', '!=', 'completed')->count(),
         ]);
+    }
+
+    /**
+     * AJAX: save notes inline from the index page expandable textarea.
+     */
+    public function updateNotes(Request $request, Task $task): JsonResponse
+    {
+        $validated = $request->validate([
+            'notes' => 'nullable|string',
+        ]);
+
+        $task->update(['notes' => $validated['notes'] ?? null]);
+
+        return response()->json(['saved' => true]);
     }
 
     /**

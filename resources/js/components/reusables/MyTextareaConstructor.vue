@@ -40,6 +40,8 @@ const sizeClass = computed(() => {
 
 const emit = defineEmits(['update:modelValue'])
 
+const textareaId = `textarea-${Math.random().toString(36).slice(2, 11)}`
+
 const stateClass = computed(() => {
   if (props.error) return 'border-brand-danger focus:ring-brand-danger'
   if (props.success) return 'border-brand-success focus:ring-brand-success'
@@ -50,18 +52,20 @@ const stateClass = computed(() => {
 <template>
   <div class="space-y-2">
     <!-- LABEL -->
-    <MyTextConstructor
-      v-if="label"
-      variant="button-lg"
-      alignment="left"
-      textColor="text-brand-text"
-      spacing="none"
-    >
-      <template #myTitle>{{ label }}</template>
-    </MyTextConstructor>
+    <label v-if="label" :for="textareaId" class="block">
+      <MyTextConstructor
+        variant="button-lg"
+        alignment="left"
+        textColor="text-brand-text"
+        spacing="none"
+      >
+        <template #myTitle>{{ label }}</template>
+      </MyTextConstructor>
+    </label>
 
     <!-- TEXTAREA -->
     <textarea
+      :id="textareaId"
       :value="modelValue"
       @input="emit('update:modelValue', $event.target.value)"
       :placeholder="placeholder"

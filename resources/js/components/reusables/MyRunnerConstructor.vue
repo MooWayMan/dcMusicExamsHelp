@@ -112,18 +112,20 @@ const gapClass = computed(() => {
 
 const wrapperClass = computed(() => widthMap[props.maxWidth])
 
+const focusClasses = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-accent'
+
 const textCardClass = computed(() => [
-  'group cursor-pointer rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm transition-all duration-200',
+  `group cursor-pointer rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm transition-all duration-200 ${focusClasses}`,
   props.enableHover ? 'hover:-translate-y-1 hover:shadow-lg' : '',
 ])
 
 const iconCardClass = computed(() => [
-  'group flex h-full cursor-pointer flex-col items-center rounded-2xl border-[4px] border-brand-primary bg-brand-surface p-5 shadow-lg transition-all duration-300',
+  `group flex h-full cursor-pointer flex-col items-center rounded-2xl border-[4px] border-brand-primary bg-brand-surface p-5 shadow-lg transition-all duration-300 ${focusClasses}`,
   props.enableHover ? 'hover:-translate-y-1 hover:scale-[1.02] hover:border-brand-accent hover:bg-brand-surface-soft hover:shadow-xl' : '',
 ])
 
 const imageCardClass = computed(() => [
-  'group flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-brand-border bg-brand-surface shadow-md transition-all duration-300',
+  `group flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-brand-border bg-brand-surface shadow-md transition-all duration-300 ${focusClasses}`,
   props.enableHover ? 'hover:-translate-y-1 hover:shadow-xl' : '',
 ])
 

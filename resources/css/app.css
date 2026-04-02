@@ -151,7 +151,7 @@
     --brand-surface-soft: hsl(210 40% 96%);
 
     --brand-text: hsl(222 47% 11%);
-    --brand-text-soft: hsl(215 16% 47%);
+    --brand-text-soft: hsl(215 16% 40%);
     --brand-text-inverse: hsl(0 0% 100%);
 
     --brand-border: hsl(214 32% 91%);
@@ -160,7 +160,7 @@
     --brand-success-soft: hsl(350 65% 95%);
     --brand-teal: hsl(175 65% 32%);
     --brand-teal-soft: hsl(175 65% 95%);
-    --brand-danger: hsl(0 84% 60%);
+    --brand-danger: hsl(0 72% 50%);
     --brand-danger-soft: hsl(0 93% 97%);
 
     /* SIDEBAR */

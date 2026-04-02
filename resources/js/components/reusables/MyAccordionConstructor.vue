@@ -83,9 +83,11 @@ const chevronSize = computed(() => {
     >
       <button
         type="button"
+        :id="`accordion-btn-${item.id}`"
         :aria-expanded="isOpen(item.id)"
+        :aria-controls="`accordion-panel-${item.id}`"
         :class="[
-          'flex w-full items-center justify-between transition-colors duration-200',
+          'flex w-full items-center justify-between transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-accent',
           props.headerBgColor,
           props.headerTextColor,
           props.headerHoverBgColor,
@@ -124,6 +126,9 @@ const chevronSize = computed(() => {
       </button>
 
       <div
+        :id="`accordion-panel-${item.id}`"
+        role="region"
+        :aria-labelledby="`accordion-btn-${item.id}`"
         class="overflow-hidden transition-all duration-300 ease-in-out"
         :class="isOpen(item.id) ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'"
       >

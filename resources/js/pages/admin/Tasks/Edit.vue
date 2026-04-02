@@ -9,6 +9,7 @@ interface TaskData {
     id: number
     title: string
     detail: string | null
+    notes: string | null
     priority: string
     status: string
     assigned_to: string
@@ -27,6 +28,7 @@ const { animClass } = usePageAnimation()
 const form = useForm({
     title: props.task.title,
     detail: props.task.detail ?? '',
+    notes: props.task.notes ?? '',
     priority: props.task.priority,
     status: props.task.status,
     assigned_to: props.task.assigned_to,

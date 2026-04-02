@@ -10,9 +10,9 @@ import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructo
 import MyFooter from '@/components/layouts/MyFooter.vue'
 
 const pageMeta = {
-  title: 'musicexams.help',
+  title: 'musicexams.help — Your Guide to Trinity Music Exams',
   description:
-    'Simple music exam guidance from Trinity Registered Exam Centre 120.',
+    'Free guidance for teachers, parents and students booking Trinity music exams through Centre 120. Incentives, recognition and support.',
 }
 
 const referralCode = '120'
@@ -27,65 +27,93 @@ const trinityCentreLogo =
 const whyCards = [
   {
     id: 1,
-    title: 'Clear booking path',
-    subTitle: 'A simpler route through the process, without extra clutter.',
+    title: 'For Teachers',
+    subTitle: 'Save time with a clear booking route, get recognised for the work you do, and access exclusive resources and discounts on exam materials.',
     showIcon: false,
   },
   {
     id: 2,
-    title: 'Code 120 kept visible',
-    subTitle: 'The centre code stays prominent so it is easier to remember at the right time.',
+    title: 'For Parents',
+    subTitle: 'No more confusion about how exams work. Step-by-step guidance from choosing the right exam to understanding results day.',
     showIcon: false,
   },
   {
     id: 3,
-    title: 'Support, not competition',
-    subTitle: 'Designed to help teachers, parents and students while keeping teachers central.',
+    title: 'For Students',
+    subTitle: 'Your hard work deserves to be celebrated. Incentives, prize draws and a Hall of Fame for students who go the distance.',
     showIcon: false,
   },
 ]
 
 const incentives = [
-  'Quarterly prize draws for entries using code 120',
-  'Recognition for teachers and students',
-  'Hall of Fame features, shout-outs and more',
+  {
+    title: 'Quarterly prize draws',
+    detail: 'Every exam entry through code 120 earns an automatic entry into our quarterly prize draw. The more students you enter, the more chances to win.',
+  },
+  {
+    title: 'Teacher recognition',
+    detail: 'Hall of Fame features, shout-outs and certificates for teachers whose students achieve outstanding results.',
+  },
+  {
+    title: 'Access Fund support',
+    detail: 'Trinity offers grants of up to £300 per candidate for students facing financial barriers. We help teachers find and apply for funding their students deserve.',
+  },
+  {
+    title: 'Exam book discounts',
+    detail: 'Exclusive discounts on Faber Music publications and exam materials, available to teachers booking through centre 120.',
+  },
 ]
 
 const faqs = [
   {
     question: 'Do I book through this website?',
     answer:
-      'No. This site gives guidance and then points you to the official booking route.',
+      'No — we guide you through the process and then link you directly to the official Trinity booking page. When you get there, centre code 120 will already be applied.',
   },
   {
     question: 'Who is this for?',
     answer:
-      'Teachers, parents and students who want a simpler route through music exam booking.',
+      'Anyone involved in music exams. Teachers looking for a smoother booking process and recognition. Parents wanting clear guidance on how exams work. Students preparing for their next grade.',
   },
   {
-    question: 'Is this only for Trinity?',
+    question: 'What is centre code 120?',
     answer:
-      'Trinity is the current focus, but the wider musicexams.help brand leaves room for other exam boards later.',
+      'It is a Trinity College London registered exam centre code. Using code 120 when booking connects your entry to this centre, which unlocks access to incentives, recognition and ongoing support.',
+  },
+  {
+    question: 'Does it cost anything extra?',
+    answer:
+      'No. The exam fees are the same regardless of which centre code you use. Code 120 simply gives you access to the extra benefits and support offered through musicexams.help.',
+  },
+  {
+    question: 'Is this only for Trinity exams?',
+    answer:
+      'Trinity College London is the current focus, covering graded music exams across all instruments. The wider musicexams.help brand may expand to include other exam boards in the future.',
+  },
+  {
+    question: 'Can I use this if I already have a teacher?',
+    answer:
+      'Absolutely. This site supports your existing teacher, not replaces them. Your teacher stays central to everything — we just make the booking and admin side easier for everyone.',
   },
 ]
 
 const usefulLinks = [
   {
     id: 1,
-    title: 'Go to official booking',
-    subTitle: 'Continue to the Trinity booking route when you are ready.',
+    title: 'Book your exam now',
+    subTitle: 'Ready to go? Head straight to the official Trinity booking page with code 120 already applied.',
     url: bookingUrl,
   },
   {
     id: 2,
-    title: 'Why use code 120',
-    subTitle: 'See why keeping the centre code visible matters before booking.',
+    title: 'See how it works',
+    subTitle: 'Find out why teachers, parents and students are choosing to book through centre 120.',
     url: '#why',
   },
   {
     id: 3,
-    title: 'Incentives and recognition',
-    subTitle: 'See how code 120 may later connect to draws, recognition and Hall of Fame features.',
+    title: 'Explore the incentives',
+    subTitle: 'Prize draws, teacher recognition, student funding and discounts on exam materials.',
     url: '#incentives',
   },
 ]
@@ -131,7 +159,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
           class="mt-6 max-w-4xl"
         >
           <template #myTitle>
-            Music exam booking made clearer
+            Your guide to Trinity music exams
           </template>
         </MyTextConstructor>
 
@@ -141,9 +169,10 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
           spacing="none"
           class="mt-4 max-w-3xl text-brand-text-soft"
         >
-          Simple guidance for teachers, parents and students. Keep
-          <span class="font-semibold text-brand-text">code {{ referralCode }}</span>
-          ready before booking.
+          Free guidance, incentives and support for teachers, parents and students.
+          Use centre code
+          <span class="font-semibold text-brand-text">{{ referralCode }}</span>
+          when booking to unlock it all.
         </MyTextConstructor>
 
         <div class="mt-6 flex flex-wrap items-center justify-center gap-4">
@@ -170,17 +199,27 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
     <div class="w-full border-y border-brand-border bg-brand-surface-soft py-6 md:py-12">
       <div class="mx-auto max-w-5xl px-6 py-5">
         <div class="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
-          <MyTextConstructor
-            alignment="left"
-            bodyVariant="body"
-            spacing="none"
-            class="text-center sm:text-left text-brand-text-soft"
-          >
-            Run independently with guidance built around
-            <span class="font-semibold text-brand-text">
-              Trinity Registered Exam Centre 120
-            </span>
-          </MyTextConstructor>
+          <div class="text-center sm:text-left">
+            <MyTextConstructor
+              alignment="left"
+              bodyVariant="body"
+              spacing="none"
+              class="text-brand-text-soft"
+            >
+              Run by a local music teacher in partnership with
+              <span class="font-semibold text-brand-text">
+                Trinity Registered Exam Centre 120
+              </span>
+            </MyTextConstructor>
+            <MyTextConstructor
+              alignment="left"
+              bodyVariant="muted"
+              spacing="none"
+              class="mt-1 text-brand-text-soft"
+            >
+              Supporting teachers, parents and students across the UK
+            </MyTextConstructor>
+          </div>
 
           <img
             :src="trinityCentreLogo"
@@ -208,7 +247,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             class="mt-3"
           >
             <template #myTitle>
-              Built to save time and reduce confusion
+              Something for everyone
             </template>
           </MyTextConstructor>
 
@@ -217,8 +256,9 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             spacing="none"
             class="mt-4 max-w-2xl text-brand-text-soft"
           >
-            The goal is simple: make music exam booking easier to understand, keep code
-            {{ referralCode }} visible, and guide people to the official booking route with more confidence.
+            Whether you teach music, you are a parent navigating exams for the first time,
+            or a student preparing for your next grade — centre code {{ referralCode }} connects
+            you to guidance, recognition and real support.
           </MyTextConstructor>
         </div>
 
@@ -273,7 +313,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
               class="mt-3 max-w-2xl"
             >
               <template #myTitle>
-                Your students work hard. So do you.
+                Hard work deserves more than a certificate
               </template>
             </MyTextConstructor>
 
@@ -282,9 +322,9 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
               spacing="none"
               class="mt-5 max-w-2xl text-brand-text-soft"
             >
-              Students put in the practice. Teachers put in the time. Code {{ referralCode }}
-              is designed to do more than help with booking — it can support quarterly
-              prize draws, recognition, shout-outs and future rewards.
+              Students put in the practice. Teachers put in the hours. Centre code {{ referralCode }}
+              connects you to real benefits — prize draws, recognition, funding support and
+              discounts on exam materials.
             </MyTextConstructor>
           </div>
 
@@ -293,11 +333,14 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             <div class="space-y-4">
               <div
                 v-for="item in incentives"
-                :key="item"
+                :key="item.title"
                 class="rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm"
               >
-                <MyTextConstructor bodyVariant="body" spacing="none">
-                  {{ item }}
+                <MyTextConstructor variant="button-lg" spacing="tight" textColor="text-brand-primary">
+                  <template #myTitle>{{ item.title }}</template>
+                </MyTextConstructor>
+                <MyTextConstructor bodyVariant="muted" spacing="none" class="mt-2 text-brand-text-soft">
+                  {{ item.detail }}
                 </MyTextConstructor>
               </div>
             </div>
@@ -343,7 +386,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
           spacing="tight"
         >
           <template #myTitle>
-            Useful next steps
+            Ready to get started?
           </template>
         </MyTextConstructor>
 
@@ -354,7 +397,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
           class="mt-3"
         >
           <template #mySubTitle>
-            Quick routes to the most useful parts of this page and the official booking process.
+            Choose your next step — whether you are ready to book or want to learn more first.
           </template>
         </MyTextConstructor>
 

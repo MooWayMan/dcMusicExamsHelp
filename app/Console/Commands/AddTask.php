@@ -10,6 +10,7 @@ class AddTask extends Command
     protected $signature = 'task:add
         {title? : The task title (omit to enter multiple tasks)}
         {--detail= : Extra detail or notes}
+        {--notes= : Journal notes (context, time spent, decisions)}
         {--priority=medium : high, medium, or low}
         {--category=technical : launch, admin, content, marketing, technical, or other}
         {--assigned=Paul & Spider-Man : Who is assigned}
@@ -35,6 +36,7 @@ class AddTask extends Command
             $task = Task::create([
                 'title' => $title,
                 'detail' => $this->option('detail') ?? '',
+                'notes' => $this->option('notes') ?? null,
                 'priority' => $this->option('priority'),
                 'category' => $this->option('category'),
                 'assigned_to' => $this->option('assigned'),

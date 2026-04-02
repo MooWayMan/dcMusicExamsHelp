@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\School;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -36,6 +37,22 @@ class OrderController extends Controller
         // Status filter
         if ($status = $request->input('status')) {
             $query->where('order_status', $status);
+        }
+
+        // Time period filter
+        $period = $request->input('period');
+        if ($period) {
+            $now = Carbon::now();
+            match ($period) {
+                'this_quarter' => $query->where('created_at', '>=', $now->copy()->startOfQuarter()),
+                'last_quarter' => $query->whereBetween('created_at', [
+                    $now->copy()->subQuarter()->startOfQuarter(),
+                    $now->copy()->subQuarter()->endOfQuarter(),
+                ]),
+                'this_year' => $query->where('created_at', '>=', $now->copy()->startOfYear()),
+                'last_12' => $query->where('created_at', '>=', $now->copy()->subMonths(12)),
+                default => null,
+            };
         }
 
         $sortBy = $request->input('sort', 'created_at');
@@ -90,6 +107,19 @@ class OrderController extends Controller
         }
         if ($method) $summaryQuery->where('delivery_method', $method);
         if ($status) $summaryQuery->where('order_status', $status);
+        if ($period) {
+            $now = Carbon::now();
+            match ($period) {
+                'this_quarter' => $summaryQuery->where('created_at', '>=', $now->copy()->startOfQuarter()),
+                'last_quarter' => $summaryQuery->whereBetween('created_at', [
+                    $now->copy()->subQuarter()->startOfQuarter(),
+                    $now->copy()->subQuarter()->endOfQuarter(),
+                ]),
+                'this_year' => $summaryQuery->where('created_at', '>=', $now->copy()->startOfYear()),
+                'last_12' => $summaryQuery->where('created_at', '>=', $now->copy()->subMonths(12)),
+                default => null,
+            };
+        }
 
         $summary = [
             'total_orders' => $summaryQuery->count(),
@@ -104,6 +134,7 @@ class OrderController extends Controller
                 'search' => $search,
                 'method' => $method,
                 'status' => $status,
+                'period' => $period,
                 'sort' => $sortBy,
                 'direction' => $sortDir,
             ],

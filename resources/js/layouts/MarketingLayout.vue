@@ -8,7 +8,7 @@ import MyFooter from '@/components/layouts/MyFooter.vue'
   <div class="flex min-h-screen flex-col bg-brand-bg text-brand-text">
     <Navbar />
 
-    <main class="flex-1 pt-10 md:pt-20">
+    <main id="main-content" class="flex-1 pt-10 md:pt-20">
       <slot />
     </main>
 

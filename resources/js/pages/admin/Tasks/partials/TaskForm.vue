@@ -42,6 +42,15 @@ function handleSubmit() {
             <p v-if="form.errors.detail" class="mt-1 text-sm text-brand-danger">{{ form.errors.detail }}</p>
         </div>
 
+        <!-- Notes -->
+        <div>
+            <label class="mb-2 block text-lg font-semibold text-brand-text">Notes</label>
+            <textarea v-model="form.notes" rows="5"
+                class="w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3 text-lg text-brand-text placeholder:text-brand-text-soft focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                placeholder="What actually happened? Time spent, decisions made, context..." />
+            <p v-if="form.errors.notes" class="mt-1 text-sm text-brand-danger">{{ form.errors.notes }}</p>
+        </div>
+
         <!-- Priority + Category + Assigned To row -->
         <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
             <!-- Priority -->
