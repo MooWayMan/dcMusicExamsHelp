@@ -148,7 +148,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
         <img
           :src="heroLogo"
           alt="musicexams.help"
-          class="h-44 w-auto sm:h-56 md:h-72 lg:h-80 xl:h-[26rem]"
+          class="h-auto w-80 object-contain sm:w-[26rem] md:w-[34rem] lg:w-[40rem] xl:w-[46rem]"
         />
 
         <MyTextConstructor
@@ -156,7 +156,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
           alignment="center"
           fontFamily="display"
           spacing="tight"
-          class="mt-6 max-w-4xl"
+          class="mt-6 max-w-4xl md:!text-5xl lg:!text-6xl"
         >
           <template #myTitle>
             Your guide to Trinity music exams
@@ -167,7 +167,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
           alignment="center"
           bodyVariant="body"
           spacing="none"
-          class="mt-4 max-w-3xl text-brand-text-soft"
+          class="mt-4 max-w-3xl text-brand-text-soft md:!text-xl lg:!text-2xl"
         >
           Free guidance, incentives and support for teachers, parents and students.
           Use centre code
@@ -204,7 +204,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
               alignment="left"
               bodyVariant="body"
               spacing="none"
-              class="text-brand-text-soft"
+              class="text-brand-text-soft md:!text-xl lg:!text-2xl"
             >
               Run by a local music teacher in partnership with
               <span class="font-semibold text-brand-text">
@@ -215,7 +215,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
               alignment="left"
               bodyVariant="muted"
               spacing="none"
-              class="mt-1 text-brand-text-soft"
+              class="mt-1 text-brand-text-soft md:!text-lg lg:!text-xl"
             >
               Supporting teachers, parents and students across the UK
             </MyTextConstructor>
@@ -244,7 +244,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             variant="heading"
             fontFamily="display"
             spacing="tight"
-            class="mt-3"
+            class="mt-3 md:!text-3xl lg:!text-4xl"
           >
             <template #myTitle>
               Something for everyone
@@ -254,7 +254,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
           <MyTextConstructor
             bodyVariant="body"
             spacing="none"
-            class="mt-4 max-w-2xl text-brand-text-soft"
+            class="mt-4 max-w-2xl text-brand-text-soft md:!text-xl lg:!text-2xl"
           >
             Whether you teach music, you are a parent navigating exams for the first time,
             or a student preparing for your next grade — centre code {{ referralCode }} connects
@@ -272,6 +272,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
               variant="subheading"
               spacing="tight"
               textColor="text-brand-primary"
+              class="md:!text-2xl lg:!text-3xl"
             >
               <template #myTitle>
                 {{ card.title }}
@@ -282,7 +283,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
               subTitleVariant="muted"
               spacing="none"
               textColor="text-brand-text-soft"
-              class="mt-2"
+              class="mt-2 md:!text-lg lg:!text-xl"
             >
               <template #mySubTitle>
                 {{ card.subTitle }}
@@ -310,7 +311,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
               variant="heading"
               fontFamily="display"
               spacing="tight"
-              class="mt-3 max-w-2xl"
+              class="mt-3 max-w-2xl md:!text-3xl lg:!text-4xl"
             >
               <template #myTitle>
                 Hard work deserves more than a certificate
@@ -320,7 +321,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             <MyTextConstructor
               bodyVariant="body"
               spacing="none"
-              class="mt-5 max-w-2xl text-brand-text-soft"
+              class="mt-5 max-w-2xl text-brand-text-soft md:!text-xl lg:!text-2xl"
             >
               Students put in the practice. Teachers put in the hours. Centre code {{ referralCode }}
               connects you to real benefits — prize draws, recognition, funding support and
@@ -336,10 +337,10 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
                 :key="item.title"
                 class="rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm"
               >
-                <MyTextConstructor variant="button-lg" spacing="tight" textColor="text-brand-primary">
+                <MyTextConstructor variant="button-lg" spacing="tight" textColor="text-brand-primary" class="md:!text-xl lg:!text-xl">
                   <template #myTitle>{{ item.title }}</template>
                 </MyTextConstructor>
-                <MyTextConstructor bodyVariant="muted" spacing="none" class="mt-2 text-brand-text-soft">
+                <MyTextConstructor bodyVariant="muted" spacing="none" class="mt-2 text-brand-text-soft md:!text-base lg:!text-lg">
                   {{ item.detail }}
                 </MyTextConstructor>
               </div>
@@ -384,6 +385,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
           fontFamily="display"
           alignment="center"
           spacing="tight"
+          class="md:!text-3xl lg:!text-4xl"
         >
           <template #myTitle>
             Ready to get started?
@@ -394,7 +396,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
           subTitleVariant="muted"
           alignment="center"
           spacing="none"
-          class="mt-3"
+          class="mt-3 md:!text-lg lg:!text-xl"
         >
           <template #mySubTitle>
             Choose your next step — whether you are ready to book or want to learn more first.
@@ -425,7 +427,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             variant="heading"
             fontFamily="display"
             spacing="tight"
-            class="mt-3"
+            class="mt-3 md:!text-3xl lg:!text-4xl"
           >
             <template #myTitle>
               Common questions
