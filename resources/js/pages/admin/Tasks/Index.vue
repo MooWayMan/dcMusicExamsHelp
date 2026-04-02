@@ -127,7 +127,13 @@ async function toggleTask(task: Task) {
 
 function deleteTask(task: Task) {
     if (confirm(`Are you sure you want to remove "${task.title}"?`)) {
-        router.delete(`/admin/tasks/${task.id}`)
+        const params = new URLSearchParams()
+        if (search.value) params.set('search', search.value)
+        if (props.filters.priority) params.set('priority', props.filters.priority)
+        if (props.filters.status) params.set('status', props.filters.status)
+        if (props.filters.category) params.set('category', props.filters.category)
+        const query = params.toString() ? `?${params.toString()}` : ''
+        router.delete(`/admin/tasks/${task.id}${query}`)
     }
 }
 
