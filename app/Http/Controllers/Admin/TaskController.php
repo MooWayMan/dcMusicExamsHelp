@@ -46,10 +46,6 @@ class TaskController extends Controller
             $query->where('category', $category);
         }
 
-        // Default sort: active tasks first (by priority), then completed at the bottom
-        $sortBy = $request->input('sort', 'priority');
-        $sortDir = $request->input('direction', 'asc');
-
         // Active tasks first, then today's completions, then older completions at the very bottom
         $query->orderByRaw("CASE
             WHEN status != 'completed' THEN 0
@@ -57,14 +53,8 @@ class TaskController extends Controller
             ELSE 2
         END");
 
-        if ($sortBy === 'priority') {
-            $query->priorityOrder();
-        } else {
-            $allowedSorts = ['title', 'assigned_to', 'category', 'created_at', 'completed_at'];
-            if (in_array($sortBy, $allowedSorts)) {
-                $query->orderBy($sortBy, $sortDir);
-            }
-        }
+        // Default: newest first (date/time order)
+        $query->orderBy('created_at', 'desc');
 
         $tasks = $query->paginate(50)->withQueryString();
 
