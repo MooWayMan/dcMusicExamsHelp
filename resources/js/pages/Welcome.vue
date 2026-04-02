@@ -1,10 +1,12 @@
 <!-- resources/js/pages/Welcome.vue -->
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3'
+import { GraduationCap, Users, Trophy } from 'lucide-vue-next'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
+import MyRunnerConstructor from '@/components/reusables/MyRunnerConstructor.vue'
 import MyRunnerListTextInfo from '@/components/reusables/MyRunnerListTextInfo.vue'
 import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
@@ -28,20 +30,23 @@ const whyCards = [
   {
     id: 1,
     title: 'For Teachers',
-    subTitle: 'Save time with a clear booking route, get recognised for the work you do, and access exclusive resources and discounts on exam materials.',
-    showIcon: false,
+    descript: 'Save time with a clear booking route, get recognised for the work you do, and access exclusive resources and discounts on exam materials.',
+    icon: GraduationCap,
+    showIcon: true,
   },
   {
     id: 2,
     title: 'For Parents',
-    subTitle: 'No more confusion about how exams work. Step-by-step guidance from choosing the right exam to understanding results day.',
-    showIcon: false,
+    descript: 'No more confusion about how exams work. Step-by-step guidance from choosing the right exam to understanding results day.',
+    icon: Users,
+    showIcon: true,
   },
   {
     id: 3,
     title: 'For Students',
-    subTitle: 'Your hard work deserves to be celebrated. Incentives, prize draws and a Hall of Fame for students who go the distance.',
-    showIcon: false,
+    descript: 'Your hard work deserves to be celebrated. Incentives, prize draws and a Hall of Fame for students who go the distance.',
+    icon: Trophy,
+    showIcon: true,
   },
 ]
 
@@ -262,34 +267,15 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
           </MyTextConstructor>
         </div>
 
-        <div class="mt-10 grid gap-5 md:grid-cols-3">
-          <div
-            v-for="card in whyCards"
-            :key="card.id"
-            class="rounded-2xl border-[6px] border-brand-primary bg-brand-surface-soft p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
-          >
-            <MyTextConstructor
-              variant="subheading"
-              spacing="tight"
-              textColor="text-brand-primary"
-              class="md:!text-2xl lg:!text-3xl"
-            >
-              <template #myTitle>
-                {{ card.title }}
-              </template>
-            </MyTextConstructor>
-
-            <MyTextConstructor
-              subTitleVariant="muted"
-              spacing="none"
-              textColor="text-brand-text-soft"
-              class="mt-2 md:!text-lg lg:!text-xl"
-            >
-              <template #mySubTitle>
-                {{ card.subTitle }}
-              </template>
-            </MyTextConstructor>
-          </div>
+        <div class="mt-10">
+          <MyRunnerConstructor
+            :theArray="whyCards"
+            variant="icon"
+            :columns="3"
+            spacing="normal"
+            maxWidth="full"
+            :enableHover="true"
+          />
         </div>
       </div>
     </section>
