@@ -90,6 +90,6 @@ class Task extends Model
     public function scopePriorityOrder($query)
     {
         return $query->orderByRaw("CASE priority WHEN 'high' THEN 0 WHEN 'medium' THEN 1 WHEN 'low' THEN 2 ELSE 3 END")
-                     ->orderBy('sort_order');
+                     ->orderBy('created_at', 'desc');
     }
 }
