@@ -174,7 +174,10 @@ class TaskController extends Controller
         $title = $task->title;
         $task->delete();
 
-        return redirect()->route('admin.tasks.index')
+        // Preserve current filters so search doesn't clear after deletion
+        $filters = array_filter(request()->only(['search', 'priority', 'status', 'category']));
+
+        return redirect()->route('admin.tasks.index', $filters)
             ->with('success', "Task \"{$title}\" has been removed.");
     }
 
