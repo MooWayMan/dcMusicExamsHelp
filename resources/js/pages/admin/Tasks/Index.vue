@@ -1,8 +1,8 @@
 <!-- resources/js/pages/admin/Tasks/Index.vue -->
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3'
-import { ref, reactive, watch } from 'vue'
-import { Search, Plus, Pencil, Trash2, CheckCircle2, Circle, ChevronLeft, ChevronRight, Clock, X } from 'lucide-vue-next'
+import { ref, reactive, watch, computed } from 'vue'
+import { Search, Plus, Pencil, Trash2, CheckCircle2, Circle, ChevronLeft, ChevronRight, Clock, X, SlidersHorizontal } from 'lucide-vue-next'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import PageHeader from '@/components/reusables/PageHeader.vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
@@ -40,6 +40,16 @@ const props = defineProps<{
 const { animClass } = usePageAnimation()
 
 const search = ref(props.filters.search ?? '')
+const showFilters = ref(false)
+
+// Count active filters (excluding defaults)
+const activeFilterCount = computed(() => {
+    let count = 0
+    if (props.filters.priority) count++
+    if (props.filters.status && props.filters.status !== 'all') count++
+    if (props.filters.category) count++
+    return count
+})
 let searchTimeout: ReturnType<typeof setTimeout>
 
 watch(search, (value) => {
@@ -61,14 +71,17 @@ function applyFilters(overrides: Record<string, string | undefined> = {}) {
 
 function filterByPriority(priority: string | null) {
     applyFilters({ priority: priority || undefined })
+    showFilters.value = false
 }
 
 function filterByStatus(status: string | null) {
     applyFilters({ status: status || undefined })
+    showFilters.value = false
 }
 
 function filterByCategory(category: string | null) {
     applyFilters({ category: category || undefined })
+    showFilters.value = false
 }
 
 // Track which tasks are in the "just completed" transition state
@@ -149,75 +162,157 @@ function statusLabel(status: string): string {
             </template>
         </PageHeader>
 
-        <!-- Summary cards -->
-        <div :class="['mt-6 grid grid-cols-2 gap-4 md:grid-cols-4', animClass('fade-up', 1)]">
-            <div class="rounded-xl border border-brand-border bg-brand-surface p-4">
-                <p class="text-base font-medium text-brand-text-soft">Total</p>
-                <p class="mt-1 text-3xl font-bold text-brand-text">{{ summary.total }}</p>
+        <!-- Summary: compact pills on mobile, full cards on desktop -->
+        <div :class="['mt-6', animClass('fade-up', 1)]">
+            <!-- Mobile: inline pills -->
+            <div class="flex flex-wrap gap-2 md:hidden">
+                <span class="inline-flex items-center gap-1.5 rounded-full border border-brand-border bg-brand-surface px-3 py-1">
+                    <span class="text-xs font-medium text-brand-text-soft">Total</span>
+                    <span class="text-sm font-bold text-brand-text">{{ summary.total }}</span>
+                </span>
+                <span class="inline-flex items-center gap-1.5 rounded-full border border-brand-border bg-brand-surface px-3 py-1">
+                    <span class="text-xs font-medium text-brand-text-soft">To Do</span>
+                    <span class="text-sm font-bold text-brand-accent">{{ summary.pending }}</span>
+                </span>
+                <span class="inline-flex items-center gap-1.5 rounded-full border border-brand-border bg-brand-surface px-3 py-1">
+                    <span class="text-xs font-medium text-brand-text-soft">In Progress</span>
+                    <span class="text-sm font-bold text-brand-teal">{{ summary.in_progress }}</span>
+                </span>
+                <span class="inline-flex items-center gap-1.5 rounded-full border border-brand-border bg-brand-surface px-3 py-1">
+                    <span class="text-xs font-medium text-brand-text-soft">Done</span>
+                    <span class="text-sm font-bold text-brand-success">{{ summary.completed }}</span>
+                </span>
             </div>
-            <div class="rounded-xl border border-brand-border bg-brand-surface p-4">
-                <p class="text-base font-medium text-brand-text-soft">To Do</p>
-                <p class="mt-1 text-3xl font-bold text-brand-accent">{{ summary.pending }}</p>
-            </div>
-            <div class="rounded-xl border border-brand-border bg-brand-surface p-4">
-                <p class="text-base font-medium text-brand-text-soft">In Progress</p>
-                <p class="mt-1 text-3xl font-bold text-brand-teal">{{ summary.in_progress }}</p>
-            </div>
-            <div class="rounded-xl border border-brand-border bg-brand-surface p-4">
-                <p class="text-base font-medium text-brand-text-soft">Done</p>
-                <p class="mt-1 text-3xl font-bold text-brand-success">{{ summary.completed }}</p>
+            <!-- Desktop: full cards -->
+            <div class="hidden md:grid md:grid-cols-4 md:gap-4">
+                <div class="rounded-xl border border-brand-border bg-brand-surface p-4">
+                    <p class="text-base font-medium text-brand-text-soft">Total</p>
+                    <p class="mt-1 text-3xl font-bold text-brand-text">{{ summary.total }}</p>
+                </div>
+                <div class="rounded-xl border border-brand-border bg-brand-surface p-4">
+                    <p class="text-base font-medium text-brand-text-soft">To Do</p>
+                    <p class="mt-1 text-3xl font-bold text-brand-accent">{{ summary.pending }}</p>
+                </div>
+                <div class="rounded-xl border border-brand-border bg-brand-surface p-4">
+                    <p class="text-base font-medium text-brand-text-soft">In Progress</p>
+                    <p class="mt-1 text-3xl font-bold text-brand-teal">{{ summary.in_progress }}</p>
+                </div>
+                <div class="rounded-xl border border-brand-border bg-brand-surface p-4">
+                    <p class="text-base font-medium text-brand-text-soft">Done</p>
+                    <p class="mt-1 text-3xl font-bold text-brand-success">{{ summary.completed }}</p>
+                </div>
             </div>
         </div>
 
         <!-- Search + Filters -->
-        <div :class="['mt-6 flex flex-wrap items-center gap-4', animClass('fade-up', 2)]">
-            <div class="relative max-w-md flex-1">
-                <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-text-soft" />
-                <input v-model="search" type="text" placeholder="Search tasks..."
-                    class="w-full rounded-lg border border-brand-border bg-brand-surface py-3 pl-10 pr-10 text-lg text-brand-text placeholder:text-brand-text-soft focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent" />
-                <button v-if="search" @click="search = ''" class="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer rounded-full p-0.5 text-brand-text-soft hover:bg-brand-surface-soft hover:text-brand-text transition-colors">
-                    <X class="h-4 w-4" />
+        <div :class="['mt-4 md:mt-6', animClass('fade-up', 2)]">
+            <div class="flex items-center gap-2">
+                <div class="relative flex-1">
+                    <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-text-soft" />
+                    <input v-model="search" type="text" placeholder="Search tasks..."
+                        class="w-full rounded-lg border border-brand-border bg-brand-surface py-3 pl-10 pr-10 text-lg text-brand-text placeholder:text-brand-text-soft focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent" />
+                    <button v-if="search" @click="search = ''" class="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer rounded-full p-0.5 text-brand-text-soft hover:bg-brand-surface-soft hover:text-brand-text transition-colors">
+                        <X class="h-4 w-4" />
+                    </button>
+                </div>
+                <!-- Mobile: filter toggle button -->
+                <button @click="showFilters = !showFilters"
+                    class="relative cursor-pointer rounded-lg border border-brand-border bg-brand-surface p-3 text-brand-text-soft hover:bg-brand-surface-soft hover:text-brand-text transition-colors md:hidden">
+                    <SlidersHorizontal class="h-5 w-5" />
+                    <span v-if="activeFilterCount > 0" class="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-accent text-[10px] font-bold text-brand-text-inverse">
+                        {{ activeFilterCount }}
+                    </span>
                 </button>
             </div>
 
-            <!-- Status filter -->
-            <div class="flex gap-1">
-                <button v-for="s in [{ label: 'All', value: 'all' }, { label: 'Active', value: 'active' }, { label: 'Done', value: 'completed' }]" :key="s.value"
-                    @click="filterByStatus(s.value)"
-                    class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
-                    :class="filters.status === s.value ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
-                    {{ s.label }}
-                </button>
+            <!-- Mobile: collapsible filter panel -->
+            <div v-show="showFilters" class="mt-3 space-y-3 rounded-xl border border-brand-border bg-brand-surface p-4 md:hidden">
+                <div>
+                    <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-brand-text-soft">Status</p>
+                    <div class="flex flex-wrap gap-1">
+                        <button v-for="s in [{ label: 'All', value: 'all' }, { label: 'Active', value: 'active' }, { label: 'Done', value: 'completed' }]" :key="s.value"
+                            @click="filterByStatus(s.value)"
+                            class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
+                            :class="filters.status === s.value ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
+                            {{ s.label }}
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-brand-text-soft">Priority</p>
+                    <div class="flex flex-wrap gap-1">
+                        <button @click="filterByPriority(null)"
+                            class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
+                            :class="!filters.priority ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
+                            All
+                        </button>
+                        <button v-for="p in priorities" :key="p"
+                            @click="filterByPriority(p)"
+                            class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
+                            :class="filters.priority === p ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
+                            {{ p.charAt(0).toUpperCase() + p.slice(1) }}
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-brand-text-soft">Category</p>
+                    <div class="flex flex-wrap gap-1">
+                        <button @click="filterByCategory(null)"
+                            class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
+                            :class="!filters.category ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
+                            All
+                        </button>
+                        <button v-for="c in categories" :key="c"
+                            @click="filterByCategory(c)"
+                            class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
+                            :class="filters.category === c ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
+                            {{ c.charAt(0).toUpperCase() + c.slice(1) }}
+                        </button>
+                    </div>
+                </div>
             </div>
 
-            <!-- Priority filter -->
-            <div class="flex gap-1">
-                <button @click="filterByPriority(null)"
-                    class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
-                    :class="!filters.priority ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
-                    All Priority
-                </button>
-                <button v-for="p in priorities" :key="p"
-                    @click="filterByPriority(p)"
-                    class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
-                    :class="filters.priority === p ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
-                    {{ p.charAt(0).toUpperCase() + p.slice(1) }}
-                </button>
-            </div>
+            <!-- Desktop: inline filter pills -->
+            <div class="mt-4 hidden flex-wrap items-center gap-4 md:flex">
+                <!-- Status filter -->
+                <div class="flex gap-1">
+                    <button v-for="s in [{ label: 'All', value: 'all' }, { label: 'Active', value: 'active' }, { label: 'Done', value: 'completed' }]" :key="s.value"
+                        @click="filterByStatus(s.value)"
+                        class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
+                        :class="filters.status === s.value ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
+                        {{ s.label }}
+                    </button>
+                </div>
 
-            <!-- Category filter -->
-            <div class="flex flex-wrap gap-1">
-                <button @click="filterByCategory(null)"
-                    class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
-                    :class="!filters.category ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
-                    All Categories
-                </button>
-                <button v-for="c in categories" :key="c"
-                    @click="filterByCategory(c)"
-                    class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
-                    :class="filters.category === c ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
-                    {{ c.charAt(0).toUpperCase() + c.slice(1) }}
-                </button>
+                <!-- Priority filter -->
+                <div class="flex gap-1">
+                    <button @click="filterByPriority(null)"
+                        class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
+                        :class="!filters.priority ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
+                        All Priority
+                    </button>
+                    <button v-for="p in priorities" :key="p"
+                        @click="filterByPriority(p)"
+                        class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
+                        :class="filters.priority === p ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
+                        {{ p.charAt(0).toUpperCase() + p.slice(1) }}
+                    </button>
+                </div>
+
+                <!-- Category filter -->
+                <div class="flex flex-wrap gap-1">
+                    <button @click="filterByCategory(null)"
+                        class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
+                        :class="!filters.category ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
+                        All Categories
+                    </button>
+                    <button v-for="c in categories" :key="c"
+                        @click="filterByCategory(c)"
+                        class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
+                        :class="filters.category === c ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
+                        {{ c.charAt(0).toUpperCase() + c.slice(1) }}
+                    </button>
+                </div>
             </div>
         </div>
 
