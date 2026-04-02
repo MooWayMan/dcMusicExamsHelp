@@ -9,9 +9,6 @@ use App\Models\Task;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -19,15 +16,6 @@ class TaskController extends Controller
 {
     public function index(Request $request): Response
     {
-        // Sync Google Calendar REMINDER events (throttled to once every 5 minutes)
-        if (Cache::add('gcal_sync_lock', true, 300)) {
-            try {
-                Artisan::call('calendar:sync-tasks');
-            } catch (\Exception $e) {
-                Log::warning('GCal sync on page load failed: ' . $e->getMessage());
-            }
-        }
-
         $query = Task::query();
 
         // Search
@@ -188,6 +176,22 @@ class TaskController extends Controller
 
         return redirect()->route('admin.tasks.index')
             ->with('success', "Task \"{$title}\" has been removed.");
+    }
+
+    /**
+     * AJAX: trigger GCal sync and return fresh active task count.
+     * Called by frontend polling (e.g. sidebar refreshing every few minutes).
+     * The actual sync is handled by the SyncCalendarTasks middleware,
+     * so this just returns the current counts.
+     */
+    public function sync(): JsonResponse
+    {
+        // Middleware already ran the throttled sync, so just return fresh counts
+        return response()->json([
+            'pending' => Task::where('status', 'pending')->count(),
+            'in_progress' => Task::where('status', 'in_progress')->count(),
+            'total_active' => Task::where('status', '!=', 'completed')->count(),
+        ]);
     }
 
     /**
