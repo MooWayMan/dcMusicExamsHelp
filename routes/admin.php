@@ -5,6 +5,7 @@
 use App\Http\Controllers\Admin\ContactLogController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\RoadmapController;
 use App\Http\Controllers\Admin\SchoolController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\TaskController;
@@ -46,6 +47,9 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])->pref
 
     // AJAX: sync calendar + return fresh active task count (for sidebar polling)
     Route::post('tasks/sync', [TaskController::class, 'sync'])->name('tasks.sync');
+
+    // Roadmap — visual project roadmap
+    Route::get('roadmap', [RoadmapController::class, 'index'])->name('roadmap');
 });
 
 // Explicit model binding: 'teacher' param resolves to User model (teachers are users with role=teacher)
