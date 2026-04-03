@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\RoadmapController;
 use App\Http\Controllers\Admin\SchoolController;
+use App\Http\Controllers\Admin\SessionLogController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\TeacherController;
@@ -51,6 +52,12 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])->pref
 
     // Roadmap — visual project roadmap
     Route::get('roadmap', [RoadmapController::class, 'index'])->name('roadmap');
+
+    // Session Logs — daily hours tracking
+    Route::get('session-logs', [SessionLogController::class, 'index'])->name('session-logs.index');
+    Route::post('session-logs', [SessionLogController::class, 'store'])->name('session-logs.store');
+    Route::put('session-logs/{sessionLog}', [SessionLogController::class, 'update'])->name('session-logs.update');
+    Route::delete('session-logs/{sessionLog}', [SessionLogController::class, 'destroy'])->name('session-logs.destroy');
 });
 
 // Explicit model binding: 'teacher' param resolves to User model (teachers are users with role=teacher)

@@ -11,6 +11,7 @@ import {
     BarChart3,
     CheckSquare,
     Map,
+    Clock,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
@@ -87,6 +88,11 @@ const adminNavItems: NavItem[] = [
         title: 'Roadmap',
         href: '/admin/roadmap',
         icon: Map,
+    },
+    {
+        title: 'Session Hours',
+        href: '/admin/session-logs',
+        icon: Clock,
     },
 ];
 
