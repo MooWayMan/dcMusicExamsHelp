@@ -38,6 +38,15 @@ const props = defineProps<{
 
 const { animClass } = usePageAnimation()
 
+// Notes modal state
+const showNotesModal = ref(false)
+const notesModalContent = ref({ date: '', notes: '' })
+
+function openNotes(row: LogEntry) {
+    notesModalContent.value = { date: row.dateFormatted, notes: row.notes ?? '' }
+    showNotesModal.value = true
+}
+
 // Form state
 const showForm = ref(false)
 const editingId = ref<number | null>(null)
@@ -110,7 +119,7 @@ const tableColumns = [
     { key: 'dateFormatted', title: 'Date', sortable: true },
     { key: 'hours', title: 'Hours', sortable: true, align: 'center' as const },
     { key: 'tasks', title: 'Tasks', sortable: true, align: 'center' as const },
-    { key: 'notes', title: 'Notes', sortable: false },
+    { key: 'notes', title: 'Notes', sortable: false, width: '40%' },
     { key: 'actions', title: '', sortable: false, align: 'right' as const, width: '100px' },
 ]
 </script>
@@ -279,6 +288,33 @@ const tableColumns = [
                 </div>
             </Teleport>
 
+            <!-- Notes modal -->
+            <Teleport to="body">
+                <div
+                    v-if="showNotesModal"
+                    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+                    @click.self="showNotesModal = false"
+                >
+                    <div class="w-full max-w-lg rounded-2xl bg-brand-surface p-6 shadow-2xl">
+                        <MyTextConstructor variant="button-lg" spacing="tight" class="mb-4">
+                            <template #myTitle>{{ notesModalContent.date }}</template>
+                        </MyTextConstructor>
+                        <p class="whitespace-pre-wrap text-sm leading-relaxed text-brand-text">
+                            {{ notesModalContent.notes }}
+                        </p>
+                        <div class="mt-5">
+                            <MyButtonConstructor
+                                variant="ghost"
+                                size="small"
+                                @click="showNotesModal = false"
+                            >
+                                Close
+                            </MyButtonConstructor>
+                        </div>
+                    </div>
+                </div>
+            </Teleport>
+
             <!-- Table -->
             <div :class="animClass('fade-up', 3)">
                 <MyTableConstructor
@@ -299,8 +335,17 @@ const tableColumns = [
                     <template #cell-tasks="{ value }">
                         <span class="font-semibold text-brand-teal">{{ value }}</span>
                     </template>
-                    <template #cell-notes="{ value }">
-                        <span class="text-sm text-brand-text-soft">{{ value || '—' }}</span>
+                    <template #cell-notes="{ value, row }">
+                        <div v-if="value" class="max-w-[200px] sm:max-w-[300px] md:max-w-[400px]">
+                            <button
+                                @click="openNotes(row)"
+                                class="block w-full truncate text-left text-sm text-brand-text-soft transition-colors hover:text-brand-accent"
+                                :title="value"
+                            >
+                                {{ value }}
+                            </button>
+                        </div>
+                        <span v-else class="text-sm text-brand-text-soft">—</span>
                     </template>
                     <template #cell-actions="{ row }">
                         <div class="flex items-center justify-end gap-2">
