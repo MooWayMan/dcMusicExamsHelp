@@ -14,11 +14,11 @@ interface Props {
   establishedYear?: number
   showSocials?: boolean
   showNavigation?: boolean
-  variant?: 'default' | 'minimal' | 'solid'
+  variant?: 'default' | 'minimal' | 'solid' | 'gradient'
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  companyName: 'MusicExams.help',
+  companyName: 'musicExams.help',
   companyNumber: '',
   establishedYear: 2026,
   showSocials: true,
@@ -44,25 +44,28 @@ const footerClasses = computed(() => {
     default: 'border-t border-brand-border bg-brand-surface',
     minimal: 'bg-transparent',
     solid: 'bg-brand-primary text-white',
+    gradient: 'bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary text-white',
   }
 
   return `py-12 ${variants[props.variant]}`
 })
 
+const isDark = computed(() => props.variant === 'solid' || props.variant === 'gradient')
+
 const sectionTitleColor = computed(() =>
-  props.variant === 'solid' ? 'text-white' : 'text-brand-primary'
+  isDark.value ? 'text-white' : 'text-brand-primary'
 )
 
 const bodyTextColor = computed(() =>
-  props.variant === 'solid' ? 'text-white/80' : 'text-brand-text-soft'
+  isDark.value ? 'text-white/80' : 'text-brand-text-soft'
 )
 
 const socialIconColor = computed(() =>
-  props.variant === 'solid' ? 'text-white' : 'text-brand-primary'
+  isDark.value ? 'text-white' : 'text-brand-primary'
 )
 
 const socialHoverColor = computed(() =>
-  props.variant === 'solid' ? 'hover:text-white/80' : 'hover:text-brand-accent'
+  isDark.value ? 'hover:text-white/80' : 'hover:text-brand-accent'
 )
 
 /** Build href (Ziggy route first; then raw url; fallback '#') */
@@ -159,7 +162,7 @@ const handleInternalClick = (link: NavigationLink) => {
             </template>
           </MyTextConstructor>
 
-          <div class="mt-4 flex flex-wrap gap-3">
+          <div class="mt-4 flex flex-wrap gap-2">
             <template v-for="link in mainNavigation" :key="link.name">
               <!-- External -->
               <a
@@ -167,14 +170,14 @@ const handleInternalClick = (link: NavigationLink) => {
                 :href="hrefFor(link)"
                 target="_blank"
                 rel="noopener noreferrer"
+                :class="[
+                  'inline-block rounded-full border px-3 py-1.5 text-xs font-medium transition-colors sm:text-sm',
+                  isDark
+                    ? 'border-white/30 text-white hover:bg-white/10'
+                    : 'border-brand-border text-brand-text hover:bg-brand-surface-soft'
+                ]"
               >
-                <MyButtonConstructor
-                  :variant="props.variant === 'solid' ? 'ghost' : 'outline'"
-                  size="small"
-                  rounded="full"
-                >
-                  {{ link.name }}
-                </MyButtonConstructor>
+                {{ link.name }}
               </a>
 
               <!-- Internal -->
@@ -182,26 +185,25 @@ const handleInternalClick = (link: NavigationLink) => {
                 v-else-if="hrefFor(link) !== '#'"
                 type="button"
                 @click="handleInternalClick(link)"
+                :class="[
+                  'inline-block rounded-full border px-3 py-1.5 text-xs font-medium transition-colors sm:text-sm',
+                  isDark
+                    ? 'border-white/30 text-white hover:bg-white/10'
+                    : 'border-brand-border text-brand-text hover:bg-brand-surface-soft'
+                ]"
               >
-                <MyButtonConstructor
-                  :variant="props.variant === 'solid' ? 'ghost' : 'outline'"
-                  size="small"
-                  rounded="full"
-                >
-                  {{ link.name }}
-                </MyButtonConstructor>
+                {{ link.name }}
               </button>
 
               <!-- Disabled/fallback -->
-              <span v-else class="opacity-50">
-                <MyButtonConstructor
-                  :variant="props.variant === 'solid' ? 'ghost' : 'outline'"
-                  size="small"
-                  rounded="full"
-                  disabled
-                >
-                  {{ link.name }}
-                </MyButtonConstructor>
+              <span
+                v-else
+                :class="[
+                  'inline-block rounded-full border px-3 py-1.5 text-xs font-medium opacity-50 sm:text-sm',
+                  isDark ? 'border-white/30 text-white' : 'border-brand-border text-brand-text'
+                ]"
+              >
+                {{ link.name }}
               </span>
             </template>
           </div>

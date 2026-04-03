@@ -1,5 +1,6 @@
 <!-- resources/js/pages/Welcome.vue -->
 <script setup lang="ts">
+import { ref } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { GraduationCap, Users, Trophy, Gift, Award, HeartHandshake, BookOpen } from 'lucide-vue-next'
 import Head from '@/components/layouts/Head.vue'
@@ -12,7 +13,7 @@ import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructo
 import MyFooter from '@/components/layouts/MyFooter.vue'
 
 const pageMeta = {
-  title: 'musicexams.help — Your Guide to Trinity Music Exams',
+  title: 'musicExams.help — Your Guide to Trinity Music Exams',
   description:
     'Free guidance for teachers, parents and students booking Trinity music exams through Centre 120. Incentives, recognition and support.',
 }
@@ -53,7 +54,7 @@ const whyCards = [
 const incentives = [
   {
     title: 'Students featured on our website',
-    detail: 'Every student who passes through centre 120 gets listed on our Thank You page — your name, instrument and grade for the world to see. Top scorers each quarter make our Hall of Fame and win a gift token.',
+    detail: 'Every student who enters through centre 120 gets listed on our Thank You page. Achieve a Distinction or Merit and receive a free digital certificate. The highest scorers each quarter make our Hall of Fame and win a gift token.',
     icon: Trophy,
     iconBg: 'bg-brand-accent/10',
     iconColor: 'text-brand-accent',
@@ -104,12 +105,7 @@ const faqs = [
   {
     question: 'Does it cost anything extra?',
     answer:
-      'No. The exam fees are the same regardless of which centre code you use. Code 120 simply gives you access to the extra benefits and support offered through musicexams.help.',
-  },
-  {
-    question: 'Is this only for Trinity exams?',
-    answer:
-      'Trinity College London is the current focus, covering graded music exams across all instruments. The wider musicexams.help brand may expand to include other exam boards in the future.',
+      'No. The exam fees are the same regardless of which centre code you use. Code 120 simply gives you access to the extra benefits and support offered through musicExams.help.',
   },
   {
     question: 'Can I use this if I already have a teacher?',
@@ -117,6 +113,9 @@ const faqs = [
       'Absolutely. This site supports your existing teacher, not replaces them. Your teacher stays central to everything — we just make the booking and admin side easier for everyone.',
   },
 ]
+
+const landingFaqCount = 4
+const landingFaqs = faqs.slice(0, landingFaqCount)
 
 const usefulLinks = [
   {
@@ -160,7 +159,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
 <template>
   <Head :title="pageMeta.title" :description="pageMeta.description" />
 
-  <div class="min-h-screen bg-brand-bg text-brand-text">
+  <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
 
     <!-- HERO -->
@@ -168,7 +167,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
       <div class="mx-auto flex w-full max-w-6xl flex-col items-center px-4 pt-24 pb-10 text-center sm:px-6 md:pt-28 lg:pt-28">
         <img
           :src="heroLogo"
-          alt="musicexams.help"
+          alt="musicExams.help"
           class="h-auto w-80 object-contain sm:w-[26rem] md:w-[34rem] lg:w-[40rem] xl:w-[46rem]"
         />
 
@@ -351,9 +350,9 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
               <MyTextConstructor variant="button-lg" spacing="tight" textColor="text-brand-primary" class="md:!text-xl lg:!text-xl">
                 <template #myTitle>{{ item.title }}</template>
               </MyTextConstructor>
-              <MyTextConstructor bodyVariant="muted" spacing="none" class="mt-2 text-brand-text-soft md:!text-base lg:!text-lg">
+              <p class="mt-2 text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base lg:text-lg">
                 {{ item.detail }}
-              </MyTextConstructor>
+              </p>
             </div>
           </div>
         </div>
@@ -409,15 +408,8 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
       </div>
     </section>
 
-    <!-- CENTRE CODE BANNER (REPEATED) -->
-    <div class="bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary py-5 text-center">
-      <p class="px-4 text-lg font-bold tracking-wide text-white sm:text-xl md:text-2xl">
-        Free guidance, recognition and rewards — all through Centre Code 120
-      </p>
-    </div>
-
     <!-- READY TO GET STARTED + FAQ — side by side on desktop -->
-    <section class="border-t border-brand-border bg-brand-surface">
+    <section class="bg-black">
       <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
         <div class="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-12">
 
@@ -427,6 +419,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
               variant="heading"
               fontFamily="display"
               spacing="tight"
+              textColor="text-white"
               class="md:!text-2xl lg:!text-2xl"
             >
               <template #myTitle>
@@ -437,6 +430,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             <MyTextConstructor
               subTitleVariant="muted"
               spacing="none"
+              textColor="text-white/70"
               class="mt-3 md:!text-base lg:!text-base"
             >
               <template #mySubTitle>
@@ -455,7 +449,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
 
           <!-- FAQ -->
           <div id="faq">
-            <MyTextConstructor variant="eyebrow" spacing="tight">
+            <MyTextConstructor variant="eyebrow" spacing="tight" textColor="text-white/60">
               <template #myTitle>
                 FAQ
               </template>
@@ -465,6 +459,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
               variant="heading"
               fontFamily="display"
               spacing="tight"
+              textColor="text-white"
               class="mt-3 md:!text-2xl lg:!text-2xl"
             >
               <template #myTitle>
@@ -474,7 +469,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
 
             <div class="mt-8">
               <MyAccordionConstructor
-                :items="faqs.map((faq, index) => ({
+                :items="landingFaqs.map((faq, index) => ({
                   id: index + 1,
                   question: faq.question,
                   answer: faq.answer,
@@ -486,6 +481,13 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
                 border-color="border-brand-primary"
                 content-bg-color="bg-brand-surface"
               />
+              <div class="mt-4 text-center">
+                <a href="/faq">
+                  <MyButtonConstructor variant="light" size="small">
+                    View all questions
+                  </MyButtonConstructor>
+                </a>
+              </div>
             </div>
           </div>
 
@@ -494,6 +496,6 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
     </section>
 
     <!-- FOOTER -->
-    <MyFooter />
+    <MyFooter variant="gradient" />
   </div>
 </template>

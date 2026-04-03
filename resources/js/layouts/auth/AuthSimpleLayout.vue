@@ -22,7 +22,7 @@ defineProps<{
                     <Link :href="home()" class="flex flex-col items-center">
                         <img
                             :src="heroLogo"
-                            alt="musicexams.help"
+                            alt="musicExams.help"
                             class="h-20 w-auto sm:h-24"
                         />
                     </Link>

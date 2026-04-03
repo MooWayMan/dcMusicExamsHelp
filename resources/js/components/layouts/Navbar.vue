@@ -20,11 +20,17 @@ const isAdmin = computed(() => user.value?.role === 'admin')
 
 const isOpen = ref(false)
 
-const navigation = [
-  { name: 'Why use this page', href: '#why' },
-  { name: 'Incentives', href: '#incentives' },
-  { name: 'FAQ', href: '#faq' },
-]
+const currentPath = computed(() => page.url)
+
+const navigation = computed(() => {
+  const isHome = currentPath.value === '/'
+  return [
+    { name: 'Home', href: '/', show: !isHome },
+    { name: 'Why use this page', href: isHome ? '#why' : '/#why', show: true },
+    { name: 'Incentives', href: isHome ? '#incentives' : '/#incentives', show: true },
+    { name: 'FAQ', href: '/faq', show: true },
+  ].filter(item => item.show)
+})
 
 const brandWordmark = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/musicexamshelp_logo2.png'
 const navIcon = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/FAVICONmusicexamshelp_logo2+(512+x+512+px)_2.png'
@@ -46,13 +52,13 @@ const navClasses = computed(() =>
           <!-- Small icon on mobile -->
           <img
             :src="navIcon"
-            alt="musicexams.help"
+            alt="musicExams.help"
             class="h-10 w-10 rounded-xl sm:hidden"
           />
           <!-- Full wordmark on larger screens -->
           <img
             :src="brandWordmark"
-            alt="musicexams.help"
+            alt="musicExams.help"
             class="hidden h-14 w-auto sm:block xl:h-20"
           />
         </Link>

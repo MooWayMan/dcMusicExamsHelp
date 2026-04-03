@@ -105,7 +105,7 @@ const musicPattern = `url("data:image/svg+xml,%3Csvg width='80' height='80' view
           ]"
         >
           <div class="inline-block rounded-2xl bg-white/95 p-3 shadow-sm backdrop-blur-sm">
-            <img :src="brandIconUrl" alt="musicexams.help" class="h-20 w-auto xl:h-24" />
+            <img :src="brandIconUrl" alt="musicExams.help" class="h-20 w-auto xl:h-24" />
           </div>
         </div>
 
@@ -142,7 +142,7 @@ const musicPattern = `url("data:image/svg+xml,%3Csvg width='80' height='80' view
         >
           <!-- Small logo card -->
           <div v-if="showBrandWordmark" class="inline-block rounded-xl bg-white/95 p-1.5 shadow-sm backdrop-blur-sm sm:p-2">
-            <img :src="brandIconUrl" alt="musicexams.help" class="h-8 w-auto sm:h-10" />
+            <img :src="brandIconUrl" alt="musicExams.help" class="h-8 w-auto sm:h-10" />
           </div>
           <!-- Eyebrow pill -->
           <span v-if="eyebrow" class="inline-block rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-[0.08em] text-white/90 backdrop-blur-sm sm:px-3 sm:py-1 sm:text-sm">

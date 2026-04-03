@@ -31,8 +31,8 @@ createInertiaApp({
         // Layout switching
         // ===============================
         
-        if (name === 'Welcome' || name === 'ConstructorsDemo') {
-            // Landing page → clean marketing layout (no breadcrumbs)
+        if (name === 'Welcome' || name === 'ConstructorsDemo' || name === 'Faq') {
+            // Public marketing pages → clean layout (no admin sidebar)
     page.default.layout = undefined
 
         } else if (name.startsWith('auth/')) {

@@ -44,7 +44,7 @@ const brandWordmark = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musi
             <Link href="/" class="cursor-pointer flex items-center">
                 <img
                     :src="brandWordmark"
-                    alt="musicexams.help"
+                    alt="musicExams.help"
                     class="h-8 w-auto sm:h-14 xl:h-20"
                 />
             </Link>

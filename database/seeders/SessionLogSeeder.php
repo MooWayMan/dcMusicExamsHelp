@@ -32,11 +32,7 @@ class SessionLogSeeder extends Seeder
                 'hours' => 10.0,
                 'notes' => 'Sessions 5+6+7: GCal sync fix & automation, landing page overhaul, task notes feature, business plan, bulk task notes population.',
             ],
-            [
-                'date' => '2026-04-03',
-                'hours' => 4.0,
-                'notes' => 'Session 8: Hall of Fame banner, certificates (teacher + student), teacher badges (10/20/30+), landing page graphics, rewards programme, FAQ styling.',
-            ],
+            // 2026-04-03: Log manually at end of session via admin panel
         ];
 
         foreach ($logs as $log) {

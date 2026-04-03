@@ -252,16 +252,12 @@ const badges = (card: RunnerItem) => {
             </template>
           </MyTextConstructor>
 
-          <MyTextConstructor
+          <p
             v-if="card.descript"
-            bodyVariant="muted"
-            alignment="center"
-            spacing="none"
-            textColor="text-brand-text-soft"
-            class="mt-3"
+            class="mt-3 text-center text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base lg:text-lg"
           >
             {{ card.descript }}
-          </MyTextConstructor>
+          </p>
         </button>
 
         <!-- IMAGE VARIANT -->
@@ -326,15 +322,12 @@ const badges = (card: RunnerItem) => {
                 </template>
               </MyTextConstructor>
 
-              <MyTextConstructor
+              <p
                 v-if="card.paragraph"
-                bodyVariant="muted"
-                alignment="left"
-                spacing="none"
-                textColor="text-brand-text-soft"
+                class="text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base lg:text-lg"
               >
                 {{ card.paragraph }}
-              </MyTextConstructor>
+              </p>
             </div>
           </div>
 

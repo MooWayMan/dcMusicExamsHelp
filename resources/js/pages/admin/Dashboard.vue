@@ -75,7 +75,7 @@ const { animClass } = usePageAnimation()
         <!-- Page Header -->
         <PageHeader
             title="Admin Dashboard"
-            subtitle="Overview of your MusicExams.help centre"
+            subtitle="Overview of your musicExams.help centre"
             eyebrow="Centre 120"
             size="compact"
         />

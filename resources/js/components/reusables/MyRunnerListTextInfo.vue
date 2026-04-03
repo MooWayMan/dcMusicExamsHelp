@@ -108,14 +108,12 @@ const badges = (card: CardData) => {
                 </template>
               </MyTextConstructor>
 
-              <MyTextConstructor
+              <p
                 v-if="card.subTitle"
-                bodyVariant="muted"
-                spacing="none"
-                class="mt-2 md:!text-base lg:!text-base"
+                class="mt-2 text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base lg:text-lg"
               >
                 {{ card.subTitle }}
-              </MyTextConstructor>
+              </p>
             </div>
           </div>
 

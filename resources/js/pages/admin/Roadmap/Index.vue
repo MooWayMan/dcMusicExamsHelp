@@ -64,7 +64,7 @@ function progressBarColor(status: string): string {
 
 <template>
     <div class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <PageHeader title="Roadmap" subtitle="MusicExams.help — from foundation to scale" eyebrow="Admin" size="compact" />
+        <PageHeader title="Roadmap" subtitle="musicExams.help — from foundation to scale" eyebrow="Admin" size="compact" />
 
         <!-- Phase timeline connector (desktop) -->
         <div :class="['mt-8', animClass('fade-up', 1)]">
