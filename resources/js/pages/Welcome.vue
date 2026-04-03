@@ -165,7 +165,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
 
     <!-- HERO -->
     <section class="relative flex justify-center bg-brand-surface">
-      <div class="mx-auto flex w-full max-w-6xl flex-col items-center px-4 pt-14 pb-10 text-center sm:px-6 md:pt-20 lg:pt-20">
+      <div class="mx-auto flex w-full max-w-6xl flex-col items-center px-4 pt-24 pb-10 text-center sm:px-6 md:pt-28 lg:pt-28">
         <img
           :src="heroLogo"
           alt="musicexams.help"
