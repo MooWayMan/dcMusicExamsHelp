@@ -96,7 +96,7 @@ const chevronSize = computed(() => {
         @click="toggleItem(item.id)"
       >
         <MyTextConstructor
-          variant="subheading"
+          variant="button-lg"
           alignment="left"
           textColor="inherit"
           spacing="none"
@@ -136,9 +136,10 @@ const chevronSize = computed(() => {
           <slot :name="`content-${item.id}`">
             <MyTextConstructor
               v-if="item.answer"
-              bodyVariant="body"
+              bodyVariant="muted"
               alignment="left"
               spacing="none"
+              class="md:!text-base lg:!text-base"
             >
               {{ item.answer }}
             </MyTextConstructor>

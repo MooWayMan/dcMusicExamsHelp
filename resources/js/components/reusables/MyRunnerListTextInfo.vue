@@ -100,9 +100,9 @@ const badges = (card: CardData) => {
             </div>
 
             <div class="flex-1">
-              <MyTextConstructor variant="subheading" spacing="tight">
+              <MyTextConstructor variant="button-lg" spacing="tight" textColor="text-brand-accent">
                 <template #myTitle>
-                  <span class="transition-colors group-hover:text-brand-accent">
+                  <span class="transition-colors group-hover:text-brand-primary">
                     {{ card.title }}
                   </span>
                 </template>
@@ -110,13 +110,11 @@ const badges = (card: CardData) => {
 
               <MyTextConstructor
                 v-if="card.subTitle"
-                subTitleVariant="muted"
+                bodyVariant="muted"
                 spacing="none"
-                class="mt-2"
+                class="mt-2 md:!text-base lg:!text-base"
               >
-                <template #mySubTitle>
-                  {{ card.subTitle }}
-                </template>
+                {{ card.subTitle }}
               </MyTextConstructor>
             </div>
           </div>

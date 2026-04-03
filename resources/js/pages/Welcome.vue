@@ -52,24 +52,32 @@ const whyCards = [
 
 const incentives = [
   {
-    title: 'Quarterly prize draws',
-    detail: 'Every exam entry through code 120 earns an automatic entry into our quarterly prize draw. The more students you enter, the more chances to win.',
-    icon: Gift,
+    title: 'Students featured on our website',
+    detail: 'Every student who passes through centre 120 gets listed on our Thank You page — your name, instrument and grade for the world to see. Top scorers each quarter make our Hall of Fame and win a gift token.',
+    icon: Trophy,
     iconBg: 'bg-brand-accent/10',
     iconColor: 'text-brand-accent',
     borderColor: 'border-l-brand-accent',
   },
   {
-    title: 'Teacher rewards',
-    detail: 'Teachers who book through centre 120 are part of our rewards programme — expect surprises and thank-yous throughout the year.',
+    title: 'Teacher recognition and digital badges',
+    detail: 'Teachers who enter 10 or more successful candidates earn a Certificate of Appreciation and a digital badge to display on their website. Tiered badges for 10+, 20+ and 30+ candidates.',
     icon: Award,
     iconBg: 'bg-brand-success-soft',
     iconColor: 'text-brand-success',
     borderColor: 'border-l-brand-success',
   },
   {
-    title: 'Exam material guidance',
-    detail: 'We help you find the right books and resources for each syllabus, including where to access discounted digital and print exam materials from Faber Music.',
+    title: 'Teacher quarterly prize draws',
+    detail: 'Every exam entry through code 120 earns an automatic entry into our quarterly prize draw. The more students you enter, the more chances to win.',
+    icon: Gift,
+    iconBg: 'bg-brand-teal/10',
+    iconColor: 'text-brand-teal',
+    borderColor: 'border-l-brand-teal',
+  },
+  {
+    title: 'Exam book discounts',
+    detail: 'We show teachers how to access discounts on exam books published by Faber Music and Trinity College London Press. A simple setup that saves you money on every order.',
     icon: BookOpen,
     iconBg: 'bg-brand-primary/10',
     iconColor: 'text-brand-primary',
@@ -243,9 +251,16 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
       </div>
     </div>
 
+    <!-- CENTRE CODE BANNER -->
+    <div class="bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary py-5 text-center">
+      <p class="px-4 text-lg font-bold tracking-wide text-white sm:text-xl md:text-2xl">
+        Book with Centre Code 120 and unlock free support, incentives and recognition
+      </p>
+    </div>
+
     <!-- WHY -->
     <section id="why" class="border-b border-brand-border bg-brand-surface">
-      <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
+      <div class="mx-auto max-w-5xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
         <div class="max-w-3xl">
           <MyTextConstructor variant="eyebrow" spacing="tight">
             <template #myTitle>
@@ -290,7 +305,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
 
     <!-- INCENTIVES -->
     <section id="incentives" class="border-t border-brand-border bg-brand-bg">
-      <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+      <div class="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
         <!-- Section header -->
         <div class="text-center">
           <MyTextConstructor variant="eyebrow" alignment="center" spacing="tight">
@@ -326,7 +341,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
           <div
             v-for="item in incentives"
             :key="item.title"
-            class="flex gap-4 rounded-2xl border border-brand-border border-l-4 bg-brand-surface p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
+            class="flex gap-4 rounded-2xl border border-brand-border border-l-4 bg-brand-surface p-5 shadow-xl transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl"
             :class="item.borderColor"
           >
             <div class="shrink-0 rounded-xl p-3" :class="item.iconBg">
@@ -343,47 +358,48 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
           </div>
         </div>
 
-        <!-- Student Hall of Fame — featured card -->
-        <div class="mt-10 overflow-hidden rounded-2xl bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary shadow-xl">
-          <div class="flex flex-col items-center gap-6 px-6 py-10 text-center sm:px-10 md:flex-row md:text-left lg:px-14 lg:py-12">
-            <!-- Trophy icon with glow -->
-            <div class="shrink-0">
-              <div class="rounded-2xl bg-white/10 p-5 ring-2 ring-white/20">
-                <Trophy class="h-12 w-12 text-white md:h-16 md:w-16" />
-              </div>
-            </div>
-            <!-- Content -->
-            <div>
-              <MyTextConstructor variant="button-lg" spacing="tight" textColor="text-brand-text-inverse" class="md:!text-2xl lg:!text-3xl">
-                <template #myTitle>Student Hall of Fame</template>
-              </MyTextConstructor>
-              <MyTextConstructor bodyVariant="muted" spacing="none" class="mt-3 text-white/80 md:!text-lg lg:!text-xl">
-                Every student who passes an exam through centre 120 gets celebrated on our Hall of Fame — your name, instrument, grade and result, all displayed for the world to see. Your hard work deserves to be recognised.
-              </MyTextConstructor>
-            </div>
-          </div>
-        </div>
+      </div>
 
+      <!-- Student Hall of Fame — banner -->
+      <div class="mx-auto max-w-5xl px-4 pt-10 sm:px-6 lg:px-8">
+        <div class="overflow-hidden rounded-2xl bg-black p-4 shadow-2xl">
+          <img
+            src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/Highest+score+In5.png"
+            alt="Student Hall of Fame — celebrating every exam result through centre 120"
+            class="block w-full"
+          />
+        </div>
+      </div>
+
+      <div class="mx-auto max-w-5xl px-4 pb-16 sm:px-6 lg:px-8 lg:pb-20">
         <!-- BOTTOM ROW -->
         <div class="mt-10">
-          <div class="mx-auto max-w-7xl">
-            <div class="overflow-hidden rounded-[2rem] bg-brand-surface p-3 shadow-xl ring-1 ring-brand-border">
-              <img
-                src="/images/rewards_add.png"
-                alt="Trinity exam rewards and recognition using code 120"
-                class="block w-full rounded-[1.5rem]"
-              />
+          <div class="mx-auto max-w-5xl">
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div class="overflow-hidden rounded-2xl bg-brand-surface p-3 shadow-2xl ring-1 ring-brand-border">
+                <img
+                  src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/certThankTeacher_10.png"
+                  alt="Teacher Certificate of Appreciation"
+                  class="block w-full rounded-2xl"
+                />
+              </div>
+              <div class="overflow-hidden rounded-2xl bg-brand-surface p-3 shadow-2xl ring-1 ring-brand-border">
+                <img
+                  src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/certAceiveStu_Dis.png"
+                  alt="Student Certificate of Achievement — Highest Distinction"
+                  class="block w-full rounded-2xl"
+                />
+              </div>
             </div>
 
 
-            <div class="mt-6">
+            <div class="mt-6 flex justify-center">
               <a
                 :href="bookingUrl"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="block"
               >
-                <MyButtonConstructor variant="primary" size="large" fullWidth>
+                <MyButtonConstructor variant="primary" size="large">
                   Continue to Official Booking
                 </MyButtonConstructor>
               </a>
@@ -393,78 +409,86 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
       </div>
     </section>
 
-    <!-- USEFUL LINKS -->
+    <!-- CENTRE CODE BANNER (REPEATED) -->
+    <div class="bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary py-5 text-center">
+      <p class="px-4 text-lg font-bold tracking-wide text-white sm:text-xl md:text-2xl">
+        Free guidance, recognition and rewards — all through Centre Code 120
+      </p>
+    </div>
+
+    <!-- READY TO GET STARTED + FAQ — side by side on desktop -->
     <section class="border-t border-brand-border bg-brand-surface">
       <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
-        <MyTextConstructor
-          variant="heading"
-          fontFamily="display"
-          alignment="center"
-          spacing="tight"
-          class="md:!text-3xl lg:!text-4xl"
-        >
-          <template #myTitle>
-            Ready to get started?
-          </template>
-        </MyTextConstructor>
+        <div class="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-12">
 
-        <MyTextConstructor
-          subTitleVariant="muted"
-          alignment="center"
-          spacing="none"
-          class="mt-3 md:!text-lg lg:!text-xl"
-        >
-          <template #mySubTitle>
-            Choose your next step — whether you are ready to book or want to learn more first.
-          </template>
-        </MyTextConstructor>
+          <!-- Ready to get started -->
+          <div>
+            <MyTextConstructor
+              variant="heading"
+              fontFamily="display"
+              spacing="tight"
+              class="md:!text-2xl lg:!text-2xl"
+            >
+              <template #myTitle>
+                Ready to get started?
+              </template>
+            </MyTextConstructor>
 
-        <div class="mt-8">
-          <MyRunnerListTextInfo
-            :theArray="usefulLinks"
-            maxWidth="4xl"
-            @cardClick="handleRunnerClick"
-          />
-        </div>
-      </div>
-    </section>
+            <MyTextConstructor
+              subTitleVariant="muted"
+              spacing="none"
+              class="mt-3 md:!text-base lg:!text-base"
+            >
+              <template #mySubTitle>
+                Choose your next step — whether you are ready to book or want to learn more first.
+              </template>
+            </MyTextConstructor>
 
-    <!-- FAQ -->
-    <section id="faq" class="border-t border-brand-border bg-brand-surface">
-      <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
-        <div class="max-w-3xl">
-          <MyTextConstructor variant="eyebrow" spacing="tight">
-            <template #myTitle>
-              FAQ
-            </template>
-          </MyTextConstructor>
+            <div class="mt-8">
+              <MyRunnerListTextInfo
+                :theArray="usefulLinks"
+                maxWidth="full"
+                @cardClick="handleRunnerClick"
+              />
+            </div>
+          </div>
 
-          <MyTextConstructor
-            variant="heading"
-            fontFamily="display"
-            spacing="tight"
-            class="mt-3 md:!text-3xl lg:!text-4xl"
-          >
-            <template #myTitle>
-              Common questions
-            </template>
-          </MyTextConstructor>
-        </div>
+          <!-- FAQ -->
+          <div id="faq">
+            <MyTextConstructor variant="eyebrow" spacing="tight">
+              <template #myTitle>
+                FAQ
+              </template>
+            </MyTextConstructor>
 
-        <div class="mt-10">
-          <MyAccordionConstructor
-            :items="faqs.map((faq, index) => ({
-              id: index + 1,
-              question: faq.question,
-              answer: faq.answer,
-            }))"
-            size="medium"
-            header-bg-color="bg-brand-surface"
-            header-text-color="text-brand-primary"
-            header-hover-bg-color="hover:bg-brand-bg"
-            border-color="border-brand-border"
-            content-bg-color="bg-brand-surface"
-          />
+            <MyTextConstructor
+              variant="heading"
+              fontFamily="display"
+              spacing="tight"
+              class="mt-3 md:!text-2xl lg:!text-2xl"
+            >
+              <template #myTitle>
+                Common questions
+              </template>
+            </MyTextConstructor>
+
+            <div class="mt-8">
+              <MyAccordionConstructor
+                :items="faqs.map((faq, index) => ({
+                  id: index + 1,
+                  question: faq.question,
+                  answer: faq.answer,
+                }))"
+                size="small"
+                header-bg-color="bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary"
+                header-text-color="text-brand-text-inverse"
+                header-hover-bg-color="hover:opacity-90"
+                border-color="border-brand-primary"
+                content-bg-color="bg-brand-surface"
+              />
+            </div>
+          </div>
+
         </div>
       </div>
     </section>
