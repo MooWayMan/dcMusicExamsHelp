@@ -18,14 +18,22 @@ export function usePageAnimation() {
 
   onMounted(() => {
     // Start hidden, then after the browser paints the hidden state,
-    // flip to visible so CSS transitions kick in
+    // flip to visible so CSS transitions kick in.
+    // Uses both rAF and setTimeout as fallback — iOS Safari doesn't
+    // always fire rAF reliably during Inertia page transitions.
     ready.value = false
     nextTick(() => {
+      let triggered = false
+      const show = () => {
+        if (triggered) return
+        triggered = true
+        ready.value = true
+      }
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          ready.value = true
-        })
+        requestAnimationFrame(show)
       })
+      // Fallback for iOS Safari where rAF can stall during navigation
+      setTimeout(show, 100)
     })
   })
 
