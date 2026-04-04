@@ -45,7 +45,7 @@ class Task extends Model
     /**
      * Category options.
      */
-    public const CATEGORIES = ['launch', 'admin', 'content', 'marketing', 'technical', 'other'];
+    public const CATEGORIES = ['launch', 'admin', 'content', 'marketing', 'technical', 'school', 'personal', 'other'];
 
     /**
      * Check if the task is completed.
