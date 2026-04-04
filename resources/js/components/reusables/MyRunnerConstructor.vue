@@ -239,25 +239,23 @@ const badges = (card: RunnerItem) => {
             </template>
           </MyTextConstructor>
 
-          <MyTextConstructor
-            v-if="card.subTitle"
-            subTitleVariant="muted"
-            alignment="center"
-            spacing="none"
-            textColor="text-brand-accent"
-            class="mt-3"
-          >
-            <template #mySubTitle>
-              {{ card.subTitle }}
-            </template>
-          </MyTextConstructor>
-
           <p
             v-if="card.descript"
-            class="mt-3 text-center text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base lg:text-lg"
+            class="mt-3 flex-grow text-center text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base lg:text-lg"
           >
             {{ card.descript }}
           </p>
+
+          <div
+            v-if="card.subTitle"
+            class="mt-5 w-full"
+          >
+            <span
+              class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-accent px-4 py-2.5 text-sm font-semibold text-brand-text-inverse transition-all duration-300 group-hover:bg-brand-accent-dark sm:text-base"
+            >
+              {{ card.subTitle }}
+            </span>
+          </div>
         </button>
 
         <!-- IMAGE VARIANT -->

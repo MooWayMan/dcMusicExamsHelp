@@ -47,6 +47,7 @@ const whyCards = [
   {
     id: 1,
     title: 'For Teachers',
+    subTitle: 'Find out more →',
     descript: 'Save time with a clear booking route, get recognised for the work you do, and access exclusive resources and discounts on exam materials.',
     icon: GraduationCap,
     showIcon: true,
@@ -55,6 +56,7 @@ const whyCards = [
   {
     id: 2,
     title: 'For Parents',
+    subTitle: 'Find out more →',
     descript: 'No more confusion about how exams work. Step-by-step guidance from choosing the right exam to understanding results day.',
     icon: Users,
     showIcon: true,
@@ -63,6 +65,7 @@ const whyCards = [
   {
     id: 3,
     title: 'For Students',
+    subTitle: 'Find out more →',
     descript: 'Your hard work deserves to be celebrated. Incentives, prize draws and a Hall of Fame for students who go the distance.',
     icon: Trophy,
     showIcon: true,
