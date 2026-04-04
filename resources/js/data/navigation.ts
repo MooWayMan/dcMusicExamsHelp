@@ -11,8 +11,9 @@ export type NavigationLink = {
 
 export const mainNavigation: NavigationLink[] = [
   { name: 'Home', url: '/' },
-  { name: 'Why Use This Page', url: '/#why' },
-  { name: 'Incentives', url: '/#incentives' },
-  { name: 'FAQ', url: '/#faq' },
+  { name: 'For Teachers', url: '/for-teachers' },
+  { name: 'For Parents', url: '/for-parents' },
+  { name: 'For Students', url: '/for-students' },
+  { name: 'FAQ', url: '/faq' },
   { name: 'Book Your Exam', url: 'https://booking.trinitycollege.com/?larCode=120', external: true },
 ]

@@ -34,6 +34,7 @@ const whyCards = [
     descript: 'Save time with a clear booking route, get recognised for the work you do, and access exclusive resources and discounts on exam materials.',
     icon: GraduationCap,
     showIcon: true,
+    url: '/for-teachers',
   },
   {
     id: 2,
@@ -41,6 +42,7 @@ const whyCards = [
     descript: 'No more confusion about how exams work. Step-by-step guidance from choosing the right exam to understanding results day.',
     icon: Users,
     showIcon: true,
+    url: '/for-parents',
   },
   {
     id: 3,
@@ -48,6 +50,7 @@ const whyCards = [
     descript: 'Your hard work deserves to be celebrated. Incentives, prize draws and a Hall of Fame for students who go the distance.',
     icon: Trophy,
     showIcon: true,
+    url: '/for-students',
   },
 ]
 
@@ -297,6 +300,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             spacing="normal"
             maxWidth="full"
             :enableHover="true"
+            @cardClick="handleRunnerClick"
           />
         </div>
       </div>

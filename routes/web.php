@@ -8,6 +8,10 @@ Route::inertia('/', 'Welcome', [
 ])->name('home');
 
 Route::inertia('/faq', 'Faq')->name('faq');
+Route::inertia('/for-teachers', 'ForTeachers')->name('for-teachers');
+Route::inertia('/for-teachers/faber-discounts', 'FaberDiscounts')->name('faber-discounts');
+Route::inertia('/for-parents', 'ForParents')->name('for-parents');
+Route::inertia('/for-students', 'ForStudents')->name('for-students');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');

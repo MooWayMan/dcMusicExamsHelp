@@ -31,7 +31,7 @@ createInertiaApp({
         // Layout switching
         // ===============================
         
-        if (name === 'Welcome' || name === 'ConstructorsDemo' || name === 'Faq') {
+        if (['Welcome', 'ConstructorsDemo', 'Faq', 'ForTeachers', 'FaberDiscounts', 'ForParents', 'ForStudents'].includes(name)) {
             // Public marketing pages → clean layout (no admin sidebar)
     page.default.layout = undefined
 
