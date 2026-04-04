@@ -2,7 +2,7 @@
 import '../css/app.css'
 import '../css/fonts.css'
 
-import { createApp, h, type DefineComponent } from 'vue'
+import { createApp, h, type DefineComponent, defineAsyncComponent } from 'vue'
 import { createInertiaApp, router } from '@inertiajs/vue3'
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers'
 import { ZiggyVue } from 'ziggy-js'
@@ -31,7 +31,7 @@ createInertiaApp({
         // Layout switching
         // ===============================
         
-        if (['Welcome', 'ConstructorsDemo', 'Faq', 'ForTeachers', 'FaberDiscounts', 'ForParents', 'ForStudents'].includes(name)) {
+        if (['Welcome', 'ConstructorsDemo', 'Faq', 'ForTeachers', 'FaberDiscounts', 'ForParents', 'ForStudents', 'PrivacyPolicy', 'CookiePolicy'].includes(name)) {
             // Public marketing pages → clean layout (no admin sidebar)
     page.default.layout = undefined
 
@@ -59,7 +59,16 @@ createInertiaApp({
     },
 
     setup({ el, App, props, plugin }) {
-        createApp({ render: () => h(App, props) })
+        const CookieConsent = defineAsyncComponent(() => import('@/components/CookieConsent.vue'))
+        const NewsletterPopup = defineAsyncComponent(() => import('@/components/NewsletterPopup.vue'))
+
+        createApp({
+            render: () => h('div', [
+                h(App, props),
+                h(CookieConsent),
+                h(NewsletterPopup),
+            ])
+        })
             .use(plugin)
             .use(ZiggyVue)
             .mount(el)

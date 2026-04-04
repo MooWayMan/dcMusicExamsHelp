@@ -2,6 +2,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { router } from '@inertiajs/vue3'
+import { useSubscription } from '@/composables/useSubscription'
 import { GraduationCap, Users, Trophy, Gift, Award, HeartHandshake, BookOpen } from 'lucide-vue-next'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
@@ -11,6 +12,9 @@ import MyRunnerConstructor from '@/components/reusables/MyRunnerConstructor.vue'
 import MyRunnerListTextInfo from '@/components/reusables/MyRunnerListTextInfo.vue'
 import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
+import EmailCapture from '@/components/EmailCapture.vue'
+
+const { isSubscribed } = useSubscription()
 
 const pageMeta = {
   title: 'musicExams.help — Your Guide to Trinity Music Exams',
@@ -26,6 +30,18 @@ const heroLogo =
 
 const trinityCentreLogo =
   'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/Trinity_Centre_120_logo_purple.png'
+
+const profilePic =
+  'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/paulsprofilepic.png'
+
+const venuePhotos = {
+  steinwayGrand: 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/IMG_7500.jpeg',
+  kawaiRoom: 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/IMG_2223.jpeg',
+  kawaiRoomOpen: 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/IMG_2233.jpeg',
+  kawaiKeysCloseup: 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/IMG_2226.jpeg',
+  kawaiFullKeyboard: 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/IMG_2230.jpeg',
+  guitarStudent: 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/IMG_0434.jpeg',
+}
 
 const whyCards = [
   {
@@ -215,6 +231,11 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             </MyButtonConstructor>
           </a>
         </div>
+
+        <!-- EMAIL CAPTURE — hero (hidden once subscribed) -->
+        <div v-if="!isSubscribed" class="mt-8 w-full max-w-md">
+          <EmailCapture source="hero" variant="light" :compact="true" />
+        </div>
       </div>
     </section>
 
@@ -222,26 +243,33 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
     <div class="w-full border-y border-brand-border bg-brand-surface-soft py-6 md:py-12">
       <div class="mx-auto max-w-5xl px-6 py-5">
         <div class="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
-          <div class="text-center sm:text-left">
-            <MyTextConstructor
-              alignment="left"
-              bodyVariant="body"
-              spacing="none"
-              class="text-brand-text-soft md:!text-xl lg:!text-2xl"
-            >
-              Run by a local music teacher in partnership with
-              <span class="font-semibold text-brand-text">
-                Trinity Registered Exam Centre 120
-              </span>
-            </MyTextConstructor>
-            <MyTextConstructor
-              alignment="left"
-              bodyVariant="muted"
-              spacing="none"
-              class="mt-1 text-brand-text-soft md:!text-lg lg:!text-xl"
-            >
-              Supporting teachers, parents and students across the UK
-            </MyTextConstructor>
+          <div class="flex items-center gap-5">
+            <img
+              :src="profilePic"
+              alt="Paul Sheridan — music teacher and Trinity exam centre coordinator"
+              class="h-20 w-20 shrink-0 rounded-full object-cover object-[center_20%] shadow-lg ring-2 ring-brand-accent/30 sm:h-24 sm:w-24 md:h-28 md:w-28"
+            />
+            <div class="text-center sm:text-left">
+              <MyTextConstructor
+                alignment="left"
+                bodyVariant="body"
+                spacing="none"
+                class="text-brand-text-soft md:!text-xl lg:!text-2xl"
+              >
+                Run by a local music teacher in partnership with
+                <span class="font-semibold text-brand-text">
+                  Trinity Registered Exam Centre 120
+                </span>
+              </MyTextConstructor>
+              <MyTextConstructor
+                alignment="left"
+                bodyVariant="muted"
+                spacing="none"
+                class="mt-1 text-brand-text-soft md:!text-lg lg:!text-xl"
+              >
+                Supporting teachers, parents and students across the UK
+              </MyTextConstructor>
+            </div>
           </div>
 
           <img
@@ -301,6 +329,111 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             maxWidth="full"
             :enableHover="true"
             @cardClick="handleRunnerClick"
+          />
+        </div>
+      </div>
+    </section>
+
+    <!-- VENUE PHOTOS -->
+    <section class="bg-brand-bg">
+      <div class="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
+        <div class="text-center">
+          <MyTextConstructor variant="eyebrow" alignment="center" spacing="tight">
+            <template #myTitle>
+              Our Exam Venues
+            </template>
+          </MyTextConstructor>
+
+          <MyTextConstructor
+            variant="heading"
+            fontFamily="display"
+            alignment="center"
+            spacing="tight"
+            class="mt-3 md:!text-3xl lg:!text-4xl"
+          >
+            <template #myTitle>
+              Where the exams happen
+            </template>
+          </MyTextConstructor>
+
+          <MyTextConstructor
+            bodyVariant="body"
+            alignment="center"
+            spacing="none"
+            class="mx-auto mt-4 max-w-3xl text-brand-text-soft md:!text-xl lg:!text-2xl"
+          >
+            Face-to-face exams take place at our centres in Liverpool and Wirral — both equipped with quality instruments in professional, comfortable settings.
+          </MyTextConstructor>
+        </div>
+
+        <!-- Photo grid -->
+        <div class="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2">
+          <!-- Steinway Grand — Wirral -->
+          <div class="group overflow-hidden rounded-2xl bg-brand-surface shadow-xl ring-1 ring-brand-border">
+            <div class="aspect-[4/3] overflow-hidden">
+              <img
+                :src="venuePhotos.steinwayGrand"
+                alt="Steinway & Sons grand piano at our Wirral exam centre"
+                class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            </div>
+            <div class="p-5">
+              <MyTextConstructor variant="button-lg" spacing="tight" textColor="text-brand-primary" class="md:!text-xl lg:!text-xl">
+                <template #myTitle>Wirral Exam Centre</template>
+              </MyTextConstructor>
+              <p class="mt-2 text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base lg:text-lg">
+                Our Wirral venue features a Steinway &amp; Sons grand piano — offering candidates the experience of performing on a world-class instrument.
+              </p>
+            </div>
+          </div>
+
+          <!-- Kawai Upright — Liverpool -->
+          <div class="group overflow-hidden rounded-2xl bg-brand-surface shadow-xl ring-1 ring-brand-border">
+            <div class="aspect-[4/3] overflow-hidden">
+              <img
+                :src="venuePhotos.kawaiRoom"
+                alt="Kawai upright piano and teaching space at our Liverpool exam centre"
+                class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            </div>
+            <div class="p-5">
+              <MyTextConstructor variant="button-lg" spacing="tight" textColor="text-brand-primary" class="md:!text-xl lg:!text-xl">
+                <template #myTitle>Liverpool Exam Centre</template>
+              </MyTextConstructor>
+              <p class="mt-2 text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base lg:text-lg">
+                A brand new Kawai upright piano in a purpose-set teaching and exam room — a warm, professional space designed to help candidates feel at ease.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Guitar student — school music room -->
+        <div class="mt-6 group overflow-hidden rounded-2xl bg-brand-surface shadow-xl ring-1 ring-brand-border">
+          <div class="grid grid-cols-1 md:grid-cols-2">
+            <div class="aspect-[4/3] overflow-hidden md:aspect-auto">
+              <img
+                :src="venuePhotos.guitarStudent"
+                alt="Guitar student in a school music room during a lesson"
+                class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            </div>
+            <div class="flex flex-col justify-center p-6 md:p-8">
+              <MyTextConstructor variant="button-lg" spacing="tight" textColor="text-brand-primary" class="md:!text-xl lg:!text-xl">
+                <template #myTitle>Real lessons, real progress</template>
+              </MyTextConstructor>
+              <p class="mt-3 text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base lg:text-lg">
+                From school music rooms to dedicated exam centres — we support students wherever they learn. Guitar, piano, brass, woodwind, strings and singing — all instruments, all grades.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Kawai keys close-up — full width accent -->
+        <div class="mt-8 overflow-hidden rounded-2xl shadow-xl">
+          <img
+            :src="venuePhotos.kawaiKeysCloseup"
+            alt="Close-up of Kawai piano keys"
+            class="h-48 w-full object-cover sm:h-56 md:h-64 lg:h-72"
           />
         </div>
       </div>
@@ -495,6 +628,35 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             </div>
           </div>
 
+        </div>
+      </div>
+    </section>
+
+    <!-- PIANO KEYS DIVIDER — atmospheric -->
+    <section class="relative bg-black">
+      <div class="relative overflow-hidden">
+        <img
+          :src="venuePhotos.kawaiFullKeyboard"
+          alt="Piano keys"
+          class="h-40 w-full object-cover opacity-30 sm:h-48 md:h-56"
+        />
+        <div class="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black" />
+      </div>
+    </section>
+
+    <!-- EMAIL CAPTURE — bottom -->
+    <section class="bg-black">
+      <div class="mx-auto max-w-lg px-4 pb-14 sm:px-6">
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6 text-center sm:p-8">
+          <h3 class="text-lg font-bold text-white sm:text-xl">
+            Don't miss out
+          </h3>
+          <p class="mt-1 text-sm text-white/60 sm:text-base">
+            Get exam tips, booking reminders and exclusive offers straight to your inbox.
+          </p>
+          <div class="mt-4">
+            <EmailCapture source="bottom" variant="dark" />
+          </div>
         </div>
       </div>
     </section>

@@ -30,6 +30,23 @@
             }
         </style>
 
+        {{-- Google Analytics (GA4) - only loads when cookie consent given --}}
+        <script>
+            (function() {
+                if (localStorage.getItem('cookie-consent') === 'accepted') {
+                    var s = document.createElement('script');
+                    s.async = true;
+                    s.src = 'https://www.googletagmanager.com/gtag/js?id=G-TZJ8ZCZW3W';
+                    document.head.appendChild(s);
+                    window.dataLayer = window.dataLayer || [];
+                    function gtag(){dataLayer.push(arguments);}
+                    gtag('js', new Date());
+                    gtag('config', 'G-TZJ8ZCZW3W');
+                    window.gtag = gtag;
+                }
+            })();
+        </script>
+
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">

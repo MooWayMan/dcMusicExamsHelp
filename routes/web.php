@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\SubscriberController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
@@ -12,6 +13,10 @@ Route::inertia('/for-teachers', 'ForTeachers')->name('for-teachers');
 Route::inertia('/for-teachers/faber-discounts', 'FaberDiscounts')->name('faber-discounts');
 Route::inertia('/for-parents', 'ForParents')->name('for-parents');
 Route::inertia('/for-students', 'ForStudents')->name('for-students');
+Route::inertia('/privacy', 'PrivacyPolicy')->name('privacy');
+Route::inertia('/cookies', 'CookiePolicy')->name('cookies');
+
+Route::post('/subscribe', [SubscriberController::class, 'store'])->name('subscribe');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
