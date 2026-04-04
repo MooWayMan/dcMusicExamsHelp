@@ -10,13 +10,13 @@ use Illuminate\Console\Command;
 class BulkTaskAction extends Command
 {
     protected $signature = 'task:bulk
-        {json : JSON array of actions, e.g. [{"id":65,"action":"complete","notes":"Done in Session 7"},{"id":192,"action":"update","title":"New title","notes":"New notes"}]}';
+        {--json= : JSON array of actions}';
 
-    protected $description = 'Bulk task operations — complete, update, delete in one command';
+    protected $description = 'Bulk task operations - complete, update, delete in one command';
 
     public function handle(): int
     {
-        $actions = json_decode($this->argument('json'), true);
+        $actions = json_decode($this->option('json'), true);
 
         if (! is_array($actions)) {
             $this->error('Invalid JSON. Provide an array of action objects.');
@@ -32,7 +32,7 @@ class BulkTaskAction extends Command
             $action = $item['action'] ?? 'update';
 
             if (! $id) {
-                $this->warn("Item {$i}: Missing ID — skipped");
+                $this->warn("Item {$i}: Missing ID -skipped");
                 $failed++;
                 continue;
             }
@@ -40,7 +40,7 @@ class BulkTaskAction extends Command
             $task = Task::withTrashed()->find($id);
 
             if (! $task) {
-                $this->warn("#{$id}: Not found — skipped");
+                $this->warn("#{$id}: Not found -skipped");
                 $failed++;
                 continue;
             }
@@ -74,24 +74,24 @@ class BulkTaskAction extends Command
                     if (! $task->isCompleted()) {
                         $task->markCompleted();
                     }
-                    $this->info("#{$id}: Completed — {$task->fresh()->title}");
+                    $this->info("#{$id}: Completed -{$task->fresh()->title}");
                     break;
 
                 case 'delete':
                     $task->delete();
-                    $this->info("#{$id}: Deleted — {$task->title}");
+                    $this->info("#{$id}: Deleted -{$task->title}");
                     break;
 
                 case 'reopen':
                     if ($task->isCompleted()) {
                         $task->markPending();
                     }
-                    $this->info("#{$id}: Reopened — {$task->fresh()->title}");
+                    $this->info("#{$id}: Reopened -{$task->fresh()->title}");
                     break;
 
                 case 'update':
                 default:
-                    $this->info("#{$id}: Updated — {$task->fresh()->title}");
+                    $this->info("#{$id}: Updated -{$task->fresh()->title}");
                     break;
             }
 
