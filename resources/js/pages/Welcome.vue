@@ -41,6 +41,7 @@ const venuePhotos = {
   kawaiKeysCloseup: 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/IMG_2226.jpeg',
   kawaiFullKeyboard: 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/IMG_2230.jpeg',
   guitarStudent: 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/IMG_0434.jpeg',
+  pianoStudent: 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/IMG_7460.jpeg',
 }
 
 const whyCards = [
@@ -48,7 +49,7 @@ const whyCards = [
     id: 1,
     title: 'For Teachers',
     subTitle: 'Find out more →',
-    descript: 'Save time with a clear booking route, get recognised for the work you do, and access exclusive resources and discounts on exam materials.',
+    descript: 'Save time with a clear booking route, get recognised for the work you do, and access resources and discounts to help grow your music teaching business.',
     icon: GraduationCap,
     showIcon: true,
     url: '/for-teachers',
@@ -76,7 +77,7 @@ const whyCards = [
 const incentives = [
   {
     title: 'Students featured on our website',
-    detail: 'Every student who enters through centre 120 gets listed on our Thank You page. Achieve a Distinction or Merit and receive a free digital certificate. The highest scorers each quarter make our Hall of Fame and win a gift token.',
+    detail: 'Every student who enters through centre 120 gets listed on our <a href="/thank-you" class="font-semibold text-white underline hover:text-brand-accent">Thank You page</a>. Do well and earn a Take a Bow Certificate. Aim high and earn a Standing Ovation Certificate. The highest scorers each quarter make our Hall of Fame and win a gift token.',
     icon: Trophy,
     iconBg: 'bg-brand-accent/10',
     iconColor: 'text-brand-accent',
@@ -84,15 +85,15 @@ const incentives = [
   },
   {
     title: 'Teacher recognition and digital badges',
-    detail: 'Teachers who enter 10 or more successful candidates earn a Certificate of Appreciation and a digital badge to display on their website. Tiered badges for 10+, 20+ and 30+ candidates.',
+    detail: 'Teachers who enter 10 or more candidates earn a Certificate of Appreciation and a digital badge to display on their website. Tiered badges for 10+, 20+ and 30+ candidates.',
     icon: Award,
     iconBg: 'bg-brand-success-soft',
     iconColor: 'text-brand-success',
     borderColor: 'border-l-brand-success',
   },
   {
-    title: 'Teacher quarterly prize draws',
-    detail: 'Every exam entry through code 120 earns an automatic entry into our quarterly prize draw. The more students you enter, the more chances to win.',
+    title: 'Quarterly prize draws',
+    detail: 'Teachers earn one prize draw entry for every exam booked through centre code 120. The more students entered, the more chances to win — with gift tokens to help invest back into their teaching. Parents and students — let your teacher know about code 120 and help them win too.',
     icon: Gift,
     iconBg: 'bg-brand-teal/10',
     iconColor: 'text-brand-teal',
@@ -100,7 +101,7 @@ const incentives = [
   },
   {
     title: 'Exam book discounts',
-    detail: 'We show teachers how to access discounts on exam books published by Faber Music and Trinity College London Press. A simple setup that saves you money on every order.',
+    detail: 'Teachers — get in touch to learn about exclusive discounts on exam books from Faber Music and Trinity College London Press. Parents and students save too — use our links to get 10% off ebooks for any grade or instrument.',
     icon: BookOpen,
     iconBg: 'bg-brand-primary/10',
     iconColor: 'text-brand-primary',
@@ -184,60 +185,142 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
   <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
 
-    <!-- HERO -->
-    <section class="relative flex justify-center bg-brand-surface">
-      <div class="mx-auto flex w-full max-w-6xl flex-col items-center px-4 pt-24 pb-10 text-center sm:px-6 md:pt-28 lg:pt-28">
-        <img
-          :src="heroLogo"
-          alt="musicExams.help"
-          class="h-auto w-80 object-contain sm:w-[26rem] md:w-[34rem] lg:w-[40rem] xl:w-[46rem]"
-        />
+    <!-- HERO — split layout with photo mosaic -->
+    <section class="relative overflow-hidden bg-brand-surface">
+      <div class="mx-auto max-w-7xl px-4 pt-24 pb-10 sm:px-6 md:pt-28 lg:px-8 lg:pt-28">
+        <div class="lg:grid lg:grid-cols-12 lg:gap-x-8 lg:gap-y-10">
 
-        <MyTextConstructor
-          variant="display"
-          alignment="center"
-          fontFamily="display"
-          spacing="tight"
-          class="mt-6 max-w-4xl md:!text-5xl lg:!text-6xl"
-        >
-          <template #myTitle>
-            Your guide to Trinity music exams
-          </template>
-        </MyTextConstructor>
+          <!-- Left — text content -->
+          <div class="lg:col-span-6 lg:flex lg:flex-col lg:justify-center">
+            <img
+              :src="heroLogo"
+              alt="musicExams.help"
+              class="h-auto w-64 object-contain sm:w-80 md:w-96"
+            />
 
-        <MyTextConstructor
-          alignment="center"
-          bodyVariant="body"
-          spacing="none"
-          class="mt-4 max-w-3xl text-brand-text-soft md:!text-xl lg:!text-2xl"
-        >
-          Free guidance, incentives and support for teachers, parents and students.
-          Use centre code
-          <span class="font-semibold text-brand-text">{{ referralCode }}</span>
-          when booking to unlock it all.
-        </MyTextConstructor>
+            <MyTextConstructor
+              variant="display"
+              alignment="left"
+              fontFamily="display"
+              spacing="tight"
+              class="mt-6 max-w-xl md:!text-4xl lg:!text-5xl xl:!text-6xl"
+            >
+              <template #myTitle>
+                Your guide to Trinity music exams
+              </template>
+            </MyTextConstructor>
 
-        <div class="mt-6 flex flex-wrap items-center justify-center gap-4">
-          <a
-            :href="bookingUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <MyButtonConstructor variant="primary" size="large">
-              Book Your Exam
-            </MyButtonConstructor>
-          </a>
+            <p class="mt-4 max-w-lg text-base text-brand-text-soft sm:text-lg md:text-xl lg:text-2xl">
+              Free guidance, incentives and support for teachers, parents and students.
+              Use centre code
+              <span class="font-semibold text-brand-text">{{ referralCode }}</span>
+              when booking to unlock it all.
+            </p>
 
-          <a href="#why">
-            <MyButtonConstructor variant="outline" size="large">
-              Why use this page
-            </MyButtonConstructor>
-          </a>
-        </div>
+            <div class="mt-6 flex flex-wrap gap-4">
+              <a
+                :href="bookingUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <MyButtonConstructor variant="primary" size="large">
+                  Book Your Exam
+                </MyButtonConstructor>
+              </a>
 
-        <!-- EMAIL CAPTURE — hero (hidden once subscribed) -->
-        <div v-if="!isSubscribed" class="mt-8 w-full max-w-md">
-          <EmailCapture source="hero" variant="light" :compact="true" />
+              <a href="#why">
+                <MyButtonConstructor variant="outline" size="large">
+                  Why use this page
+                </MyButtonConstructor>
+              </a>
+            </div>
+
+            <!-- EMAIL CAPTURE — hero (hidden once subscribed) -->
+            <div v-if="!isSubscribed" class="mt-8 w-full max-w-md">
+              <EmailCapture source="hero" variant="light" :compact="true" />
+            </div>
+          </div>
+
+          <!-- Right — photo mosaic (desktop) / row of 3 (mobile) -->
+          <div class="mt-10 lg:col-span-6 lg:mt-0">
+            <!-- Mobile — row of 3 key photos -->
+            <div class="grid grid-cols-3 gap-3 lg:hidden">
+              <div class="overflow-hidden rounded-xl shadow-lg">
+                <img
+                  :src="venuePhotos.steinwayGrand"
+                  alt="Steinway grand piano"
+                  class="h-28 w-full object-cover sm:h-36"
+                />
+              </div>
+              <div class="overflow-hidden rounded-xl shadow-lg">
+                <img
+                  :src="venuePhotos.guitarStudent"
+                  alt="Guitar student"
+                  class="h-28 w-full object-cover sm:h-36"
+                />
+              </div>
+              <div class="overflow-hidden rounded-xl shadow-lg">
+                <img
+                  :src="venuePhotos.pianoStudent"
+                  alt="Piano student"
+                  class="h-28 w-full object-cover sm:h-36"
+                />
+              </div>
+            </div>
+
+            <!-- Desktop — full staggered mosaic -->
+            <div class="hidden lg:grid lg:grid-cols-2 lg:gap-4">
+              <!-- Column 1 — offset down -->
+              <div class="space-y-4 pt-8">
+                <div class="overflow-hidden rounded-2xl shadow-xl">
+                  <img
+                    :src="venuePhotos.steinwayGrand"
+                    alt="Steinway grand piano at our Wirral exam centre"
+                    class="h-64 w-full object-cover"
+                  />
+                </div>
+                <div class="overflow-hidden rounded-2xl shadow-xl">
+                  <img
+                    :src="venuePhotos.guitarStudent"
+                    alt="Guitar student in a school music room"
+                    class="h-56 w-full object-cover"
+                  />
+                </div>
+                <div class="overflow-hidden rounded-2xl shadow-xl">
+                  <img
+                    :src="venuePhotos.kawaiKeysCloseup"
+                    alt="Close-up of piano keys"
+                    class="h-48 w-full object-cover"
+                  />
+                </div>
+              </div>
+              <!-- Column 2 — flush top -->
+              <div class="space-y-4">
+                <div class="overflow-hidden rounded-2xl shadow-xl">
+                  <img
+                    :src="venuePhotos.pianoStudent"
+                    alt="Piano student at a keyboard"
+                    class="h-56 w-full object-cover"
+                  />
+                </div>
+                <div class="overflow-hidden rounded-2xl shadow-xl">
+                  <img
+                    :src="venuePhotos.kawaiRoom"
+                    alt="Kawai piano at our Liverpool exam centre"
+                    class="h-64 w-full object-cover"
+                  />
+                </div>
+                <div class="overflow-hidden rounded-2xl shadow-xl">
+                  <img
+                    :src="venuePhotos.kawaiFullKeyboard"
+                    alt="Full keyboard view"
+                    class="h-48 w-full object-cover"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </section>
@@ -367,6 +450,13 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
           >
             Face-to-face exams take place at our centres in Liverpool and Wirral — both equipped with quality instruments in professional, comfortable settings.
           </MyTextConstructor>
+
+          <!-- Digital exams callout -->
+          <div class="mx-auto mt-6 max-w-2xl rounded-2xl bg-brand-primary px-6 py-5 text-center shadow-lg">
+            <p class="text-sm font-semibold text-brand-text-inverse sm:text-base md:text-lg">
+              Digital exams can be taken from anywhere in the UK — whether you're up in Scotland, down in South Wales, over in Northern Ireland or on the east coast.
+            </p>
+          </div>
         </div>
 
         <!-- Photo grid -->
@@ -410,22 +500,39 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
           </div>
         </div>
 
-        <!-- Guitar student — school music room -->
-        <div class="mt-6 group overflow-hidden rounded-2xl bg-brand-surface shadow-xl ring-1 ring-brand-border">
-          <div class="grid grid-cols-1 md:grid-cols-2">
-            <div class="aspect-[4/3] overflow-hidden md:aspect-auto">
+        <!-- Student photos — guitar and piano side by side -->
+        <div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div class="group overflow-hidden rounded-2xl bg-brand-surface shadow-xl ring-1 ring-brand-border">
+            <div class="aspect-[4/3] overflow-hidden">
               <img
                 :src="venuePhotos.guitarStudent"
                 alt="Guitar student in a school music room during a lesson"
                 class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
             </div>
-            <div class="flex flex-col justify-center p-6 md:p-8">
+            <div class="p-5">
               <MyTextConstructor variant="button-lg" spacing="tight" textColor="text-brand-primary" class="md:!text-xl lg:!text-xl">
-                <template #myTitle>Real lessons, real progress</template>
+                <template #myTitle>Guitar — school music room</template>
               </MyTextConstructor>
-              <p class="mt-3 text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base lg:text-lg">
-                From school music rooms to dedicated exam centres — we support students wherever they learn. Guitar, piano, brass, woodwind, strings and singing — all instruments, all grades.
+              <p class="mt-2 text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base lg:text-lg">
+                From school music rooms to dedicated exam centres — all instruments, all grades.
+              </p>
+            </div>
+          </div>
+          <div class="group overflow-hidden rounded-2xl bg-brand-surface shadow-xl ring-1 ring-brand-border">
+            <div class="aspect-[4/3] overflow-hidden">
+              <img
+                :src="venuePhotos.pianoStudent"
+                alt="Piano student practising at a keyboard"
+                class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            </div>
+            <div class="p-5">
+              <MyTextConstructor variant="button-lg" spacing="tight" textColor="text-brand-primary" class="md:!text-xl lg:!text-xl">
+                <template #myTitle>Piano — home teaching studio</template>
+              </MyTextConstructor>
+              <p class="mt-2 text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base lg:text-lg">
+                From home studios to school music rooms — wherever you learn, your hard work deserves to be celebrated.
               </p>
             </div>
           </div>
@@ -443,11 +550,35 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
     </section>
 
     <!-- INCENTIVES -->
-    <section id="incentives" class="border-t border-brand-border bg-brand-bg">
-      <div class="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+    <section
+      id="incentives"
+      class="relative border-t border-brand-border"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_stars_bg.jpg'); background-size: cover; background-position: center;"
+    >
+      <div class="absolute inset-0 bg-black/50" />
+
+      <!-- Shooting stars animation -->
+      <div class="pointer-events-none absolute inset-0 overflow-hidden">
+        <!-- Top stars -->
+        <div class="shooting-star shooting-star-1" />
+        <div class="shooting-star shooting-star-2" />
+        <div class="shooting-star shooting-star-5" />
+        <div class="shooting-star shooting-star-8" />
+        <div class="shooting-star shooting-star-9" />
+        <div class="shooting-star shooting-star-10" />
+        <!-- Bottom stars -->
+        <div class="shooting-star shooting-star-3" />
+        <div class="shooting-star shooting-star-4" />
+        <div class="shooting-star shooting-star-6" />
+        <div class="shooting-star shooting-star-7" />
+        <div class="shooting-star shooting-star-11" />
+        <div class="shooting-star shooting-star-12" />
+      </div>
+
+      <div class="relative mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
         <!-- Section header -->
         <div class="text-center">
-          <MyTextConstructor variant="eyebrow" alignment="center" spacing="tight">
+          <MyTextConstructor variant="eyebrow" alignment="center" spacing="tight" textColor="text-brand-accent">
             <template #myTitle>
               Incentives
             </template>
@@ -458,6 +589,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="mt-3 md:!text-3xl lg:!text-4xl"
           >
             <template #myTitle>
@@ -465,85 +597,93 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             </template>
           </MyTextConstructor>
 
-          <MyTextConstructor
-            bodyVariant="body"
-            alignment="center"
-            spacing="none"
-            class="mx-auto mt-5 max-w-3xl text-brand-text-soft md:!text-xl lg:!text-2xl"
-          >
+          <p class="mx-auto mt-5 max-w-3xl text-center text-base text-white/80 sm:text-lg md:text-xl lg:text-2xl">
             Real benefits for everyone who books through centre code {{ referralCode }} — whether you enter online or through our face-to-face centres in Liverpool and Wirral.
-          </MyTextConstructor>
+          </p>
         </div>
 
-        <!-- Incentive cards — 2x2 grid with icons and colour accents -->
+        <!-- Incentive cards — 2x2 grid -->
         <div class="mt-10 grid gap-5 sm:grid-cols-2">
           <div
             v-for="item in incentives"
             :key="item.title"
-            class="flex gap-4 rounded-2xl border border-brand-border border-l-4 bg-brand-surface p-5 shadow-xl transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl"
-            :class="item.borderColor"
+            class="overflow-hidden rounded-2xl bg-white/10 shadow-2xl ring-1 ring-white/10 backdrop-blur-sm transition-all duration-200 hover:-translate-y-1 hover:bg-white/15 hover:shadow-[0_25px_60px_-12px_rgba(0,0,0,0.5)]"
           >
-            <div class="shrink-0 rounded-xl p-3" :class="item.iconBg">
-              <component :is="item.icon" class="h-7 w-7" :class="item.iconColor" />
-            </div>
-            <div>
-              <MyTextConstructor variant="button-lg" spacing="tight" textColor="text-brand-primary" class="md:!text-xl lg:!text-xl">
-                <template #myTitle>{{ item.title }}</template>
-              </MyTextConstructor>
-              <p class="mt-2 text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base lg:text-lg">
-                {{ item.detail }}
+            <div class="p-6">
+              <component :is="item.icon" class="mb-3 h-8 w-8 text-brand-accent" />
+              <h3 class="text-lg font-bold text-white sm:text-xl">{{ item.title }}</h3>
+              <p class="mt-2 text-sm leading-snug text-white/80 sm:text-sm md:text-base" v-html="item.detail">
               </p>
             </div>
           </div>
         </div>
 
       </div>
+    </section>
 
-      <!-- Student Hall of Fame — banner -->
-      <div class="mx-auto max-w-5xl px-4 pt-10 sm:px-6 lg:px-8">
-        <div class="overflow-hidden rounded-2xl bg-black p-4 shadow-2xl">
+    <!-- AWARDS & CERTIFICATES — clean dark background -->
+    <section class="bg-black">
+      <div class="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+        <!-- Student Hall of Fame — banner (links to Thank You page) -->
+        <a href="/thank-you" class="group block overflow-hidden rounded-2xl bg-black p-4 shadow-2xl transition-transform duration-300 hover:scale-[1.005]">
           <img
             src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/Highest+score+In5.png"
             alt="Student Hall of Fame — celebrating every exam result through centre 120"
             class="block w-full"
           />
+        </a>
+
+        <!-- Certificates (link to Thank You page) -->
+        <div class="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2">
+          <a href="/thank-you" class="group block overflow-hidden rounded-2xl bg-brand-surface p-3 shadow-2xl ring-1 ring-brand-border transition-transform duration-300 hover:scale-[1.01]">
+            <img
+              src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/certThankTeacher_10.png"
+              alt="Teacher Certificate of Appreciation"
+              class="block w-full rounded-2xl"
+            />
+          </a>
+          <a href="/thank-you" class="group block overflow-hidden rounded-2xl bg-brand-surface p-3 shadow-2xl ring-1 ring-brand-border transition-transform duration-300 hover:scale-[1.01]">
+            <img
+              src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/certAceiveStu_Dis.png"
+              alt="Student Certificate of Achievement — Highest Distinction"
+              class="block w-full rounded-2xl"
+            />
+          </a>
+        </div>
+
+        <!-- CTA to Thank You page -->
+        <div class="mt-8 text-center">
+          <a href="/thank-you">
+            <MyButtonConstructor variant="light" size="large">
+              Visit the Thank You Page
+            </MyButtonConstructor>
+          </a>
         </div>
       </div>
+    </section>
 
-      <div class="mx-auto max-w-5xl px-4 pb-16 sm:px-6 lg:px-8 lg:pb-20">
-        <!-- BOTTOM ROW -->
-        <div class="mt-10">
-          <div class="mx-auto max-w-5xl">
-            <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div class="overflow-hidden rounded-2xl bg-brand-surface p-3 shadow-2xl ring-1 ring-brand-border">
-                <img
-                  src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/certThankTeacher_10.png"
-                  alt="Teacher Certificate of Appreciation"
-                  class="block w-full rounded-2xl"
-                />
-              </div>
-              <div class="overflow-hidden rounded-2xl bg-brand-surface p-3 shadow-2xl ring-1 ring-brand-border">
-                <img
-                  src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/certAceiveStu_Dis.png"
-                  alt="Student Certificate of Achievement — Highest Distinction"
-                  class="block w-full rounded-2xl"
-                />
-              </div>
-            </div>
+    <!-- THANK YOU BANNER + BOOKING CTA — clean light background -->
+    <section class="bg-brand-surface">
+      <div class="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+        <!-- Thank You banner — links to /thank-you -->
+        <a href="/thank-you" class="group block overflow-hidden rounded-2xl shadow-2xl transition-transform duration-300 hover:scale-[1.005]">
+          <img
+            src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/thank_you_banner.jpg"
+            alt="Thank You — Every student. Every exam. Recognised."
+            class="block w-full"
+          />
+        </a>
 
-
-            <div class="mt-6 flex justify-center">
-              <a
-                :href="bookingUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <MyButtonConstructor variant="primary" size="large">
-                  Continue to Official Booking
-                </MyButtonConstructor>
-              </a>
-            </div>
-          </div>
+        <div class="mt-10 flex justify-center">
+          <a
+            :href="bookingUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <MyButtonConstructor variant="primary" size="large">
+              Continue to Official Booking
+            </MyButtonConstructor>
+          </a>
         </div>
       </div>
     </section>

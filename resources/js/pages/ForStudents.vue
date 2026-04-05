@@ -35,15 +35,17 @@ const tiers = [
     iconBg: 'bg-brand-accent/10',
     iconColor: 'text-brand-accent',
     borderColor: 'border-brand-accent',
+    url: '/thank-you',
   },
   {
     icon: Award,
-    title: 'Distinction & Merit certificates',
+    title: 'Take a Bow & Standing Ovation',
     subtitle: 'Every high scorer',
-    detail: 'Achieve a Distinction (87–100) or Merit (75–86) and you\'ll receive a free digital certificate from musicExams.help celebrating your result. Show it off, share it, put it on the wall.',
+    detail: 'Do well and earn a Take a Bow Certificate. Aim high and earn a Standing Ovation Certificate. Show it off, share it, put it on the wall.',
     iconBg: 'bg-brand-success-soft',
     iconColor: 'text-brand-success',
     borderColor: 'border-brand-success',
+    url: '/thank-you',
   },
   {
     icon: Star,
@@ -53,12 +55,13 @@ const tiers = [
     iconBg: 'bg-brand-teal/10',
     iconColor: 'text-brand-teal',
     borderColor: 'border-brand-teal',
+    url: '/thank-you',
   },
   {
     icon: Gift,
     title: 'Prize draws',
     subtitle: 'Automatic entry',
-    detail: 'Every exam entry through centre 120 earns an automatic entry into our quarterly prize draw. Just by sitting your exam, you\'re in with a chance to win.',
+    detail: 'Every exam entry through centre 120 earns an automatic entry into our quarterly prize draw. Just by sitting your exam, you\'re in with a chance to win a gift token!',
     iconBg: 'bg-brand-primary/10',
     iconColor: 'text-brand-primary',
     borderColor: 'border-brand-primary',
@@ -106,7 +109,7 @@ const resultsBands = [
           <div :class="animClass('fade-up', 2)">
             <p class="mx-auto mt-4 max-w-2xl text-sm text-brand-text-soft sm:text-sm md:text-base lg:text-lg">
               When you sit a Trinity exam through centre 120, your achievement doesn't just disappear into a filing cabinet.
-              You get recognised — on our website, with certificates, and through prizes.
+              You get recognised — on our website, with special certificates, and through prizes.
             </p>
           </div>
         </div>
@@ -116,13 +119,13 @@ const resultsBands = [
     <!-- HALL OF FAME BANNER -->
     <section class="bg-black">
       <div class="mx-auto max-w-4xl px-4 py-10 sm:px-6">
-        <div :class="animClass('zoom-in', 1)" class="overflow-hidden rounded-2xl bg-black shadow-2xl">
+        <a href="/thank-you" :class="animClass('zoom-in', 1)" class="group block overflow-hidden rounded-2xl bg-black shadow-2xl transition-transform duration-300 hover:scale-[1.005]">
           <img
             :src="hallOfFameLogo"
             alt="Hall of Fame — Highest Score"
             class="h-auto w-full object-contain"
           />
-        </div>
+        </a>
       </div>
     </section>
 
@@ -145,20 +148,34 @@ const resultsBands = [
         </div>
 
         <div :class="animClass('fade-up', 2)" class="mt-10 space-y-6">
-          <div
+          <component
             v-for="tier in tiers"
             :key="tier.title"
-            :class="['flex gap-4 rounded-2xl border-l-4 bg-brand-surface p-5 shadow-sm sm:gap-6 sm:p-6', tier.borderColor]"
+            :is="tier.url ? 'a' : 'div'"
+            :href="tier.url || undefined"
+            :class="['flex gap-4 rounded-2xl border-l-4 bg-brand-surface p-5 shadow-sm transition-all duration-200 sm:gap-6 sm:p-6', tier.borderColor, tier.url ? 'group cursor-pointer hover:-translate-y-0.5 hover:shadow-md' : '']"
           >
             <div :class="[tier.iconBg, 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12']">
               <component :is="tier.icon" :class="[tier.iconColor, 'h-5 w-5 sm:h-6 sm:w-6']" />
             </div>
             <div>
-              <p class="text-base font-semibold text-brand-text sm:text-lg">{{ tier.title }}</p>
+              <p class="text-base font-semibold text-brand-text sm:text-lg">
+                {{ tier.title }}
+                <span v-if="tier.url" class="text-brand-accent"> →</span>
+              </p>
               <p class="text-xs font-medium uppercase tracking-wide text-brand-text-soft">{{ tier.subtitle }}</p>
               <p class="mt-2 text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base">{{ tier.detail }}</p>
             </div>
-          </div>
+          </component>
+        </div>
+
+        <!-- CTA to Thank You page -->
+        <div :class="animClass('fade-up', 3)" class="mt-10 text-center">
+          <a href="/thank-you">
+            <MyButtonConstructor variant="primary" size="large">
+              Visit the Thank You Page
+            </MyButtonConstructor>
+          </a>
         </div>
       </div>
     </section>
