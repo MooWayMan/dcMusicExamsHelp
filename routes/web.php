@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\SubscriberController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
@@ -20,10 +21,13 @@ Route::inertia('/exam-guide/what-to-expect', 'ExamGuideExpect')->name('exam-guid
 Route::inertia('/exam-guide/digital-exams', 'ExamGuideDigital')->name('exam-guide.digital');
 Route::inertia('/exam-guide/grades-explained', 'ExamGuideGrades')->name('exam-guide.grades');
 Route::inertia('/exam-fees', 'ExamFees')->name('exam-fees');
+Route::inertia('/contact', 'Contact')->name('contact');
+Route::inertia('/about', 'About')->name('about');
 Route::inertia('/privacy', 'PrivacyPolicy')->name('privacy');
 Route::inertia('/cookies', 'CookiePolicy')->name('cookies');
 
 Route::post('/subscribe', [SubscriberController::class, 'store'])->name('subscribe');
+Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');

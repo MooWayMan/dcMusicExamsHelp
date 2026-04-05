@@ -71,7 +71,7 @@ const inTheRoom = [
   {
     step: '5',
     title: 'That\'s it!',
-    detail: 'The examiner will thank you and you\'re done. The whole thing typically takes 12–30 minutes depending on the grade. Results arrive by post and online within a few weeks.',
+    detail: 'The examiner will thank you and you\'re done. The whole thing typically takes 12–30 minutes depending on the grade. Results arrive by post and online within a few weeks. A digital certificate is included — if you want a printed paper certificate, that\'s an extra £5.',
   },
 ]
 
@@ -107,6 +107,35 @@ const nerveTips = [
   'Play through your pieces in front of family or friends beforehand — performing for any audience builds confidence.',
   'Arrive early so you\'re not rushing. Give yourself time to warm up.',
   'Focus on the music, not the marks. If you enjoy playing, it comes through in your performance.',
+]
+
+/* ── What happens after you book (F2F) ── */
+const afterBookingF2F = [
+  {
+    step: '1',
+    title: 'Booking confirmation',
+    detail: 'You\'ll receive a confirmation email with your order reference, candidate name, instrument, grade and the amount paid. Check the details carefully — if anything is wrong, contact support@trinitycollege.com straight away.',
+  },
+  {
+    step: '2',
+    title: 'Exam scheduled email',
+    detail: 'Closer to the exam session, you\'ll receive an email from noreply@trinitycollege.com with your exam date, time and venue address. This email also includes an appointment slip. Check your junk/spam folder — add the address as a safe sender.',
+  },
+  {
+    step: '3',
+    title: 'Print the appointment slip',
+    detail: 'The appointment slip must be printed and filled in with your choices (pieces, scales, supporting tests). It must be handed to the examiner when you walk into the room. Without it, the examiner won\'t know what you\'re performing.',
+  },
+  {
+    step: '4',
+    title: 'Exam day',
+    detail: 'Arrive at the venue in good time. Bring your instrument, sheet music, appointment slip and any accompanist if needed. The exam typically lasts 12–30 minutes depending on the grade.',
+  },
+  {
+    step: '5',
+    title: 'Results and certificate',
+    detail: 'A written report form is provided after the exam. Results are provisional until validated by Trinity. Your digital certificate is issued within 24–48 hours of validation. If you want a printed paper certificate, that\'s an extra £5.',
+  },
 ]
 
 /* ── FAQ ── */
@@ -351,8 +380,53 @@ const faqs = [
       </div>
     </section>
 
-    <!-- FAQ -->
+    <!-- WHAT HAPPENS AFTER YOU BOOK -->
     <section class="bg-brand-surface">
+      <div class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
+        <div :class="animClass('fade-up', 1)">
+          <div class="mx-auto mb-4 h-1 w-16 rounded-full bg-gradient-to-r from-brand-primary to-brand-accent"></div>
+          <MyTextConstructor
+            variant="subheading"
+            fontFamily="display"
+            alignment="center"
+            spacing="tight"
+            class="md:!text-2xl lg:!text-3xl"
+          >
+            <template #myTitle>What happens after you book?</template>
+          </MyTextConstructor>
+          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg">
+            Here's what to expect once you've booked a face-to-face exam.
+          </p>
+        </div>
+
+        <div class="mt-8 space-y-6">
+          <div
+            v-for="(item, index) in afterBookingF2F"
+            :key="item.step"
+            :class="animClass('fade-up', index + 2)"
+            class="flex gap-4 sm:gap-5"
+          >
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-brand-primary to-brand-accent text-sm font-bold text-white shadow-md sm:h-12 sm:w-12 sm:text-base">
+              {{ item.step }}
+            </div>
+            <div>
+              <p class="text-base font-semibold text-brand-text sm:text-lg">{{ item.title }}</p>
+              <p class="mt-1 text-sm leading-relaxed text-brand-text-soft sm:text-base">{{ item.detail }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div :class="animClass('fade-up', 5)" class="mt-8 rounded-2xl border border-brand-accent/30 bg-brand-accent/5 p-5 sm:p-6">
+          <p class="text-sm leading-snug text-brand-text-soft sm:text-base">
+            <span class="font-semibold text-brand-accent">Special needs provisions:</span>
+            If a candidate has a specific educational need or disability, complete and submit Trinity's SEND provision form to trinity.csn@trinitycollege.com before the exam. This ensures any adjustments can be arranged in time.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="bg-black">
       <div class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
           <MyTextConstructor
@@ -360,6 +434,7 @@ const faqs = [
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>Exam day questions</template>

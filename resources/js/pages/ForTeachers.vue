@@ -74,7 +74,7 @@ const benefits = [
   {
     icon: GraduationCap,
     title: 'Your students get celebrated',
-    detail: 'Every student entered through centre 120 gets listed on our Thank You page. Top scorers each quarter make the Hall of Fame with a certificate and gift token. Parents love it.',
+    detail: 'Every student entered through centre 120 gets listed on our Thank You page. Merit and Distinction students make the Hall of Fame — with a Take a Bow or Standing Ovation Certificate. The highest scorers each quarter get the top spot and a gift token. Parents love it.',
     iconBg: 'bg-brand-accent/10',
     iconColor: 'text-brand-accent',
   },
@@ -87,11 +87,11 @@ const faqs = [
   },
   {
     question: 'Can I still use my own centre code?',
-    answer: 'If you already have a centre code, you can keep using it. But your students will miss out on the Hall of Fame, certificates, prize draws and other incentives that come with centre 120.',
+    answer: 'If you already have a centre code, you can keep using it. But your students will miss out on the Thank You page, the Hall of Fame, Take a Bow and Standing Ovation Certificates, prize draws and other incentives that come with centre 120.',
   },
   {
     question: 'What if I already book directly for a digital exam discount?',
-    answer: 'Teachers can set up their own digital centre and receive an ebook discount from Trinity. That\'s a valid option. The difference is that centre 120 offers your students public recognition, certificates, a Hall of Fame and gift tokens — things you can\'t provide on your own.',
+    answer: 'Teachers can set up their own digital centre and receive an ebook discount from Trinity. That\'s a valid option. The difference is that centre 120 offers your students public recognition, Take a Bow and Standing Ovation Certificates, a Hall of Fame and gift tokens — things you can\'t provide on your own.',
   },
   {
     question: 'How do the Faber book discounts work?',

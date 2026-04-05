@@ -49,7 +49,7 @@ const howItWorks = [
   {
     step: '4',
     title: 'Receive your result',
-    detail: 'A qualified Trinity examiner watches your video and marks it using the same criteria as a face-to-face exam. Results and detailed feedback arrive online within a few weeks.',
+    detail: 'A qualified Trinity examiner watches your video and marks it using the same criteria as a face-to-face exam. Results are normally provided within 14 days of submission (28 days for diploma exams). The exam report is emailed as an attachment to the email address provided at booking — no portal or login needed. A digital certificate is issued automatically for any Pass, Merit or Distinction. If you want a printed paper certificate posted to you, that\'s an extra £5.',
     icon: Monitor,
   },
 ]
@@ -85,7 +85,11 @@ const comparison = [
   { feature: 'Nerves', digital: 'Re-record until you\'re happy', faceToFace: 'One live performance' },
   { feature: 'Supporting tests', digital: 'Overall Performance Criteria (or repertoire-only)', faceToFace: 'Sight-reading, aural, etc.' },
   { feature: 'Feedback', digital: 'Written feedback online', faceToFace: 'Written feedback by post and online' },
+  { feature: 'Results', digital: 'Normally within 14 days', faceToFace: 'A few weeks by post and online' },
+  { feature: 'Certificate', digital: 'Digital certificate within 48 hours of result', faceToFace: 'Digital certificate included (paper £5 extra)' },
+  { feature: 'Accompaniment', digital: 'Recorded accompaniment at all grades', faceToFace: 'Live accompanist required from Grade 4' },
   { feature: 'Marking', digital: 'Same marking criteria', faceToFace: 'Same marking criteria' },
+  { feature: 'Diplomas', digital: 'ATCL, LTCL and FTCL Recital available digitally', faceToFace: 'Full range including teaching and theory diplomas' },
 ]
 
 /* ── Tips ── */
@@ -97,6 +101,30 @@ const recordingTips = [
   'Use natural light or a well-lit room — avoid backlighting (don\'t sit in front of a window)',
   'Place your device on a stable surface or use a tripod — no hand-held filming',
   'Warm up before you hit record, then take a breath and begin when you\'re ready',
+]
+
+/* ── What happens after you book (digital) ── */
+const afterBookingDigital = [
+  {
+    step: '1',
+    title: 'Confirmation email',
+    detail: 'You\'ll receive a booking confirmation straight away with your order reference, candidate details and the amount paid. Check the details carefully — if anything is wrong, contact support@trinitycollege.com immediately.',
+  },
+  {
+    step: '2',
+    title: 'Login details arrive within one week',
+    detail: 'Within the next week, the candidate will receive an email from noreply@trinitycollege.com with login details for the upload portal. Check your junk/spam folder — add that address as a safe sender. If nothing arrives after a week, contact support@trinitycollege.com.',
+  },
+  {
+    step: '3',
+    title: 'Record and submit within four weeks',
+    detail: 'Once you have your login details, you have four weeks to record your performance and upload it through the exam portal. You can re-record as many times as you like — only the final submission is marked.',
+  },
+  {
+    step: '4',
+    title: 'Results within 14 days',
+    detail: 'A qualified Trinity examiner watches your video and marks it. Results are normally provided within 14 days of submission (28 days for diplomas). Your digital certificate is sent within 48 hours of receiving your result.',
+  },
 ]
 
 /* ── FAQ ── */
@@ -129,7 +157,22 @@ const faqs = [
   {
     question: 'What\'s the deadline for uploading?',
     answer:
-      'Trinity sets submission windows throughout the year. Check the Trinity website or your exam booking confirmation for the specific deadline. For UCAS purposes, recordings must be uploaded at least three weeks before the second Friday in June.',
+      'You have 28 days from the date of booking to submit your recording. Check your booking confirmation for the exact deadline. For UCAS purposes, recordings must be uploaded at least three weeks before the second Friday in June.',
+  },
+  {
+    question: 'How long until I get my result?',
+    answer:
+      'Results for digital graded exams are normally provided within 14 days of submission. Diploma exams may take up to 28 days. Your digital certificate is sent within 48 hours of receiving your result. If you\'d like a printed paper certificate, that\'s an extra £5.',
+  },
+  {
+    question: 'Can I do a diploma digitally?',
+    answer:
+      'Yes. Trinity now offers digital versions of the ATCL, LTCL and FTCL Recital diplomas for both Classical & Jazz and Rock & Pop. Digital diplomas are marked to the same standard and carry the same qualification. Teaching and theory diplomas are face-to-face only.',
+  },
+  {
+    question: 'Can I use a recorded accompaniment?',
+    answer:
+      'Yes — recorded accompaniments are permitted at all grades for digital exams. This is a big advantage over face-to-face, where a live accompanist is required from Grade 4 onwards. Trinity publishes its own recorded accompaniments, or you can use any suitable recording.',
   },
 ]
 </script>
@@ -356,8 +399,53 @@ const faqs = [
       </div>
     </section>
 
-    <!-- FAQ -->
+    <!-- WHAT HAPPENS AFTER YOU BOOK -->
     <section class="bg-brand-surface">
+      <div class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
+        <div :class="animClass('fade-up', 1)">
+          <div class="mx-auto mb-4 h-1 w-16 rounded-full bg-gradient-to-r from-brand-primary to-brand-accent"></div>
+          <MyTextConstructor
+            variant="subheading"
+            fontFamily="display"
+            alignment="center"
+            spacing="tight"
+            class="md:!text-2xl lg:!text-3xl"
+          >
+            <template #myTitle>What happens after you book?</template>
+          </MyTextConstructor>
+          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg">
+            Here's what to expect once you've booked a digital exam through Trinity.
+          </p>
+        </div>
+
+        <div class="mt-8 space-y-6">
+          <div
+            v-for="(item, index) in afterBookingDigital"
+            :key="item.step"
+            :class="animClass('fade-up', index + 2)"
+            class="flex gap-4 sm:gap-5"
+          >
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-brand-primary to-brand-accent text-sm font-bold text-white shadow-md sm:h-12 sm:w-12 sm:text-base">
+              {{ item.step }}
+            </div>
+            <div>
+              <p class="text-base font-semibold text-brand-text sm:text-lg">{{ item.title }}</p>
+              <p class="mt-1 text-sm leading-relaxed text-brand-text-soft sm:text-base">{{ item.detail }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div :class="animClass('fade-up', 4)" class="mt-8 rounded-2xl border border-brand-accent/30 bg-brand-accent/5 p-5 sm:p-6">
+          <p class="text-sm leading-snug text-brand-text-soft sm:text-base">
+            <span class="font-semibold text-brand-accent">Cancellation:</span>
+            You can cancel within 14 days of the day of booking. Trinity will reimburse your payment, minus a portion to cover reasonable costs. After 14 days, cancellation is not guaranteed.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="bg-black">
       <div class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
           <MyTextConstructor
@@ -365,6 +453,7 @@ const faqs = [
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>Digital exam questions</template>

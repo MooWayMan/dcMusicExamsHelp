@@ -1,6 +1,6 @@
 <!-- resources/js/pages/ExamFees.vue -->
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted, watch, nextTick, Transition } from 'vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
@@ -15,6 +15,57 @@ import { PoundSterling, Calendar, FileText } from 'lucide-vue-next'
 
 const { animClass } = usePageAnimation()
 const showBookingModal = ref(false)
+const activeTab = ref<'fees' | 'dates'>('fees')
+const crossRefVisible = ref(true)
+const headerVisible = ref(true)
+const tabContentVisible = ref(true)
+
+/* ── Reactive header text based on active tab ── */
+const pageTitle = computed(() =>
+  activeTab.value === 'fees'
+    ? 'How much does a Trinity exam cost?'
+    : 'When are the Trinity exam dates?'
+)
+const pageSubtitle = computed(() =>
+  activeTab.value === 'fees'
+    ? 'Official Trinity College London fees for 2026. The fees are set by Trinity and are exactly the same whether you use centre code 120 or book directly — no extra cost.'
+    : 'Face-to-face exam sessions for 2026 in Liverpool and Wirral, plus booking window dates. Digital exams can be booked and submitted at any time.'
+)
+
+/* ── URL hash support: /exam-fees#dates switches tab ── */
+onMounted(() => {
+  if (window.location.hash === '#dates') activeTab.value = 'dates'
+  if (window.location.hash === '#fees') activeTab.value = 'fees'
+})
+
+/* ── Switch tab and scroll to top ── */
+function switchTab(tab: 'fees' | 'dates') {
+  activeTab.value = tab
+  nextTick(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  })
+}
+
+/* ── Fade transitions on tab switch ── */
+watch(activeTab, (tab) => {
+  window.history.replaceState(null, '', `#${tab}`)
+
+  // Fade out header text, tab content, and cross-ref button
+  headerVisible.value = false
+  tabContentVisible.value = false
+  crossRefVisible.value = false
+
+  // Fade header and content back in after a longer pause (let fade-out complete)
+  setTimeout(() => {
+    headerVisible.value = true
+    tabContentVisible.value = true
+  }, 400)
+
+  // Cross-ref button fades in later to prevent ping-pong
+  setTimeout(() => {
+    crossRefVisible.value = true
+  }, 1200)
+})
 
 const pageMeta = {
   title: 'Exam Fees 2026 — musicExams.help',
@@ -48,19 +99,18 @@ const f2fData = [
 const digitalColumns = [
   { key: 'grade', title: 'Grade', sortable: false },
   { key: 'fee', title: 'Fee (GBP)', sortable: false, align: 'right' as const },
-  { key: 'saving', title: 'Saving vs F2F', sortable: false, align: 'right' as const },
 ]
 
 const digitalData = [
-  { grade: 'Initial', fee: '£49.00', saving: '£6.00' },
-  { grade: 'Grade 1', fee: '£55.00', saving: '£6.00' },
-  { grade: 'Grade 2', fee: '£61.00', saving: '£7.00' },
-  { grade: 'Grade 3', fee: '£68.00', saving: '£8.00' },
-  { grade: 'Grade 4', fee: '£78.00', saving: '£8.00' },
-  { grade: 'Grade 5', fee: '£88.00', saving: '£11.00' },
-  { grade: 'Grade 6', fee: '£98.00', saving: '£11.00' },
-  { grade: 'Grade 7', fee: '£109.00', saving: '£13.00' },
-  { grade: 'Grade 8', fee: '£120.00', saving: '£18.00' },
+  { grade: 'Initial', fee: '£49.00' },
+  { grade: 'Grade 1', fee: '£55.00' },
+  { grade: 'Grade 2', fee: '£61.00' },
+  { grade: 'Grade 3', fee: '£68.00' },
+  { grade: 'Grade 4', fee: '£78.00' },
+  { grade: 'Grade 5', fee: '£88.00' },
+  { grade: 'Grade 6', fee: '£98.00' },
+  { grade: 'Grade 7', fee: '£109.00' },
+  { grade: 'Grade 8', fee: '£120.00' },
 ]
 
 /* ── Theory fees ── */
@@ -179,7 +229,7 @@ const faqs = [
     <Navbar />
 
     <!-- HEADER -->
-    <section class="bg-brand-surface pt-24 pb-10 md:pt-28 lg:pt-28">
+    <section class="bg-brand-surface pt-24 pb-6 md:pt-28 lg:pt-28">
       <div class="mx-auto max-w-4xl px-4 sm:px-6">
         <div class="mb-6">
           <Breadcrumbs :pages="breadcrumbPages" home-href="/" />
@@ -191,7 +241,11 @@ const faqs = [
             </MyTextConstructor>
           </div>
 
-          <div :class="animClass('fade-up', 1)">
+          <div
+            :class="animClass('fade-up', 1)"
+            class="transition-all duration-700 ease-in-out"
+            :style="{ opacity: headerVisible ? 1 : 0, transform: headerVisible ? 'translateY(0)' : 'translateY(10px)' }"
+          >
             <MyTextConstructor
               variant="heading"
               fontFamily="display"
@@ -199,24 +253,77 @@ const faqs = [
               spacing="tight"
               class="mt-3 md:!text-3xl lg:!text-4xl"
             >
-              <template #myTitle>How much does a Trinity exam cost?</template>
+              <template #myTitle>{{ pageTitle }}</template>
             </MyTextConstructor>
           </div>
 
-          <div :class="animClass('fade-up', 2)">
+          <div
+            :class="animClass('fade-up', 2)"
+            class="transition-all duration-700 ease-in-out delay-150"
+            :style="{ opacity: headerVisible ? 1 : 0, transform: headerVisible ? 'translateY(0)' : 'translateY(10px)' }"
+          >
             <p class="mx-auto mt-4 max-w-2xl text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
-              Official Trinity College London fees for 2026. Digital exams are cheaper than face-to-face at every grade.
-              Booking through centre 120 costs nothing extra — you pay the same as booking directly.
+              {{ pageSubtitle }}
             </p>
           </div>
         </div>
       </div>
     </section>
 
+    <!-- DIGITAL SAVINGS CALLOUT -->
+    <section class="bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary">
+      <div class="mx-auto max-w-4xl px-4 py-5 sm:px-6 sm:py-6">
+        <div :class="animClass('fade-up', 3)">
+          <p class="text-center text-base leading-snug text-white sm:text-base md:text-lg lg:text-xl">
+            <span class="font-semibold">Digital exams are generally lower in cost than face-to-face</span>
+            and carry the same Ofqual-regulated certificate and UCAS points. Both options are fully supported through centre 120.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB NAVIGATION -->
+    <section class="sticky top-0 z-30 border-b border-brand-border bg-brand-surface shadow-sm">
+      <div class="mx-auto flex max-w-4xl items-center justify-center gap-2 px-4 py-3 sm:px-6">
+        <button
+          @click="activeTab = 'fees'"
+          :class="[
+            'flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold transition-all duration-200 sm:text-base',
+            activeTab === 'fees'
+              ? 'bg-gradient-to-r from-brand-primary to-brand-accent text-white shadow-md'
+              : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text hover:bg-brand-border'
+          ]"
+        >
+          <PoundSterling class="h-4 w-4" />
+          Exam Fees
+        </button>
+        <button
+          @click="activeTab = 'dates'"
+          :class="[
+            'flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold transition-all duration-200 sm:text-base',
+            activeTab === 'dates'
+              ? 'bg-gradient-to-r from-brand-primary to-brand-accent text-white shadow-md'
+              : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text hover:bg-brand-border'
+          ]"
+        >
+          <Calendar class="h-4 w-4" />
+          Exam Dates
+        </button>
+      </div>
+    </section>
+
+    <!-- ═══ FEES TAB ═══ -->
+    <div
+      v-show="activeTab === 'fees'"
+      class="transition-all duration-700 ease-in-out"
+      :style="{ opacity: tabContentVisible ? 1 : 0, transform: tabContentVisible ? 'translateY(0)' : 'translateY(12px)' }"
+    >
+
     <!-- FACE-TO-FACE FEES -->
-    <section class="border-t border-brand-border bg-brand-bg">
+    <section class="bg-brand-bg">
       <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
+          <div class="mx-auto mb-4 h-1 w-16 rounded-full bg-gradient-to-r from-brand-primary to-brand-accent"></div>
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
@@ -250,6 +357,7 @@ const faqs = [
     <section class="bg-brand-surface">
       <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
+          <div class="mx-auto mb-4 h-1 w-16 rounded-full bg-gradient-to-r from-brand-primary to-brand-accent"></div>
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
@@ -277,19 +385,14 @@ const faqs = [
           />
         </div>
 
-        <div :class="animClass('fade-up', 3)" class="mt-6 rounded-2xl border border-brand-accent/30 bg-brand-accent/5 p-5 sm:p-6">
-          <p class="text-base leading-snug text-brand-text-soft sm:text-base md:text-lg">
-            <span class="font-semibold text-brand-accent">Digital exams save you money at every grade.</span>
-            At Grade 8 the saving is £18 compared to face-to-face — and you get the same Ofqual-regulated certificate and UCAS points.
-          </p>
-        </div>
       </div>
     </section>
 
     <!-- THEORY FEES -->
-    <section class="border-t border-brand-border bg-brand-bg">
+    <section class="bg-brand-bg">
       <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
+          <div class="mx-auto mb-4 h-1 w-16 rounded-full bg-gradient-to-r from-brand-primary to-brand-accent"></div>
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
@@ -323,6 +426,7 @@ const faqs = [
     <section class="bg-brand-surface">
       <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
+          <div class="mx-auto mb-4 h-1 w-16 rounded-full bg-gradient-to-r from-brand-primary to-brand-accent"></div>
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
@@ -365,10 +469,47 @@ const faqs = [
       </div>
     </section>
 
+    <!-- QUICK DATES REFERENCE (bottom of fees tab) -->
+    <section class="bg-brand-surface-soft">
+      <div class="mx-auto max-w-4xl px-4 py-10 sm:px-6">
+        <div
+          class="text-center transition-all duration-700 ease-out"
+          :class="crossRefVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'"
+        >
+          <div class="mx-auto mb-3 h-1 w-16 rounded-full bg-gradient-to-r from-brand-primary to-brand-accent"></div>
+          <p class="text-lg font-semibold text-brand-text sm:text-xl">Looking for exam dates?</p>
+          <p class="mx-auto mt-2 max-w-xl text-sm text-brand-text-soft sm:text-base">
+            Three face-to-face sessions per year: <span class="font-medium text-brand-text">March</span>,
+            <span class="font-medium text-brand-text">July</span> and
+            <span class="font-medium text-brand-text">November</span>.
+            Digital exams can be booked any time.
+          </p>
+          <button
+            @click="switchTab('dates')"
+            :disabled="!crossRefVisible"
+            class="mt-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-brand-primary to-brand-accent px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:opacity-90 sm:text-base"
+          >
+            <Calendar class="h-4 w-4" />
+            View all exam dates
+          </button>
+        </div>
+      </div>
+    </section>
+
+    </div><!-- end FEES TAB -->
+
+    <!-- ═══ DATES TAB ═══ -->
+    <div
+      v-show="activeTab === 'dates'"
+      class="transition-all duration-700 ease-in-out"
+      :style="{ opacity: tabContentVisible ? 1 : 0, transform: tabContentVisible ? 'translateY(0)' : 'translateY(12px)' }"
+    >
+
     <!-- EXAM DATES -->
-    <section id="dates" class="border-t border-brand-border bg-brand-bg">
+    <section id="dates" class="bg-brand-bg">
       <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
+          <div class="mx-auto mb-4 h-1 w-16 rounded-full bg-gradient-to-r from-brand-primary to-brand-accent"></div>
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
@@ -415,6 +556,34 @@ const faqs = [
       </div>
     </section>
 
+    <!-- QUICK FEES REFERENCE (bottom of dates tab) -->
+    <section class="bg-brand-surface-soft">
+      <div class="mx-auto max-w-4xl px-4 py-10 sm:px-6">
+        <div
+          class="text-center transition-all duration-700 ease-out"
+          :class="crossRefVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'"
+        >
+          <div class="mx-auto mb-3 h-1 w-16 rounded-full bg-gradient-to-r from-brand-primary to-brand-accent"></div>
+          <p class="text-lg font-semibold text-brand-text sm:text-xl">Looking for exam fees?</p>
+          <p class="mx-auto mt-2 max-w-xl text-sm text-brand-text-soft sm:text-base">
+            Graded exams from <span class="font-medium text-brand-text">£49</span> (digital) or
+            <span class="font-medium text-brand-text">£55</span> (face-to-face).
+            Theory from <span class="font-medium text-brand-text">£42</span>.
+          </p>
+          <button
+            @click="switchTab('fees')"
+            :disabled="!crossRefVisible"
+            class="mt-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-brand-primary to-brand-accent px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:opacity-90 sm:text-base"
+          >
+            <PoundSterling class="h-4 w-4" />
+            View all exam fees
+          </button>
+        </div>
+      </div>
+    </section>
+
+    </div><!-- end DATES TAB -->
+
     <!-- CTA -->
     <section class="bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary">
       <div class="mx-auto max-w-4xl px-4 py-10 text-center sm:px-6">
@@ -428,7 +597,7 @@ const faqs = [
             <template #myTitle>Ready to book?</template>
           </MyTextConstructor>
           <p class="mx-auto mt-2 max-w-xl text-base text-white/80 sm:text-base md:text-lg">
-            Same fees as booking directly — plus incentives, recognition and support through centre 120.
+            Use centre code 120 on Trinity's booking page — same fees, plus incentives, recognition and support.
           </p>
         </div>
         <div :class="animClass('fade-up', 2)" class="mt-6">

@@ -1,8 +1,8 @@
 <!-- resources/js/components/layouts/Navbar.vue -->
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { Link, usePage } from '@inertiajs/vue3'
-import { Bars3Icon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { Link, usePage, router } from '@inertiajs/vue3'
+import { Bars3Icon, XMarkIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import BookingModal from '@/components/BookingModal.vue'
@@ -20,24 +20,102 @@ const user = computed(() => (page.props.auth as any)?.user)
 const isAdmin = computed(() => user.value?.role === 'admin')
 
 const isOpen = ref(false)
+const openDropdown = ref<string | null>(null)
+const openMobileDropdown = ref<string | null>(null)
+const showBookingModal = ref(false)
 
 const currentPath = computed(() => page.url)
 
-const navigation = computed(() => {
+interface NavChild {
+  name: string
+  href: string
+}
+
+interface NavItem {
+  name: string
+  href: string
+  show: boolean
+  children?: NavChild[]
+}
+
+const navigation = computed<NavItem[]>(() => {
   const isHome = currentPath.value === '/'
   return [
     { name: 'Home', href: '/', show: !isHome },
-    { name: 'Why use this page', href: isHome ? '#why' : '/#why', show: true },
-    { name: 'Incentives', href: isHome ? '#incentives' : '/#incentives', show: true },
-    { name: 'Exam Guide', href: '/exam-guide', show: true },
+    {
+      name: 'Who is it for',
+      href: '#why',
+      show: true,
+      children: [
+        { name: 'For Teachers', href: '/for-teachers' },
+        { name: 'For Parents', href: '/for-parents' },
+        { name: 'For Students', href: '/for-students' },
+      ],
+    },
+    {
+      name: 'Exam Guide',
+      href: '/exam-guide',
+      show: true,
+      children: [
+        { name: 'Grades Explained', href: '/exam-guide/grades-explained' },
+        { name: 'What to Expect', href: '/exam-guide/what-to-expect' },
+        { name: 'Digital Exams', href: '/exam-guide/digital-exams' },
+        { name: 'UCAS Points', href: '/exam-guide/ucas-points' },
+      ],
+    },
+    { name: 'Fees & Dates', href: '/exam-fees', show: true },
     { name: 'FAQ', href: '/faq', show: true },
   ].filter(item => item.show)
 })
 
+const toggleDropdown = (name: string) => {
+  openDropdown.value = openDropdown.value === name ? null : name
+}
+
+const closeDropdowns = () => {
+  openDropdown.value = null
+}
+
+const toggleMobileDropdown = (name: string) => {
+  openMobileDropdown.value = openMobileDropdown.value === name ? null : name
+}
+
+const navigateTo = (href: string) => {
+  isOpen.value = false
+  openDropdown.value = null
+  openMobileDropdown.value = null
+
+  if (href.startsWith('#')) {
+    const el = document.querySelector(href)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' })
+    } else {
+      router.visit('/' + href)
+    }
+    return
+  }
+
+  router.visit(href)
+}
+
+/* Close dropdown when clicking outside */
+const handleClickOutside = (e: MouseEvent) => {
+  const target = e.target as HTMLElement
+  if (!target.closest('[data-dropdown]')) {
+    closeDropdowns()
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+
 const brandWordmark = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/musicexamshelp_logo2.png'
 const navIcon = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/FAVICONmusicexamshelp_logo2+(512+x+512+px)_2.png'
-
-const showBookingModal = ref(false)
 
 const navClasses = computed(() =>
   props.fixed
@@ -65,23 +143,76 @@ const navClasses = computed(() =>
           />
         </Link>
 
-        <div class="hidden items-center gap-8 md:flex">
-          <a
-            v-for="item in navigation"
-            :key="item.name"
-            :href="item.href"
-            class="transition hover:opacity-70"
-          >
-            <MyTextConstructor
-              variant="button"
-              textColor="text-slate-700"
-              spacing="none"
+        <!-- DESKTOP NAV -->
+        <div class="hidden items-center gap-6 lg:flex">
+          <template v-for="item in navigation" :key="item.name">
+            <!-- Item WITH dropdown -->
+            <div v-if="item.children" class="relative" data-dropdown>
+              <button
+                class="flex items-center gap-1 transition hover:opacity-70"
+                @click="toggleDropdown(item.name)"
+              >
+                <MyTextConstructor
+                  variant="button"
+                  textColor="text-slate-700"
+                  spacing="none"
+                >
+                  <template #myTitle>{{ item.name }}</template>
+                </MyTextConstructor>
+                <ChevronDownIcon
+                  class="h-4 w-4 text-slate-500 transition-transform duration-200"
+                  :class="{ 'rotate-180': openDropdown === item.name }"
+                />
+              </button>
+
+              <!-- Dropdown panel -->
+              <Transition
+                enter-active-class="transition duration-150 ease-out"
+                enter-from-class="scale-95 opacity-0"
+                enter-to-class="scale-100 opacity-100"
+                leave-active-class="transition duration-100 ease-in"
+                leave-from-class="scale-100 opacity-100"
+                leave-to-class="scale-95 opacity-0"
+              >
+                <div
+                  v-if="openDropdown === item.name"
+                  class="absolute left-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-brand-border bg-white shadow-xl ring-1 ring-black/5"
+                >
+                  <!-- Link to parent page -->
+                  <button
+                    class="block w-full px-4 py-3 text-left text-sm font-semibold text-brand-accent transition hover:bg-brand-surface-soft"
+                    @click="navigateTo(item.href)"
+                  >
+                    {{ item.name }} overview
+                  </button>
+                  <div class="border-t border-brand-border"></div>
+                  <button
+                    v-for="child in item.children"
+                    :key="child.name"
+                    class="block w-full px-4 py-3 text-left text-sm text-slate-700 transition hover:bg-brand-surface-soft hover:text-brand-accent"
+                    @click="navigateTo(child.href)"
+                  >
+                    {{ child.name }}
+                  </button>
+                </div>
+              </Transition>
+            </div>
+
+            <!-- Item WITHOUT dropdown -->
+            <button
+              v-else
+              class="transition hover:opacity-70"
+              @click="navigateTo(item.href)"
             >
-              <template #myTitle>
-                {{ item.name }}
-              </template>
-            </MyTextConstructor>
-          </a>
+              <MyTextConstructor
+                variant="button"
+                textColor="text-slate-700"
+                spacing="none"
+              >
+                <template #myTitle>{{ item.name }}</template>
+              </MyTextConstructor>
+            </button>
+          </template>
 
           <!-- Auth links -->
           <Link v-if="isAdmin" href="/admin" class="transition hover:opacity-70">
@@ -105,9 +236,10 @@ const navClasses = computed(() =>
           </MyButtonConstructor>
         </div>
 
+        <!-- MOBILE hamburger -->
         <button
           type="button"
-          class="inline-flex items-center justify-center rounded-xl p-3 text-slate-700 transition hover:bg-slate-100 hover:text-slate-950 md:hidden"
+          class="inline-flex items-center justify-center rounded-xl p-3 text-slate-700 transition hover:bg-slate-100 hover:text-slate-950 lg:hidden"
           @click="isOpen = !isOpen"
         >
           <span class="sr-only">Toggle menu</span>
@@ -117,25 +249,62 @@ const navClasses = computed(() =>
       </div>
     </div>
 
-    <div v-if="isOpen" class="border-t border-slate-200 bg-white md:hidden">
+    <!-- MOBILE NAV -->
+    <div v-if="isOpen" class="border-t border-slate-200 bg-white lg:hidden">
       <div class="space-y-1 px-4 py-4 sm:px-6">
-        <a
-          v-for="item in navigation"
-          :key="item.name"
-          :href="item.href"
-          class="block rounded-xl px-3 py-3 hover:bg-slate-50"
-          @click="isOpen = false"
-        >
-          <MyTextConstructor
-            variant="button"
-            textColor="text-slate-700"
-            spacing="none"
+        <template v-for="item in navigation" :key="item.name">
+          <!-- Item WITH children — accordion style -->
+          <div v-if="item.children">
+            <button
+              class="flex w-full items-center justify-between rounded-xl px-3 py-3 hover:bg-slate-50"
+              @click="toggleMobileDropdown(item.name)"
+            >
+              <MyTextConstructor
+                variant="button"
+                textColor="text-slate-700"
+                spacing="none"
+              >
+                <template #myTitle>{{ item.name }}</template>
+              </MyTextConstructor>
+              <ChevronDownIcon
+                class="h-4 w-4 text-slate-500 transition-transform duration-200"
+                :class="{ 'rotate-180': openMobileDropdown === item.name }"
+              />
+            </button>
+
+            <div v-if="openMobileDropdown === item.name" class="ml-4 space-y-1 border-l-2 border-brand-accent/30 pl-3">
+              <button
+                class="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-brand-accent transition hover:bg-slate-50"
+                @click="navigateTo(item.href)"
+              >
+                {{ item.name }} overview
+              </button>
+              <button
+                v-for="child in item.children"
+                :key="child.name"
+                class="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-slate-600 transition hover:bg-slate-50 hover:text-brand-accent"
+                @click="navigateTo(child.href)"
+              >
+                {{ child.name }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Item WITHOUT children -->
+          <button
+            v-else
+            class="block w-full rounded-xl px-3 py-3 text-left hover:bg-slate-50"
+            @click="navigateTo(item.href)"
           >
-            <template #myTitle>
-              {{ item.name }}
-            </template>
-          </MyTextConstructor>
-        </a>
+            <MyTextConstructor
+              variant="button"
+              textColor="text-slate-700"
+              spacing="none"
+            >
+              <template #myTitle>{{ item.name }}</template>
+            </MyTextConstructor>
+          </button>
+        </template>
 
         <!-- Auth links (mobile) -->
         <Link v-if="isAdmin" href="/admin" class="block rounded-xl px-3 py-3 hover:bg-slate-50" @click="isOpen = false">

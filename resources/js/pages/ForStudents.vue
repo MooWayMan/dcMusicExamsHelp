@@ -30,9 +30,9 @@ const hallOfFameLogo =
 const tiers = [
   {
     icon: Trophy,
-    title: 'Hall of Fame',
-    subtitle: 'Quarterly — top scorers only',
-    detail: 'The student with the highest Distinction and highest Merit score each quarter gets celebrated on the Hall of Fame. Winners receive a Standing Ovation or Take a Bow Certificate and a gift token.',
+    title: 'Top Scorers',
+    subtitle: 'Quarterly — the very best',
+    detail: 'The highest Distinction and highest Merit score each quarter earn the top spot on the Hall of Fame — plus a gift token. This is the ultimate recognition for outstanding achievement.',
     iconBg: 'bg-brand-accent/10',
     iconColor: 'text-brand-accent',
     borderColor: 'border-brand-accent',
@@ -40,9 +40,9 @@ const tiers = [
   },
   {
     icon: Award,
-    title: 'Take a Bow & Standing Ovation',
-    subtitle: 'Every high scorer',
-    detail: 'Do well and earn a Take a Bow Certificate. Aim high and earn a Standing Ovation Certificate. Show it off, share it, put it on the wall.',
+    title: 'Hall of Fame',
+    subtitle: 'Every Merit and Distinction',
+    detail: 'Score a Merit and earn a Take a Bow Certificate. Score a Distinction and earn a Standing Ovation Certificate. Every Merit and Distinction student gets celebrated in the Hall of Fame — show it off, share it, put it on the wall.',
     iconBg: 'bg-brand-success-soft',
     iconColor: 'text-brand-success',
     borderColor: 'border-brand-success',

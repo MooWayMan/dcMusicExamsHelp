@@ -49,14 +49,14 @@ const journeySteps = [
   {
     step: 5,
     title: 'Results and recognition',
-    detail: 'Results are graded as Pass (60–74), Merit (75–86) or Distinction (87–100). Every student entered through centre 120 gets listed on our Thank You page. Top scorers make the Hall of Fame.',
+    detail: 'Results are graded as Pass (60–74), Merit (75–86) or Distinction (87–100). Every student entered through centre 120 gets listed on our Thank You page. Every Merit and Distinction makes the Hall of Fame.',
   },
 ]
 
 const whatYourChildGets = [
   'Listed on our Thank You page — first name and initial, instrument and grade (full name shown only with your permission)',
-  'A Take a Bow Certificate for Merit or a Standing Ovation Certificate for Distinction',
-  'A chance to make the quarterly Hall of Fame with a gift token',
+  'A place in the Hall of Fame for Merit or Distinction — with a Take a Bow or Standing Ovation Certificate',
+  'The highest scorers each quarter get the top spot and a gift token',
   'The same official Trinity certificate and result as any other centre',
 ]
 
@@ -75,11 +75,19 @@ const faqs = [
   },
   {
     question: 'What is the difference between digital and face-to-face?',
-    answer: 'Face-to-face exams take place at a local venue with an examiner in the room. Digital exams can be recorded anywhere and submitted online. Both are marked to the same standard and carry the same qualification. Many families prefer digital for the convenience.',
+    answer: 'Face-to-face exams take place at a local venue with an examiner in the room. Digital exams can be recorded anywhere and submitted online. Both are marked to the same standard and carry the same qualification. Digital exams are also cheaper at every grade. Many families prefer digital for the convenience.',
+  },
+  {
+    question: 'How long until we get the result?',
+    answer: 'For digital exams, results are normally provided within 14 days of submission. The exam report is sent as an attachment to the email address provided at booking — no login or portal needed. If you gave your own email when the exam was booked, you\'ll receive it directly. For face-to-face exams, a written report is provided and results are confirmed once validated by Trinity. In both cases, a digital certificate is issued automatically for any Pass, Merit or Distinction. If you\'d like a printed paper certificate posted to you, that\'s an extra £5.',
   },
   {
     question: 'Do I need to be present for the exam?',
     answer: 'For face-to-face exams, parents are not usually in the exam room but should be nearby. For digital exams, you may need to help with the recording setup, but the performance itself is your child\'s. Anyone can submit the recording — it doesn\'t have to be the teacher.',
+  },
+  {
+    question: 'What happens after we book?',
+    answer: 'For digital exams, you\'ll get a confirmation email straight away. Login details for the upload portal arrive within a week (check spam). You then have four weeks to record and submit. For face-to-face exams, you\'ll receive an email closer to the exam date with the venue, time and an appointment slip that must be printed and handed to the examiner.',
   },
   {
     question: 'What does centre code 120 mean?',

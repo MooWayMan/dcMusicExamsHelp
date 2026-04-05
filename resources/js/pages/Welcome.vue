@@ -80,7 +80,7 @@ const whyCards = [
 const incentives = [
   {
     title: 'Students featured on our website',
-    detail: 'Every student who enters through centre 120 gets listed on our <a href="/thank-you" class="font-semibold text-white underline hover:text-brand-accent">Thank You page</a>. Do well and earn a Take a Bow Certificate. Aim high and earn a Standing Ovation Certificate. The highest scorers each quarter make our Hall of Fame and win a gift token.',
+    detail: 'Every student who enters through centre 120 gets listed on our <a href="/thank-you" class="font-semibold text-white underline hover:text-brand-accent">Thank You page</a>. Score a Merit or Distinction and you make the Hall of Fame — with a Take a Bow or Standing Ovation Certificate. The highest scorers each quarter get the top spot and a gift token.',
     icon: Trophy,
     iconBg: 'bg-brand-accent/10',
     iconColor: 'text-brand-accent',
