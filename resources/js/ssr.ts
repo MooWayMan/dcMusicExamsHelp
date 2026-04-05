@@ -25,8 +25,10 @@ createServer((page) =>
                 import.meta.glob<DefineComponent>('./pages/**/*.vue')
             )
 
-            if (name === 'Welcome') {
-                resolvedPage.default.layout = resolvedPage.default.layout || undefined
+            const publicPages = ['Welcome', 'ConstructorsDemo', 'Faq', 'ForTeachers', 'FaberDiscounts', 'ForParents', 'ForStudents', 'ThankYou', 'PrivacyPolicy', 'CookiePolicy']
+
+            if (publicPages.includes(name)) {
+                resolvedPage.default.layout = undefined
             } else if (name.startsWith('auth/')) {
                 const opt = resolvedPage.default.layout
                 if (opt && typeof opt === 'object' && !('setup' in opt) && !('render' in opt)) {
