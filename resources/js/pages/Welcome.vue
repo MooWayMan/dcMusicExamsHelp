@@ -42,6 +42,8 @@ const venuePhotos = {
   kawaiFullKeyboard: 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/IMG_2230.jpeg',
   guitarStudent: 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/IMG_0434.jpeg',
   pianoStudent: 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/IMG_7460.jpeg',
+  sajeevanPiano: 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/IMG_7820.jpg',
+  keerthanaaPiano: 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/IMG_7819.jpg',
 }
 
 const whyCards = [
@@ -288,8 +290,8 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
                 </div>
                 <div class="overflow-hidden rounded-2xl shadow-xl">
                   <img
-                    :src="venuePhotos.kawaiKeysCloseup"
-                    alt="Close-up of piano keys"
+                    :src="venuePhotos.sajeevanPiano"
+                    alt="Sajeevan at the piano during a lesson"
                     class="h-48 w-full object-cover"
                   />
                 </div>
@@ -312,8 +314,8 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
                 </div>
                 <div class="overflow-hidden rounded-2xl shadow-xl">
                   <img
-                    :src="venuePhotos.kawaiFullKeyboard"
-                    alt="Full keyboard view"
+                    :src="venuePhotos.keerthanaaPiano"
+                    alt="Keerthanaa practising piano at home"
                     class="h-48 w-full object-cover"
                   />
                 </div>
@@ -500,8 +502,32 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
           </div>
         </div>
 
+        <!-- Students heading -->
+        <div class="mt-14 text-center">
+          <MyTextConstructor
+            variant="heading"
+            fontFamily="display"
+            alignment="center"
+            spacing="tight"
+            class="mt-3 md:!text-3xl lg:!text-4xl"
+          >
+            <template #myTitle>
+              Students in action
+            </template>
+          </MyTextConstructor>
+
+          <MyTextConstructor
+            bodyVariant="body"
+            alignment="center"
+            spacing="none"
+            class="mx-auto mt-4 max-w-3xl text-brand-text-soft md:!text-xl lg:!text-2xl"
+          >
+            In lessons, at home, and in school — preparing for their exams and loving every minute.
+          </MyTextConstructor>
+        </div>
+
         <!-- Student photos — guitar and piano side by side -->
-        <div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div class="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
           <div class="group overflow-hidden rounded-2xl bg-brand-surface shadow-xl ring-1 ring-brand-border">
             <div class="aspect-[4/3] overflow-hidden">
               <img
@@ -512,10 +538,10 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             </div>
             <div class="p-5">
               <MyTextConstructor variant="button-lg" spacing="tight" textColor="text-brand-primary" class="md:!text-xl lg:!text-xl">
-                <template #myTitle>Guitar — school music room</template>
+                <template #myTitle>Guitar lesson — school music room</template>
               </MyTextConstructor>
               <p class="mt-2 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
-                From school music rooms to dedicated exam centres — all instruments, all grades.
+                School music rooms, teaching studios, at home — wherever you learn, we're here to support you.
               </p>
             </div>
           </div>
@@ -529,22 +555,51 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             </div>
             <div class="p-5">
               <MyTextConstructor variant="button-lg" spacing="tight" textColor="text-brand-primary" class="md:!text-xl lg:!text-xl">
-                <template #myTitle>Piano — home teaching studio</template>
+                <template #myTitle>Piano lesson — teaching studio</template>
               </MyTextConstructor>
               <p class="mt-2 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
-                From home studios to school music rooms — wherever you learn, your hard work deserves to be celebrated.
+                Building confidence one lesson at a time — that's how exam success starts.
               </p>
             </div>
           </div>
         </div>
 
-        <!-- Kawai keys close-up — full width accent -->
-        <div class="mt-8 overflow-hidden rounded-2xl shadow-xl">
-          <img
-            :src="venuePhotos.kawaiKeysCloseup"
-            alt="Close-up of Kawai piano keys"
-            class="h-48 w-full object-cover sm:h-56 md:h-64 lg:h-72"
-          />
+        <!-- More student photos -->
+        <div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div class="group overflow-hidden rounded-2xl bg-brand-surface shadow-xl ring-1 ring-brand-border">
+            <div class="aspect-[4/3] overflow-hidden">
+              <img
+                :src="venuePhotos.sajeevanPiano"
+                alt="Sajeevan at the piano during a lesson"
+                class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            </div>
+            <div class="p-5">
+              <MyTextConstructor variant="button-lg" spacing="tight" textColor="text-brand-primary" class="md:!text-xl lg:!text-xl">
+                <template #myTitle>Piano lesson — teaching studio</template>
+              </MyTextConstructor>
+              <p class="mt-2 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
+                Every lesson is a step closer to exam day — and every step deserves to be celebrated.
+              </p>
+            </div>
+          </div>
+          <div class="group overflow-hidden rounded-2xl bg-brand-surface shadow-xl ring-1 ring-brand-border">
+            <div class="aspect-[4/3] overflow-hidden">
+              <img
+                :src="venuePhotos.keerthanaaPiano"
+                alt="Keerthanaa practising piano at home"
+                class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            </div>
+            <div class="p-5">
+              <MyTextConstructor variant="button-lg" spacing="tight" textColor="text-brand-primary" class="md:!text-xl lg:!text-xl">
+                <template #myTitle>Piano practice — at home</template>
+              </MyTextConstructor>
+              <p class="mt-2 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
+                The best practice happens where you feel most comfortable — and it all counts towards exam day.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </section>

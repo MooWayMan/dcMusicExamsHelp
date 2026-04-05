@@ -29,7 +29,7 @@ const bookingUrl = 'https://booking.trinitycollege.com/?larCode=120'
 const beforeTheDay = [
   'Practise your pieces until they feel comfortable — not just note-perfect, but musically confident',
   'Check your exam date, time and venue well in advance',
-  'Make sure you have the correct sheet music — original copies, not photocopies (the examiner needs to see them)',
+  'Make sure you have the correct sheet music — original copies, not photocopies (Trinity requires this for copyright reasons). If any pieces aren\'t from a Trinity publication, prepare an extra copy for the examiner',
   'Prepare any scales, arpeggios or technical work required for your grade',
   'If you play an instrument that needs accompaniment, arrange your accompanist early',
   'Get a good night\'s sleep — it makes more difference than a last-minute practice session',
@@ -38,7 +38,7 @@ const beforeTheDay = [
 /* ── What to bring ── */
 const whatToBring = [
   'Your instrument (tuned and in good working order)',
-  'Your sheet music — original copies for the examiner to follow',
+  'Your sheet music — original copies, not photocopies (copyright rules). If your piece isn\'t published by Trinity, you\'ll also need to provide a copy for the examiner to follow along with. A tablet or iPad with photos of the music works well — just make sure it\'s in aeroplane mode',
   'Any backing tracks if required (Rock & Pop candidates)',
   'A bottle of water',
   'Your exam confirmation or appointment details',
@@ -171,8 +171,9 @@ const faqs = [
 
         <div :class="animClass('fade-up', 3)">
           <p class="mx-auto mt-4 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
-            Whether it's your first exam or your eighth, knowing what to expect takes the mystery out of exam day.
-            Here's a friendly walkthrough so there are no surprises.
+            This guide covers what happens at a face-to-face exam. Whether it's your first or your eighth,
+            knowing what to expect takes the mystery out of exam day. Taking a digital exam instead?
+            <a href="/exam-guide/digital-exams" class="font-semibold text-brand-accent hover:underline">See our digital exams guide</a>.
           </p>
         </div>
       </div>
@@ -241,10 +242,10 @@ const faqs = [
             spacing="tight"
             class="md:!text-2xl lg:!text-3xl"
           >
-            <template #myTitle>In the exam room</template>
+            <template #myTitle>In the exam room — face-to-face</template>
           </MyTextConstructor>
           <p class="mx-auto mt-3 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg">
-            Here's what happens step by step in a face-to-face exam.
+            Here's what happens step by step when you walk in.
           </p>
         </div>
 

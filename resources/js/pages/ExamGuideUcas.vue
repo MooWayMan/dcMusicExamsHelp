@@ -57,7 +57,7 @@ const faqs = [
   {
     question: 'Can I count UCAS points from more than one music exam?',
     answer:
-      'Yes, but only from different subjects. For example, you could count Grade 8 Piano and Grade 7 Music Theory. You cannot count Grade 7 Piano and Grade 8 Piano — only the higher grade counts.',
+      'Yes, but only from different subjects. For example, you could count Grade 8 Piano and Grade 7 Music Theory — both count because they\'re different subjects. You cannot count Grade 7 Piano and Grade 8 Piano — only the result with the most UCAS points counts. In practice, a higher grade always earns equal or more points than the grade below it, even at a lower result band.',
   },
   {
     question: 'Do Rock & Pop exams earn the same UCAS points as Classical & Jazz?',
