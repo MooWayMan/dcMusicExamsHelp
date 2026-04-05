@@ -14,6 +14,11 @@ Route::inertia('/for-teachers/faber-discounts', 'FaberDiscounts')->name('faber-d
 Route::inertia('/for-parents', 'ForParents')->name('for-parents');
 Route::inertia('/for-students', 'ForStudents')->name('for-students');
 Route::inertia('/thank-you', 'ThankYou')->name('thank-you');
+Route::inertia('/exam-guide', 'ExamGuide')->name('exam-guide');
+Route::inertia('/exam-guide/ucas-points', 'ExamGuideUcas')->name('exam-guide.ucas');
+Route::inertia('/exam-guide/what-to-expect', 'ExamGuideExpect')->name('exam-guide.expect');
+Route::inertia('/exam-guide/digital-exams', 'ExamGuideDigital')->name('exam-guide.digital');
+Route::inertia('/exam-guide/grades-explained', 'ExamGuideGrades')->name('exam-guide.grades');
 Route::inertia('/privacy', 'PrivacyPolicy')->name('privacy');
 Route::inertia('/cookies', 'CookiePolicy')->name('cookies');
 

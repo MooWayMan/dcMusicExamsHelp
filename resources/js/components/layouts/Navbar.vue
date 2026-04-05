@@ -28,6 +28,7 @@ const navigation = computed(() => {
     { name: 'Home', href: '/', show: !isHome },
     { name: 'Why use this page', href: isHome ? '#why' : '/#why', show: true },
     { name: 'Incentives', href: isHome ? '#incentives' : '/#incentives', show: true },
+    { name: 'Exam Guide', href: '/exam-guide', show: true },
     { name: 'FAQ', href: '/faq', show: true },
   ].filter(item => item.show)
 })

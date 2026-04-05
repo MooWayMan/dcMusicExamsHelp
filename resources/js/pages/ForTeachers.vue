@@ -33,7 +33,7 @@ const bookingSteps = [
   {
     step: 2,
     title: 'Choose digital or face-to-face',
-    detail: 'Digital exams let students record at home and submit online — no travel needed. Face-to-face sessions run in Liverpool and Wirral at scheduled dates throughout the year.',
+    detail: 'Digital exams let students record anywhere — at home, school or studio — and submit online. Anyone can submit the recording, not just the teacher. Face-to-face sessions run in Liverpool and Wirral throughout the year.',
   },
   {
     step: 3,
@@ -102,7 +102,7 @@ const faqs = [
   },
   {
     question: 'Do you offer face-to-face and digital exams?',
-    answer: 'Yes, both. Face-to-face sessions run at venues in Liverpool and Wirral throughout the year. Digital exams can be taken from home — the student records their performance and submits it online through Trinity.',
+    answer: 'Yes, both. Face-to-face sessions run at venues in Liverpool and Wirral throughout the year. Digital exams can be recorded anywhere — at home, school or studio — and submitted online through Trinity. Anyone can submit the recording, not just the teacher.',
   },
 ]
 </script>
@@ -249,7 +249,7 @@ const faqs = [
             <template #myTitle>Digital or face-to-face?</template>
           </MyTextConstructor>
           <p class="mx-auto mt-3 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
-            Trinity offers both options for Classical &amp; Jazz graded exams and diplomas. Both carry the same Ofqual-regulated certificate and UCAS points — the difference is how the exam is taken and what it includes.
+            Trinity offers both options for Classical &amp; Jazz and Rock &amp; Pop graded exams and diplomas. Both carry the same Ofqual-regulated certificate and UCAS points — the difference is how the exam is taken and what it includes.
           </p>
         </div>
 
@@ -260,7 +260,7 @@ const faqs = [
             <ul class="mt-4 space-y-3">
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                <span class="text-base text-brand-text sm:text-base md:text-lg">Record at home on your own schedule — 28 days to submit after booking</span>
+                <span class="text-base text-brand-text sm:text-base md:text-lg">Record anywhere on your own schedule — 28 days to submit after booking</span>
               </li>
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />

@@ -27,8 +27,8 @@ const bookingUrl = 'https://booking.trinitycollege.com/?larCode=120'
 const journeySteps = [
   {
     step: 1,
-    title: 'Your child\'s teacher recommends an exam',
-    detail: 'When your child is ready, their teacher will suggest the right grade and instrument. Trust their judgement — they know when the time is right.',
+    title: 'Decide when your child is ready',
+    detail: 'Usually a teacher will recommend the right grade and instrument when the time is right. If your child doesn\'t have a teacher, that\'s fine — you can still enter them for an exam. Get in touch and we\'ll help you choose the right starting point.',
   },
   {
     step: 2,
@@ -43,7 +43,7 @@ const journeySteps = [
   {
     step: 4,
     title: 'Exam day',
-    detail: 'For face-to-face exams, your child performs in front of a Trinity examiner at a local venue. For digital exams, they record at home and submit the video online. Both count exactly the same.',
+    detail: 'For face-to-face exams, your child performs in front of a Trinity examiner at a local venue. For digital exams, they record anywhere — at home, school or studio — and submit the video online. Anyone can submit it, not just the teacher. Both count exactly the same.',
   },
   {
     step: 5,
@@ -53,7 +53,7 @@ const journeySteps = [
 ]
 
 const whatYourChildGets = [
-  'Listed on our Thank You page — name, instrument and grade',
+  'Listed on our Thank You page — first name and initial, instrument and grade (full name shown only with your permission)',
   'A Take a Bow Certificate for Merit or a Standing Ovation Certificate for Distinction',
   'A chance to make the quarterly Hall of Fame with a gift token',
   'The same official Trinity certificate and result as any other centre',
@@ -74,11 +74,11 @@ const faqs = [
   },
   {
     question: 'What is the difference between digital and face-to-face?',
-    answer: 'Face-to-face exams take place at a local venue with an examiner in the room. Digital exams are recorded at home and submitted online. Both are marked to the same standard and carry the same qualification. Many families prefer digital for the convenience.',
+    answer: 'Face-to-face exams take place at a local venue with an examiner in the room. Digital exams can be recorded anywhere and submitted online. Both are marked to the same standard and carry the same qualification. Many families prefer digital for the convenience.',
   },
   {
     question: 'Do I need to be present for the exam?',
-    answer: 'For face-to-face exams, parents are not usually in the exam room but should be nearby. For digital exams at home, you may need to help with the recording setup, but the performance itself is your child\'s.',
+    answer: 'For face-to-face exams, parents are not usually in the exam room but should be nearby. For digital exams, you may need to help with the recording setup, but the performance itself is your child\'s. Anyone can submit the recording — it doesn\'t have to be the teacher.',
   },
   {
     question: 'What does centre code 120 mean?',

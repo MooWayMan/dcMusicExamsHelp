@@ -37,7 +37,7 @@ const faqs = [
   {
     question: 'What is centre code 120?',
     answer:
-      'It is a Trinity College London registered exam centre code. Using code 120 when booking connects your entry to this centre, which unlocks access to incentives, recognition and ongoing support.',
+      'Centre 120 is our registered Trinity College London exam centre code. When you use it at booking, your entry is connected to musicExams.help — which means your student gets listed on our Thank You page, qualifies for the Hall of Fame, and you get access to teacher recognition badges, prize draws and ongoing support.',
   },
   {
     question: 'Does it cost anything extra?',
@@ -52,7 +52,7 @@ const faqs = [
   {
     question: 'What are digital exams?',
     answer:
-      'Digital exams let you record your performance at home and submit it online through Trinity. No need to travel to an exam venue — you play, record, and upload. Results come back the same way as face-to-face exams.',
+      'Digital exams let you record your performance anywhere — at home, at school, in a studio — and submit it online through Trinity. No need to travel to an exam venue. Anyone can submit the recording, not just the teacher. Results come back the same way as face-to-face exams.',
   },
   {
     question: 'What instruments can I take exams on?',
@@ -87,7 +87,7 @@ const faqs = [
   {
     question: 'Can I book face-to-face exams through centre 120?',
     answer:
-      'Yes. We offer face-to-face exam sessions in Liverpool and Wirral, as well as digital exams that can be taken from home. Centre code 120 works for both.',
+      'Yes. We offer face-to-face exam sessions in Liverpool and Wirral, as well as digital exams that can be recorded anywhere and submitted online. Centre code 120 works for both.',
   },
 ]
 </script>
