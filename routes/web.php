@@ -14,10 +14,6 @@ Route::inertia('/for-teachers/faber-discounts', 'FaberDiscounts')->name('faber-d
 Route::inertia('/for-parents', 'ForParents')->name('for-parents');
 Route::inertia('/for-students', 'ForStudents')->name('for-students');
 Route::inertia('/thank-you', 'ThankYou')->name('thank-you');
-
-// DEBUG: plain text test — remove after diagnosing 404
-Route::get('/thank-you-test', fn () => 'Route works — Laravel can see this path');
-Route::get('/debug-routes', fn () => collect(\Illuminate\Support\Facades\Route::getRoutes())->map(fn ($r) => $r->methods()[0] . ' ' . $r->uri())->filter(fn ($r) => str_contains($r, 'thank'))->values());
 Route::inertia('/privacy', 'PrivacyPolicy')->name('privacy');
 Route::inertia('/cookies', 'CookiePolicy')->name('cookies');
 
