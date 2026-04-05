@@ -25,7 +25,7 @@ createServer((page) =>
                 import.meta.glob<DefineComponent>('./pages/**/*.vue')
             )
 
-            const publicPages = ['Welcome', 'ConstructorsDemo', 'Faq', 'ForTeachers', 'FaberDiscounts', 'ForParents', 'ForStudents', 'ThankYou', 'ExamGuide', 'ExamGuideUcas', 'ExamGuideExpect', 'ExamGuideDigital', 'ExamGuideGrades', 'PrivacyPolicy', 'CookiePolicy']
+            const publicPages = ['Welcome', 'ConstructorsDemo', 'Faq', 'ForTeachers', 'FaberDiscounts', 'ForParents', 'ForStudents', 'ThankYou', 'ExamGuide', 'ExamGuideUcas', 'ExamGuideExpect', 'ExamGuideDigital', 'ExamGuideGrades', 'ExamFees', 'PrivacyPolicy', 'CookiePolicy']
 
             if (publicPages.includes(name)) {
                 resolvedPage.default.layout = undefined

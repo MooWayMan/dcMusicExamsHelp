@@ -19,6 +19,7 @@ Route::inertia('/exam-guide/ucas-points', 'ExamGuideUcas')->name('exam-guide.uca
 Route::inertia('/exam-guide/what-to-expect', 'ExamGuideExpect')->name('exam-guide.expect');
 Route::inertia('/exam-guide/digital-exams', 'ExamGuideDigital')->name('exam-guide.digital');
 Route::inertia('/exam-guide/grades-explained', 'ExamGuideGrades')->name('exam-guide.grades');
+Route::inertia('/exam-fees', 'ExamFees')->name('exam-fees');
 Route::inertia('/privacy', 'PrivacyPolicy')->name('privacy');
 Route::inertia('/cookies', 'CookiePolicy')->name('cookies');
 
