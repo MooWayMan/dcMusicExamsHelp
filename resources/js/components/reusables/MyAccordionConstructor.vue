@@ -139,7 +139,7 @@ const chevronSize = computed(() => {
               bodyVariant="muted"
               alignment="left"
               spacing="none"
-              class="md:!text-base lg:!text-base"
+              class="md:!text-lg lg:!text-lg"
             >
               {{ item.answer }}
             </MyTextConstructor>

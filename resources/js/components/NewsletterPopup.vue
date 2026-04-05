@@ -65,7 +65,7 @@ function dismiss() {
             <h3 class="text-lg font-bold text-brand-text sm:text-xl">
               Stay in the loop
             </h3>
-            <p class="mt-1 text-sm text-brand-text-soft sm:text-base">
+            <p class="mt-1 text-base text-brand-text-soft sm:text-base">
               Tips, exam dates, book discounts and more — straight to your inbox.
             </p>
           </div>

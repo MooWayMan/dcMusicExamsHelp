@@ -54,7 +54,7 @@ const lastUpdated = '4 April 2026'
           </div>
 
           <div :class="animClass('fade-up', 2)">
-            <p class="mx-auto mt-4 max-w-2xl text-sm text-brand-text-soft sm:text-sm md:text-base lg:text-lg">
+            <p class="mx-auto mt-4 max-w-2xl text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
               Last updated: {{ lastUpdated }}
             </p>
           </div>
@@ -70,7 +70,7 @@ const lastUpdated = '4 April 2026'
           <!-- WHAT ARE COOKIES -->
           <div>
             <h2 class="text-lg font-bold text-brand-primary sm:text-xl">What are cookies?</h2>
-            <p class="mt-2 text-sm leading-relaxed text-brand-text sm:text-base">
+            <p class="mt-2 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
               Cookies are small text files stored on your device when you visit a website. They are widely used to make
               websites work properly, remember your preferences, and provide usage information to site owners.
             </p>
@@ -79,7 +79,7 @@ const lastUpdated = '4 April 2026'
           <!-- HOW WE USE COOKIES -->
           <div>
             <h2 class="text-lg font-bold text-brand-primary sm:text-xl">How we use cookies</h2>
-            <p class="mt-2 text-sm leading-relaxed text-brand-text sm:text-base">
+            <p class="mt-2 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
               musicExams.help uses a small number of cookies. We do not use any advertising or marketing cookies.
             </p>
           </div>
@@ -87,7 +87,7 @@ const lastUpdated = '4 April 2026'
           <!-- ESSENTIAL COOKIES -->
           <div>
             <h2 class="text-lg font-bold text-brand-primary sm:text-xl">Essential cookies</h2>
-            <p class="mt-2 text-sm leading-relaxed text-brand-text sm:text-base">
+            <p class="mt-2 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
               These cookies are necessary for the website to function and cannot be switched off. They are set in response
               to actions you take such as logging in, filling in forms, or setting your cookie preferences.
             </p>
@@ -124,7 +124,7 @@ const lastUpdated = '4 April 2026'
           <!-- ANALYTICS COOKIES -->
           <div>
             <h2 class="text-lg font-bold text-brand-primary sm:text-xl">Analytics cookies</h2>
-            <p class="mt-2 text-sm leading-relaxed text-brand-text sm:text-base">
+            <p class="mt-2 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
               These cookies are only set if you click "Accept" on our cookie banner. They help us understand how visitors
               use our website so we can improve it. All data is anonymised — we cannot identify you personally from analytics data.
             </p>
@@ -151,7 +151,7 @@ const lastUpdated = '4 April 2026'
                 </tbody>
               </table>
             </div>
-            <p class="mt-3 text-sm leading-relaxed text-brand-text sm:text-base">
+            <p class="mt-3 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
               Google Analytics data is processed by Google LLC. You can learn more about how Google uses your data at
               <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" class="font-medium text-brand-accent hover:underline">policies.google.com/privacy</a>.
               You can also opt out of Google Analytics across all websites by installing the
@@ -162,12 +162,12 @@ const lastUpdated = '4 April 2026'
           <!-- MANAGING COOKIES -->
           <div>
             <h2 class="text-lg font-bold text-brand-primary sm:text-xl">Managing your cookie preferences</h2>
-            <p class="mt-2 text-sm leading-relaxed text-brand-text sm:text-base">
+            <p class="mt-2 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
               When you first visit our site, a cookie banner will ask for your consent to analytics cookies.
               You can change your preference at any time by clearing your browser cookies and revisiting the site —
               the banner will appear again.
             </p>
-            <p class="mt-2 text-sm leading-relaxed text-brand-text sm:text-base">
+            <p class="mt-2 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
               You can also control cookies through your browser settings. Most browsers allow you to block or delete cookies.
               Please note that blocking essential cookies may prevent parts of the website from working correctly.
             </p>
@@ -176,11 +176,11 @@ const lastUpdated = '4 April 2026'
           <!-- CONTACT -->
           <div>
             <h2 class="text-lg font-bold text-brand-primary sm:text-xl">Questions</h2>
-            <p class="mt-2 text-sm leading-relaxed text-brand-text sm:text-base">
+            <p class="mt-2 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
               If you have any questions about our use of cookies, please contact us at
               <a href="mailto:musicexams@musicexams.help" class="font-medium text-brand-accent hover:underline">musicexams@musicexams.help</a>.
             </p>
-            <p class="mt-2 text-sm leading-relaxed text-brand-text sm:text-base">
+            <p class="mt-2 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
               For more information about your data and privacy, please see our
               <a href="/privacy" class="font-medium text-brand-accent hover:underline">Privacy Policy</a>.
             </p>

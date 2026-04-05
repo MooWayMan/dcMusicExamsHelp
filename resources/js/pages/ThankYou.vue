@@ -122,7 +122,7 @@ const certificateName = (result: string) => {
             </div>
 
             <div :class="animClass('fade-up', 2)">
-              <p class="mx-auto mt-4 max-w-2xl text-sm text-brand-text-soft sm:text-sm md:text-base lg:text-lg">
+              <p class="mx-auto mt-4 max-w-2xl text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
                 Every student who enters a Trinity exam through centre 120 gets recognised here.
                 Your hard work matters — earn a Take a Bow or a Standing Ovation, and we want the world to know about it.
               </p>
@@ -194,7 +194,7 @@ const certificateName = (result: string) => {
             <p class="mt-3 text-2xl font-extrabold text-white sm:text-3xl">{{ entry.name }}</p>
 
             <!-- Instrument and grade -->
-            <p class="mt-1 text-sm text-white/70 sm:text-base">
+            <p class="mt-1 text-base text-white/70 sm:text-base">
               {{ entry.instrument }} · {{ entry.grade }}
             </p>
 
@@ -231,7 +231,7 @@ const certificateName = (result: string) => {
             >
               <template #myTitle>Every entry counts</template>
             </MyTextConstructor>
-            <p class="mx-auto mt-3 max-w-2xl text-center text-sm text-white/70 sm:text-sm md:text-base lg:text-lg">
+            <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/70 sm:text-base md:text-lg lg:text-xl">
               Every student who enters through centre 120 is a star to us. You sat the exam, you did the work,
               and your name belongs here.
             </p>
@@ -266,17 +266,17 @@ const certificateName = (result: string) => {
                   <div class="col-span-5 sm:col-span-4">
                     <div class="flex items-center gap-2">
                       <Music class="hidden h-4 w-4 shrink-0 text-brand-accent sm:block" />
-                      <p class="text-sm font-semibold text-white sm:text-base">{{ entry.name }}</p>
+                      <p class="text-base font-semibold text-white sm:text-base">{{ entry.name }}</p>
                     </div>
                     <p v-if="entry.result && certificateName(entry.result)" class="mt-0.5 text-[10px] font-medium text-brand-accent sm:text-xs">
                       <Award class="mb-0.5 mr-0.5 inline h-3 w-3" />{{ certificateName(entry.result) }}
                     </p>
                   </div>
                   <div class="col-span-4 sm:col-span-4">
-                    <p class="text-sm text-white/70 sm:text-base">{{ entry.instrument }}</p>
+                    <p class="text-base text-white/70 sm:text-base">{{ entry.instrument }}</p>
                   </div>
                   <div class="col-span-3 sm:col-span-4">
-                    <p class="text-sm text-white/70 sm:text-base">{{ entry.grade }}</p>
+                    <p class="text-base text-white/70 sm:text-base">{{ entry.grade }}</p>
                   </div>
                 </div>
               </div>
@@ -299,11 +299,11 @@ const certificateName = (result: string) => {
         <div :class="animClass('fade-up', 1)" class="mx-auto max-w-xl space-y-3">
           <div class="flex items-center gap-3 rounded-xl bg-brand-surface p-4 shadow-sm ring-1 ring-brand-border">
             <Award class="h-6 w-6 shrink-0 text-brand-success" />
-            <p class="text-sm font-semibold text-brand-text sm:text-base md:text-lg">Do well and earn a <span class="text-brand-success">Take a Bow Certificate</span></p>
+            <p class="text-base font-semibold text-brand-text sm:text-base md:text-lg">Do well and earn a <span class="text-brand-success">Take a Bow Certificate</span></p>
           </div>
           <div class="flex items-center gap-3 rounded-xl bg-brand-surface p-4 shadow-sm ring-1 ring-brand-border">
             <Trophy class="h-6 w-6 shrink-0 text-brand-accent" />
-            <p class="text-sm font-semibold text-brand-text sm:text-base md:text-lg">Aim high and earn a <span class="text-brand-accent">Standing Ovation Certificate</span></p>
+            <p class="text-base font-semibold text-brand-text sm:text-base md:text-lg">Aim high and earn a <span class="text-brand-accent">Standing Ovation Certificate</span></p>
           </div>
         </div>
 
@@ -349,7 +349,7 @@ const certificateName = (result: string) => {
           >
             <template #myTitle>Ready to get your name on the board?</template>
           </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-xl text-sm text-brand-text-soft sm:text-sm md:text-base lg:text-lg">
+          <p class="mx-auto mt-3 max-w-xl text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
             Book your Trinity exam through centre 120 and your result will be celebrated here.
           </p>
           <div class="mt-6">

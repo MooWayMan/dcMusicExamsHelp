@@ -139,7 +139,7 @@ const faqs = [
           </div>
 
           <div :class="animClass('fade-up', 2)">
-            <p class="mx-auto mt-4 max-w-2xl text-sm text-brand-text-soft sm:text-sm md:text-base lg:text-lg">
+            <p class="mx-auto mt-4 max-w-2xl text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
               musicExams.help takes the admin confusion out of Trinity exam entries.
               Book through centre code 120 and your students get celebrated while you earn recognition, discounts and prize draw entries.
             </p>
@@ -161,7 +161,7 @@ const faqs = [
           >
             <template #myTitle>How booking works</template>
           </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-2xl text-center text-sm text-brand-text-soft sm:text-sm md:text-base lg:text-lg">
+          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
             Four steps. No extra cost. Your students are entered through centre 120 and qualify for everything.
           </p>
         </div>
@@ -176,8 +176,8 @@ const faqs = [
               {{ item.step }}
             </div>
             <div>
-              <p class="text-base font-semibold text-brand-text sm:text-lg">{{ item.title }}</p>
-              <p class="mt-1 text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base">{{ item.detail }}</p>
+              <p class="text-lg font-semibold text-brand-text sm:text-lg">{{ item.title }}</p>
+              <p class="mt-1 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg">{{ item.detail }}</p>
             </div>
           </div>
         </div>
@@ -218,8 +218,8 @@ const faqs = [
                 <component :is="benefit.icon" :class="[benefit.iconColor, 'h-5 w-5 sm:h-6 sm:w-6']" />
               </div>
               <div>
-                <p class="text-base font-semibold text-brand-text sm:text-lg">{{ benefit.title }}</p>
-                <p class="mt-1 text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base">{{ benefit.detail }}</p>
+                <p class="text-lg font-semibold text-brand-text sm:text-lg">{{ benefit.title }}</p>
+                <p class="mt-1 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg">{{ benefit.detail }}</p>
                 <a
                   v-if="benefit.link"
                   :href="benefit.link"
@@ -248,7 +248,7 @@ const faqs = [
           >
             <template #myTitle>Digital or face-to-face?</template>
           </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-2xl text-center text-sm text-brand-text-soft sm:text-sm md:text-base lg:text-lg">
+          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
             Trinity offers both options for Classical &amp; Jazz graded exams and diplomas. Both carry the same Ofqual-regulated certificate and UCAS points — the difference is how the exam is taken and what it includes.
           </p>
         </div>
@@ -256,54 +256,54 @@ const faqs = [
         <div :class="animClass('fade-up', 2)" class="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <!-- Digital -->
           <div class="rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-sm">
-            <p class="text-lg font-bold text-brand-accent sm:text-xl">Digital exams</p>
+            <p class="text-xl font-bold text-brand-accent sm:text-xl">Digital exams</p>
             <ul class="mt-4 space-y-3">
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                <span class="text-sm text-brand-text sm:text-sm md:text-base">Record at home on your own schedule — 28 days to submit after booking</span>
+                <span class="text-base text-brand-text sm:text-base md:text-lg">Record at home on your own schedule — 28 days to submit after booking</span>
               </li>
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                <span class="text-sm text-brand-text sm:text-sm md:text-base">Submit your video through Trinity's MyTrinity portal</span>
+                <span class="text-base text-brand-text sm:text-base md:text-lg">Submit your video through Trinity's MyTrinity portal</span>
               </li>
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                <span class="text-sm text-brand-text sm:text-sm md:text-base">Use a recorded accompaniment instead of a live pianist — no scrambling to find an accompanist for exam day</span>
+                <span class="text-base text-brand-text sm:text-base md:text-lg">Use a recorded accompaniment instead of a live pianist — no scrambling to find an accompanist for exam day</span>
               </li>
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                <span class="text-sm text-brand-text sm:text-sm md:text-base">No sight reading, aural or improvisation tests — digital replaces these with Overall Performance Criteria</span>
+                <span class="text-base text-brand-text sm:text-base md:text-lg">No sight reading, aural or improvisation tests — digital replaces these with Overall Performance Criteria</span>
               </li>
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                <span class="text-sm text-brand-text sm:text-sm md:text-base">Repertoire-only pathway available — four pieces, no technical work at all</span>
+                <span class="text-base text-brand-text sm:text-base md:text-lg">Repertoire-only pathway available — four pieces, no technical work at all</span>
               </li>
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                <span class="text-sm text-brand-text sm:text-sm md:text-base">Same certificate and UCAS points as face-to-face</span>
+                <span class="text-base text-brand-text sm:text-base md:text-lg">Same certificate and UCAS points as face-to-face</span>
               </li>
             </ul>
           </div>
 
           <!-- F2F -->
           <div class="rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-sm">
-            <p class="text-lg font-bold text-brand-accent sm:text-xl">Face-to-face exams</p>
+            <p class="text-xl font-bold text-brand-accent sm:text-xl">Face-to-face exams</p>
             <ul class="mt-4 space-y-3">
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                <span class="text-sm text-brand-text sm:text-sm md:text-base">Exam sessions in Liverpool and Wirral at scheduled dates throughout the year</span>
+                <span class="text-base text-brand-text sm:text-base md:text-lg">Exam sessions in Liverpool and Wirral at scheduled dates throughout the year</span>
               </li>
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                <span class="text-sm text-brand-text sm:text-sm md:text-base">Live with a Trinity examiner in the room — traditional exam experience</span>
+                <span class="text-base text-brand-text sm:text-base md:text-lg">Live with a Trinity examiner in the room — traditional exam experience</span>
               </li>
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                <span class="text-sm text-brand-text sm:text-sm md:text-base">Three pieces plus technical work and two supporting tests (sight reading, aural, improvisation or musical knowledge)</span>
+                <span class="text-base text-brand-text sm:text-base md:text-lg">Three pieces plus technical work and two supporting tests (sight reading, aural, improvisation or musical knowledge)</span>
               </li>
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                <span class="text-sm text-brand-text sm:text-sm md:text-base">Live accompanist required for accompanied pieces from Grade 4 onwards — backing tracks are only permitted up to Grade 3</span>
+                <span class="text-base text-brand-text sm:text-base md:text-lg">Live accompanist required for accompanied pieces from Grade 4 onwards — backing tracks are only permitted up to Grade 3</span>
               </li>
             </ul>
           </div>
@@ -311,25 +311,25 @@ const faqs = [
 
         <!-- Accompaniment callout -->
         <div :class="animClass('fade-up', 3)" class="mt-8 rounded-2xl border border-brand-accent/30 bg-brand-accent/5 p-5 sm:p-6">
-          <p class="text-base font-semibold text-brand-accent sm:text-lg">Why teachers love the digital option</p>
-          <p class="mt-2 text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base">
+          <p class="text-lg font-semibold text-brand-accent sm:text-lg">Why teachers love the digital option</p>
+          <p class="mt-2 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg">
             Many instruments require a piano accompaniment for at least two of the three exam pieces. Finding a reliable pianist who can learn the parts, attend on the specific exam day, and perform under pressure is one of the biggest headaches in exam preparation. With digital exams, students can use a high-quality recorded accompaniment instead — removing the stress for both teacher and student.
           </p>
-          <p class="mt-3 text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base">
+          <p class="mt-3 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg">
             <span class="font-semibold text-brand-text">In face-to-face exams</span> across brass, woodwind and singing, backing tracks are only permitted up to Grade 3. From Grade 4 onwards, a live accompanist must be in the room. <span class="font-semibold text-brand-text">Digital exams</span> remove this restriction entirely, letting candidates at any grade use a recorded accompaniment. For teachers who play their students' accompaniments themselves, digital also takes away the pressure of performing live in front of the examiner.
           </p>
         </div>
 
         <!-- Face-to-face callout -->
         <div :class="animClass('fade-up', 4)" class="mt-6 rounded-2xl border border-brand-accent/30 bg-brand-accent/5 p-5 sm:p-6">
-          <p class="text-base font-semibold text-brand-accent sm:text-lg">Why face-to-face still matters</p>
-          <p class="mt-2 text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base">
+          <p class="text-lg font-semibold text-brand-accent sm:text-lg">Why face-to-face still matters</p>
+          <p class="mt-2 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg">
             Face-to-face exams develop skills that digital simply cannot replicate. Students learn to perform in front of someone they have never met, in an unfamiliar room, under real pressure — and that experience is invaluable preparation for concerts, auditions and live performance. The supporting tests (sight reading, aural, improvisation) also build well-rounded musicianship that a repertoire-only digital exam does not assess.
           </p>
-          <p class="mt-3 text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base">
+          <p class="mt-3 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg">
             There is also a real benefit to having a fixed exam date. With digital exams, students can spend months re-recording, chasing perfection — and the process can drift indefinitely. A face-to-face date creates focus: the student knows they have to be ready, and the teacher can plan a preparation schedule around it. Many teachers find their students actually perform better with that deadline in place.
           </p>
-          <p class="mt-3 text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base">
+          <p class="mt-3 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg">
             <span class="font-semibold text-brand-text">A tip from experience:</span> with digital exams, do not pay until your student has actually recorded their performance. Once you pay, the 28-day submission window starts. If the recording is not ready, you are under pressure from day one. Get the recording done first, then book and submit.
           </p>
         </div>

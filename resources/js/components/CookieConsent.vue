@@ -56,7 +56,7 @@ function accept() {
           <h3 class="text-lg font-bold text-brand-text sm:text-xl">
             We use cookies
           </h3>
-          <p class="mt-2 text-sm leading-relaxed text-brand-text-soft sm:text-base">
+          <p class="mt-2 text-base leading-relaxed text-brand-text-soft sm:text-base">
             We use cookies to improve your experience and understand how our site is used.
           </p>
 
@@ -71,7 +71,7 @@ function accept() {
           <!-- Cookie policy link — subtle -->
           <a
             href="/cookies"
-            class="mt-3 text-sm text-brand-text-soft transition-colors hover:text-brand-accent hover:underline"
+            class="mt-3 text-base text-brand-text-soft transition-colors hover:text-brand-accent hover:underline"
           >
             View Cookie Policy
           </a>

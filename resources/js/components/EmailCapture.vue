@@ -83,7 +83,7 @@ async function handleSubmit() {
   <div>
     <!-- Subscribed state — replaces the form everywhere -->
     <div v-if="isSubscribed" class="rounded-xl border border-brand-accent/30 bg-brand-accent/10 px-5 py-4 text-center">
-      <p class="text-sm font-semibold sm:text-base" :class="isDark ? 'text-white' : 'text-brand-accent'">
+      <p class="text-base font-semibold sm:text-base" :class="isDark ? 'text-white' : 'text-brand-accent'">
         You're on the list{{ subscriberName ? `, ${subscriberName}` : '' }}! We'll be in touch soon.
       </p>
     </div>
@@ -97,7 +97,7 @@ async function handleSubmit() {
           placeholder="Your name"
           required
           :class="[
-            'w-full rounded-lg border px-4 py-3 text-sm transition-colors focus:outline-none focus:ring-2 sm:text-base',
+            'w-full rounded-lg border px-4 py-3 text-base transition-colors focus:outline-none focus:ring-2 sm:text-base',
             isDark
               ? 'border-white/20 bg-white/10 text-white placeholder-white/50 focus:border-brand-accent focus:ring-brand-accent/30'
               : 'border-brand-border bg-brand-surface text-brand-text placeholder-brand-text-soft focus:border-brand-accent focus:ring-brand-accent/30'
@@ -110,7 +110,7 @@ async function handleSubmit() {
           placeholder="Your email"
           required
           :class="[
-            'w-full rounded-lg border px-4 py-3 text-sm transition-colors focus:outline-none focus:ring-2 sm:text-base',
+            'w-full rounded-lg border px-4 py-3 text-base transition-colors focus:outline-none focus:ring-2 sm:text-base',
             isDark
               ? 'border-white/20 bg-white/10 text-white placeholder-white/50 focus:border-brand-accent focus:ring-brand-accent/30'
               : 'border-brand-border bg-brand-surface text-brand-text placeholder-brand-text-soft focus:border-brand-accent focus:ring-brand-accent/30'
@@ -121,7 +121,7 @@ async function handleSubmit() {
           v-if="compact"
           type="submit"
           :disabled="isSubmitting"
-          class="shrink-0 cursor-pointer rounded-lg bg-brand-accent px-6 py-3 text-sm font-semibold text-brand-text-inverse transition-colors hover:bg-brand-accent-dark disabled:opacity-50 sm:text-base"
+          class="shrink-0 cursor-pointer rounded-lg bg-brand-accent px-6 py-3 text-base font-semibold text-brand-text-inverse transition-colors hover:bg-brand-accent-dark disabled:opacity-50 sm:text-base"
         >
           {{ isSubmitting ? 'Sending...' : 'Subscribe' }}
         </button>
@@ -129,7 +129,7 @@ async function handleSubmit() {
 
       <!-- Role selector (not shown in compact mode) -->
       <div v-if="!compact" class="flex flex-wrap gap-2">
-        <span :class="isDark ? 'text-sm text-white/60' : 'text-sm text-brand-text-soft'">I am a:</span>
+        <span :class="isDark ? 'text-base text-white/60' : 'text-base text-brand-text-soft'">I am a:</span>
         <label
           v-for="r in [{ value: 'teacher', label: 'Teacher' }, { value: 'parent', label: 'Parent' }, { value: 'student', label: 'Student' }]"
           :key="r.value"
@@ -157,7 +157,7 @@ async function handleSubmit() {
         v-if="!compact"
         type="submit"
         :disabled="isSubmitting"
-        class="w-full cursor-pointer rounded-lg bg-brand-accent px-6 py-3 text-sm font-semibold text-brand-text-inverse transition-colors hover:bg-brand-accent-dark disabled:opacity-50 sm:text-base"
+        class="w-full cursor-pointer rounded-lg bg-brand-accent px-6 py-3 text-base font-semibold text-brand-text-inverse transition-colors hover:bg-brand-accent-dark disabled:opacity-50 sm:text-base"
       >
         {{ isSubmitting ? 'Sending...' : 'Stay in the loop' }}
       </button>

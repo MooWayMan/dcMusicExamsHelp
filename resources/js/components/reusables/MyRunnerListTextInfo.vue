@@ -110,7 +110,7 @@ const badges = (card: CardData) => {
 
               <p
                 v-if="card.subTitle"
-                class="mt-2 text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base lg:text-lg"
+                class="mt-2 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg lg:text-xl"
               >
                 {{ card.subTitle }}
               </p>

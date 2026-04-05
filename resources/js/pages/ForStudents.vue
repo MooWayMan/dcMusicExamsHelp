@@ -107,7 +107,7 @@ const resultsBands = [
           </div>
 
           <div :class="animClass('fade-up', 2)">
-            <p class="mx-auto mt-4 max-w-2xl text-sm text-brand-text-soft sm:text-sm md:text-base lg:text-lg">
+            <p class="mx-auto mt-4 max-w-2xl text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
               When you sit a Trinity exam through centre 120, your achievement doesn't just disappear into a filing cabinet.
               You get recognised — on our website, with special certificates, and through prizes.
             </p>
@@ -142,7 +142,7 @@ const resultsBands = [
           >
             <template #myTitle>How you get recognised</template>
           </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-2xl text-center text-sm text-brand-text-soft sm:text-sm md:text-base lg:text-lg">
+          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
             Every student gets something. The higher you score, the more you earn.
           </p>
         </div>
@@ -159,12 +159,12 @@ const resultsBands = [
               <component :is="tier.icon" :class="[tier.iconColor, 'h-5 w-5 sm:h-6 sm:w-6']" />
             </div>
             <div>
-              <p class="text-base font-semibold text-brand-text sm:text-lg">
+              <p class="text-lg font-semibold text-brand-text sm:text-lg">
                 {{ tier.title }}
                 <span v-if="tier.url" class="text-brand-accent"> →</span>
               </p>
               <p class="text-xs font-medium uppercase tracking-wide text-brand-text-soft">{{ tier.subtitle }}</p>
-              <p class="mt-2 text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base">{{ tier.detail }}</p>
+              <p class="mt-2 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg">{{ tier.detail }}</p>
             </div>
           </component>
         </div>
@@ -193,7 +193,7 @@ const resultsBands = [
           >
             <template #myTitle>Understanding your results</template>
           </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-2xl text-center text-sm text-brand-text-soft sm:text-sm md:text-base lg:text-lg">
+          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
             Trinity exams are marked out of 100. Here's what the results mean.
           </p>
         </div>

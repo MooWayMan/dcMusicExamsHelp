@@ -210,7 +210,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
               </template>
             </MyTextConstructor>
 
-            <p class="mt-4 max-w-lg text-base text-brand-text-soft sm:text-lg md:text-xl lg:text-2xl">
+            <p class="mt-4 max-w-lg text-lg text-brand-text-soft sm:text-lg md:text-xl lg:text-2xl">
               Free guidance, incentives and support for teachers, parents and students.
               Use centre code
               <span class="font-semibold text-brand-text">{{ referralCode }}</span>
@@ -369,7 +369,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
 
     <!-- CENTRE CODE BANNER -->
     <div class="bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary py-5 text-center">
-      <p class="px-4 text-lg font-bold tracking-wide text-white sm:text-xl md:text-2xl">
+      <p class="px-4 text-xl font-bold tracking-wide text-white sm:text-xl md:text-2xl">
         Book with Centre Code 120 and unlock free support, incentives and recognition
       </p>
     </div>
@@ -453,7 +453,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
 
           <!-- Digital exams callout -->
           <div class="mx-auto mt-6 max-w-2xl rounded-2xl bg-brand-primary px-6 py-5 text-center shadow-lg">
-            <p class="text-sm font-semibold text-brand-text-inverse sm:text-base md:text-lg">
+            <p class="text-lg font-semibold text-brand-text-inverse sm:text-lg md:text-xl">
               Digital exams can be taken from anywhere in the UK — whether you're up in Scotland, down in South Wales, over in Northern Ireland or on the east coast.
             </p>
           </div>
@@ -474,7 +474,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
               <MyTextConstructor variant="button-lg" spacing="tight" textColor="text-brand-primary" class="md:!text-xl lg:!text-xl">
                 <template #myTitle>Wirral Exam Centre</template>
               </MyTextConstructor>
-              <p class="mt-2 text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base lg:text-lg">
+              <p class="mt-2 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
                 Our Wirral venue features a Steinway &amp; Sons grand piano — offering candidates the experience of performing on a world-class instrument.
               </p>
             </div>
@@ -493,7 +493,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
               <MyTextConstructor variant="button-lg" spacing="tight" textColor="text-brand-primary" class="md:!text-xl lg:!text-xl">
                 <template #myTitle>Liverpool Exam Centre</template>
               </MyTextConstructor>
-              <p class="mt-2 text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base lg:text-lg">
+              <p class="mt-2 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
                 A brand new Kawai upright piano in a purpose-set teaching and exam room — a warm, professional space designed to help candidates feel at ease.
               </p>
             </div>
@@ -514,7 +514,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
               <MyTextConstructor variant="button-lg" spacing="tight" textColor="text-brand-primary" class="md:!text-xl lg:!text-xl">
                 <template #myTitle>Guitar — school music room</template>
               </MyTextConstructor>
-              <p class="mt-2 text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base lg:text-lg">
+              <p class="mt-2 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
                 From school music rooms to dedicated exam centres — all instruments, all grades.
               </p>
             </div>
@@ -531,7 +531,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
               <MyTextConstructor variant="button-lg" spacing="tight" textColor="text-brand-primary" class="md:!text-xl lg:!text-xl">
                 <template #myTitle>Piano — home teaching studio</template>
               </MyTextConstructor>
-              <p class="mt-2 text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base lg:text-lg">
+              <p class="mt-2 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
                 From home studios to school music rooms — wherever you learn, your hard work deserves to be celebrated.
               </p>
             </div>
@@ -597,7 +597,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             </template>
           </MyTextConstructor>
 
-          <p class="mx-auto mt-5 max-w-3xl text-center text-base text-white/80 sm:text-lg md:text-xl lg:text-2xl">
+          <p class="mx-auto mt-5 max-w-3xl text-center text-lg text-white/80 sm:text-lg md:text-xl lg:text-2xl">
             Real benefits for everyone who books through centre code {{ referralCode }} — whether you enter online or through our face-to-face centres in Liverpool and Wirral.
           </p>
         </div>
@@ -611,8 +611,8 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
           >
             <div class="p-6">
               <component :is="item.icon" class="mb-3 h-8 w-8 text-brand-accent" />
-              <h3 class="text-lg font-bold text-white sm:text-xl">{{ item.title }}</h3>
-              <p class="mt-2 text-sm leading-snug text-white/80 sm:text-sm md:text-base" v-html="item.detail">
+              <h3 class="text-xl font-bold text-white sm:text-xl">{{ item.title }}</h3>
+              <p class="mt-2 text-base leading-snug text-white/80 sm:text-base md:text-lg" v-html="item.detail">
               </p>
             </div>
           </div>
@@ -791,10 +791,10 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
     <section class="bg-black">
       <div class="mx-auto max-w-lg px-4 pb-14 sm:px-6">
         <div class="rounded-2xl border border-white/10 bg-white/5 p-6 text-center sm:p-8">
-          <h3 class="text-lg font-bold text-white sm:text-xl">
+          <h3 class="text-xl font-bold text-white sm:text-xl">
             Don't miss out
           </h3>
-          <p class="mt-1 text-sm text-white/60 sm:text-base">
+          <p class="mt-1 text-base text-white/60 sm:text-base">
             Get exam tips, booking reminders and exclusive offers straight to your inbox.
           </p>
           <div class="mt-4">

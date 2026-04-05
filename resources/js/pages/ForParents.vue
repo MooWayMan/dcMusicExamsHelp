@@ -119,7 +119,7 @@ const faqs = [
           </div>
 
           <div :class="animClass('fade-up', 2)">
-            <p class="mx-auto mt-4 max-w-2xl text-sm text-brand-text-soft sm:text-sm md:text-base lg:text-lg">
+            <p class="mx-auto mt-4 max-w-2xl text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
               Music exams can feel confusing if you've never been through the process.
               This page explains what happens, what it costs, and how your child gets recognised along the way.
             </p>
@@ -153,8 +153,8 @@ const faqs = [
               {{ item.step }}
             </div>
             <div>
-              <p class="text-base font-semibold text-brand-text sm:text-lg">{{ item.title }}</p>
-              <p class="mt-1 text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base">{{ item.detail }}</p>
+              <p class="text-lg font-semibold text-brand-text sm:text-lg">{{ item.title }}</p>
+              <p class="mt-1 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg">{{ item.detail }}</p>
             </div>
           </div>
         </div>
@@ -184,7 +184,7 @@ const faqs = [
               class="flex items-start gap-3"
             >
               <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-              <span class="text-sm text-brand-text sm:text-sm md:text-base lg:text-lg">{{ item }}</span>
+              <span class="text-base text-brand-text sm:text-base md:text-lg lg:text-xl">{{ item }}</span>
             </li>
           </ul>
         </div>

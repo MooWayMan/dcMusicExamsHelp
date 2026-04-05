@@ -198,7 +198,7 @@ const faqs = [
           </div>
 
           <div :class="animClass('fade-up', 2)">
-            <p class="mx-auto mt-4 max-w-2xl text-sm text-brand-text-soft sm:text-sm md:text-base lg:text-lg">
+            <p class="mx-auto mt-4 max-w-2xl text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
               Faber Music and Trinity College London Press publish the books behind Trinity exams.
               As a music teacher, you can access significant discounts on both physical and digital editions — here's how.
             </p>
@@ -220,7 +220,7 @@ const faqs = [
           >
             <template #myTitle>Your discount pathway</template>
           </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-2xl text-center text-sm text-brand-text-soft sm:text-sm md:text-base lg:text-lg">
+          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
             Four programmes, all designed to help music teachers save money on resources.
           </p>
         </div>
@@ -242,7 +242,7 @@ const faqs = [
                   >
                     <component :is="step.icon" :class="[step.iconColour, 'h-7 w-7']" />
                   </div>
-                  <p class="mt-3 text-sm font-semibold text-brand-text sm:text-base">{{ step.label }}</p>
+                  <p class="mt-3 text-base font-semibold text-brand-text sm:text-base">{{ step.label }}</p>
                   <p class="mt-1 max-w-[180px] text-xs text-brand-text-soft sm:text-sm">{{ step.tagline }}</p>
                 </div>
                 <!-- Connector arrow (not after last) -->
@@ -278,7 +278,7 @@ const faqs = [
                     />
                   </div>
                   <div class="pt-2">
-                    <p class="text-sm font-semibold text-brand-text sm:text-base">{{ step.label }}</p>
+                    <p class="text-base font-semibold text-brand-text sm:text-base">{{ step.label }}</p>
                     <p class="mt-0.5 text-xs text-brand-text-soft sm:text-sm">{{ step.tagline }}</p>
                   </div>
                 </div>
@@ -315,8 +315,8 @@ const faqs = [
                 <component :is="card.icon" :class="[card.iconColor, 'h-5 w-5 sm:h-6 sm:w-6']" />
               </div>
               <div class="flex-1">
-                <p class="text-base font-semibold text-brand-text sm:text-lg">{{ card.title }}</p>
-                <p class="mt-1 text-sm leading-snug text-brand-text-soft sm:text-sm md:text-base">{{ card.detail }}</p>
+                <p class="text-lg font-semibold text-brand-text sm:text-lg">{{ card.title }}</p>
+                <p class="mt-1 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg">{{ card.detail }}</p>
               </div>
             </div>
             <!-- CTA links if present -->
@@ -368,7 +368,7 @@ const faqs = [
           >
             <template #myTitle>How we help</template>
           </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-2xl text-center text-sm text-brand-text-soft sm:text-sm md:text-base lg:text-lg">
+          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
             Setting up discount accounts can feel confusing if you haven't done it before.
             We've been through the process ourselves and are happy to walk you through it — just get in touch.
           </p>
@@ -378,25 +378,25 @@ const faqs = [
           <div class="mx-auto max-w-lg space-y-4">
             <div class="flex items-start gap-4 rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm">
               <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-              <p class="text-sm text-brand-text sm:text-sm md:text-base">
+              <p class="text-base text-brand-text sm:text-base md:text-lg">
                 We'll explain which discounts apply to your situation
               </p>
             </div>
             <div class="flex items-start gap-4 rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm">
               <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-              <p class="text-sm text-brand-text sm:text-sm md:text-base">
+              <p class="text-base text-brand-text sm:text-base md:text-lg">
                 We'll guide you through the trade account setup if you want one
               </p>
             </div>
             <div class="flex items-start gap-4 rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm">
               <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-              <p class="text-sm text-brand-text sm:text-sm md:text-base">
+              <p class="text-base text-brand-text sm:text-base md:text-lg">
                 We'll point you to the Teachers' Community and Free Books programme
               </p>
             </div>
             <div class="flex items-start gap-4 rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm">
               <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-              <p class="text-sm text-brand-text sm:text-sm md:text-base">
+              <p class="text-base text-brand-text sm:text-base md:text-lg">
                 No pressure, no cost — just practical help from someone who uses these programmes daily
               </p>
             </div>

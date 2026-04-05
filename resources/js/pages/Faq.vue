@@ -124,7 +124,7 @@ const faqs = [
         </div>
 
         <div :class="animClass('fade-up', 2)">
-          <p class="mx-auto mt-4 max-w-2xl text-sm text-brand-text-soft sm:text-sm md:text-base lg:text-lg">
+          <p class="mx-auto mt-4 max-w-2xl text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
             Everything you need to know about booking Trinity music exams through centre code 120.
             Can't find your answer? Get in touch and we'll help.
           </p>

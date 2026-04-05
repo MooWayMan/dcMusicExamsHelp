@@ -65,15 +65,15 @@ const fontFamilyClass = computed(() => {
 })
 
 const variantClasses: Record<NonNullable<Props['variant']>, string> = {
-  display: 'text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight text-brand-primary',
-  heading: 'text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight text-brand-primary',
-  subheading: 'text-xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold leading-tight text-brand-primary',
-  body: 'text-lg sm:text-xl md:text-2xl lg:text-3xl leading-relaxed text-brand-text',
-  muted: 'text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed text-brand-text-soft',
-  eyebrow: 'text-sm sm:text-base font-semibold uppercase tracking-[0.08em] text-brand-accent',
+  display: 'text-5xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight text-brand-primary',
+  heading: 'text-3xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight text-brand-primary',
+  subheading: 'text-2xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold leading-tight text-brand-primary',
+  body: 'text-xl sm:text-xl md:text-2xl lg:text-3xl leading-relaxed text-brand-text',
+  muted: 'text-lg sm:text-lg md:text-xl lg:text-2xl leading-relaxed text-brand-text-soft',
+  eyebrow: 'text-base sm:text-base font-semibold uppercase tracking-[0.08em] text-brand-accent',
   button: 'text-base sm:text-lg font-semibold leading-none',
   'button-sm': 'text-sm sm:text-base font-semibold leading-none',
-  'button-lg': 'text-lg sm:text-xl md:text-2xl font-semibold leading-none',
+  'button-lg': 'text-xl sm:text-xl md:text-2xl font-semibold leading-none',
 }
 
 const resolvedTextColor = computed(() => {
@@ -91,9 +91,9 @@ const titleClasses = computed(() => {
 
 const subTitleClasses = computed(() => {
   const map = {
-    body: 'text-lg sm:text-xl md:text-2xl lg:text-3xl leading-relaxed text-brand-text-soft',
-    muted: 'text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed text-brand-text-soft',
-    subheading: 'text-xl sm:text-2xl md:text-3xl lg:text-4xl font-medium leading-tight text-brand-text-soft',
+    body: 'text-xl sm:text-xl md:text-2xl lg:text-3xl leading-relaxed text-brand-text-soft',
+    muted: 'text-lg sm:text-lg md:text-xl lg:text-2xl leading-relaxed text-brand-text-soft',
+    subheading: 'text-2xl sm:text-2xl md:text-3xl lg:text-4xl font-medium leading-tight text-brand-text-soft',
   } as const
 
   return [
@@ -106,8 +106,8 @@ const subTitleClasses = computed(() => {
 
 const bodyClasses = computed(() => {
   const map = {
-    body: 'text-lg sm:text-xl md:text-2xl lg:text-3xl leading-relaxed text-brand-text',
-    muted: 'text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed text-brand-text-soft',
+    body: 'text-xl sm:text-xl md:text-2xl lg:text-3xl leading-relaxed text-brand-text',
+    muted: 'text-lg sm:text-lg md:text-xl lg:text-2xl leading-relaxed text-brand-text-soft',
   } as const
 
   return [

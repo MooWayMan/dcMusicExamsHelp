@@ -239,3 +239,188 @@
         @apply bg-background text-foreground;
     }
 }
+
+/* ===============================
+   SHOOTING STARS ANIMATION
+================================ */
+@layer components {
+.shooting-star {
+    position: absolute;
+    width: 150px;
+    height: 3px;
+    background: linear-gradient(90deg, rgba(59, 130, 246, 0), rgba(59, 130, 246, 0.6), rgba(255, 255, 255, 1));
+    border-radius: 999px;
+    opacity: 0;
+    transform: rotate(-35deg);
+    filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.8));
+    animation-name: shootingStar;
+    animation-timing-function: ease-in;
+    animation-iteration-count: infinite;
+}
+
+.shooting-star::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 0 12px 4px rgba(59, 130, 246, 0.8), 0 0 30px 8px rgba(59, 130, 246, 0.4);
+    transform: translate(50%, -35%);
+}
+
+/* TOP — Shooting RIGHT (from left side) */
+.shooting-star-1 {
+    top: 5%;
+    left: 0%;
+    width: 180px;
+    animation-duration: 5s;
+    animation-delay: 0.5s;
+    animation-name: shootRight;
+}
+
+.shooting-star-2 {
+    top: 15%;
+    left: 3%;
+    width: 140px;
+    animation-duration: 4.5s;
+    animation-delay: 3.5s;
+    animation-name: shootRight;
+}
+
+/* TOP — Shooting LEFT (from right side) */
+.shooting-star-5 {
+    top: 8%;
+    right: 0%;
+    left: auto;
+    width: 170px;
+    animation-duration: 5s;
+    animation-delay: 1.5s;
+    animation-name: shootLeft;
+}
+
+.shooting-star-8 {
+    top: 20%;
+    right: 5%;
+    left: auto;
+    width: 130px;
+    animation-duration: 4.5s;
+    animation-delay: 5s;
+    animation-name: shootLeft;
+}
+
+.shooting-star-9 {
+    top: 12%;
+    left: 8%;
+    width: 150px;
+    animation-duration: 5.5s;
+    animation-delay: 7s;
+    animation-name: shootRight;
+}
+
+.shooting-star-10 {
+    top: 3%;
+    right: 10%;
+    left: auto;
+    width: 120px;
+    animation-duration: 4s;
+    animation-delay: 9s;
+    animation-name: shootLeft;
+}
+
+/* BOTTOM — Shooting RIGHT (from left side) */
+.shooting-star-3 {
+    top: 75%;
+    left: 0%;
+    width: 160px;
+    animation-duration: 5.5s;
+    animation-delay: 2s;
+    animation-name: shootRight;
+}
+
+.shooting-star-4 {
+    top: 88%;
+    left: 2%;
+    width: 120px;
+    animation-duration: 4s;
+    animation-delay: 6s;
+    animation-name: shootRight;
+}
+
+.shooting-star-11 {
+    top: 82%;
+    left: 5%;
+    width: 170px;
+    animation-duration: 5s;
+    animation-delay: 8.5s;
+    animation-name: shootRight;
+}
+
+/* BOTTOM — Shooting LEFT (from right side) */
+.shooting-star-6 {
+    top: 78%;
+    right: 0%;
+    left: auto;
+    width: 130px;
+    animation-duration: 4.5s;
+    animation-delay: 4s;
+    animation-name: shootLeft;
+}
+
+.shooting-star-7 {
+    top: 90%;
+    right: 3%;
+    left: auto;
+    width: 150px;
+    animation-duration: 5s;
+    animation-delay: 7.5s;
+    animation-name: shootLeft;
+}
+
+.shooting-star-12 {
+    top: 72%;
+    right: 8%;
+    left: auto;
+    width: 140px;
+    animation-duration: 4.5s;
+    animation-delay: 1s;
+    animation-name: shootLeft;
+}
+
+@keyframes shootRight {
+    0% {
+        opacity: 0;
+        transform: rotate(-8deg) translateX(0);
+    }
+    3% {
+        opacity: 1;
+    }
+    20% {
+        opacity: 0;
+        transform: rotate(-8deg) translateX(600px);
+    }
+    100% {
+        opacity: 0;
+        transform: rotate(-8deg) translateX(600px);
+    }
+}
+
+@keyframes shootLeft {
+    0% {
+        opacity: 0;
+        transform: rotate(8deg) translateX(0) scaleX(-1);
+    }
+    3% {
+        opacity: 1;
+    }
+    20% {
+        opacity: 0;
+        transform: rotate(8deg) translateX(-600px) scaleX(-1);
+    }
+    100% {
+        opacity: 0;
+        transform: rotate(8deg) translateX(-600px) scaleX(-1);
+    }
+}
+} /* end @layer components */
