@@ -59,7 +59,7 @@ const pathwaySteps = [
     id: 3,
     icon: ShoppingBag,
     label: 'Set up your trade account',
-    tagline: '33% off all physical Faber and Trinity Press books',
+    tagline: 'Exclusive discount on all physical Faber and Trinity Press books',
     colour: 'brand-success',
     bgRing: 'bg-brand-success-soft',
     iconColour: 'text-brand-success',
@@ -96,11 +96,11 @@ const discountCards = [
   },
   {
     icon: ShoppingBag,
-    title: '33% trade discount on physical books',
+    title: 'Exclusive trade discount on physical books',
     detail:
-      'Registered music teachers can set up a Faber Education Trade Account and get 33% off all physical books published by Faber Music and Trinity College London Press — not just exam books, but everything in their catalogue. The ordering process is done by spreadsheet at the moment, but the saving is well worth it.',
+      'Registered music teachers can set up a Faber Education Trade Account and get an exclusive discount on all physical books published by Faber Music and Trinity College London Press — not just exam books, but everything in their catalogue. The ordering process is done by spreadsheet at the moment, but the saving is well worth it.',
     cta: 'Get in touch to find out more',
-    ctaUrl: 'mailto:musicexams@musicexams.help?subject=Setting%20up%20a%20Faber%20trade%20account&body=Hi%2C%0A%0AI%27m%20interested%20in%20setting%20up%20a%20Faber%20trade%20account%20to%20get%2033%25%20off%20exam%20books.%20Could%20you%20let%20me%20know%20how%20to%20get%20started%3F%0A%0AThanks',
+    ctaUrl: 'mailto:musicexams@musicexams.help?subject=Setting%20up%20a%20Faber%20trade%20account&body=Hi%2C%0A%0AI%27m%20interested%20in%20setting%20up%20a%20Faber%20trade%20account%20for%20the%20teacher%20discount%20on%20exam%20books.%20Could%20you%20let%20me%20know%20how%20to%20get%20started%3F%0A%0AThanks',
     ctaExternal: false,
     iconBg: 'bg-brand-success-soft',
     iconColor: 'text-brand-success',
@@ -134,7 +134,7 @@ const discountCards = [
    ─────────────────────────────────── */
 const faqs = [
   {
-    question: 'Does the 33% discount only apply to exam books?',
+    question: 'Does the trade discount only apply to exam books?',
     answer:
       'No. The trade discount covers everything published by Faber Music and Trinity College London Press — exam books, sight-reading, scales, repertoire collections, teaching resources, and more.',
   },
@@ -146,7 +146,7 @@ const faqs = [
   {
     question: 'Is there a minimum order for the trade discount?',
     answer:
-      'No. Once your trade account is active, the 33% discount applies to every order regardless of size. You can order a single book or a whole class set.',
+      'No. Once your trade account is active, the discount applies to every order regardless of size. You can order a single book or a whole class set.',
   },
   {
     question: 'Do I need to be a Trinity teacher to get these discounts?',

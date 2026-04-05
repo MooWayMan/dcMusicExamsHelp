@@ -65,7 +65,7 @@ const benefits = [
   {
     icon: BookOpen,
     title: 'Exam book discounts',
-    detail: 'We show you how to set up a Faber Music trade account for 33% off physical exam books published by Faber and Trinity College London Press. Plus access to discounted digital editions.',
+    detail: 'We show you how to access exclusive discounts on physical exam books published by Faber Music and Trinity College London Press. Plus access to discounted digital editions.',
     iconBg: 'bg-brand-primary/10',
     iconColor: 'text-brand-primary',
     link: '/for-teachers/faber-discounts',
@@ -90,11 +90,11 @@ const faqs = [
   },
   {
     question: 'What if I already book directly for a digital exam discount?',
-    answer: 'Teachers can set up their own digital centre and receive a 33% ebook discount from Trinity. That\'s a valid option. The difference is that centre 120 offers your students public recognition, certificates, a Hall of Fame and gift tokens — things you can\'t provide on your own.',
+    answer: 'Teachers can set up their own digital centre and receive an ebook discount from Trinity. That\'s a valid option. The difference is that centre 120 offers your students public recognition, certificates, a Hall of Fame and gift tokens — things you can\'t provide on your own.',
   },
   {
     question: 'How do the Faber book discounts work?',
-    answer: 'Faber Music offers a 33% trade discount on physical books to registered music teachers. We walk you through the simple setup process. Once registered, the discount applies to all Faber and Trinity College London Press publications — not just exam books. Visit our Exam Book Discounts page for the full breakdown.',
+    answer: 'Faber Music offers an exclusive trade discount on physical books to registered music teachers. We walk you through the simple setup process. Once registered, the discount applies to all Faber and Trinity College London Press publications — not just exam books. Visit our Exam Book Discounts page for the full breakdown.',
   },
   {
     question: 'How does the teacher badge system work?',

@@ -111,12 +111,12 @@ const navClasses = computed(() =>
 
         <button
           type="button"
-          class="inline-flex items-center justify-center rounded-xl p-2 text-slate-700 transition hover:bg-slate-100 hover:text-slate-950 md:hidden"
+          class="inline-flex items-center justify-center rounded-xl p-3 text-slate-700 transition hover:bg-slate-100 hover:text-slate-950 md:hidden"
           @click="isOpen = !isOpen"
         >
           <span class="sr-only">Toggle menu</span>
-          <Bars3Icon v-if="!isOpen" class="h-6 w-6" />
-          <XMarkIcon v-else class="h-6 w-6" />
+          <Bars3Icon v-if="!isOpen" class="h-8 w-8" />
+          <XMarkIcon v-else class="h-8 w-8" />
         </button>
       </div>
     </div>

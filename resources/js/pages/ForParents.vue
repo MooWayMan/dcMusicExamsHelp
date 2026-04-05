@@ -54,7 +54,7 @@ const journeySteps = [
 
 const whatYourChildGets = [
   'Listed on our Thank You page — name, instrument and grade',
-  'A free digital certificate for Distinction or Merit results',
+  'A Take a Bow Certificate for Merit or a Standing Ovation Certificate for Distinction',
   'A chance to make the quarterly Hall of Fame with a gift token',
   'The same official Trinity certificate and result as any other centre',
 ]
@@ -82,7 +82,7 @@ const faqs = [
   },
   {
     question: 'What does centre code 120 mean?',
-    answer: 'It\'s a registered Trinity exam centre code. When you use code 120, your child\'s entry is connected to musicExams.help — which means they qualify for the Thank You page, Hall of Fame, digital certificates and other incentives at no extra cost.',
+    answer: 'It\'s a registered Trinity exam centre code. When you use code 120, your child\'s entry is connected to musicExams.help — which means they qualify for the Thank You page, Hall of Fame, Take a Bow and Standing Ovation Certificates and other incentives at no extra cost.',
   },
 ]
 </script>
