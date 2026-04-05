@@ -1,10 +1,12 @@
 <!-- resources/js/pages/ExamGuide.vue -->
 <script setup lang="ts">
+import { ref } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { usePageAnimation } from '@/composables/usePageAnimation'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
 import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
+import BookingModal from '@/components/BookingModal.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyRunnerConstructor from '@/components/reusables/MyRunnerConstructor.vue'
@@ -13,6 +15,7 @@ import MyFooter from '@/components/layouts/MyFooter.vue'
 import { Music, Guitar, CheckCircle, ArrowRight, GraduationCap, BookOpen, Clock, Award } from 'lucide-vue-next'
 
 const { animClass } = usePageAnimation()
+const showBookingModal = ref(false)
 
 const pageMeta = {
   title: 'Exam Guide — musicExams.help',
@@ -23,8 +26,6 @@ const pageMeta = {
 const breadcrumbPages = [
   { name: 'Exam Guide', href: '/exam-guide', current: true },
 ]
-
-const bookingUrl = 'https://booking.trinitycollege.com/?larCode=120'
 
 /* ── Classical & Jazz highlights ── */
 const classicalHighlights = [
@@ -322,16 +323,16 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             Use centre code 120 and your entry gets recognised on our Thank You page, Hall of Fame and more.
           </p>
           <div class="mt-6">
-            <a :href="bookingUrl" target="_blank" rel="noopener noreferrer">
-              <MyButtonConstructor variant="primary" size="large">
-                Book Your Exam
-              </MyButtonConstructor>
-            </a>
+            <MyButtonConstructor variant="primary" size="large" @click="showBookingModal = true">
+              Book Your Exam
+            </MyButtonConstructor>
           </div>
         </div>
       </div>
     </section>
 
     <MyFooter variant="gradient" />
+
+    <BookingModal :show="showBookingModal" @close="showBookingModal = false" />
   </div>
 </template>

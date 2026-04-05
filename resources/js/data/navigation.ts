@@ -15,5 +15,5 @@ export const mainNavigation: NavigationLink[] = [
   { name: 'For Parents', url: '/for-parents' },
   { name: 'For Students', url: '/for-students' },
   { name: 'FAQ', url: '/faq' },
-  { name: 'Book Your Exam', url: 'https://booking.trinitycollege.com/?larCode=120', external: true },
+  { name: 'Book Your Exam', url: '#booking-modal' },
 ]

@@ -1,9 +1,11 @@
 <!-- resources/js/pages/ExamGuideDigital.vue -->
 <script setup lang="ts">
+import { ref } from 'vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
 import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
+import BookingModal from '@/components/BookingModal.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
@@ -11,6 +13,7 @@ import MyFooter from '@/components/layouts/MyFooter.vue'
 import { Monitor, CheckCircle, AlertCircle, Video, Upload, Music, ArrowRight } from 'lucide-vue-next'
 
 const { animClass } = usePageAnimation()
+const showBookingModal = ref(false)
 
 const pageMeta = {
   title: 'Digital Exams Guide — musicExams.help',
@@ -22,8 +25,6 @@ const breadcrumbPages = [
   { name: 'Exam Guide', href: '/exam-guide' },
   { name: 'Digital Exams', href: '/exam-guide/digital-exams', current: true },
 ]
-
-const bookingUrl = 'https://booking.trinitycollege.com/?larCode=120'
 
 /* ── How it works ── */
 const howItWorks = [
@@ -401,11 +402,9 @@ const faqs = [
             Book through centre 120 and your achievement gets celebrated here too — Hall of Fame, certificates and recognition.
           </p>
           <div class="mt-6 flex flex-wrap items-center justify-center gap-4">
-            <a :href="bookingUrl" target="_blank" rel="noopener noreferrer">
-              <MyButtonConstructor variant="primary" size="large">
-                Book Your Exam
-              </MyButtonConstructor>
-            </a>
+            <MyButtonConstructor variant="primary" size="large" @click="showBookingModal = true">
+              Book Your Exam
+            </MyButtonConstructor>
             <a href="/exam-guide">
               <MyButtonConstructor variant="outline" size="large">
                 Back to Exam Guide
@@ -417,5 +416,7 @@ const faqs = [
     </section>
 
     <MyFooter variant="gradient" />
+
+    <BookingModal :show="showBookingModal" @close="showBookingModal = false" />
   </div>
 </template>

@@ -1,15 +1,18 @@
 <!-- resources/js/pages/ForStudents.vue -->
 <script setup lang="ts">
+import { ref } from 'vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
 import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
+import BookingModal from '@/components/BookingModal.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
 import { Trophy, Award, Star, Gift } from 'lucide-vue-next'
 
 const { animClass } = usePageAnimation()
+const showBookingModal = ref(false)
 
 const pageMeta = {
   title: 'For Students — musicExams.help',
@@ -20,8 +23,6 @@ const pageMeta = {
 const breadcrumbPages = [
   { name: 'For Students', href: '/for-students', current: true },
 ]
-
-const bookingUrl = 'https://booking.trinitycollege.com/?larCode=120'
 
 const hallOfFameLogo =
   'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/Highest+score+In5.png'
@@ -219,11 +220,9 @@ const resultsBands = [
             <template #myTitle>Aim high — aim for the Hall of Fame</template>
           </MyTextConstructor>
           <div class="mt-4">
-            <a :href="bookingUrl" target="_blank" rel="noopener noreferrer">
-              <MyButtonConstructor variant="primary" size="large">
-                Book Your Exam
-              </MyButtonConstructor>
-            </a>
+            <MyButtonConstructor variant="primary" size="large" @click="showBookingModal = true">
+              Book Your Exam
+            </MyButtonConstructor>
           </div>
         </div>
       </div>
@@ -231,5 +230,7 @@ const resultsBands = [
 
     <!-- FOOTER -->
     <MyFooter variant="gradient" />
+
+    <BookingModal :show="showBookingModal" @close="showBookingModal = false" />
   </div>
 </template>

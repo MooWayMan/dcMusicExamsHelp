@@ -1,9 +1,11 @@
 <!-- resources/js/pages/ForTeachers.vue -->
 <script setup lang="ts">
+import { ref } from 'vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
 import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
+import BookingModal from '@/components/BookingModal.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
@@ -11,6 +13,7 @@ import MyFooter from '@/components/layouts/MyFooter.vue'
 import { Award, BookOpen, Gift, GraduationCap, CheckCircle, ArrowRight } from 'lucide-vue-next'
 
 const { animClass } = usePageAnimation()
+const showBookingModal = ref(false)
 
 const pageMeta = {
   title: 'For Teachers — musicExams.help',
@@ -21,8 +24,6 @@ const pageMeta = {
 const breadcrumbPages = [
   { name: 'For Teachers', href: '/for-teachers', current: true },
 ]
-
-const bookingUrl = 'https://booking.trinitycollege.com/?larCode=120'
 
 const bookingSteps = [
   {
@@ -183,11 +184,9 @@ const faqs = [
         </div>
 
         <div :class="animClass('fade-up', 3)" class="mt-8 text-center">
-          <a :href="bookingUrl" target="_blank" rel="noopener noreferrer">
-            <MyButtonConstructor variant="primary" size="large">
-              Book Your Exam
-            </MyButtonConstructor>
-          </a>
+          <MyButtonConstructor variant="primary" size="large" @click="showBookingModal = true">
+            Book Your Exam
+          </MyButtonConstructor>
         </div>
       </div>
     </section>
@@ -379,11 +378,9 @@ const faqs = [
             <template #myTitle>Ready to get your students recognised?</template>
           </MyTextConstructor>
           <div class="mt-4">
-            <a :href="bookingUrl" target="_blank" rel="noopener noreferrer">
-              <MyButtonConstructor variant="primary" size="large">
-                Book Your Exam
-              </MyButtonConstructor>
-            </a>
+            <MyButtonConstructor variant="primary" size="large" @click="showBookingModal = true">
+              Book Your Exam
+            </MyButtonConstructor>
           </div>
         </div>
       </div>
@@ -391,5 +388,7 @@ const faqs = [
 
     <!-- FOOTER -->
     <MyFooter variant="gradient" />
+
+    <BookingModal :show="showBookingModal" @close="showBookingModal = false" />
   </div>
 </template>

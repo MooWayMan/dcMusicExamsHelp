@@ -6,6 +6,7 @@ import { useSubscription } from '@/composables/useSubscription'
 import { GraduationCap, Users, Trophy, Gift, Award, HeartHandshake, BookOpen } from 'lucide-vue-next'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
+import BookingModal from '@/components/BookingModal.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyRunnerConstructor from '@/components/reusables/MyRunnerConstructor.vue'
@@ -15,6 +16,7 @@ import MyFooter from '@/components/layouts/MyFooter.vue'
 import EmailCapture from '@/components/EmailCapture.vue'
 
 const { isSubscribed } = useSubscription()
+const showBookingModal = ref(false)
 
 const pageMeta = {
   title: 'musicExams.help — Your Guide to Trinity Music Exams',
@@ -23,7 +25,6 @@ const pageMeta = {
 }
 
 const referralCode = '120'
-const bookingUrl = 'https://booking.trinitycollege.com/?larCode=120'
 
 const heroLogo =
   'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/musicexamshelp_logo2.png'
@@ -147,7 +148,7 @@ const usefulLinks = [
     id: 1,
     title: 'Book your exam now',
     subTitle: 'Ready to go? Head straight to the official Trinity booking page with code 120 already applied.',
-    url: bookingUrl,
+    url: '#booking-modal',
   },
   {
     id: 2,
@@ -165,6 +166,11 @@ const usefulLinks = [
 
 const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
   if (!card.url) return
+
+  if (card.url === '#booking-modal') {
+    showBookingModal.value = true
+    return
+  }
 
   if (card.url.startsWith('#')) {
     const element = document.querySelector(card.url)
@@ -220,15 +226,9 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             </p>
 
             <div class="mt-6 flex flex-wrap gap-4">
-              <a
-                :href="bookingUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <MyButtonConstructor variant="primary" size="large">
-                  Book Your Exam
-                </MyButtonConstructor>
-              </a>
+              <MyButtonConstructor variant="primary" size="large" @click="showBookingModal = true">
+                Book Your Exam
+              </MyButtonConstructor>
 
               <a href="#why">
                 <MyButtonConstructor variant="outline" size="large">
@@ -730,15 +730,9 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
         </a>
 
         <div class="mt-10 flex justify-center">
-          <a
-            :href="bookingUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <MyButtonConstructor variant="primary" size="large">
-              Continue to Official Booking
-            </MyButtonConstructor>
-          </a>
+          <MyButtonConstructor variant="primary" size="large" @click="showBookingModal = true">
+            Continue to Official Booking
+          </MyButtonConstructor>
         </div>
       </div>
     </section>
@@ -861,5 +855,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
 
     <!-- FOOTER -->
     <MyFooter variant="gradient" />
+
+    <BookingModal :show="showBookingModal" @close="showBookingModal = false" />
   </div>
 </template>

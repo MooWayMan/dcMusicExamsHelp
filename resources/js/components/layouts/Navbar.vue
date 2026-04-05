@@ -5,6 +5,7 @@ import { Link, usePage } from '@inertiajs/vue3'
 import { Bars3Icon, XMarkIcon } from '@heroicons/vue/24/outline'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
+import BookingModal from '@/components/BookingModal.vue'
 
 interface Props {
   fixed?: boolean
@@ -36,7 +37,7 @@ const navigation = computed(() => {
 const brandWordmark = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/musicexamshelp_logo2.png'
 const navIcon = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/FAVICONmusicexamshelp_logo2+(512+x+512+px)_2.png'
 
-const bookingUrl = 'https://booking.trinitycollege.com/?larCode=120'
+const showBookingModal = ref(false)
 
 const navClasses = computed(() =>
   props.fixed
@@ -99,15 +100,9 @@ const navClasses = computed(() =>
             </MyTextConstructor>
           </Link>
 
-          <a
-            :href="bookingUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <MyButtonConstructor variant="primary" size="medium">
-              Book Your Exam
-            </MyButtonConstructor>
-          </a>
+          <MyButtonConstructor variant="primary" size="medium" @click="showBookingModal = true">
+            Book Your Exam
+          </MyButtonConstructor>
         </div>
 
         <button
@@ -159,17 +154,14 @@ const navClasses = computed(() =>
           </MyTextConstructor>
         </Link>
 
-        <a
-          :href="bookingUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="mt-3 block"
-        >
-          <MyButtonConstructor variant="primary" size="medium" fullWidth>
+        <div class="mt-3">
+          <MyButtonConstructor variant="primary" size="medium" fullWidth @click="showBookingModal = true; isOpen = false">
             Book Your Exam
           </MyButtonConstructor>
-        </a>
+        </div>
       </div>
     </div>
   </nav>
+
+  <BookingModal :show="showBookingModal" @close="showBookingModal = false" />
 </template>

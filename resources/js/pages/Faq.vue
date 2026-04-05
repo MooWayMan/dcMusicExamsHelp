@@ -1,8 +1,10 @@
 <!-- resources/js/pages/Faq.vue -->
 <script setup lang="ts">
+import { ref } from 'vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
+import BookingModal from '@/components/BookingModal.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
@@ -10,6 +12,7 @@ import MyFooter from '@/components/layouts/MyFooter.vue'
 import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
 
 const { animClass } = usePageAnimation()
+const showBookingModal = ref(false)
 
 const breadcrumbPages = [
   { name: 'FAQ', href: '/faq', current: true },
@@ -20,8 +23,6 @@ const pageMeta = {
   description:
     'Frequently asked questions about booking Trinity music exams through Centre 120. Guidance for teachers, parents and students.',
 }
-
-const bookingUrl = 'https://booking.trinitycollege.com/?larCode=120'
 
 const faqs = [
   {
@@ -163,11 +164,9 @@ const faqs = [
             <template #myTitle>Ready to book your exam?</template>
           </MyTextConstructor>
           <div class="mt-4">
-            <a :href="bookingUrl" target="_blank" rel="noopener noreferrer">
-              <MyButtonConstructor variant="primary" size="large">
-                Book Your Exam
-              </MyButtonConstructor>
-            </a>
+            <MyButtonConstructor variant="primary" size="large" @click="showBookingModal = true">
+              Book Your Exam
+            </MyButtonConstructor>
           </div>
         </div>
       </div>
@@ -175,5 +174,7 @@ const faqs = [
 
     <!-- FOOTER -->
     <MyFooter variant="gradient" />
+
+    <BookingModal :show="showBookingModal" @close="showBookingModal = false" />
   </div>
 </template>
