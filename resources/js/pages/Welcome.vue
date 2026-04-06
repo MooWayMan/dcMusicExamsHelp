@@ -3,7 +3,7 @@
 import { ref } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { useSubscription } from '@/composables/useSubscription'
-import { GraduationCap, Users, Trophy, Gift, Award, HeartHandshake, BookOpen } from 'lucide-vue-next'
+import { GraduationCap, Users, Trophy, Gift, Award, HeartHandshake, BookOpen, ChevronRight } from 'lucide-vue-next'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
 import BookingModal from '@/components/BookingModal.vue'
@@ -419,6 +419,21 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             @cardClick="handleRunnerClick"
           />
         </div>
+
+        <!-- Exam Guide CTA strip -->
+        <a
+          href="/exam-guide"
+          class="mt-8 flex items-center justify-between rounded-xl border border-brand-accent/30 bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary px-5 py-3 text-white shadow-lg transition hover:scale-[1.01] hover:shadow-xl sm:px-6 sm:py-4"
+        >
+          <div class="flex items-center gap-3">
+            <BookOpen class="h-5 w-5 shrink-0 text-white/80 sm:h-6 sm:w-6" />
+            <div>
+              <span class="text-sm font-semibold sm:text-base lg:text-lg">Exam Guide</span>
+              <span class="ml-2 text-xs text-white/70 sm:text-sm">Grades, digital exams, what to expect, fees &amp; dates</span>
+            </div>
+          </div>
+          <ChevronRight class="h-5 w-5 shrink-0 text-white/60" />
+        </a>
       </div>
     </section>
 
