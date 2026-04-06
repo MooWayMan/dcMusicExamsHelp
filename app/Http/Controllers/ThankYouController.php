@@ -32,14 +32,13 @@ class ThankYouController extends Controller
         }
 
         $startMonth = ($quarter - 1) * 3 + 1;
-        $startDate = sprintf('%d-%02d-01', $year, $startMonth);
-        $endMonth = $startMonth + 2;
-        $endDate = sprintf('%d-%02d-31', $year, $endMonth);
+        $start = \Carbon\Carbon::create($year, $startMonth, 1)->startOfDay();
+        $end = $start->copy()->addMonths(2)->endOfMonth()->endOfDay();
 
         $entries = ExamEntry::with('instrument')
             ->whereNotNull('score')
-            ->where('exam_date', '>=', $startDate)
-            ->where('exam_date', '<=', $endDate)
+            ->where('exam_date', '>=', $start)
+            ->where('exam_date', '<=', $end)
             ->orderByDesc('score')
             ->get();
 
