@@ -1,6 +1,7 @@
 <!-- resources/js/pages/ThankYou.vue -->
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { router } from '@inertiajs/vue3'
 import { usePageAnimation } from '@/composables/usePageAnimation'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
@@ -9,7 +10,7 @@ import BookingModal from '@/components/BookingModal.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
-import { Heart, Trophy, Music, Star, Award } from 'lucide-vue-next'
+import { Heart, Trophy, Music, Star, Award, Search, ArrowUp, ChevronRight } from 'lucide-vue-next'
 
 interface HallOfFameEntry {
   name: string
@@ -37,15 +38,32 @@ interface Summary {
   total: number
 }
 
+interface QuarterOption {
+  quarter: number
+  year: number
+}
+
+interface Nudge {
+  quarter: number
+  year: number
+  label: string
+}
+
 const props = defineProps<{
   currentQuarter: string
+  selectedQuarter: number
+  selectedYear: number
+  availableQuarters: QuarterOption[]
   hallOfFameEntries: HallOfFameEntry[]
   thankYouEntries: ThankYouEntry[]
+  nudge: Nudge | null
   summary: Summary
 }>()
 
 const { animClass } = usePageAnimation()
 const showBookingModal = ref(false)
+const searchQuery = ref('')
+const showBackToTop = ref(false)
 
 const pageMeta = {
   title: 'Thank You — musicExams.help',
@@ -78,6 +96,43 @@ const resultBadgeClass = (result: string) => {
       return 'bg-brand-surface-soft text-brand-text'
   }
 }
+
+/* ── Quarter tabs ── */
+const quarterLabel = (q: QuarterOption) => `Q${q.quarter} ${q.year}`
+
+const isActiveQuarter = (q: QuarterOption) =>
+  q.quarter === props.selectedQuarter && q.year === props.selectedYear
+
+const switchQuarter = (q: QuarterOption) => {
+  if (isActiveQuarter(q)) return
+  router.get('/thank-you', { quarter: q.quarter, year: q.year }, { preserveScroll: false })
+}
+
+const goToNudgeQuarter = () => {
+  if (! props.nudge) return
+  router.get('/thank-you', { quarter: props.nudge.quarter, year: props.nudge.year }, { preserveScroll: false })
+}
+
+/* ── Search filter ── */
+const filteredEntries = computed(() => {
+  if (! searchQuery.value.trim()) return props.thankYouEntries
+  const q = searchQuery.value.toLowerCase().trim()
+  return props.thankYouEntries.filter(
+    (e) => e.name.toLowerCase().includes(q) || e.instrument.toLowerCase().includes(q)
+  )
+})
+
+/* ── Back to top ── */
+const handleScroll = () => {
+  showBackToTop.value = window.scrollY > 400
+}
+
+const scrollToTop = () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+onMounted(() => window.addEventListener('scroll', handleScroll))
+onUnmounted(() => window.removeEventListener('scroll', handleScroll))
 </script>
 
 <template>
@@ -99,7 +154,24 @@ const resultBadgeClass = (result: string) => {
             class="h-auto w-full object-contain"
           />
         </div>
-        <div :class="animClass('fade-up', 2)" class="mt-4 text-center">
+
+        <!-- Quarter tabs -->
+        <div v-if="availableQuarters.length > 1" :class="animClass('fade-up', 2)" class="mt-6 flex flex-wrap justify-center gap-2">
+          <button
+            v-for="q in availableQuarters"
+            :key="`${q.quarter}-${q.year}`"
+            @click="switchQuarter(q)"
+            class="rounded-full px-5 py-2 text-sm font-semibold transition-all duration-200"
+            :class="isActiveQuarter(q)
+              ? 'bg-brand-accent text-white shadow-lg ring-2 ring-brand-accent/40'
+              : 'bg-brand-surface text-brand-text-soft hover:bg-brand-accent/10 ring-1 ring-brand-border'"
+          >
+            {{ quarterLabel(q) }}
+          </button>
+        </div>
+
+        <!-- Single quarter label (when only one quarter exists) -->
+        <div v-else :class="animClass('fade-up', 2)" class="mt-4 text-center">
           <span class="inline-flex items-center gap-2 rounded-full bg-brand-accent/10 px-4 py-2 ring-1 ring-brand-accent/20">
             <Heart class="h-4 w-4 text-brand-accent" />
             <span class="text-sm font-semibold text-brand-accent">{{ currentQuarter }}</span>
@@ -164,10 +236,11 @@ const resultBadgeClass = (result: string) => {
             <!-- Student name — big and bold -->
             <p class="mt-3 text-2xl font-extrabold text-white sm:text-3xl">{{ entry.name }}</p>
 
-            <!-- Instrument, grade and location -->
+            <!-- Instrument and grade -->
             <p class="mt-1 text-base text-white/70 sm:text-base">
               {{ entry.instrument }} · {{ entry.grade }}
             </p>
+
             <!-- Score badge -->
             <div class="mt-4 flex items-center gap-3">
               <span :class="[resultBadgeClass(entry.result), 'rounded-full px-4 py-1.5 text-sm font-bold shadow-lg']">
@@ -182,8 +255,21 @@ const resultBadgeClass = (result: string) => {
           </div>
         </div>
 
+        <!-- Nudge to previous quarter when current has few entries -->
+        <div v-if="nudge && thankYouEntries.length < 10" :class="animClass('fade-up', 3)" class="mt-8">
+          <button
+            @click="goToNudgeQuarter"
+            class="mx-auto flex items-center gap-2 rounded-xl bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm ring-1 ring-white/20 transition-all duration-200 hover:bg-white/20"
+          >
+            <span v-if="thankYouEntries.length === 0">No results yet for {{ currentQuarter }}</span>
+            <span v-else>Results are still coming in for {{ currentQuarter }}</span>
+            <span class="text-brand-accent">— check out {{ nudge.label }}</span>
+            <ChevronRight class="h-4 w-4 text-brand-accent" />
+          </button>
+        </div>
+
         <!-- EVERY ENTRY COUNTS — student table on same star background -->
-        <div class="mt-14">
+        <div v-if="thankYouEntries.length > 0" class="mt-14">
           <div :class="animClass('fade-up', 4)">
             <MyTextConstructor
               variant="subheading"
@@ -201,8 +287,21 @@ const resultBadgeClass = (result: string) => {
             </p>
           </div>
 
+          <!-- Search bar -->
+          <div :class="animClass('fade-up', 4)" class="mx-auto mt-6 max-w-md">
+            <div class="relative">
+              <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+              <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="Search by name or instrument..."
+                class="w-full rounded-xl border-0 bg-white/10 py-2.5 pl-10 pr-4 text-sm text-white placeholder-white/40 ring-1 ring-white/20 backdrop-blur-sm transition-all duration-200 focus:bg-white/15 focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
+              />
+            </div>
+          </div>
+
           <!-- Student list -->
-          <div :class="animClass('fade-up', 5)" class="mt-8">
+          <div :class="animClass('fade-up', 5)" class="mt-6">
             <div class="overflow-hidden rounded-2xl shadow-2xl ring-1 ring-white/20 backdrop-blur-md">
               <!-- Table header -->
               <div class="bg-white/25 px-4 py-3 backdrop-blur-md sm:px-6">
@@ -225,7 +324,7 @@ const resultBadgeClass = (result: string) => {
               <!-- Table rows -->
               <div class="divide-y divide-white/10">
                 <div
-                  v-for="(entry, index) in thankYouEntries"
+                  v-for="(entry, index) in filteredEntries"
                   :key="entry.name + entry.instrument"
                   class="grid grid-cols-12 items-center gap-2 px-4 py-3 sm:px-6"
                   :class="index % 2 === 1 ? 'bg-white/15' : 'bg-white/10'"
@@ -251,6 +350,11 @@ const resultBadgeClass = (result: string) => {
                     </span>
                   </div>
                 </div>
+              </div>
+
+              <!-- No search results -->
+              <div v-if="filteredEntries.length === 0 && searchQuery.trim()" class="px-4 py-8 text-center">
+                <p class="text-sm text-white/50">No results found for "{{ searchQuery }}"</p>
               </div>
             </div>
 
@@ -304,7 +408,6 @@ const resultBadgeClass = (result: string) => {
     </section>
 
     <!-- DIVIDER — atmospheric piano keys -->
-    <!-- DIVIDER — atmospheric piano keys -->
     <section class="relative bg-brand-bg">
       <div class="mx-auto max-w-5xl px-4 py-2 sm:px-6">
         <div class="relative overflow-hidden rounded-2xl">
@@ -347,5 +450,24 @@ const resultBadgeClass = (result: string) => {
     <MyFooter variant="gradient" />
 
     <BookingModal :show="showBookingModal" @close="showBookingModal = false" />
+
+    <!-- Back to top button -->
+    <Transition
+      enter-active-class="transition-all duration-300 ease-out"
+      enter-from-class="opacity-0 translate-y-4"
+      enter-to-class="opacity-100 translate-y-0"
+      leave-active-class="transition-all duration-200 ease-in"
+      leave-from-class="opacity-100 translate-y-0"
+      leave-to-class="opacity-0 translate-y-4"
+    >
+      <button
+        v-if="showBackToTop"
+        @click="scrollToTop"
+        class="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-brand-accent text-white shadow-lg transition-transform duration-200 hover:scale-110 hover:bg-brand-accent-dark"
+        aria-label="Back to top"
+      >
+        <ArrowUp class="h-5 w-5" />
+      </button>
+    </Transition>
   </div>
 </template>

@@ -19,6 +19,7 @@ class ExamEntry extends Model
         'candidate_name',
         'teacher_name',
         'school_name',
+        'show_full_name',
         'grade',
         'subject_area',
         'delivery_method',
@@ -33,6 +34,7 @@ class ExamEntry extends Model
         return [
             'exam_date' => 'date',
             'score' => 'integer',
+            'show_full_name' => 'boolean',
         ];
     }
 
