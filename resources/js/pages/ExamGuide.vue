@@ -185,41 +185,41 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
       <div class="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)" class="grid grid-cols-1 gap-8 lg:grid-cols-2">
           <!-- Classical & Jazz -->
-          <div class="rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-sm">
-            <div class="flex items-center gap-3">
-              <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-primary/10">
-                <Music class="h-5 w-5 text-brand-primary" />
-              </div>
-              <p class="text-xl font-bold text-brand-primary sm:text-xl">Classical &amp; Jazz</p>
+          <div class="overflow-hidden rounded-2xl border-4 border-brand-accent bg-brand-surface shadow-sm">
+            <div class="flex items-center gap-3 bg-black px-5 py-3 sm:px-6">
+              <Music class="h-5 w-5 shrink-0 text-brand-accent sm:h-6 sm:w-6" />
+              <p class="text-base font-semibold text-white sm:text-lg">Classical &amp; Jazz</p>
             </div>
-            <p class="mt-3 text-base text-brand-text-soft sm:text-base md:text-lg">
-              The traditional route. A wide range of instruments, structured technique work, and repertoire spanning centuries of music — from Bach to Brubeck.
-            </p>
-            <ul class="mt-5 space-y-3">
-              <li v-for="item in classicalHighlights" :key="item" class="flex items-start gap-2">
-                <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-primary" />
-                <span class="text-base text-brand-text sm:text-base md:text-lg">{{ item }}</span>
-              </li>
-            </ul>
+            <div class="p-6">
+              <p class="text-base text-brand-text-soft sm:text-base md:text-lg">
+                The traditional route. A wide range of instruments, structured technique work, and repertoire spanning centuries of music — from Bach to Brubeck.
+              </p>
+              <ul class="mt-5 space-y-3">
+                <li v-for="item in classicalHighlights" :key="item" class="flex items-start gap-2">
+                  <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
+                  <span class="text-base text-brand-text sm:text-base md:text-lg">{{ item }}</span>
+                </li>
+              </ul>
+            </div>
           </div>
 
           <!-- Rock & Pop -->
-          <div class="rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-sm">
-            <div class="flex items-center gap-3">
-              <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-accent/10">
-                <Guitar class="h-5 w-5 text-brand-accent" />
-              </div>
-              <p class="text-xl font-bold text-brand-accent sm:text-xl">Rock &amp; Pop</p>
+          <div class="overflow-hidden rounded-2xl border-4 border-brand-accent bg-brand-surface shadow-sm">
+            <div class="flex items-center gap-3 bg-black px-5 py-3 sm:px-6">
+              <Guitar class="h-5 w-5 shrink-0 text-brand-accent sm:h-6 sm:w-6" />
+              <p class="text-base font-semibold text-white sm:text-lg">Rock &amp; Pop</p>
             </div>
-            <p class="mt-3 text-base text-brand-text-soft sm:text-base md:text-lg">
-              Play real songs by real artists. Five instruments, a band-focused approach, and music you actually want to listen to — from Arctic Monkeys to Stevie Wonder.
-            </p>
-            <ul class="mt-5 space-y-3">
-              <li v-for="item in rockPopHighlights" :key="item" class="flex items-start gap-2">
-                <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                <span class="text-base text-brand-text sm:text-base md:text-lg">{{ item }}</span>
-              </li>
-            </ul>
+            <div class="p-6">
+              <p class="text-base text-brand-text-soft sm:text-base md:text-lg">
+                Play real songs by real artists. Five instruments, a band-focused approach, and music you actually want to listen to — from Arctic Monkeys to Stevie Wonder.
+              </p>
+              <ul class="mt-5 space-y-3">
+                <li v-for="item in rockPopHighlights" :key="item" class="flex items-start gap-2">
+                  <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
+                  <span class="text-base text-brand-text sm:text-base md:text-lg">{{ item }}</span>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
 
@@ -234,13 +234,19 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
           >
             <template #myTitle>What both have in common</template>
           </MyTextConstructor>
-          <div class="mx-auto mt-6 max-w-2xl">
-            <ul class="space-y-3">
-              <li v-for="item in sharedFeatures" :key="item" class="flex items-start gap-2">
-                <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-success" />
-                <span class="text-base text-brand-text sm:text-base md:text-lg">{{ item }}</span>
-              </li>
-            </ul>
+          <div class="mx-auto mt-6 max-w-2xl overflow-hidden rounded-2xl border-4 border-brand-accent bg-brand-surface shadow-sm">
+            <div class="flex items-center justify-center gap-3 bg-black px-5 py-3 sm:px-6">
+              <CheckCircle class="h-5 w-5 shrink-0 text-brand-accent sm:h-6 sm:w-6" />
+              <p class="text-base font-semibold text-white sm:text-lg">Shared Features</p>
+            </div>
+            <div class="p-6">
+              <ul class="space-y-3">
+                <li v-for="item in sharedFeatures" :key="item" class="flex items-start gap-2">
+                  <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
+                  <span class="text-base text-brand-text sm:text-base md:text-lg">{{ item }}</span>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>

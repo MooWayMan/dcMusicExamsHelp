@@ -187,7 +187,7 @@ const highlights = [
       </div>
     </section>
 
-    <MyFooter />
+    <MyFooter variant="gradient" />
   </div>
 
   <BookingModal :show="showBookingModal" @close="showBookingModal = false" />

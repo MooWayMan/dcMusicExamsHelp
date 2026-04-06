@@ -274,6 +274,6 @@ const faqs = [
       </div>
     </section>
 
-    <MyFooter />
+    <MyFooter variant="gradient" />
   </div>
 </template>
