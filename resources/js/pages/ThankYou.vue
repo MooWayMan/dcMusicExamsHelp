@@ -102,7 +102,7 @@ const certificateName = (result?: string) => {
     <Navbar />
 
     <!-- HEADER — Canva hero card on dark background -->
-    <section class="bg-brand-bg pt-24 pb-2 md:pt-28 lg:pt-28">
+    <section class="bg-brand-bg pt-36 pb-2 md:pt-40 lg:pt-40">
       <div class="mx-auto max-w-4xl px-4 sm:px-6">
         <div class="mb-4">
           <Breadcrumbs :pages="breadcrumbPages" home-href="/" />

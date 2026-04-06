@@ -93,7 +93,7 @@ const faqs = [
     <Navbar />
 
     <!-- HEADER -->
-    <section class="bg-brand-surface pt-24 pb-6 md:pt-28 lg:pt-28">
+    <section class="bg-brand-surface pt-36 pb-6 md:pt-40 lg:pt-40">
       <div class="mx-auto max-w-4xl px-4 sm:px-6">
         <div class="mb-6">
           <Breadcrumbs :pages="breadcrumbPages" home-href="/" />

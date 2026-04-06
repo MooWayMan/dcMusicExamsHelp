@@ -70,6 +70,4 @@ const props = withDefaults(defineProps<Props>(), {
       </nav>
     </div>
   </div>
-  <!-- Spacer to push page content below the fixed breadcrumb bar -->
-  <div class="h-12"></div>
 </template>

@@ -175,7 +175,7 @@ const faqs = [
     <Navbar />
 
     <!-- HEADER -->
-    <section class="bg-brand-surface pt-24 pb-10 md:pt-28 lg:pt-28">
+    <section class="bg-brand-surface pt-36 pb-10 md:pt-40 lg:pt-40">
       <div class="mx-auto max-w-4xl px-4 sm:px-6">
         <div class="mb-6">
           <Breadcrumbs :pages="breadcrumbPages" home-href="/" />
@@ -282,7 +282,7 @@ const faqs = [
               :key="item.step"
               class="flex gap-4"
             >
-              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-accent text-lg font-bold text-white shadow-md">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary via-brand-accent to-brand-primary text-lg font-bold text-white shadow-md sm:h-12 sm:w-12 sm:text-xl">
                 {{ item.step }}
               </div>
               <div>
@@ -329,7 +329,7 @@ const faqs = [
               :key="item.step"
               class="flex gap-4"
             >
-              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-accent text-lg font-bold text-white">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary via-brand-accent to-brand-primary text-lg font-bold text-white shadow-md sm:h-12 sm:w-12 sm:text-xl">
                 {{ item.step }}
               </div>
               <div>
@@ -434,7 +434,7 @@ const faqs = [
               :key="item.step"
               class="flex gap-4 sm:gap-5"
             >
-              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-accent text-sm font-bold text-white shadow-md sm:h-12 sm:w-12 sm:text-base">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary via-brand-accent to-brand-primary text-sm font-bold text-white shadow-md sm:h-12 sm:w-12 sm:text-base">
                 {{ item.step }}
               </div>
               <div>
