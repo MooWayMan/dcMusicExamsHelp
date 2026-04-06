@@ -14,7 +14,7 @@
                     {{-- Header with gradient --}}
                     <tr>
                         <td style="background: linear-gradient(to right, #1e3a5f, #3B82F6, #1e3a5f); padding: 24px 32px; border-radius: 12px 12px 0 0; text-align: center;">
-                            <img src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/FAVICONmusicexamshelp_logo2+(512+x+512+px)_2.png" alt="musicExams.help" width="48" height="48" style="display: inline-block; border-radius: 8px; margin-bottom: 12px;" />
+                            <img src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/FAVICONmusicexamshelp_logo2+(512+x+512+px)_2.png" alt="musicExams.help" width="48" height="48" style="display: inline-block; border-radius: 12px; margin-bottom: 12px; background-color: #ffffff; padding: 4px;" />
                             <h1 style="margin: 0; color: #ffffff; font-size: 22px; font-weight: bold; font-family: Georgia, 'Times New Roman', serif;">
                                 New Contact Form Submission
                             </h1>
