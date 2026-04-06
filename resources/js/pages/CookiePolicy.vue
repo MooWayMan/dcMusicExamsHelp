@@ -164,8 +164,11 @@ const lastUpdated = '4 April 2026'
             <h2 class="text-lg font-bold text-brand-primary sm:text-xl">Managing your cookie preferences</h2>
             <p class="mt-2 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
               When you first visit our site, a cookie banner will ask for your consent to analytics cookies.
-              You can change your preference at any time by clearing your browser cookies and revisiting the site —
-              the banner will appear again.
+              You can accept or decline at that point.
+            </p>
+            <p class="mt-2 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
+              To change your preference later, click the "Cookie Preferences" link in the footer of any page.
+              This will re-open the cookie banner so you can update your choice.
             </p>
             <p class="mt-2 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
               You can also control cookies through your browser settings. Most browsers allow you to block or delete cookies.

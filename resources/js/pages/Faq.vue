@@ -38,7 +38,7 @@ const faqs = [
   {
     question: 'What is centre code 120?',
     answer:
-      'Centre 120 is our registered Trinity College London exam centre code. When you use it at booking, your entry is connected to musicExams.help — which means your student gets listed on our Thank You page, qualifies for the Hall of Fame, and you get access to teacher recognition badges, prize draws and ongoing support.',
+      'Centre 120 is our registered Trinity College London exam centre code. When you use it at booking, your entry is connected to musicExams.help — which means your student gets listed on our <a href="/thank-you" class="font-semibold text-brand-accent underline hover:text-brand-primary">Thank You page</a>, qualifies for the <a href="/thank-you" class="font-semibold text-brand-accent underline hover:text-brand-primary">Hall of Fame</a>, and you get access to teacher recognition badges, prize draws and ongoing support.',
   },
   {
     question: 'Does it cost anything extra?',
@@ -68,7 +68,7 @@ const faqs = [
   {
     question: 'What results can I achieve?',
     answer:
-      'Trinity graded exams are marked out of 100. A Pass is 60–74, Merit is 75–86, and Distinction is 87–100. The highest scorers each quarter through centre 120 make our Hall of Fame.',
+      'Trinity graded exams are marked out of 100. A Pass is 60–74, Merit is 75–86, and Distinction is 87–100. The highest scorers each quarter through centre 120 make our <a href="/thank-you" class="font-semibold text-brand-accent underline hover:text-brand-primary">Hall of Fame</a>.',
   },
   {
     question: 'Do I need to provide sheet music for the examiner?',
@@ -83,7 +83,7 @@ const faqs = [
   {
     question: 'What is the Hall of Fame?',
     answer:
-      'Each quarter, the students with the highest Distinction and highest Merit scores through centre 120 are celebrated on our Hall of Fame page. Winners receive a certificate and a gift token.',
+      'Each quarter, the students with the highest Distinction and highest Merit scores through centre 120 are celebrated on our <a href="/thank-you" class="font-semibold text-brand-accent underline hover:text-brand-primary">Hall of Fame</a> page. Winners receive a certificate and a gift token.',
   },
   {
     question: 'Can I book face-to-face exams through centre 120?',

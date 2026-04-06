@@ -13,12 +13,25 @@ onMounted(() => {
       isVisible.value = true
     }, 1500)
   }
+
+  // Listen for footer "Cookie Preferences" link
+  window.addEventListener('open-cookie-preferences', () => {
+    isVisible.value = true
+  })
 })
 
 function accept() {
   localStorage.setItem('cookie-consent', 'accepted')
   isVisible.value = false
+  loadAnalytics()
+}
 
+function decline() {
+  localStorage.setItem('cookie-consent', 'declined')
+  isVisible.value = false
+}
+
+function loadAnalytics() {
   // Load Google Analytics now that consent is given
   const s = document.createElement('script')
   s.async = true
@@ -29,6 +42,7 @@ function accept() {
   gtag('js', new Date())
   gtag('config', 'G-TZJ8ZCZW3W')
 }
+
 </script>
 
 <template>
@@ -68,13 +82,22 @@ function accept() {
             OK, got it
           </button>
 
-          <!-- Cookie policy link — subtle -->
-          <a
-            href="/cookies"
-            class="mt-3 text-base text-brand-text-soft transition-colors hover:text-brand-accent hover:underline"
-          >
-            View Cookie Policy
-          </a>
+          <!-- Decline + Cookie policy links — subtle -->
+          <div class="mt-3 flex items-center justify-center gap-4">
+            <button
+              @click="decline"
+              class="cursor-pointer text-base text-brand-text-soft transition-colors hover:text-brand-accent hover:underline"
+            >
+              No thanks
+            </button>
+            <span class="text-brand-text-soft/40">|</span>
+            <a
+              href="/cookies"
+              class="text-base text-brand-text-soft transition-colors hover:text-brand-accent hover:underline"
+            >
+              Cookie Policy
+            </a>
+          </div>
         </div>
       </div>
     </div>

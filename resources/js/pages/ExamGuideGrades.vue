@@ -315,7 +315,7 @@ const faqs = [
             <div>
               <p class="text-base font-semibold text-brand-text sm:text-base md:text-lg">Celebrating your achievement</p>
               <p class="mt-1 text-base text-brand-text-soft sm:text-base md:text-lg">
-                Book through centre 120 and you'll receive extra recognition: a Take a Bow Certificate for Merit or a Standing Ovation Certificate for Distinction, plus your name on our Hall of Fame.
+                Book through centre 120 and you'll receive extra recognition: a Take a Bow Certificate for Merit or a Standing Ovation Certificate for Distinction, plus your name on our <a href="/thank-you" class="font-semibold text-brand-accent underline hover:text-brand-primary">Hall of Fame</a>.
               </p>
             </div>
           </div>
@@ -427,8 +427,11 @@ const faqs = [
             <template #myTitle>Start your grade journey</template>
           </MyTextConstructor>
           <p class="mx-auto mt-3 max-w-xl text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
-            Book through centre 120 and your achievement gets celebrated here too — Hall of Fame, certificates and recognition.
+            Book through centre 120 and your achievement gets celebrated here too — <strong>Hall of Fame</strong>, certificates and recognition.
           </p>
+          <a href="/thank-you" class="mt-4 inline-block text-base font-semibold text-brand-accent underline hover:text-brand-primary sm:text-base md:text-lg">
+            See the Hall of Fame →
+          </a>
           <div class="mt-6 flex flex-wrap items-center justify-center gap-4">
             <MyButtonConstructor variant="primary" size="large" @click="showBookingModal = true">
               Book Your Exam

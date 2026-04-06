@@ -80,7 +80,7 @@ const whyCards = [
 const incentives = [
   {
     title: 'Students featured on our website',
-    detail: 'Every student who enters through centre 120 gets listed on our <a href="/thank-you" class="font-semibold text-white underline hover:text-brand-accent">Thank You page</a>. Score a Merit or Distinction and you make the Hall of Fame — with a Take a Bow or Standing Ovation Certificate. The highest scorers each quarter get the top spot and a gift token.',
+    detail: 'Every student who enters through centre 120 gets listed on our <a href="/thank-you" class="font-semibold text-white underline hover:text-brand-accent">Thank You page</a>. Score a Merit or Distinction and you make the <strong>Hall of Fame</strong> — with a Take a Bow or Standing Ovation Certificate. The highest scorers each quarter get the top spot and a gift token.',
     icon: Trophy,
     iconBg: 'bg-brand-accent/10',
     iconColor: 'text-brand-accent',
@@ -422,6 +422,78 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
       </div>
     </section>
 
+    <!-- INCENTIVES -->
+    <section
+      id="incentives"
+      class="relative border-t border-brand-border"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_stars_bg.jpg'); background-size: cover; background-position: center;"
+    >
+      <div class="absolute inset-0 bg-black/50" />
+
+      <!-- Shooting stars animation -->
+      <div class="pointer-events-none absolute inset-0 overflow-hidden">
+        <!-- Top stars -->
+        <div class="shooting-star shooting-star-1" />
+        <div class="shooting-star shooting-star-2" />
+        <div class="shooting-star shooting-star-5" />
+        <div class="shooting-star shooting-star-8" />
+        <div class="shooting-star shooting-star-9" />
+        <div class="shooting-star shooting-star-10" />
+        <!-- Bottom stars -->
+        <div class="shooting-star shooting-star-3" />
+        <div class="shooting-star shooting-star-4" />
+        <div class="shooting-star shooting-star-6" />
+        <div class="shooting-star shooting-star-7" />
+        <div class="shooting-star shooting-star-11" />
+        <div class="shooting-star shooting-star-12" />
+      </div>
+
+      <div class="relative mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+        <!-- Section header -->
+        <div class="text-center">
+          <MyTextConstructor variant="eyebrow" alignment="center" spacing="tight" textColor="text-brand-accent">
+            <template #myTitle>
+              Incentives
+            </template>
+          </MyTextConstructor>
+
+          <MyTextConstructor
+            variant="heading"
+            fontFamily="display"
+            alignment="center"
+            spacing="tight"
+            textColor="text-white"
+            class="mt-3 md:!text-3xl lg:!text-4xl"
+          >
+            <template #myTitle>
+              Hard work deserves more than a certificate
+            </template>
+          </MyTextConstructor>
+
+          <p class="mx-auto mt-5 max-w-3xl text-center text-lg text-white/80 sm:text-lg md:text-xl lg:text-2xl">
+            Real benefits for everyone who books through centre code {{ referralCode }} — whether you enter online or through our face-to-face centres in Liverpool and Wirral.
+          </p>
+        </div>
+
+        <!-- Incentive cards — 2x2 grid -->
+        <div class="mt-10 grid gap-5 sm:grid-cols-2">
+          <div
+            v-for="item in incentives"
+            :key="item.title"
+            class="overflow-hidden rounded-2xl bg-white/10 shadow-2xl ring-1 ring-white/10 backdrop-blur-sm transition-all duration-200 hover:-translate-y-1 hover:bg-white/15 hover:shadow-[0_25px_60px_-12px_rgba(0,0,0,0.5)]"
+          >
+            <div class="p-6">
+              <component :is="item.icon" class="mb-3 h-8 w-8 text-brand-accent" />
+              <h3 class="text-xl font-bold text-white sm:text-xl">{{ item.title }}</h3>
+              <p class="mt-2 text-base leading-snug text-white/80 sm:text-base md:text-lg" v-html="item.detail">
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
     <!-- VENUE PHOTOS -->
     <section class="bg-brand-bg">
       <div class="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
@@ -601,78 +673,6 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             </div>
           </div>
         </div>
-      </div>
-    </section>
-
-    <!-- INCENTIVES -->
-    <section
-      id="incentives"
-      class="relative border-t border-brand-border"
-      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_stars_bg.jpg'); background-size: cover; background-position: center;"
-    >
-      <div class="absolute inset-0 bg-black/50" />
-
-      <!-- Shooting stars animation -->
-      <div class="pointer-events-none absolute inset-0 overflow-hidden">
-        <!-- Top stars -->
-        <div class="shooting-star shooting-star-1" />
-        <div class="shooting-star shooting-star-2" />
-        <div class="shooting-star shooting-star-5" />
-        <div class="shooting-star shooting-star-8" />
-        <div class="shooting-star shooting-star-9" />
-        <div class="shooting-star shooting-star-10" />
-        <!-- Bottom stars -->
-        <div class="shooting-star shooting-star-3" />
-        <div class="shooting-star shooting-star-4" />
-        <div class="shooting-star shooting-star-6" />
-        <div class="shooting-star shooting-star-7" />
-        <div class="shooting-star shooting-star-11" />
-        <div class="shooting-star shooting-star-12" />
-      </div>
-
-      <div class="relative mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
-        <!-- Section header -->
-        <div class="text-center">
-          <MyTextConstructor variant="eyebrow" alignment="center" spacing="tight" textColor="text-brand-accent">
-            <template #myTitle>
-              Incentives
-            </template>
-          </MyTextConstructor>
-
-          <MyTextConstructor
-            variant="heading"
-            fontFamily="display"
-            alignment="center"
-            spacing="tight"
-            textColor="text-white"
-            class="mt-3 md:!text-3xl lg:!text-4xl"
-          >
-            <template #myTitle>
-              Hard work deserves more than a certificate
-            </template>
-          </MyTextConstructor>
-
-          <p class="mx-auto mt-5 max-w-3xl text-center text-lg text-white/80 sm:text-lg md:text-xl lg:text-2xl">
-            Real benefits for everyone who books through centre code {{ referralCode }} — whether you enter online or through our face-to-face centres in Liverpool and Wirral.
-          </p>
-        </div>
-
-        <!-- Incentive cards — 2x2 grid -->
-        <div class="mt-10 grid gap-5 sm:grid-cols-2">
-          <div
-            v-for="item in incentives"
-            :key="item.title"
-            class="overflow-hidden rounded-2xl bg-white/10 shadow-2xl ring-1 ring-white/10 backdrop-blur-sm transition-all duration-200 hover:-translate-y-1 hover:bg-white/15 hover:shadow-[0_25px_60px_-12px_rgba(0,0,0,0.5)]"
-          >
-            <div class="p-6">
-              <component :is="item.icon" class="mb-3 h-8 w-8 text-brand-accent" />
-              <h3 class="text-xl font-bold text-white sm:text-xl">{{ item.title }}</h3>
-              <p class="mt-2 text-base leading-snug text-white/80 sm:text-base md:text-lg" v-html="item.detail">
-              </p>
-            </div>
-          </div>
-        </div>
-
       </div>
     </section>
 

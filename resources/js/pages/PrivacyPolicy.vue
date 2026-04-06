@@ -103,7 +103,7 @@ const lastUpdated = '4 April 2026'
             <p class="mt-1 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
               We process student names, instruments, grades and exam results submitted through centre code 120.
               Where students are under 18, we treat this data with additional care (see "Children's data" below).
-              On public-facing pages such as our Hall of Fame, we display anonymised information only (e.g. "Fred B — Trumpet, Grade 3, Distinction").
+              On public-facing pages such as our <strong>Hall of Fame</strong>, we display anonymised information only (e.g. "Fred B — Trumpet, Grade 3, Distinction").
               A student's full name will only appear publicly if a parent or guardian has explicitly opted in via their account.
             </p>
             <p class="mt-3 text-base font-semibold text-brand-text sm:text-base md:text-lg">Website usage data</p>
@@ -141,7 +141,7 @@ const lastUpdated = '4 April 2026'
               Many of our exam candidates are under 18. We take extra care with children's data:
             </p>
             <p class="mt-2 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
-              Student results on public pages (such as the Hall of Fame) are displayed using first name and initial only by default —
+              Student results on public pages (such as the <strong>Hall of Fame</strong>) are displayed using first name and initial only by default —
               for example "Fred B". No child's full name appears publicly unless a parent or guardian has logged in and explicitly
               opted in. This consent can be withdrawn at any time.
             </p>

@@ -241,11 +241,9 @@ function statusLabel(status: string): string {
     <div class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <PageHeader title="Tasks" subtitle="Launch checklist and ongoing task management" eyebrow="Admin" size="compact">
             <template #actions>
-                <Link href="/admin/tasks/create">
-                    <MyButtonConstructor variant="primary" size="medium" :icon="Plus">
-                        Add Task
-                    </MyButtonConstructor>
-                </Link>
+                <MyButtonConstructor variant="primary" size="medium" :icon="Plus" @click="router.visit('/admin/tasks/create')">
+                    Add Task
+                </MyButtonConstructor>
             </template>
         </PageHeader>
 

@@ -74,9 +74,10 @@ const benefits = [
   {
     icon: GraduationCap,
     title: 'Your students get celebrated',
-    detail: 'Every student entered through centre 120 gets listed on our Thank You page. Merit and Distinction students make the Hall of Fame — with a Take a Bow or Standing Ovation Certificate. The highest scorers each quarter get the top spot and a gift token. Parents love it.',
+    detail: 'Every student entered through centre 120 gets listed on our Thank You page. Merit and Distinction students make the <strong>Hall of Fame</strong> — with a Take a Bow or Standing Ovation Certificate. The highest scorers each quarter get the top spot and a gift token. Parents love it.',
     iconBg: 'bg-brand-accent/10',
     iconColor: 'text-brand-accent',
+    link: '/thank-you',
   },
 ]
 
@@ -86,12 +87,8 @@ const faqs = [
     answer: 'No. Exam fees are exactly the same as booking directly with Trinity. Centre 120 simply connects your entries to additional benefits and recognition.',
   },
   {
-    question: 'Can I still use my own centre code?',
-    answer: 'If you already have a centre code, you can keep using it. But your students will miss out on the Thank You page, the Hall of Fame, Take a Bow and Standing Ovation Certificates, prize draws and other incentives that come with centre 120.',
-  },
-  {
-    question: 'What if I already book directly for a digital exam discount?',
-    answer: 'Teachers can set up their own digital centre and receive an ebook discount from Trinity. That\'s a valid option. The difference is that centre 120 offers your students public recognition, Take a Bow and Standing Ovation Certificates, a Hall of Fame and gift tokens — things you can\'t provide on your own.',
+    question: 'Can I still use a different centre code?',
+    answer: 'If you already have a different centre code, you can keep using it. But your students will miss out on the Thank You page, the <strong>Hall of Fame</strong>, Take a Bow and Standing Ovation Certificates, prize draws and other incentives that come with centre 120.',
   },
   {
     question: 'How do the Faber book discounts work?',
@@ -218,7 +215,7 @@ const faqs = [
               </div>
               <div>
                 <p class="text-lg font-semibold text-brand-text sm:text-lg">{{ benefit.title }}</p>
-                <p class="mt-1 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg">{{ benefit.detail }}</p>
+                <p class="mt-1 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg" v-html="benefit.detail"></p>
                 <a
                   v-if="benefit.link"
                   :href="benefit.link"

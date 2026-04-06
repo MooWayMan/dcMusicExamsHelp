@@ -32,7 +32,7 @@ const tiers = [
     icon: Trophy,
     title: 'Top Scorers',
     subtitle: 'Quarterly — the very best',
-    detail: 'The highest Distinction and highest Merit score each quarter earn the top spot on the Hall of Fame — plus a gift token. This is the ultimate recognition for outstanding achievement.',
+    detail: 'The highest Distinction and highest Merit score each quarter earn the top spot on the <strong>Hall of Fame</strong> — plus a gift token. This is the ultimate recognition for outstanding achievement.',
     iconBg: 'bg-brand-accent/10',
     iconColor: 'text-brand-accent',
     borderColor: 'border-brand-accent',
@@ -42,7 +42,7 @@ const tiers = [
     icon: Award,
     title: 'Hall of Fame',
     subtitle: 'Every Merit and Distinction',
-    detail: 'Score a Merit and earn a Take a Bow Certificate. Score a Distinction and earn a Standing Ovation Certificate. Every Merit and Distinction student gets celebrated in the Hall of Fame — show it off, share it, put it on the wall.',
+    detail: 'Score a Merit and earn a Take a Bow Certificate. Score a Distinction and earn a Standing Ovation Certificate. Every Merit and Distinction student gets celebrated in the <strong>Hall of Fame</strong> — show it off, share it, put it on the wall.',
     iconBg: 'bg-brand-success-soft',
     iconColor: 'text-brand-success',
     borderColor: 'border-brand-success',
@@ -52,7 +52,7 @@ const tiers = [
     icon: Star,
     title: 'Thank You page',
     subtitle: 'Every student through centre 120',
-    detail: 'Every student who enters an exam through centre 120 gets listed on our Thank You page — your first name and initial, instrument and grade. Your parent or guardian can choose to show your full name if they\'d like. Your hard work is always recognised.',
+    detail: 'Every student who enters an exam through centre 120 gets listed on our Thank You page — your first name and initial, instrument and grade. This can later be changed to show your full name with permission. Your hard work is always recognised.',
     iconBg: 'bg-brand-teal/10',
     iconColor: 'text-brand-teal',
     borderColor: 'border-brand-teal',
@@ -165,7 +165,7 @@ const resultsBands = [
                 <span v-if="tier.url" class="text-brand-accent"> →</span>
               </p>
               <p class="text-xs font-medium uppercase tracking-wide text-brand-text-soft">{{ tier.subtitle }}</p>
-              <p class="mt-2 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg">{{ tier.detail }}</p>
+              <p class="mt-2 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg" v-html="tier.detail"></p>
             </div>
           </component>
         </div>

@@ -33,13 +33,13 @@ const journeySteps = [
   },
   {
     step: 2,
-    title: 'The exam gets booked through centre 120',
-    detail: 'Either you or the teacher books the exam on the Trinity website using centre code 120. The fees are the same as booking anywhere else — no extra cost.',
+    title: 'Book on the Trinity website using code 120',
+    detail: 'Either you or the teacher books the exam directly on the Trinity website. When booking, enter centre code 120 as your referral — this connects your entry to musicExams.help so your child can be recognised on our Thank You page and <strong>Hall of Fame</strong>. The fees are the standard Trinity prices — using code 120 doesn\'t cost anything extra.',
   },
   {
     step: 3,
-    title: 'Your child prepares with their teacher',
-    detail: 'Your child will work on their exam pieces, scales, sight-reading and other elements with their teacher. The syllabus sets out exactly what\'s needed for each grade.',
+    title: 'Your child prepares for the exam',
+    detail: 'Your child will work on their exam pieces, scales, sight-reading and other elements — usually with their teacher, but self-taught candidates can prepare independently too. The syllabus sets out exactly what\'s needed for each grade.',
   },
   {
     step: 4,
@@ -49,15 +49,15 @@ const journeySteps = [
   {
     step: 5,
     title: 'Results and recognition',
-    detail: 'Results are graded as Pass (60–74), Merit (75–86) or Distinction (87–100). Every student entered through centre 120 gets listed on our Thank You page. Every Merit and Distinction makes the Hall of Fame.',
+    detail: 'Results are graded as Pass (60–74), Merit (75–86) or Distinction (87–100). Every student entered through centre 120 gets listed on our Thank You page. Every Merit and Distinction makes the <strong>Hall of Fame</strong>.',
   },
 ]
 
 const whatYourChildGets = [
   'Listed on our Thank You page — first name and initial, instrument and grade (full name shown only with your permission)',
-  'A place in the Hall of Fame for Merit or Distinction — with a Take a Bow or Standing Ovation Certificate',
+  'A place in the <strong>Hall of Fame</strong> for Merit or Distinction — with a Take a Bow or Standing Ovation Certificate',
   'The highest scorers each quarter get the top spot and a gift token',
-  'The same official Trinity certificate and result as any other centre',
+  'The same official Trinity certificate and result as any other centre — plus our own special certificates for Merit and Distinction',
 ]
 
 const faqs = [
@@ -71,7 +71,7 @@ const faqs = [
   },
   {
     question: 'How much does it cost?',
-    answer: 'Exam fees vary by grade and are set by Trinity College London. The cost is the same whether you book through centre 120 or anywhere else. Your child\'s teacher can tell you the exact fee for their grade.',
+    answer: 'Exam fees vary by grade and are set by Trinity College London. Using centre code 120 when booking doesn\'t cost anything extra — the fees are the standard Trinity prices. You can see the full fee breakdown on our Exam Fees page.',
   },
   {
     question: 'What is the difference between digital and face-to-face?',
@@ -79,7 +79,7 @@ const faqs = [
   },
   {
     question: 'How long until we get the result?',
-    answer: 'For digital exams, results are normally provided within 14 days of submission. The exam report is sent as an attachment to the email address provided at booking — no login or portal needed. If you gave your own email when the exam was booked, you\'ll receive it directly. For face-to-face exams, a written report is provided and results are confirmed once validated by Trinity. In both cases, a digital certificate is issued automatically for any Pass, Merit or Distinction. If you\'d like a printed paper certificate posted to you, that\'s an extra £5.',
+    answer: 'For digital exams, results are normally provided within 14 days of submission. The exam report is sent as an attachment to the email address provided at booking — no login or portal needed. If you gave your own email when the exam was booked, you\'ll receive it directly. For face-to-face exams through centre 120, results are checked and posted to you within days of the exam — much faster than the usual turnaround. In both cases, a digital certificate is issued automatically for any Pass, Merit or Distinction. If you\'d like a printed paper certificate posted to you, that\'s an extra £5.',
   },
   {
     question: 'Do I need to be present for the exam?',
@@ -91,7 +91,7 @@ const faqs = [
   },
   {
     question: 'What does centre code 120 mean?',
-    answer: 'It\'s a registered Trinity exam centre code. When you use code 120, your child\'s entry is connected to musicExams.help — which means they qualify for the Thank You page, Hall of Fame, Take a Bow and Standing Ovation Certificates and other incentives at no extra cost.',
+    answer: 'It\'s a registered Trinity exam centre code. When you use code 120, your child\'s entry is connected to musicExams.help — which means they qualify for the Thank You page, <strong>Hall of Fame</strong>, Take a Bow and Standing Ovation Certificates and other incentives at no extra cost.',
   },
 ]
 </script>
@@ -163,7 +163,7 @@ const faqs = [
             </div>
             <div>
               <p class="text-lg font-semibold text-brand-text sm:text-lg">{{ item.title }}</p>
-              <p class="mt-1 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg">{{ item.detail }}</p>
+              <p class="mt-1 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg" v-html="item.detail"></p>
             </div>
           </div>
         </div>
@@ -193,12 +193,18 @@ const faqs = [
               class="flex items-start gap-3"
             >
               <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-              <span class="text-base text-brand-text sm:text-base md:text-lg lg:text-xl">{{ item }}</span>
+              <span class="text-base text-brand-text sm:text-base md:text-lg lg:text-xl" v-html="item"></span>
             </li>
           </ul>
         </div>
 
-        <div :class="animClass('fade-up', 3)" class="mt-8 text-center">
+        <div :class="animClass('fade-up', 3)" class="mt-6 text-center">
+          <a href="/thank-you" class="inline-block text-base font-semibold text-brand-accent underline hover:text-brand-primary sm:text-base md:text-lg">
+            See the Hall of Fame →
+          </a>
+        </div>
+
+        <div :class="animClass('fade-up', 4)" class="mt-8 text-center">
           <MyButtonConstructor variant="primary" size="large" @click="showBookingModal = true">
             Book Your Exam
           </MyButtonConstructor>

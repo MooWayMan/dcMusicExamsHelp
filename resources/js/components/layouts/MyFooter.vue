@@ -26,6 +26,10 @@ const props = withDefaults(defineProps<Props>(), {
   variant: 'default',
 })
 
+function openCookiePreferences() {
+  window.dispatchEvent(new Event('open-cookie-preferences'))
+}
+
 const currentYear = computed(() => new Date().getFullYear())
 
 const copyrightText = computed(() => {
@@ -152,6 +156,18 @@ const handleInternalClick = (link: NavigationLink) => {
               ]"
             >
               Cookie Policy
+            </button>
+            <button
+              type="button"
+              @click="openCookiePreferences"
+              :class="[
+                'inline-block cursor-pointer rounded-full border px-3 py-1.5 text-xs font-medium transition-colors sm:text-sm',
+                isDark
+                  ? 'border-white/30 text-white hover:bg-white/10'
+                  : 'border-brand-border text-brand-text hover:bg-brand-surface-soft'
+              ]"
+            >
+              Cookie Preferences
             </button>
           </div>
 

@@ -64,8 +64,8 @@ const equipment = [
   'For singers: you\'ll need a backing track or accompaniment (recorded or live in the video)',
 ]
 
-/* ── Digital pathways (Classical & Jazz) ── */
-const digitalPathways = [
+/* ── Digital pathways ── */
+const classicalJazzPathways = [
   {
     title: 'Performance pathway',
     description: 'The standard digital option. You record your three pieces (one can be your own composition) plus technical work. The supporting tests (sight-reading, aural etc.) are replaced by Overall Performance Criteria — the examiner assesses your overall musicianship across the whole performance.',
@@ -76,20 +76,24 @@ const digitalPathways = [
   },
 ]
 
+const rockPopPathway = {
+  title: 'Rock & Pop digital format',
+  description: 'You perform three songs — two from the Rock & Pop songbook and one Technical Focus song — all played to the official Trinity backing tracks. There are no Session Skills tests in the digital format. Instead, the examiner awards a separate Overall Performance mark (20 out of 100) based on your musicianship across all three songs.',
+}
+
 /* ── Digital vs F2F comparison ── */
 const comparison = [
   { feature: 'Qualification', digital: 'Same Ofqual-regulated qualification', faceToFace: 'Same Ofqual-regulated qualification' },
-  { feature: 'Certificate', digital: 'Identical certificate', faceToFace: 'Identical certificate' },
+  { feature: 'Certificate', digital: 'Digital certificate within 48 hours of result (paper £5 extra)', faceToFace: 'Digital certificate within 48 hours of result (paper £5 extra)' },
   { feature: 'UCAS points', digital: 'Same UCAS points (Grades 6–8)', faceToFace: 'Same UCAS points (Grades 6–8)' },
   { feature: 'Location', digital: 'Record anywhere', faceToFace: 'Attend an exam venue' },
   { feature: 'Nerves', digital: 'Re-record until you\'re happy', faceToFace: 'One live performance' },
   { feature: 'Supporting tests', digital: 'Overall Performance Criteria (or repertoire-only)', faceToFace: 'Sight-reading, aural, etc.' },
   { feature: 'Feedback', digital: 'Written feedback online', faceToFace: 'Written feedback by post and online' },
-  { feature: 'Results', digital: 'Normally within 14 days', faceToFace: 'A few weeks by post and online' },
-  { feature: 'Certificate', digital: 'Digital certificate within 48 hours of result', faceToFace: 'Digital certificate included (paper £5 extra)' },
+  { feature: 'Results', digital: 'Normally within 14 days', faceToFace: 'Through centre 120, checked and posted within days' },
   { feature: 'Accompaniment', digital: 'Recorded accompaniment at all grades', faceToFace: 'Live accompanist required from Grade 4' },
   { feature: 'Marking', digital: 'Same marking criteria', faceToFace: 'Same marking criteria' },
-  { feature: 'Diplomas', digital: 'ATCL, LTCL and FTCL Recital available digitally', faceToFace: 'Full range including teaching and theory diplomas' },
+  { feature: 'Diplomas', digital: 'ATCL, LTCL and FTCL Recital available digitally', faceToFace: 'ATCL, LTCL and FTCL Recital plus teaching and theory diplomas' },
 ]
 
 /* ── Tips ── */
@@ -290,18 +294,31 @@ const faqs = [
             <template #myTitle>Digital pathways</template>
           </MyTextConstructor>
           <p class="mx-auto mt-3 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg">
-            Classical &amp; Jazz digital exams offer two pathways. Rock &amp; Pop digital exams follow a single format.
+            Classical &amp; Jazz digital exams offer two pathways. Rock &amp; Pop digital exams follow a single format — all three are explained below.
           </p>
         </div>
 
-        <div :class="animClass('fade-up', 2)" class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <div
-            v-for="pathway in digitalPathways"
-            :key="pathway.title"
-            class="rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-sm"
-          >
-            <p class="text-base font-bold text-brand-primary sm:text-base md:text-lg">{{ pathway.title }}</p>
-            <p class="mt-2 text-base text-brand-text-soft sm:text-base md:text-lg">{{ pathway.description }}</p>
+        <!-- Classical & Jazz pathways -->
+        <div :class="animClass('fade-up', 2)" class="mt-8">
+          <p class="mb-4 text-base font-semibold text-brand-primary sm:text-base md:text-lg">Classical &amp; Jazz</p>
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div
+              v-for="pathway in classicalJazzPathways"
+              :key="pathway.title"
+              class="rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-sm"
+            >
+              <p class="text-base font-bold text-brand-primary sm:text-base md:text-lg">{{ pathway.title }}</p>
+              <p class="mt-2 text-base text-brand-text-soft sm:text-base md:text-lg">{{ pathway.description }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rock & Pop pathway -->
+        <div :class="animClass('fade-up', 3)" class="mt-6">
+          <p class="mb-4 text-base font-semibold text-brand-primary sm:text-base md:text-lg">Rock &amp; Pop</p>
+          <div class="rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-sm">
+            <p class="text-base font-bold text-brand-primary sm:text-base md:text-lg">{{ rockPopPathway.title }}</p>
+            <p class="mt-2 text-base text-brand-text-soft sm:text-base md:text-lg">{{ rockPopPathway.description }}</p>
           </div>
         </div>
       </div>
@@ -488,8 +505,11 @@ const faqs = [
             <template #myTitle>Record your best performance</template>
           </MyTextConstructor>
           <p class="mx-auto mt-3 max-w-xl text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
-            Book through centre 120 and your achievement gets celebrated here too — Hall of Fame, certificates and recognition.
+            Book through centre 120 and your achievement gets celebrated here too — <strong>Hall of Fame</strong>, certificates and recognition.
           </p>
+          <a href="/thank-you" class="mt-4 inline-block text-base font-semibold text-brand-accent underline hover:text-brand-primary sm:text-base md:text-lg">
+            See the Hall of Fame →
+          </a>
           <div class="mt-6 flex flex-wrap items-center justify-center gap-4">
             <MyButtonConstructor variant="primary" size="large" @click="showBookingModal = true">
               Book Your Exam

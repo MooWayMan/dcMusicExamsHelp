@@ -141,7 +141,7 @@ const chevronSize = computed(() => {
               spacing="none"
               class="md:!text-lg lg:!text-lg"
             >
-              {{ item.answer }}
+              <span v-html="item.answer"></span>
             </MyTextConstructor>
           </slot>
         </div>

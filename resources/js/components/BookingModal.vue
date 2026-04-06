@@ -43,7 +43,7 @@ const bookingOptions = [
     icon: Users,
     title: 'Face-to-Face — Rock & Pop',
     subtitle: 'Three sessions per year: March / July / December',
-    detail: 'Live with a Trinity examiner at our Liverpool or Wirral venue. Day is stated at booking — exam time emailed close to exam date.',
+    detail: 'Live with a Trinity examiner at our Liverpool venue. Day is stated at booking — exam time emailed close to exam date.',
     url: 'https://my-trinity.trinitycollege.com/music/grades-and-diplomas/',
     iconBg: 'bg-brand-teal/10',
     iconColor: 'text-brand-teal',
