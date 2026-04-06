@@ -243,60 +243,72 @@ const faqs = [
     </section>
 
     <!-- REPERTOIRE LIST -->
-    <section class="bg-brand-surface">
-      <div class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      class="relative bg-cover bg-center bg-no-repeat"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_8.jpg')"
+    >
+      <div class="absolute inset-0 bg-black/50"></div>
+      <div class="relative mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>A growing repertoire list</template>
           </MyTextConstructor>
         </div>
 
-        <div :class="animClass('fade-up', 2)" class="mt-6 space-y-4">
-          <p class="text-base text-brand-text sm:text-base md:text-lg">
-            One of the biggest advantages of Trinity's Classical &amp; Jazz exams is that the repertoire list has no end date. Pieces stay valid indefinitely, and Trinity adds new ones regularly — so the list keeps growing.
-          </p>
-          <p class="text-base text-brand-text sm:text-base md:text-lg">
-            For example, a Grade 3 Piano exam currently has around 56 pieces to choose from. Compare that to some other boards where you might only have 10 or 12 options, and those change every two to three years — meaning teachers have to buy new books and learn new pieces all over again.
-          </p>
-          <p class="text-base text-brand-text sm:text-base md:text-lg">
-            With Trinity, you can keep playing a piece you love for as long as it's on the list. No rushing to take an exam before the syllabus changes. No wasted books. Just more choice, with new pieces added over time.
-          </p>
+        <div :class="animClass('fade-up', 2)" class="mt-6 overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
+          <div class="p-6 space-y-4">
+            <p class="text-base text-white/80 sm:text-base md:text-lg">
+              One of the biggest advantages of Trinity's Classical &amp; Jazz exams is that the repertoire list has no end date. Pieces stay valid indefinitely, and Trinity adds new ones regularly — so the list keeps growing.
+            </p>
+            <p class="text-base text-white/80 sm:text-base md:text-lg">
+              For example, a Grade 3 Piano exam currently has around 56 pieces to choose from. Compare that to some other boards where you might only have 10 or 12 options, and those change every two to three years — meaning teachers have to buy new books and learn new pieces all over again.
+            </p>
+            <p class="text-base text-white/80 sm:text-base md:text-lg">
+              With Trinity, you can keep playing a piece you love for as long as it's on the list. No rushing to take an exam before the syllabus changes. No wasted books. Just more choice, with new pieces added over time.
+            </p>
+          </div>
         </div>
 
-        <div :class="animClass('fade-up', 3)" class="mt-6 rounded-2xl bg-brand-accent/5 p-6 ring-1 ring-brand-accent/20">
-          <div class="flex items-start gap-3">
-            <Music class="mt-0.5 h-6 w-6 shrink-0 text-brand-accent" />
-            <div>
-              <p class="text-base font-semibold text-brand-text sm:text-base md:text-lg">Own composition welcome</p>
-              <p class="mt-1 text-base text-brand-text-soft sm:text-base md:text-lg">
-                In Classical &amp; Jazz exams, one of your pieces can be your own composition. It's assessed the same way as listed repertoire — marks are based on your performance, not the quality of the composition itself. It must be comparable in technical and musical demand to the pieces listed for your grade, and it should be your own unaided work.
-              </p>
-            </div>
+        <div :class="animClass('fade-up', 3)" class="mt-6 overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
+          <div class="flex items-center gap-3 bg-black px-5 py-3 sm:px-6">
+            <Music class="h-5 w-5 shrink-0 text-brand-accent sm:h-6 sm:w-6" />
+            <p class="text-base font-semibold text-white sm:text-lg">Own composition welcome</p>
+          </div>
+          <div class="p-6">
+            <p class="text-base text-white/80 sm:text-base md:text-lg">
+              In Classical &amp; Jazz exams, one of your pieces can be your own composition. It's assessed the same way as listed repertoire — marks are based on your performance, not the quality of the composition itself. It must be comparable in technical and musical demand to the pieces listed for your grade, and it should be your own unaided work.
+            </p>
           </div>
         </div>
       </div>
     </section>
 
     <!-- RESULT BANDS -->
-    <section class="bg-brand-bg">
-      <div class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      class="relative bg-cover bg-center bg-no-repeat"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_9.jpg')"
+    >
+      <div class="absolute inset-0 bg-black/50"></div>
+      <div class="relative mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>How results work</template>
           </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg">
+          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/80 sm:text-base md:text-lg">
             All Trinity graded exams are marked out of 100. Your score determines your result.
           </p>
         </div>
@@ -314,34 +326,39 @@ const faqs = [
         </div>
 
         <!-- Certificate highlight -->
-        <div :class="animClass('fade-up', 3)" class="mt-6 rounded-2xl bg-brand-accent/5 p-6 ring-1 ring-brand-accent/20">
-          <div class="flex items-start gap-3">
-            <Award class="mt-0.5 h-6 w-6 shrink-0 text-brand-accent" />
-            <div>
-              <p class="text-base font-semibold text-brand-text sm:text-base md:text-lg">Celebrating your achievement</p>
-              <p class="mt-1 text-base text-brand-text-soft sm:text-base md:text-lg">
-                Book through centre 120 and you'll receive extra recognition: a Take a Bow Certificate for Merit or a Standing Ovation Certificate for Distinction, plus your name on our <a href="/thank-you" class="font-semibold text-brand-accent underline hover:text-brand-primary">Hall of Fame</a>.
-              </p>
-            </div>
+        <div :class="animClass('fade-up', 3)" class="mt-6 overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
+          <div class="flex items-center gap-3 bg-black px-5 py-3 sm:px-6">
+            <Award class="h-5 w-5 shrink-0 text-brand-accent sm:h-6 sm:w-6" />
+            <p class="text-base font-semibold text-white sm:text-lg">Celebrating your achievement</p>
+          </div>
+          <div class="p-6">
+            <p class="text-base text-white/80 sm:text-base md:text-lg">
+              Book through centre 120 and you'll receive extra recognition: a Take a Bow Certificate for Merit or a Standing Ovation Certificate for Distinction, plus your name on our <a href="/thank-you" class="font-semibold text-brand-accent underline hover:text-brand-accent/80">Hall of Fame</a>.
+            </p>
           </div>
         </div>
       </div>
     </section>
 
     <!-- DIPLOMAS -->
-    <section class="bg-brand-surface">
-      <div class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      class="relative bg-cover bg-center bg-no-repeat"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_10.jpg')"
+    >
+      <div class="absolute inset-0 bg-black/50"></div>
+      <div class="relative mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>Beyond Grade 8 — Diplomas</template>
           </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg">
+          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/80 sm:text-base md:text-lg">
             For those who want to keep going after Grade 8, Trinity offers three levels of performance diploma.
           </p>
         </div>
@@ -350,47 +367,52 @@ const faqs = [
           <div
             v-for="diploma in diplomas"
             :key="diploma.title"
-            class="rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-sm"
+            class="rounded-2xl border-4 border-brand-accent bg-white/10 p-6 shadow-2xl backdrop-blur-sm"
           >
-            <p class="text-base font-bold text-brand-primary sm:text-base md:text-lg">{{ diploma.title }}</p>
-            <p class="mt-1 text-sm font-medium text-brand-accent sm:text-sm md:text-base">{{ diploma.level }}</p>
-            <p class="mt-2 text-base text-brand-text-soft sm:text-base md:text-lg">{{ diploma.description }}</p>
+            <p class="text-base font-bold text-brand-accent sm:text-base md:text-lg">{{ diploma.title }}</p>
+            <p class="mt-1 text-sm font-medium text-white sm:text-sm md:text-base">{{ diploma.level }}</p>
+            <p class="mt-2 text-base text-white/80 sm:text-base md:text-lg">{{ diploma.description }}</p>
           </div>
         </div>
       </div>
     </section>
 
     <!-- NO THEORY REQUIREMENT -->
-    <section class="bg-brand-bg">
-      <div class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      class="relative bg-cover bg-center bg-no-repeat"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_5.jpg')"
+    >
+      <div class="absolute inset-0 bg-black/50"></div>
+      <div class="relative mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>No theory requirement</template>
           </MyTextConstructor>
         </div>
 
-        <div :class="animClass('fade-up', 2)" class="mt-6 rounded-2xl bg-brand-accent/5 p-6 ring-1 ring-brand-accent/20">
-          <div class="flex items-start gap-3">
-            <Music class="mt-0.5 h-6 w-6 shrink-0 text-brand-accent" />
-            <div>
-              <p class="text-base font-semibold text-brand-text sm:text-base md:text-lg">Go straight to any grade</p>
-              <p class="mt-1 text-base text-brand-text-soft sm:text-base md:text-lg">
-                Unlike some other exam boards, Trinity does not require you to pass a music theory exam before taking higher grades on your instrument. You can go straight to Grade 8 without any theory exams at all. Music Theory is available as a separate qualification if you want it, and it earns UCAS points at Grades 6–8 too.
-              </p>
-            </div>
+        <div :class="animClass('fade-up', 2)" class="mt-6 overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
+          <div class="flex items-center gap-3 bg-black px-5 py-3 sm:px-6">
+            <Music class="h-5 w-5 shrink-0 text-brand-accent sm:h-6 sm:w-6" />
+            <p class="text-base font-semibold text-white sm:text-lg">Go straight to any grade</p>
+          </div>
+          <div class="p-6">
+            <p class="text-base text-white/80 sm:text-base md:text-lg">
+              Unlike some other exam boards, Trinity does not require you to pass a music theory exam before taking higher grades on your instrument. You can go straight to Grade 8 without any theory exams at all. Music Theory is available as a separate qualification if you want it, and it earns UCAS points at Grades 6–8 too.
+            </p>
           </div>
         </div>
       </div>
     </section>
 
     <!-- FAQ -->
-    <section class="bg-brand-surface">
+    <section class="bg-black">
       <div class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
           <MyTextConstructor
@@ -419,7 +441,7 @@ const faqs = [
     </section>
 
     <!-- CTA -->
-    <section class="bg-brand-bg">
+    <section class="bg-brand-surface">
       <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)" class="text-center">
           <MyTextConstructor

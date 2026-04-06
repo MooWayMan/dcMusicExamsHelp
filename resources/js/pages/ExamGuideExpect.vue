@@ -209,54 +209,41 @@ const faqs = [
       </div>
     </section>
 
-    <!-- BEFORE THE DAY -->
-    <section class="bg-brand-bg">
-      <div class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
-        <div :class="animClass('fade-up', 1)">
-          <MyTextConstructor
-            variant="subheading"
-            fontFamily="display"
-            alignment="center"
-            spacing="tight"
-            class="md:!text-2xl lg:!text-3xl"
-          >
-            <template #myTitle>Before the day</template>
-          </MyTextConstructor>
+    <!-- BEFORE THE DAY & WHAT TO BRING -->
+    <section
+      class="relative bg-cover bg-center bg-no-repeat"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_9.jpg')"
+    >
+      <div class="absolute inset-0 bg-black/50"></div>
+      <div class="relative mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
+        <div :class="animClass('fade-up', 1)" class="overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
+          <div class="flex items-center justify-center gap-3 bg-black px-5 py-3 sm:px-6">
+            <CheckCircle class="h-5 w-5 shrink-0 text-brand-accent sm:h-6 sm:w-6" />
+            <p class="text-base font-semibold text-white sm:text-lg">Before the day</p>
+          </div>
+          <div class="p-6">
+            <ul class="space-y-4">
+              <li v-for="item in beforeTheDay" :key="item" class="flex items-start gap-3">
+                <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
+                <span class="text-base text-white sm:text-base md:text-lg">{{ item }}</span>
+              </li>
+            </ul>
+          </div>
         </div>
 
-        <div :class="animClass('fade-up', 2)" class="mt-8">
-          <ul class="space-y-4">
-            <li v-for="item in beforeTheDay" :key="item" class="flex items-start gap-3">
-              <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-success" />
-              <span class="text-base text-brand-text sm:text-base md:text-lg">{{ item }}</span>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <!-- WHAT TO BRING -->
-    <section class="bg-brand-surface">
-      <div class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
-        <div :class="animClass('fade-up', 1)">
-          <MyTextConstructor
-            variant="subheading"
-            fontFamily="display"
-            alignment="center"
-            spacing="tight"
-            class="md:!text-2xl lg:!text-3xl"
-          >
-            <template #myTitle>What to bring</template>
-          </MyTextConstructor>
-        </div>
-
-        <div :class="animClass('fade-up', 2)" class="mt-8">
-          <ul class="space-y-4">
-            <li v-for="item in whatToBring" :key="item" class="flex items-start gap-3">
-              <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-              <span class="text-base text-brand-text sm:text-base md:text-lg">{{ item }}</span>
-            </li>
-          </ul>
+        <div :class="animClass('fade-up', 2)" class="mt-8 overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
+          <div class="flex items-center justify-center gap-3 bg-black px-5 py-3 sm:px-6">
+            <CheckCircle class="h-5 w-5 shrink-0 text-brand-accent sm:h-6 sm:w-6" />
+            <p class="text-base font-semibold text-white sm:text-lg">What to bring</p>
+          </div>
+          <div class="p-6">
+            <ul class="space-y-4">
+              <li v-for="item in whatToBring" :key="item" class="flex items-start gap-3">
+                <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
+                <span class="text-base text-white sm:text-base md:text-lg">{{ item }}</span>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </section>
@@ -284,18 +271,24 @@ const faqs = [
           </p>
         </div>
 
-        <div :class="animClass('fade-up', 2)" class="mt-8 space-y-6">
-          <div
-            v-for="item in inTheRoom"
-            :key="item.step"
-            class="flex gap-4"
-          >
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary via-brand-accent to-brand-primary text-lg font-bold text-white shadow-md">
-              {{ item.step }}
-            </div>
-            <div>
-              <p class="text-base font-semibold text-white sm:text-base md:text-lg">{{ item.title }}</p>
-              <p class="mt-1 text-base text-white/80 sm:text-base md:text-lg">{{ item.detail }}</p>
+        <div :class="animClass('fade-up', 2)" class="mt-8 overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
+          <div class="flex items-center justify-center gap-3 bg-black px-5 py-3 sm:px-6">
+            <Music class="h-5 w-5 shrink-0 text-brand-accent sm:h-6 sm:w-6" />
+            <p class="text-base font-semibold text-white sm:text-lg">Step by step</p>
+          </div>
+          <div class="space-y-6 p-6">
+            <div
+              v-for="item in inTheRoom"
+              :key="item.step"
+              class="flex gap-4"
+            >
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-accent text-lg font-bold text-white shadow-md">
+                {{ item.step }}
+              </div>
+              <div>
+                <p class="text-base font-semibold text-white sm:text-base md:text-lg">{{ item.title }}</p>
+                <p class="mt-1 text-base text-white/80 sm:text-base md:text-lg">{{ item.detail }}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -303,42 +296,53 @@ const faqs = [
     </section>
 
     <!-- DIGITAL EXAM STEPS -->
-    <section class="bg-brand-surface">
-      <div class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      class="relative bg-cover bg-center bg-no-repeat"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_11.jpg')"
+    >
+      <div class="absolute inset-0 bg-black/50"></div>
+      <div class="relative mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>Taking a digital exam?</template>
           </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg">
+          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/80 sm:text-base md:text-lg">
             Digital exams follow a different process — but the qualification is exactly the same.
           </p>
         </div>
 
-        <div :class="animClass('fade-up', 2)" class="mt-8 space-y-6">
-          <div
-            v-for="item in digitalSteps"
-            :key="item.step"
-            class="flex gap-4"
-          >
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-accent text-lg font-bold text-brand-text-inverse">
-              {{ item.step }}
-            </div>
-            <div>
-              <p class="text-base font-semibold text-brand-text sm:text-base md:text-lg">{{ item.title }}</p>
-              <p class="mt-1 text-base text-brand-text-soft sm:text-base md:text-lg">{{ item.detail }}</p>
+        <div :class="animClass('fade-up', 2)" class="mt-8 overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
+          <div class="flex items-center justify-center gap-3 bg-black px-5 py-3 sm:px-6">
+            <Music class="h-5 w-5 shrink-0 text-brand-accent sm:h-6 sm:w-6" />
+            <p class="text-base font-semibold text-white sm:text-lg">How it works</p>
+          </div>
+          <div class="space-y-6 p-6">
+            <div
+              v-for="item in digitalSteps"
+              :key="item.step"
+              class="flex gap-4"
+            >
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-accent text-lg font-bold text-white">
+                {{ item.step }}
+              </div>
+              <div>
+                <p class="text-base font-semibold text-white sm:text-base md:text-lg">{{ item.title }}</p>
+                <p class="mt-1 text-base text-white/80 sm:text-base md:text-lg">{{ item.detail }}</p>
+              </div>
             </div>
           </div>
         </div>
 
         <div :class="animClass('fade-up', 3)" class="mt-6 text-center">
           <a href="/exam-guide/digital-exams">
-            <MyButtonConstructor variant="outline" size="medium">
+            <MyButtonConstructor variant="light" size="medium">
               Full Digital Exams Guide
             </MyButtonConstructor>
           </a>
@@ -347,85 +351,110 @@ const faqs = [
     </section>
 
     <!-- TIPS FOR NERVES -->
-    <section class="bg-brand-bg">
-      <div class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      class="relative bg-cover bg-center bg-no-repeat"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_10.jpg')"
+    >
+      <div class="absolute inset-0 bg-black/50"></div>
+      <div class="relative mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>Keeping nerves in check</template>
           </MyTextConstructor>
         </div>
 
-        <div :class="animClass('fade-up', 2)" class="mt-8">
-          <ul class="space-y-4">
-            <li v-for="tip in nerveTips" :key="tip" class="flex items-start gap-3">
-              <Music class="mt-0.5 h-5 w-5 shrink-0 text-brand-primary" />
-              <span class="text-base text-brand-text sm:text-base md:text-lg">{{ tip }}</span>
-            </li>
-          </ul>
+        <div :class="animClass('fade-up', 2)" class="mt-8 overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
+          <div class="flex items-center justify-center gap-3 bg-black px-5 py-3 sm:px-6">
+            <Music class="h-5 w-5 shrink-0 text-brand-accent sm:h-6 sm:w-6" />
+            <p class="text-base font-semibold text-white sm:text-lg">Top tips</p>
+          </div>
+          <div class="p-6">
+            <ul class="space-y-4">
+              <li v-for="tip in nerveTips" :key="tip" class="flex items-start gap-3">
+                <Music class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
+                <span class="text-base text-white sm:text-base md:text-lg">{{ tip }}</span>
+              </li>
+            </ul>
+          </div>
         </div>
 
         <!-- Reassurance box -->
-        <div :class="animClass('fade-up', 3)" class="mt-8 rounded-2xl bg-brand-accent/5 p-6 ring-1 ring-brand-accent/20">
-          <div class="flex items-start gap-3">
-            <Clock class="mt-0.5 h-6 w-6 shrink-0 text-brand-accent" />
-            <div>
-              <p class="text-base font-semibold text-brand-text sm:text-base md:text-lg">It's shorter than you think</p>
-              <p class="mt-1 text-base text-brand-text-soft sm:text-base md:text-lg">
-                Most exams are over in 15–20 minutes. By the time you've played your first piece and settled in, you're already halfway through. It goes quickly!
-              </p>
-            </div>
+        <div :class="animClass('fade-up', 3)" class="mt-8 overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
+          <div class="flex items-center gap-3 bg-black px-5 py-3 sm:px-6">
+            <Clock class="h-5 w-5 shrink-0 text-brand-accent sm:h-6 sm:w-6" />
+            <p class="text-base font-semibold text-white sm:text-lg">It's shorter than you think</p>
+          </div>
+          <div class="p-6">
+            <p class="text-base text-white/80 sm:text-base md:text-lg">
+              Most exams are over in 15–20 minutes. By the time you've played your first piece and settled in, you're already halfway through. It goes quickly!
+            </p>
           </div>
         </div>
       </div>
     </section>
 
     <!-- WHAT HAPPENS AFTER YOU BOOK -->
-    <section class="bg-brand-surface">
-      <div class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      class="relative bg-cover bg-center bg-no-repeat"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_5.jpg')"
+    >
+      <div class="absolute inset-0 bg-black/50"></div>
+      <div class="relative mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
-          <div class="mx-auto mb-4 h-1 w-16 rounded-full bg-gradient-to-r from-brand-primary to-brand-accent"></div>
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>What happens after you book?</template>
           </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg">
+          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/80 sm:text-base md:text-lg">
             Here's what to expect once you've booked a face-to-face exam.
           </p>
         </div>
 
-        <div class="mt-8 space-y-6">
-          <div
-            v-for="(item, index) in afterBookingF2F"
-            :key="item.step"
-            :class="animClass('fade-up', index + 2)"
-            class="flex gap-4 sm:gap-5"
-          >
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-brand-primary to-brand-accent text-sm font-bold text-white shadow-md sm:h-12 sm:w-12 sm:text-base">
-              {{ item.step }}
-            </div>
-            <div>
-              <p class="text-base font-semibold text-brand-text sm:text-lg">{{ item.title }}</p>
-              <p class="mt-1 text-sm leading-relaxed text-brand-text-soft sm:text-base">{{ item.detail }}</p>
+        <div :class="animClass('fade-up', 2)" class="mt-8 overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
+          <div class="flex items-center justify-center gap-3 bg-black px-5 py-3 sm:px-6">
+            <Clock class="h-5 w-5 shrink-0 text-brand-accent sm:h-6 sm:w-6" />
+            <p class="text-base font-semibold text-white sm:text-lg">After booking</p>
+          </div>
+          <div class="space-y-6 p-6">
+            <div
+              v-for="item in afterBookingF2F"
+              :key="item.step"
+              class="flex gap-4 sm:gap-5"
+            >
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-accent text-sm font-bold text-white shadow-md sm:h-12 sm:w-12 sm:text-base">
+                {{ item.step }}
+              </div>
+              <div>
+                <p class="text-base font-semibold text-white sm:text-lg">{{ item.title }}</p>
+                <p class="mt-1 text-sm leading-relaxed text-white/80 sm:text-base">{{ item.detail }}</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div :class="animClass('fade-up', 5)" class="mt-8 rounded-2xl border border-brand-accent/30 bg-brand-accent/5 p-5 sm:p-6">
-          <p class="text-sm leading-snug text-brand-text-soft sm:text-base">
-            <span class="font-semibold text-brand-accent">Special needs provisions:</span>
-            If a candidate has a specific educational need or disability, Trinity offers access arrangements to support them. Visit <a href="https://www.trinitycollege.com/qualifications/music/special-needs" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand-accent underline hover:text-brand-primary">Trinity's special needs page</a> for full details and to download the application form. A new form must be submitted for every exam, at least 28 days before the exam date.
-          </p>
+        <div :class="animClass('fade-up', 3)" class="mt-8 overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
+          <div class="flex items-center gap-3 bg-black px-5 py-3 sm:px-6">
+            <AlertCircle class="h-5 w-5 shrink-0 text-brand-accent sm:h-6 sm:w-6" />
+            <p class="text-base font-semibold text-white sm:text-lg">Special needs provisions</p>
+          </div>
+          <div class="p-6">
+            <p class="text-base leading-snug text-white/80 sm:text-base md:text-lg">
+              If a candidate has a specific educational need or disability, Trinity offers access arrangements to support them. Visit <a href="https://www.trinitycollege.com/qualifications/music/special-needs" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand-accent underline hover:text-white">Trinity's special needs page</a> for full details and to download the application form. A new form must be submitted for every exam, at least 28 days before the exam date.
+            </p>
+          </div>
         </div>
       </div>
     </section>
@@ -461,7 +490,7 @@ const faqs = [
     </section>
 
     <!-- CTA -->
-    <section class="bg-brand-bg">
+    <section class="bg-brand-surface">
       <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)" class="text-center">
           <MyTextConstructor

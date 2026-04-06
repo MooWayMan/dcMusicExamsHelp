@@ -289,18 +289,18 @@ const certificateName = (result?: string) => {
     <section class="bg-brand-bg">
       <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)" class="mx-auto max-w-xl space-y-3">
-          <div class="flex items-center gap-3 rounded-xl bg-brand-surface p-4 shadow-sm ring-1 ring-brand-border">
+          <div class="flex items-center gap-3 rounded-xl bg-brand-surface p-4 shadow-sm border-4 border-brand-accent">
             <Award class="h-6 w-6 shrink-0 text-brand-success" />
             <p class="text-base font-semibold text-brand-text sm:text-base md:text-lg">Do well and earn a <span class="text-brand-success">Take a Bow Certificate</span></p>
           </div>
-          <div class="flex items-center gap-3 rounded-xl bg-brand-surface p-4 shadow-sm ring-1 ring-brand-border">
+          <div class="flex items-center gap-3 rounded-xl bg-brand-surface p-4 shadow-sm border-4 border-brand-accent">
             <Trophy class="h-6 w-6 shrink-0 text-brand-accent" />
             <p class="text-base font-semibold text-brand-text sm:text-base md:text-lg">Aim high and earn a <span class="text-brand-accent">Standing Ovation Certificate</span></p>
           </div>
         </div>
 
         <div :class="animClass('zoom-in', 2)" class="mx-auto mt-8 max-w-md">
-          <div class="overflow-hidden rounded-2xl bg-brand-surface p-3 shadow-2xl ring-1 ring-brand-border">
+          <div class="overflow-hidden rounded-2xl bg-brand-surface p-3 shadow-2xl border-4 border-brand-accent">
             <img
               :src="certStudent"
               alt="Standing Ovation Certificate — Distinction"

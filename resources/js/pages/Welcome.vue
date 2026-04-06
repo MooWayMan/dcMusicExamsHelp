@@ -536,7 +536,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
         <!-- Photo grid -->
         <div class="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2">
           <!-- Steinway Grand — Wirral -->
-          <div class="group overflow-hidden rounded-2xl bg-brand-surface shadow-xl ring-1 ring-brand-border">
+          <div class="group overflow-hidden rounded-2xl bg-brand-surface shadow-xl border-4 border-brand-accent">
             <div class="aspect-[4/3] overflow-hidden">
               <img
                 :src="venuePhotos.steinwayGrand"
@@ -555,7 +555,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
           </div>
 
           <!-- Kawai Upright — Liverpool -->
-          <div class="group overflow-hidden rounded-2xl bg-brand-surface shadow-xl ring-1 ring-brand-border">
+          <div class="group overflow-hidden rounded-2xl bg-brand-surface shadow-xl border-4 border-brand-accent">
             <div class="aspect-[4/3] overflow-hidden">
               <img
                 :src="venuePhotos.kawaiRoom"
@@ -600,7 +600,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
 
         <!-- Student photos — guitar and piano side by side -->
         <div class="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div class="group overflow-hidden rounded-2xl bg-brand-surface shadow-xl ring-1 ring-brand-border">
+          <div class="group overflow-hidden rounded-2xl bg-brand-surface shadow-xl border-4 border-brand-accent">
             <div class="aspect-[4/3] overflow-hidden">
               <img
                 :src="venuePhotos.guitarStudent"
@@ -617,7 +617,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
               </p>
             </div>
           </div>
-          <div class="group overflow-hidden rounded-2xl bg-brand-surface shadow-xl ring-1 ring-brand-border">
+          <div class="group overflow-hidden rounded-2xl bg-brand-surface shadow-xl border-4 border-brand-accent">
             <div class="aspect-[4/3] overflow-hidden">
               <img
                 :src="venuePhotos.pianoStudent"
@@ -638,7 +638,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
 
         <!-- More student photos -->
         <div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div class="group overflow-hidden rounded-2xl bg-brand-surface shadow-xl ring-1 ring-brand-border">
+          <div class="group overflow-hidden rounded-2xl bg-brand-surface shadow-xl border-4 border-brand-accent">
             <div class="aspect-[4/3] overflow-hidden">
               <img
                 :src="venuePhotos.sajeevanPiano"
@@ -655,7 +655,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
               </p>
             </div>
           </div>
-          <div class="group overflow-hidden rounded-2xl bg-brand-surface shadow-xl ring-1 ring-brand-border">
+          <div class="group overflow-hidden rounded-2xl bg-brand-surface shadow-xl border-4 border-brand-accent">
             <div class="aspect-[4/3] overflow-hidden">
               <img
                 :src="venuePhotos.keerthanaaPiano"
@@ -690,14 +690,14 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
 
         <!-- Certificates (link to Thank You page) -->
         <div class="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2">
-          <a href="/thank-you" class="group block overflow-hidden rounded-2xl bg-brand-surface p-3 shadow-2xl ring-1 ring-brand-border transition-transform duration-300 hover:scale-[1.01]">
+          <a href="/thank-you" class="group block overflow-hidden rounded-2xl bg-brand-surface p-3 shadow-2xl border-4 border-brand-accent transition-transform duration-300 hover:scale-[1.01]">
             <img
               src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/certThankTeacher_10.png"
               alt="Teacher Certificate of Appreciation"
               class="block w-full rounded-2xl"
             />
           </a>
-          <a href="/thank-you" class="group block overflow-hidden rounded-2xl bg-brand-surface p-3 shadow-2xl ring-1 ring-brand-border transition-transform duration-300 hover:scale-[1.01]">
+          <a href="/thank-you" class="group block overflow-hidden rounded-2xl bg-brand-surface p-3 shadow-2xl border-4 border-brand-accent transition-transform duration-300 hover:scale-[1.01]">
             <img
               src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/certAceiveStu_Dis.png"
               alt="Student Certificate of Achievement — Highest Distinction"

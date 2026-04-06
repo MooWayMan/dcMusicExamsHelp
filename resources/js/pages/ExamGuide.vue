@@ -181,42 +181,46 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
     </section>
 
     <!-- CLASSICAL VS ROCK & POP COMPARISON -->
-    <section class="bg-brand-bg">
-      <div class="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      class="relative bg-cover bg-center bg-no-repeat"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_7.jpg')"
+    >
+      <div class="absolute inset-0 bg-black/50"></div>
+      <div class="relative mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)" class="grid grid-cols-1 gap-8 lg:grid-cols-2">
           <!-- Classical & Jazz -->
-          <div class="overflow-hidden rounded-2xl border-4 border-brand-accent bg-brand-surface shadow-sm">
+          <div class="flex h-full flex-col overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
             <div class="flex items-center gap-3 bg-black px-5 py-3 sm:px-6">
               <Music class="h-5 w-5 shrink-0 text-brand-accent sm:h-6 sm:w-6" />
               <p class="text-base font-semibold text-white sm:text-lg">Classical &amp; Jazz</p>
             </div>
-            <div class="p-6">
-              <p class="text-base text-brand-text-soft sm:text-base md:text-lg">
+            <div class="flex-1 p-6">
+              <p class="text-base text-white/80 sm:text-base md:text-lg">
                 The traditional route. A wide range of instruments, structured technique work, and repertoire spanning centuries of music — from Bach to Brubeck.
               </p>
               <ul class="mt-5 space-y-3">
                 <li v-for="item in classicalHighlights" :key="item" class="flex items-start gap-2">
                   <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                  <span class="text-base text-brand-text sm:text-base md:text-lg">{{ item }}</span>
+                  <span class="text-base text-white sm:text-base md:text-lg">{{ item }}</span>
                 </li>
               </ul>
             </div>
           </div>
 
           <!-- Rock & Pop -->
-          <div class="overflow-hidden rounded-2xl border-4 border-brand-accent bg-brand-surface shadow-sm">
+          <div class="flex h-full flex-col overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
             <div class="flex items-center gap-3 bg-black px-5 py-3 sm:px-6">
               <Guitar class="h-5 w-5 shrink-0 text-brand-accent sm:h-6 sm:w-6" />
               <p class="text-base font-semibold text-white sm:text-lg">Rock &amp; Pop</p>
             </div>
-            <div class="p-6">
-              <p class="text-base text-brand-text-soft sm:text-base md:text-lg">
+            <div class="flex-1 p-6">
+              <p class="text-base text-white/80 sm:text-base md:text-lg">
                 Play real songs by real artists. Five instruments, a band-focused approach, and music you actually want to listen to — from Arctic Monkeys to Stevie Wonder.
               </p>
               <ul class="mt-5 space-y-3">
                 <li v-for="item in rockPopHighlights" :key="item" class="flex items-start gap-2">
                   <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                  <span class="text-base text-brand-text sm:text-base md:text-lg">{{ item }}</span>
+                  <span class="text-base text-white sm:text-base md:text-lg">{{ item }}</span>
                 </li>
               </ul>
             </div>
@@ -230,11 +234,12 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>What both have in common</template>
           </MyTextConstructor>
-          <div class="mx-auto mt-6 max-w-2xl overflow-hidden rounded-2xl border-4 border-brand-accent bg-brand-surface shadow-sm">
+          <div class="mx-auto mt-6 max-w-2xl overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
             <div class="flex items-center justify-center gap-3 bg-black px-5 py-3 sm:px-6">
               <CheckCircle class="h-5 w-5 shrink-0 text-brand-accent sm:h-6 sm:w-6" />
               <p class="text-base font-semibold text-white sm:text-lg">Shared Features</p>
@@ -243,7 +248,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
               <ul class="space-y-3">
                 <li v-for="item in sharedFeatures" :key="item" class="flex items-start gap-2">
                   <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                  <span class="text-base text-brand-text sm:text-base md:text-lg">{{ item }}</span>
+                  <span class="text-base text-white sm:text-base md:text-lg">{{ item }}</span>
                 </li>
               </ul>
             </div>

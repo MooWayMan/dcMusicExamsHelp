@@ -320,20 +320,24 @@ const faqs = [
     >
 
     <!-- FACE-TO-FACE FEES -->
-    <section class="bg-brand-bg">
-      <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      class="relative bg-cover bg-center bg-no-repeat"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_5.jpg')"
+    >
+      <div class="absolute inset-0 bg-black/50"></div>
+      <div class="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
-          <div class="mx-auto mb-4 h-1 w-16 rounded-full bg-gradient-to-r from-brand-primary to-brand-accent"></div>
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>Face-to-face exam fees</template>
           </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
+          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/80 sm:text-base md:text-lg lg:text-xl">
             Classical &amp; Jazz and Rock &amp; Pop — same fees for both.
             Exams take place at our centres in Liverpool and Wirral.
           </p>
@@ -354,20 +358,24 @@ const faqs = [
     </section>
 
     <!-- DIGITAL FEES -->
-    <section class="bg-brand-surface">
-      <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      class="relative bg-cover bg-center bg-no-repeat"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_8.jpg')"
+    >
+      <div class="absolute inset-0 bg-black/50"></div>
+      <div class="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
-          <div class="mx-auto mb-4 h-1 w-16 rounded-full bg-gradient-to-r from-brand-primary to-brand-accent"></div>
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>Digital exam fees</template>
           </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
+          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/80 sm:text-base md:text-lg lg:text-xl">
             Classical &amp; Jazz and Rock &amp; Pop — same fees for both.
             Record anywhere and submit online.
           </p>
@@ -389,20 +397,24 @@ const faqs = [
     </section>
 
     <!-- THEORY FEES -->
-    <section class="bg-brand-bg">
-      <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      class="relative bg-cover bg-center bg-no-repeat"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_10.jpg')"
+    >
+      <div class="absolute inset-0 bg-black/50"></div>
+      <div class="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
-          <div class="mx-auto mb-4 h-1 w-16 rounded-full bg-gradient-to-r from-brand-primary to-brand-accent"></div>
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>Theory exam fees</template>
           </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
+          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/80 sm:text-base md:text-lg lg:text-xl">
             Digital only. No Initial grade for theory — starts at Grade 1.
             Trinity does not require theory for practical exams at any grade.
           </p>
@@ -423,26 +435,30 @@ const faqs = [
     </section>
 
     <!-- DIPLOMA FEES -->
-    <section class="bg-brand-surface">
-      <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      class="relative bg-cover bg-center bg-no-repeat"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_6.jpg')"
+    >
+      <div class="absolute inset-0 bg-black/50"></div>
+      <div class="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
-          <div class="mx-auto mb-4 h-1 w-16 rounded-full bg-gradient-to-r from-brand-primary to-brand-accent"></div>
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>Diploma fees</template>
           </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
+          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/80 sm:text-base md:text-lg lg:text-xl">
             For candidates beyond Grade 8. Associate (ATCL), Licentiate (LTCL) and Fellowship (FTCL) diplomas.
           </p>
         </div>
 
         <div :class="animClass('fade-up', 2)" class="mt-8">
-          <p class="mb-3 text-lg font-semibold text-brand-text">Face-to-face diplomas</p>
+          <p class="mb-3 text-lg font-semibold text-white">Face-to-face diplomas</p>
           <MyTableConstructor
             :data="diplomaF2fData"
             :columns="diplomaF2fColumns"
@@ -455,7 +471,7 @@ const faqs = [
         </div>
 
         <div :class="animClass('fade-up', 3)" class="mt-10">
-          <p class="mb-3 text-lg font-semibold text-brand-text">Digital diplomas <span class="text-sm font-normal text-brand-accent">(new for 2026)</span></p>
+          <p class="mb-3 text-lg font-semibold text-white">Digital diplomas <span class="text-sm font-normal text-brand-accent">(new for 2026)</span></p>
           <MyTableConstructor
             :data="diplomaDigitalData"
             :columns="diplomaDigitalColumns"
@@ -506,27 +522,33 @@ const faqs = [
     >
 
     <!-- EXAM DATES -->
-    <section id="dates" class="bg-brand-bg">
-      <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      id="dates"
+      class="relative bg-cover bg-center bg-no-repeat"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_7.jpg')"
+    >
+      <div class="absolute inset-0 bg-black/50"></div>
+      <div class="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
-          <div class="mx-auto mb-4 h-1 w-16 rounded-full bg-gradient-to-r from-brand-primary to-brand-accent"></div>
+          <div class="mx-auto mb-4 h-1 w-16 rounded-full bg-white/30"></div>
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>Face-to-face exam dates 2026</template>
           </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
+          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/80 sm:text-base md:text-lg lg:text-xl">
             Liverpool and Wirral — three sessions per year for both Classical &amp; Jazz and Rock &amp; Pop.
             Digital exams can be booked and submitted at any time.
           </p>
         </div>
 
         <div :class="animClass('fade-up', 2)" class="mt-8">
-          <p class="mb-3 text-lg font-semibold text-brand-text">Exam weeks and closing dates</p>
+          <p class="mb-3 text-lg font-semibold text-white">Exam weeks and closing dates</p>
           <MyTableConstructor
             :data="dateData"
             :columns="dateColumns"
@@ -539,7 +561,7 @@ const faqs = [
         </div>
 
         <div :class="animClass('fade-up', 3)" class="mt-10">
-          <p class="mb-3 text-lg font-semibold text-brand-text">Online booking windows</p>
+          <p class="mb-3 text-lg font-semibold text-white">Online booking windows</p>
           <MyTableConstructor
             :data="bookingWindowData"
             :columns="bookingWindowColumns"
@@ -549,7 +571,7 @@ const faqs = [
             :bordered="true"
             size="medium"
           />
-          <p class="mt-3 text-sm text-brand-text-soft">
+          <p class="mt-3 text-sm text-white/60">
             Booking windows are for face-to-face Classical &amp; Jazz exams via the MOB system. Rock &amp; Pop face-to-face dates are booked through MyTrinity.
           </p>
         </div>

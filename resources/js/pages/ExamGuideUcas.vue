@@ -114,14 +114,19 @@ const faqs = [
     </section>
 
     <!-- UCAS TABLE -->
-    <section class="bg-brand-bg">
-      <div class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      class="relative bg-cover bg-center bg-no-repeat"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_7.jpg')"
+    >
+      <div class="absolute inset-0 bg-black/50"></div>
+      <div class="relative mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>Points by grade and result</template>
@@ -141,61 +146,72 @@ const faqs = [
         </div>
 
         <!-- Highlight box -->
-        <div :class="animClass('fade-up', 3)" class="mt-6 rounded-2xl bg-brand-accent/5 p-6 ring-1 ring-brand-accent/20">
-          <div class="flex items-start gap-3">
-            <GraduationCap class="mt-0.5 h-6 w-6 shrink-0 text-brand-accent" />
-            <div>
-              <p class="text-base font-semibold text-brand-text sm:text-base md:text-lg">Grade 8 Distinction = 30 UCAS points</p>
-              <p class="mt-1 text-base text-brand-text-soft sm:text-base md:text-lg">
-                That's the same as an A-level grade between a D and a C. Combined with other qualifications, music exam points can make a real difference to your application.
-              </p>
-            </div>
+        <div :class="animClass('fade-up', 3)" class="mt-6 overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
+          <div class="flex items-center gap-3 bg-black px-5 py-3 sm:px-6">
+            <GraduationCap class="h-5 w-5 shrink-0 text-brand-accent sm:h-6 sm:w-6" />
+            <p class="text-base font-semibold text-white sm:text-lg">Grade 8 Distinction = 30 UCAS points</p>
+          </div>
+          <div class="p-6">
+            <p class="text-base text-white/80 sm:text-base md:text-lg">
+              That's the same as an A-level grade between a D and a C. Combined with other qualifications, music exam points can make a real difference to your application.
+            </p>
           </div>
         </div>
       </div>
     </section>
 
     <!-- KEY FACTS -->
-    <section class="bg-brand-surface">
-      <div class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      class="relative bg-cover bg-center bg-no-repeat"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_9.jpg')"
+    >
+      <div class="absolute inset-0 bg-black/50"></div>
+      <div class="relative mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>Key things to know</template>
           </MyTextConstructor>
         </div>
 
-        <div :class="animClass('fade-up', 2)" class="mt-8">
-          <ul class="space-y-4">
-            <li v-for="fact in keyFacts" :key="fact" class="flex items-start gap-3">
-              <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-success" />
-              <span class="text-base text-brand-text sm:text-base md:text-lg">{{ fact }}</span>
-            </li>
-          </ul>
+        <div :class="animClass('fade-up', 2)" class="mt-8 overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
+          <div class="flex items-center justify-center gap-3 bg-black px-5 py-3 sm:px-6">
+            <CheckCircle class="h-5 w-5 shrink-0 text-brand-accent sm:h-6 sm:w-6" />
+            <p class="text-base font-semibold text-white sm:text-lg">Key facts</p>
+          </div>
+          <div class="p-6">
+            <ul class="space-y-4">
+              <li v-for="fact in keyFacts" :key="fact" class="flex items-start gap-3">
+                <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
+                <span class="text-base text-white sm:text-base md:text-lg">{{ fact }}</span>
+              </li>
+            </ul>
+          </div>
         </div>
 
         <!-- Deadline warning -->
-        <div :class="animClass('fade-up', 3)" class="mt-8 rounded-2xl bg-brand-danger-soft p-6 ring-1 ring-brand-danger/20">
-          <div class="flex items-start gap-3">
-            <AlertCircle class="mt-0.5 h-6 w-6 shrink-0 text-brand-danger" />
-            <div>
-              <p class="text-base font-semibold text-brand-text sm:text-base md:text-lg">Don't miss the deadline</p>
-              <p class="mt-1 text-base text-brand-text-soft sm:text-base md:text-lg">
-                Your exam must happen by the second Friday in June. For digital exams, upload your recording at least three weeks before that — around mid to late May. Plan ahead!
-              </p>
-            </div>
+        <div :class="animClass('fade-up', 3)" class="mt-8 overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
+          <div class="flex items-center gap-3 bg-black px-5 py-3 sm:px-6">
+            <AlertCircle class="h-5 w-5 shrink-0 text-brand-accent sm:h-6 sm:w-6" />
+            <p class="text-base font-semibold text-white sm:text-lg">Don't miss the deadline</p>
+          </div>
+          <div class="p-6">
+            <p class="text-base text-white/80 sm:text-base md:text-lg">
+              Your exam must happen by the second Friday in June. For digital exams, upload your recording at least three weeks before that — around mid to late May. Plan ahead!
+            </p>
           </div>
         </div>
       </div>
     </section>
 
     <!-- FAQ -->
-    <section class="bg-brand-bg">
+    <section class="bg-black">
       <div class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
           <MyTextConstructor

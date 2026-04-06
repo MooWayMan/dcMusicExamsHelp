@@ -43,28 +43,25 @@ const navigation = computed<NavItem[]>(() => {
   return [
     { name: 'Home', href: '/', show: !isHome },
     {
-      name: 'Who is it for',
-      href: '#why',
+      name: 'More',
+      href: '#more',
       show: true,
       children: [
         { name: 'For Teachers', href: '/for-teachers' },
         { name: 'For Parents', href: '/for-parents' },
         { name: 'For Students', href: '/for-students' },
-      ],
-    },
-    {
-      name: 'Exam Guide',
-      href: '/exam-guide',
-      show: true,
-      children: [
+        { name: '---', href: '#divider-1' },
+        { name: 'Exam Guide', href: '/exam-guide' },
         { name: 'Grades Explained', href: '/exam-guide/grades-explained' },
         { name: 'What to Expect', href: '/exam-guide/what-to-expect' },
         { name: 'Digital Exams', href: '/exam-guide/digital-exams' },
         { name: 'UCAS Points', href: '/exam-guide/ucas-points' },
+        { name: '---', href: '#divider-2' },
+        { name: 'Fees & Dates', href: '/exam-fees' },
+        { name: 'FAQ', href: '/faq' },
+        { name: 'Contact Us', href: '/contact' },
       ],
     },
-    { name: 'Fees & Dates', href: '/exam-fees', show: true },
-    { name: 'FAQ', href: '/faq', show: true },
   ].filter(item => item.show)
 })
 
@@ -178,22 +175,27 @@ const navClasses = computed(() =>
                   v-if="openDropdown === item.name"
                   class="absolute left-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-brand-border bg-white shadow-xl ring-1 ring-black/5"
                 >
-                  <!-- Link to parent page -->
-                  <button
-                    class="block w-full px-4 py-3 text-left text-sm font-semibold text-brand-accent transition hover:bg-brand-surface-soft"
-                    @click="navigateTo(item.href)"
-                  >
-                    {{ item.name }} overview
-                  </button>
-                  <div class="border-t border-brand-border"></div>
-                  <button
-                    v-for="child in item.children"
-                    :key="child.name"
-                    class="block w-full px-4 py-3 text-left text-sm text-slate-700 transition hover:bg-brand-surface-soft hover:text-brand-accent"
-                    @click="navigateTo(child.href)"
-                  >
-                    {{ child.name }}
-                  </button>
+                  <!-- Link to parent page (skip for More since it's not a real page) -->
+                  <template v-if="!item.href.startsWith('#')">
+                    <button
+                      class="block w-full px-4 py-3 text-left text-sm font-semibold text-brand-accent transition hover:bg-brand-surface-soft"
+                      @click="navigateTo(item.href)"
+                    >
+                      {{ item.name }} overview
+                    </button>
+                    <div class="border-t border-brand-border"></div>
+                  </template>
+                  <template v-for="child in item.children" :key="child.name">
+                    <div v-if="child.name === '---'" class="border-t border-brand-border"></div>
+                    <button
+                      v-else
+                      class="block w-full px-4 py-3 text-left text-sm text-slate-700 transition hover:bg-brand-surface-soft hover:text-brand-accent"
+                      :class="{ 'pl-8 text-xs': child.href.includes('/exam-guide/') }"
+                      @click="navigateTo(child.href)"
+                    >
+                      {{ child.name }}
+                    </button>
+                  </template>
                 </div>
               </Transition>
             </div>
@@ -274,19 +276,23 @@ const navClasses = computed(() =>
 
             <div v-if="openMobileDropdown === item.name" class="ml-4 space-y-1 border-l-2 border-brand-accent/30 pl-3">
               <button
+                v-if="!item.href.startsWith('#')"
                 class="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-brand-accent transition hover:bg-slate-50"
                 @click="navigateTo(item.href)"
               >
                 {{ item.name }} overview
               </button>
-              <button
-                v-for="child in item.children"
-                :key="child.name"
-                class="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-slate-600 transition hover:bg-slate-50 hover:text-brand-accent"
-                @click="navigateTo(child.href)"
-              >
-                {{ child.name }}
-              </button>
+              <template v-for="child in item.children" :key="child.name">
+                <div v-if="child.name === '---'" class="my-1 border-t border-brand-border"></div>
+                <button
+                  v-else
+                  class="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-slate-600 transition hover:bg-slate-50 hover:text-brand-accent"
+                  :class="{ 'pl-6 text-xs': child.href.includes('/exam-guide/') }"
+                  @click="navigateTo(child.href)"
+                >
+                  {{ child.name }}
+                </button>
+              </template>
             </div>
           </div>
 

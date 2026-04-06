@@ -208,19 +208,24 @@ const faqs = [
     </section>
 
     <!-- INFOGRAPHIC PATHWAY -->
-    <section class="border-t border-brand-border bg-brand-bg">
-      <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      class="relative bg-cover bg-center bg-no-repeat"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_7.jpg')"
+    >
+      <div class="absolute inset-0 bg-black/50"></div>
+      <div class="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>Your discount pathway</template>
           </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
+          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/80 sm:text-base md:text-lg lg:text-xl">
             Four programmes, all designed to help music teachers save money on resources.
           </p>
         </div>
@@ -242,16 +247,16 @@ const faqs = [
                   >
                     <component :is="step.icon" :class="[step.iconColour, 'h-7 w-7']" />
                   </div>
-                  <p class="mt-3 text-base font-semibold text-brand-text sm:text-base">{{ step.label }}</p>
-                  <p class="mt-1 max-w-[180px] text-xs text-brand-text-soft sm:text-sm">{{ step.tagline }}</p>
+                  <p class="mt-3 text-base font-semibold text-white sm:text-base">{{ step.label }}</p>
+                  <p class="mt-1 max-w-[180px] text-xs text-white/60 sm:text-sm">{{ step.tagline }}</p>
                 </div>
                 <!-- Connector arrow (not after last) -->
                 <div
                   v-if="index < pathwaySteps.length - 1"
                   class="mt-7 flex shrink-0 items-center px-2"
                 >
-                  <div class="h-0.5 w-6 bg-brand-border" />
-                  <ArrowRight class="h-4 w-4 text-brand-text-soft" />
+                  <div class="h-0.5 w-6 bg-white/30" />
+                  <ArrowRight class="h-4 w-4 text-white/60" />
                 </div>
               </div>
             </div>
@@ -274,12 +279,12 @@ const faqs = [
                     <!-- Vertical connector -->
                     <div
                       v-if="index < pathwaySteps.length - 1"
-                      class="mt-1 h-8 w-0.5 bg-brand-border"
+                      class="mt-1 h-8 w-0.5 bg-white/30"
                     />
                   </div>
                   <div class="pt-2">
-                    <p class="text-base font-semibold text-brand-text sm:text-base">{{ step.label }}</p>
-                    <p class="mt-0.5 text-xs text-brand-text-soft sm:text-sm">{{ step.tagline }}</p>
+                    <p class="text-base font-semibold text-white sm:text-base">{{ step.label }}</p>
+                    <p class="mt-0.5 text-xs text-white/60 sm:text-sm">{{ step.tagline }}</p>
                   </div>
                 </div>
               </div>
@@ -361,50 +366,62 @@ const faqs = [
     </section>
 
     <!-- HOW WE HELP — soft get-in-touch section -->
-    <section id="get-in-touch" class="border-t border-brand-border bg-brand-bg">
-      <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      id="get-in-touch"
+      class="relative bg-cover bg-center bg-no-repeat"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_9.jpg')"
+    >
+      <div class="absolute inset-0 bg-black/50"></div>
+      <div class="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>How we help</template>
           </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
+          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/80 sm:text-base md:text-lg lg:text-xl">
             Setting up discount accounts can feel confusing if you haven't done it before.
             We've been through the process ourselves and are happy to walk you through it — just get in touch.
           </p>
         </div>
 
-        <div :class="animClass('fade-up', 2)" class="mt-10">
-          <div class="mx-auto max-w-lg space-y-4">
-            <div class="flex items-start gap-4 rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm">
-              <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-              <p class="text-base text-brand-text sm:text-base md:text-lg">
-                We'll explain which discounts apply to your situation
-              </p>
-            </div>
-            <div class="flex items-start gap-4 rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm">
-              <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-              <p class="text-base text-brand-text sm:text-base md:text-lg">
-                We'll guide you through the trade account setup if you want one
-              </p>
-            </div>
-            <div class="flex items-start gap-4 rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm">
-              <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-              <p class="text-base text-brand-text sm:text-base md:text-lg">
-                We'll point you to the Teachers' Community and Free Books programme
-              </p>
-            </div>
-            <div class="flex items-start gap-4 rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm">
-              <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-              <p class="text-base text-brand-text sm:text-base md:text-lg">
-                No pressure, no cost — just practical help from someone who uses these programmes daily
-              </p>
-            </div>
+        <div :class="animClass('fade-up', 2)" class="mt-10 overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
+          <div class="flex items-center justify-center gap-3 bg-black px-5 py-3 sm:px-6">
+            <CheckCircle class="h-5 w-5 shrink-0 text-brand-accent sm:h-6 sm:w-6" />
+            <p class="text-base font-semibold text-white sm:text-lg">What we can do</p>
+          </div>
+          <div class="p-6">
+            <ul class="space-y-4">
+              <li class="flex items-start gap-3">
+                <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
+                <span class="text-base text-white sm:text-base md:text-lg">
+                  We'll explain which discounts apply to your situation
+                </span>
+              </li>
+              <li class="flex items-start gap-3">
+                <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
+                <span class="text-base text-white sm:text-base md:text-lg">
+                  We'll guide you through the trade account setup if you want one
+                </span>
+              </li>
+              <li class="flex items-start gap-3">
+                <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
+                <span class="text-base text-white sm:text-base md:text-lg">
+                  We'll point you to the Teachers' Community and Free Books programme
+                </span>
+              </li>
+              <li class="flex items-start gap-3">
+                <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
+                <span class="text-base text-white sm:text-base md:text-lg">
+                  No pressure, no cost — just practical help from someone who uses these programmes daily
+                </span>
+              </li>
+            </ul>
           </div>
         </div>
 

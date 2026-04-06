@@ -135,7 +135,7 @@ const faqs = [
     </section>
 
     <!-- FAQ ACCORDION -->
-    <section class="border-t border-brand-border bg-brand-bg">
+    <section class="bg-black">
       <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 2)">
           <MyAccordionConstructor
@@ -159,7 +159,7 @@ const faqs = [
             variant="button-lg"
             alignment="center"
             spacing="tight"
-            textColor="text-brand-primary"
+            textColor="text-white"
           >
             <template #myTitle>Ready to book your exam?</template>
           </MyTextConstructor>
