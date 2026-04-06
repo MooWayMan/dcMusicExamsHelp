@@ -16,10 +16,14 @@ class ExamEntry extends Model
         'order_id',
         'student_id',
         'instrument_id',
+        'candidate_name',
+        'teacher_name',
+        'school_name',
         'grade',
         'subject_area',
         'delivery_method',
         'result',
+        'score',
         'exam_date',
         'notes',
     ];
@@ -28,7 +32,49 @@ class ExamEntry extends Model
     {
         return [
             'exam_date' => 'date',
+            'score' => 'integer',
         ];
+    }
+
+    /**
+     * Result band based on score.
+     */
+    public function getResultBandAttribute(): ?string
+    {
+        if ($this->score === null) {
+            return $this->result;
+        }
+
+        return match (true) {
+            $this->score >= 87 => 'Distinction',
+            $this->score >= 75 => 'Merit',
+            $this->score >= 60 => 'Pass',
+            default => 'Below Pass',
+        };
+    }
+
+    /**
+     * Is this a Hall of Fame entry? (Merit or Distinction)
+     */
+    public function isHallOfFame(): bool
+    {
+        return $this->score !== null && $this->score >= 75;
+    }
+
+    /**
+     * Get the certificate name for this result.
+     */
+    public function getCertificateNameAttribute(): ?string
+    {
+        if ($this->score === null) {
+            return null;
+        }
+
+        return match (true) {
+            $this->score >= 87 => 'Standing Ovation Certificate',
+            $this->score >= 75 => 'Take a Bow Certificate',
+            default => null,
+        };
     }
 
     public function order(): BelongsTo

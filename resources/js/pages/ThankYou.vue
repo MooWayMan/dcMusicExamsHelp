@@ -9,7 +9,40 @@ import BookingModal from '@/components/BookingModal.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
-import { Heart, Trophy, Music, Star, Award, Gift } from 'lucide-vue-next'
+import { Heart, Trophy, Music, Star, Award } from 'lucide-vue-next'
+
+interface HallOfFameEntry {
+  name: string
+  instrument: string
+  grade: string
+  score: number
+  result: string
+  award: string
+  certificate: string
+}
+
+interface ThankYouEntry {
+  name: string
+  instrument: string
+  grade: string
+  score: number
+  result: string
+  certificate: string | null
+}
+
+interface Summary {
+  distinctions: number
+  merits: number
+  passes: number
+  total: number
+}
+
+const props = defineProps<{
+  currentQuarter: string
+  hallOfFameEntries: HallOfFameEntry[]
+  thankYouEntries: ThankYouEntry[]
+  summary: Summary
+}>()
 
 const { animClass } = usePageAnimation()
 const showBookingModal = ref(false)
@@ -33,43 +66,6 @@ const certStudent =
 const thankYouHero =
   'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/Thank_You_card.png'
 
-/* ── Mock data — will be replaced with real database entries ── */
-const currentQuarter = 'Q1 2026'
-
-const hallOfFameEntries = [
-  {
-    name: 'Sophie L',
-    instrument: 'Piano',
-    grade: 'Grade 5',
-    score: 96,
-    result: 'Distinction',
-    award: 'Highest Distinction',
-    location: 'Liverpool, England',
-  },
-  {
-    name: 'James T',
-    instrument: 'Trumpet',
-    grade: 'Grade 3',
-    score: 84,
-    result: 'Merit',
-    award: 'Highest Merit',
-    location: 'Glasgow, Scotland',
-  },
-]
-
-const thankYouEntries = [
-  { name: 'Sophie L', instrument: 'Piano', grade: 'Grade 5', result: 'Distinction', location: 'Liverpool, England' },
-  { name: 'Amara K', instrument: 'Singing', grade: 'Grade 4', result: 'Distinction', location: 'Manchester, England' },
-  { name: 'James T', instrument: 'Trumpet', grade: 'Grade 3', result: 'Merit', location: 'Glasgow, Scotland' },
-  { name: 'Freddie B', instrument: 'Guitar', grade: 'Grade 2', result: 'Merit', location: 'Liverpool, England' },
-  { name: 'Isla M', instrument: 'Clarinet', grade: 'Grade 6', result: 'Merit', location: 'Edinburgh, Scotland' },
-  { name: 'Noah P', instrument: 'Piano', grade: 'Grade 1', location: 'Cardiff, Wales' },
-  { name: 'Emily R', instrument: 'Flute', grade: 'Grade 3' },
-  { name: 'Oliver S', instrument: 'Drums', grade: 'Grade 2', location: 'Birmingham, England' },
-  { name: 'Mia W', instrument: 'Violin', grade: 'Grade 4' },
-  { name: 'Archie D', instrument: 'Saxophone', grade: 'Grade 1', location: 'Belfast, Northern Ireland' },
-]
-
 const resultBadgeClass = (result: string) => {
   switch (result) {
     case 'Distinction':
@@ -80,17 +76,6 @@ const resultBadgeClass = (result: string) => {
       return 'bg-brand-teal text-white'
     default:
       return 'bg-brand-surface-soft text-brand-text'
-  }
-}
-
-const certificateName = (result?: string) => {
-  switch (result) {
-    case 'Distinction':
-      return 'Standing Ovation Certificate'
-    case 'Merit':
-      return 'Take a Bow Certificate'
-    default:
-      return null
   }
 }
 </script>
@@ -159,7 +144,7 @@ const certificateName = (result?: string) => {
         </div>
 
         <!-- Hall of Fame winner cards — spotlight style -->
-        <div :class="animClass('fade-up', 3)" class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <div v-if="hallOfFameEntries.length > 0" :class="animClass('fade-up', 3)" class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div
             v-for="entry in hallOfFameEntries"
             :key="entry.name + entry.award"
@@ -183,10 +168,6 @@ const certificateName = (result?: string) => {
             <p class="mt-1 text-base text-white/70 sm:text-base">
               {{ entry.instrument }} · {{ entry.grade }}
             </p>
-            <p v-if="entry.location" class="mt-1 text-sm text-white/50">
-              {{ entry.location }}
-            </p>
-
             <!-- Score badge -->
             <div class="mt-4 flex items-center gap-3">
               <span :class="[resultBadgeClass(entry.result), 'rounded-full px-4 py-1.5 text-sm font-bold shadow-lg']">
@@ -195,15 +176,9 @@ const certificateName = (result?: string) => {
             </div>
 
             <!-- Certificate earned -->
-            <p v-if="certificateName(entry.result)" class="mt-3 text-xs font-semibold text-white/60">
-              <Award class="mb-0.5 mr-1 inline h-3.5 w-3.5 text-brand-accent" />{{ certificateName(entry.result) }}
+            <p v-if="entry.certificate" class="mt-3 text-xs font-semibold text-white/60">
+              <Award class="mb-0.5 mr-1 inline h-3.5 w-3.5 text-brand-accent" />{{ entry.certificate }}
             </p>
-
-            <!-- Gift token callout -->
-            <div class="mt-4 flex items-center gap-2 rounded-lg bg-brand-accent/20 px-3 py-2">
-              <Gift class="h-4 w-4 text-brand-accent" />
-              <span class="text-xs font-semibold text-white">Gift token winner</span>
-            </div>
           </div>
         </div>
 
@@ -232,14 +207,17 @@ const certificateName = (result?: string) => {
               <!-- Table header -->
               <div class="bg-white/25 px-4 py-3 backdrop-blur-md sm:px-6">
                 <div class="grid grid-cols-12 gap-2">
-                  <div class="col-span-5 sm:col-span-4">
+                  <div class="col-span-4 sm:col-span-3">
                     <p class="text-xs font-semibold uppercase tracking-wide text-white sm:text-sm">Student</p>
                   </div>
-                  <div class="col-span-4 sm:col-span-4">
+                  <div class="col-span-3 sm:col-span-3">
                     <p class="text-xs font-semibold uppercase tracking-wide text-white sm:text-sm">Instrument</p>
                   </div>
-                  <div class="col-span-3 sm:col-span-4">
+                  <div class="col-span-2 sm:col-span-3">
                     <p class="text-xs font-semibold uppercase tracking-wide text-white sm:text-sm">Grade</p>
+                  </div>
+                  <div class="col-span-3 sm:col-span-3">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-white sm:text-sm">Result</p>
                   </div>
                 </div>
               </div>
@@ -252,33 +230,44 @@ const certificateName = (result?: string) => {
                   class="grid grid-cols-12 items-center gap-2 px-4 py-3 sm:px-6"
                   :class="index % 2 === 1 ? 'bg-white/15' : 'bg-white/10'"
                 >
-                  <div class="col-span-5 sm:col-span-4">
+                  <div class="col-span-4 sm:col-span-3">
                     <div class="flex items-center gap-2">
                       <Music class="hidden h-4 w-4 shrink-0 text-brand-accent sm:block" />
-                      <p class="text-base font-semibold text-white sm:text-base">{{ entry.name }}</p>
+                      <p class="text-sm font-semibold text-white sm:text-base">{{ entry.name }}</p>
                     </div>
-                    <p v-if="entry.location" class="mt-0.5 text-[10px] text-white/40 sm:text-xs sm:ml-6">
-                      {{ entry.location }}
-                    </p>
-                    <p v-if="entry.result && certificateName(entry.result)" class="mt-0.5 text-[10px] font-medium text-brand-accent sm:text-xs sm:ml-6">
-                      <Award class="mb-0.5 mr-0.5 inline h-3 w-3" />{{ certificateName(entry.result) }}
+                    <p v-if="entry.certificate" class="mt-0.5 text-[10px] font-medium text-brand-accent sm:text-xs sm:ml-6">
+                      <Award class="mb-0.5 mr-0.5 inline h-3 w-3" />{{ entry.certificate }}
                     </p>
                   </div>
-                  <div class="col-span-4 sm:col-span-4">
-                    <p class="text-base text-white/70 sm:text-base">{{ entry.instrument }}</p>
+                  <div class="col-span-3 sm:col-span-3">
+                    <p class="text-sm text-white/70 sm:text-base">{{ entry.instrument }}</p>
                   </div>
-                  <div class="col-span-3 sm:col-span-4">
-                    <p class="text-base text-white/70 sm:text-base">{{ entry.grade }}</p>
+                  <div class="col-span-2 sm:col-span-3">
+                    <p class="text-sm text-white/70 sm:text-base">{{ entry.grade }}</p>
+                  </div>
+                  <div class="col-span-3 sm:col-span-3">
+                    <span :class="[resultBadgeClass(entry.result), 'inline-block rounded-full px-2.5 py-0.5 text-xs font-bold sm:text-sm']">
+                      {{ entry.result }}
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Sample data notice -->
-            <div class="mt-4 rounded-xl bg-white/5 px-4 py-3 text-center ring-1 ring-white/10">
-              <p class="text-xs text-white/50 italic sm:text-sm">
-                Sample entries shown — real student results will appear here once exams are entered through centre 120
-              </p>
+            <!-- Summary counts -->
+            <div v-if="summary.total > 0" class="mt-4 flex flex-wrap justify-center gap-3">
+              <span class="inline-flex items-center gap-1.5 rounded-full bg-brand-accent/20 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm ring-1 ring-white/10">
+                <Trophy class="h-3 w-3" /> {{ summary.distinctions }} Distinction{{ summary.distinctions !== 1 ? 's' : '' }}
+              </span>
+              <span class="inline-flex items-center gap-1.5 rounded-full bg-brand-success/20 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm ring-1 ring-white/10">
+                <Award class="h-3 w-3" /> {{ summary.merits }} Merit{{ summary.merits !== 1 ? 's' : '' }}
+              </span>
+              <span class="inline-flex items-center gap-1.5 rounded-full bg-brand-teal/20 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm ring-1 ring-white/10">
+                <Star class="h-3 w-3" /> {{ summary.passes }} Pass{{ summary.passes !== 1 ? 'es' : '' }}
+              </span>
+              <span class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm ring-1 ring-white/10">
+                <Music class="h-3 w-3" /> {{ summary.total }} entries
+              </span>
             </div>
           </div>
         </div>

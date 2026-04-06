@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\SubscriberController;
+use App\Http\Controllers\ThankYouController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
@@ -14,7 +15,7 @@ Route::inertia('/for-teachers', 'ForTeachers')->name('for-teachers');
 Route::inertia('/for-teachers/faber-discounts', 'FaberDiscounts')->name('faber-discounts');
 Route::inertia('/for-parents', 'ForParents')->name('for-parents');
 Route::inertia('/for-students', 'ForStudents')->name('for-students');
-Route::inertia('/thank-you', 'ThankYou')->name('thank-you');
+Route::get('/thank-you', ThankYouController::class)->name('thank-you');
 Route::inertia('/exam-guide', 'ExamGuide')->name('exam-guide');
 Route::inertia('/exam-guide/ucas-points', 'ExamGuideUcas')->name('exam-guide.ucas');
 Route::inertia('/exam-guide/what-to-expect', 'ExamGuideExpect')->name('exam-guide.expect');
