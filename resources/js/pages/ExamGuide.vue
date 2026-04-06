@@ -143,7 +143,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
 <template>
   <Head :title="pageMeta.title" :description="pageMeta.description" />
 
-  <div class="min-h-screen bg-brand-bg text-brand-text">
+  <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
 
     <!-- HEADER -->

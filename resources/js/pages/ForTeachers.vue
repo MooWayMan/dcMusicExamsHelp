@@ -245,7 +245,7 @@ const faqs = [
         <div :class="animClass('fade-up', 2)" class="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <!-- Digital -->
           <div class="rounded-2xl border-4 border-brand-accent bg-white/10 p-6 shadow-2xl backdrop-blur-sm">
-            <p class="text-xl font-bold text-brand-accent sm:text-xl">Digital exams</p>
+            <p class="text-xl font-bold text-white sm:text-xl">Digital exams</p>
             <ul class="mt-4 space-y-3">
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
@@ -276,7 +276,7 @@ const faqs = [
 
           <!-- F2F -->
           <div class="rounded-2xl border-4 border-brand-accent bg-white/10 p-6 shadow-2xl backdrop-blur-sm">
-            <p class="text-xl font-bold text-brand-accent sm:text-xl">Face-to-face exams</p>
+            <p class="text-xl font-bold text-white sm:text-xl">Face-to-face exams</p>
             <ul class="mt-4 space-y-3">
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
@@ -300,7 +300,7 @@ const faqs = [
 
         <!-- Accompaniment callout -->
         <div :class="animClass('fade-up', 3)" class="mt-8 rounded-2xl border-4 border-brand-accent bg-white/10 p-5 backdrop-blur-sm sm:p-6">
-          <p class="text-lg font-semibold text-brand-accent sm:text-lg">Why teachers love the digital option</p>
+          <p class="text-lg font-semibold text-white sm:text-lg">Why teachers love the digital option</p>
           <p class="mt-2 text-base leading-snug text-white/80 sm:text-base md:text-lg">
             Many instruments require a piano accompaniment for at least two of the three exam pieces. Finding a reliable pianist who can learn the parts, attend on the specific exam day, and perform under pressure is one of the biggest headaches in exam preparation. With digital exams, students can use a high-quality recorded accompaniment instead — removing the stress for both teacher and student.
           </p>
@@ -311,7 +311,7 @@ const faqs = [
 
         <!-- Face-to-face callout -->
         <div :class="animClass('fade-up', 4)" class="mt-6 rounded-2xl border-4 border-brand-accent bg-white/10 p-5 backdrop-blur-sm sm:p-6">
-          <p class="text-lg font-semibold text-brand-accent sm:text-lg">Why face-to-face still matters</p>
+          <p class="text-lg font-semibold text-white sm:text-lg">Why face-to-face still matters</p>
           <p class="mt-2 text-base leading-snug text-white/80 sm:text-base md:text-lg">
             Face-to-face exams develop skills that digital simply cannot replicate. Students learn to perform in front of someone they have never met, in an unfamiliar room, under real pressure — and that experience is invaluable preparation for concerts, auditions and live performance. The supporting tests (sight reading, aural, improvisation) also build well-rounded musicianship that a repertoire-only digital exam does not assess.
           </p>

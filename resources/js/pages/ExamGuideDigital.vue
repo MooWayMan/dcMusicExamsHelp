@@ -10,7 +10,7 @@ import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
-import { Monitor, CheckCircle, AlertCircle, Video, Upload, Music, ArrowRight } from 'lucide-vue-next'
+import { Monitor, CheckCircle, AlertCircle, Video, Upload, Music, ArrowRight, Clock } from 'lucide-vue-next'
 
 const { animClass } = usePageAnimation()
 const showBookingModal = ref(false)
@@ -184,7 +184,7 @@ const faqs = [
 <template>
   <Head :title="pageMeta.title" :description="pageMeta.description" />
 
-  <div class="min-h-screen bg-brand-bg text-brand-text">
+  <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
 
     <!-- HEADER -->
@@ -385,8 +385,8 @@ const faqs = [
               <thead>
                 <tr class="border-b-2 border-brand-accent">
                   <th class="py-3 pr-4 text-base font-semibold text-white sm:text-base md:text-lg"></th>
-                  <th class="py-3 px-4 text-base font-semibold text-brand-accent sm:text-base md:text-lg">Digital</th>
-                  <th class="py-3 pl-4 text-base font-semibold text-brand-accent sm:text-base md:text-lg">Face-to-face</th>
+                  <th class="py-3 px-4 text-base font-semibold text-white sm:text-base md:text-lg">Digital</th>
+                  <th class="py-3 pl-4 text-base font-semibold text-white sm:text-base md:text-lg">Face-to-face</th>
                 </tr>
               </thead>
               <tbody>
@@ -559,7 +559,7 @@ const faqs = [
     </section>
 
     <!-- CTA -->
-    <section class="bg-brand-bg">
+    <section class="bg-brand-surface">
       <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)" class="text-center">
           <MyTextConstructor

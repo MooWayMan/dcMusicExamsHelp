@@ -147,7 +147,7 @@ const faqs = [
 <template>
   <Head :title="pageMeta.title" :description="pageMeta.description" />
 
-  <div class="min-h-screen bg-brand-bg text-brand-text">
+  <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
 
     <!-- HEADER -->
@@ -212,7 +212,7 @@ const faqs = [
           >
             <div class="flex items-start justify-between gap-4">
               <div>
-                <p class="text-base font-bold text-brand-accent sm:text-base md:text-lg">{{ level.grade }}</p>
+                <p class="text-base font-bold text-white sm:text-base md:text-lg">{{ level.grade }}</p>
                 <p class="mt-1 text-base text-white/80 sm:text-base md:text-lg">{{ level.description }}</p>
               </div>
             </div>
@@ -369,7 +369,7 @@ const faqs = [
             :key="diploma.title"
             class="rounded-2xl border-4 border-brand-accent bg-white/10 p-6 shadow-2xl backdrop-blur-sm"
           >
-            <p class="text-base font-bold text-brand-accent sm:text-base md:text-lg">{{ diploma.title }}</p>
+            <p class="text-base font-bold text-white sm:text-base md:text-lg">{{ diploma.title }}</p>
             <p class="mt-1 text-sm font-medium text-white sm:text-sm md:text-base">{{ diploma.level }}</p>
             <p class="mt-2 text-base text-white/80 sm:text-base md:text-lg">{{ diploma.description }}</p>
           </div>

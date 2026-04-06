@@ -98,14 +98,14 @@ const cellPadding = {
 }
 
 const wrapperClasses = computed(() =>
-  'my-4 rounded-xl border border-brand-border bg-brand-surface px-3 py-6 sm:my-8 sm:px-4 sm:py-8 md:my-10 md:px-6 md:py-10'
+  'my-4 rounded-xl border border-brand-border bg-brand-surface px-2 py-4 sm:my-8 sm:px-4 sm:py-8 md:my-10 md:px-6 md:py-10'
 )
 
 const tableBoxClasses = computed(() =>
   [props.fullWidth ? 'block' : 'inline-block', 'overflow-x-auto rounded-lg', props.bordered ? 'border-4 border-brand-primary' : 'border-0'].join(' ')
 )
 
-const tableClasses = computed(() => ['w-full min-w-[720px]', sizeClasses[props.size]].join(' '))
+const tableClasses = computed(() => ['w-full', sizeClasses[props.size]].join(' '))
 
 const headerBaseClasses = computed(() =>
   [props.headerColor, props.headerTextColor, 'whitespace-nowrap font-bold', cellPadding[props.size]].join(' ')
@@ -116,7 +116,7 @@ const headerClickableClasses = 'cursor-pointer select-none hover:opacity-90'
 const cellClasses = computed(() =>
   [
     cellPadding[props.size],
-    'whitespace-nowrap border-b border-r border-brand-border text-brand-text last:border-r-0',
+    'border-b border-r border-brand-border text-brand-text last:border-r-0',
     props.clickableCells ? 'cursor-pointer transition-colors duration-150 hover:bg-brand-surface-soft hover:text-brand-primary' : '',
   ]
     .filter(Boolean)
