@@ -45,6 +45,12 @@ function submitForm() {
     return
   }
 
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/
+  if (!emailRegex.test(form.value.email.trim())) {
+    formError.value = 'Please enter a valid email address (e.g. jane@example.com).'
+    return
+  }
+
   formSubmitting.value = true
 
   router.post('/contact', form.value, {
@@ -157,9 +163,9 @@ const faqs = [
         <div
           v-if="formSuccess"
           :class="animClass('fade-up', 2)"
-          class="mt-8 rounded-2xl border border-brand-success/30 bg-brand-success/5 p-8 text-center"
+          class="mt-8 rounded-2xl border-4 border-brand-accent bg-brand-accent/5 p-10 text-center"
         >
-          <MessageCircle class="mx-auto mb-4 h-12 w-12 text-brand-success" />
+          <MessageCircle class="mx-auto mb-4 h-14 w-14 text-brand-accent" />
           <p class="text-lg font-semibold text-brand-text sm:text-xl">Message sent!</p>
           <p class="mt-2 text-base text-brand-text-soft">
             Thanks for getting in touch. We'll get back to you as soon as we can.

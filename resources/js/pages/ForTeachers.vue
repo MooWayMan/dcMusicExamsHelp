@@ -53,7 +53,7 @@ const benefits = [
   {
     icon: Award,
     title: 'Recognition and digital badges',
-    detail: 'Teachers who are linked to 10 or more successful candidates earn a Certificate of Appreciation and a tiered digital badge (10+, 20+, 30+) to display on your website and social media. It doesn\'t matter who books the exam — as long as we know the student is yours, it counts towards your total.',
+    detail: 'Teachers who are linked to 10 or more exam entries earn a Certificate of Appreciation and a tiered digital badge to display on your website and social media. The more entries, the higher the tier. Every entry counts, regardless of result. It doesn\'t matter who books the exam — as long as we know the student is yours, it counts towards your total.',
     link: '/contact',
     linkText: 'Find out more',
   },

@@ -135,6 +135,18 @@ const handleInternalClick = (link: NavigationLink) => {
           <div class="mt-4 flex flex-wrap gap-2">
             <button
               type="button"
+              @click="router.get('/contact')"
+              :class="[
+                'inline-block cursor-pointer rounded-full border px-3 py-1.5 text-xs font-medium transition-colors sm:text-sm',
+                isDark
+                  ? 'border-white/30 text-white hover:bg-white/10'
+                  : 'border-brand-border text-brand-text hover:bg-brand-surface-soft'
+              ]"
+            >
+              Contact Us
+            </button>
+            <button
+              type="button"
               @click="router.get('/privacy')"
               :class="[
                 'inline-block cursor-pointer rounded-full border px-3 py-1.5 text-xs font-medium transition-colors sm:text-sm',
