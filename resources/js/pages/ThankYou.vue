@@ -26,7 +26,6 @@ interface ThankYouEntry {
   name: string
   instrument: string
   grade: string
-  score: number
   result: string
   certificate: string | null
 }

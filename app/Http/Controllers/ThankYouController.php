@@ -98,14 +98,21 @@ class ThankYouController extends Controller
         }
 
         // All entries for the "Every entry counts" table
+        // Grouped by result band (Distinction → Merit → Pass/Below), alphabetical within each
+        $bandOrder = ['Distinction' => 1, 'Merit' => 2, 'Pass' => 3, 'Below Pass' => 4];
+
         $thankYouEntries = $entries->map(fn (ExamEntry $e) => [
             'name' => $this->displayName($e),
             'instrument' => $e->instrument?->name ?? '—',
             'grade' => $e->grade,
-            'score' => $e->score,
             'result' => $e->result_band,
             'certificate' => $e->certificate_name,
-        ])->values()->toArray();
+            '_sortBand' => $bandOrder[$e->result_band] ?? 5,
+        ])->sortBy([
+            ['_sortBand', 'asc'],
+            ['name', 'asc'],
+        ])->map(fn ($e) => collect($e)->except('_sortBand')->toArray())
+        ->values()->toArray();
 
         // Summary counts
         $distinctions = $entries->where('score', '>=', 87)->count();
