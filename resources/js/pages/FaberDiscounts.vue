@@ -290,14 +290,19 @@ const faqs = [
     </section>
 
     <!-- DETAIL CARDS -->
-    <section class="bg-brand-surface">
-      <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      class="relative"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_8.jpg'); background-size: cover; background-position: center;"
+    >
+      <div class="absolute inset-0 bg-brand-primary/50" />
+      <div class="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>What's available</template>
@@ -308,15 +313,15 @@ const faqs = [
           <div
             v-for="card in discountCards"
             :key="card.title"
-            class="flex flex-col rounded-2xl border border-brand-border bg-brand-bg p-5 shadow-sm sm:p-6"
+            class="flex flex-col rounded-2xl border-4 border-brand-accent bg-white/10 p-5 shadow-2xl backdrop-blur-sm sm:p-6"
           >
             <div class="flex items-start gap-4">
-              <div :class="[card.iconBg, 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12']">
-                <component :is="card.icon" :class="[card.iconColor, 'h-5 w-5 sm:h-6 sm:w-6']" />
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 sm:h-12 sm:w-12">
+                <component :is="card.icon" class="h-5 w-5 text-brand-accent sm:h-6 sm:w-6" />
               </div>
               <div class="flex-1">
-                <p class="text-lg font-semibold text-brand-text sm:text-lg">{{ card.title }}</p>
-                <p class="mt-1 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg">{{ card.detail }}</p>
+                <p class="text-lg font-semibold text-white sm:text-lg">{{ card.title }}</p>
+                <p class="mt-1 text-base leading-snug text-white/80 sm:text-base md:text-lg">{{ card.detail }}</p>
               </div>
             </div>
             <!-- CTA links if present -->

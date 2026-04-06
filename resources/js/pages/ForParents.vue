@@ -138,14 +138,19 @@ const faqs = [
     </section>
 
     <!-- THE JOURNEY -->
-    <section class="border-t border-brand-border bg-brand-bg">
-      <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      class="relative border-t border-brand-border"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_7.jpg'); background-size: cover; background-position: center;"
+    >
+      <div class="absolute inset-0 bg-brand-primary/50" />
+      <div class="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>What to expect</template>
@@ -156,14 +161,14 @@ const faqs = [
           <div
             v-for="item in journeySteps"
             :key="item.step"
-            class="flex gap-4 rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm sm:gap-6 sm:p-6"
+            class="flex gap-4 rounded-2xl border-4 border-brand-accent bg-white/10 p-5 shadow-2xl backdrop-blur-sm sm:gap-6 sm:p-6"
           >
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-accent text-lg font-bold text-white sm:h-12 sm:w-12 sm:text-xl">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary via-brand-accent to-brand-primary text-lg font-bold text-white shadow-md sm:h-12 sm:w-12 sm:text-xl">
               {{ item.step }}
             </div>
             <div>
-              <p class="text-lg font-semibold text-brand-text sm:text-lg">{{ item.title }}</p>
-              <p class="mt-1 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg" v-html="item.detail"></p>
+              <p class="text-lg font-semibold text-white sm:text-lg">{{ item.title }}</p>
+              <p class="mt-1 text-base leading-snug text-white/80 sm:text-base md:text-lg" v-html="item.detail"></p>
             </div>
           </div>
         </div>
@@ -171,14 +176,19 @@ const faqs = [
     </section>
 
     <!-- WHAT YOUR CHILD GETS -->
-    <section class="bg-brand-surface">
-      <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      class="relative"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_8.jpg'); background-size: cover; background-position: center;"
+    >
+      <div class="absolute inset-0 bg-brand-primary/60" />
+      <div class="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>What your child gets through centre 120</template>
@@ -186,26 +196,28 @@ const faqs = [
         </div>
 
         <div :class="animClass('fade-up', 2)" class="mx-auto mt-8 max-w-xl">
-          <ul class="space-y-4">
-            <li
-              v-for="item in whatYourChildGets"
-              :key="item"
-              class="flex items-start gap-3"
-            >
-              <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-              <span class="text-base text-brand-text sm:text-base md:text-lg lg:text-xl" v-html="item"></span>
-            </li>
-          </ul>
+          <div class="rounded-2xl border-4 border-brand-accent bg-white/10 p-5 shadow-2xl backdrop-blur-sm sm:p-6">
+            <ul class="space-y-4">
+              <li
+                v-for="item in whatYourChildGets"
+                :key="item"
+                class="flex items-start gap-3"
+              >
+                <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
+                <span class="text-base text-white/90 sm:text-base md:text-lg lg:text-xl" v-html="item"></span>
+              </li>
+            </ul>
+          </div>
         </div>
 
         <div :class="animClass('fade-up', 3)" class="mt-6 text-center">
-          <a href="/thank-you" class="inline-block text-base font-semibold text-brand-accent underline hover:text-brand-primary sm:text-base md:text-lg">
+          <a href="/thank-you" class="inline-block text-base font-semibold text-brand-accent underline hover:text-white sm:text-base md:text-lg">
             See the Hall of Fame →
           </a>
         </div>
 
         <div :class="animClass('fade-up', 4)" class="mt-8 text-center">
-          <MyButtonConstructor variant="primary" size="large" @click="showBookingModal = true">
+          <MyButtonConstructor variant="light" size="large" @click="showBookingModal = true">
             Book Your Exam
           </MyButtonConstructor>
         </div>

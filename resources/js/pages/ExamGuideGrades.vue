@@ -185,14 +185,19 @@ const faqs = [
     </section>
 
     <!-- GRADE LEVELS -->
-    <section class="bg-brand-bg">
-      <div class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      class="relative"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_6.jpg'); background-size: cover; background-position: center;"
+    >
+      <div class="absolute inset-0 bg-brand-primary/60" />
+      <div class="relative mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>The grade journey</template>
@@ -203,27 +208,27 @@ const faqs = [
           <div
             v-for="level in gradeLevels"
             :key="level.grade"
-            class="rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm"
+            class="rounded-2xl border-4 border-brand-accent bg-white/10 p-5 shadow-2xl backdrop-blur-sm"
           >
             <div class="flex items-start justify-between gap-4">
               <div>
-                <p class="text-base font-bold text-brand-primary sm:text-base md:text-lg">{{ level.grade }}</p>
-                <p class="mt-1 text-base text-brand-text-soft sm:text-base md:text-lg">{{ level.description }}</p>
+                <p class="text-base font-bold text-brand-accent sm:text-base md:text-lg">{{ level.grade }}</p>
+                <p class="mt-1 text-base text-white/80 sm:text-base md:text-lg">{{ level.description }}</p>
               </div>
             </div>
-            <p class="mt-2 text-sm text-brand-text-soft italic sm:text-sm md:text-base">
+            <p class="mt-2 text-sm text-white/60 italic sm:text-sm md:text-base">
               Typical: {{ level.typical }}
             </p>
           </div>
         </div>
 
         <!-- UCAS callout -->
-        <div :class="animClass('fade-up', 3)" class="mt-6 rounded-2xl bg-brand-accent/5 p-6 ring-1 ring-brand-accent/20">
+        <div :class="animClass('fade-up', 3)" class="mt-6 rounded-2xl border-4 border-brand-accent bg-white/10 p-6 backdrop-blur-sm">
           <div class="flex items-start gap-3">
             <GraduationCap class="mt-0.5 h-6 w-6 shrink-0 text-brand-accent" />
             <div>
-              <p class="text-base font-semibold text-brand-text sm:text-base md:text-lg">Grades 6, 7 and 8 earn UCAS points</p>
-              <p class="mt-1 text-base text-brand-text-soft sm:text-base md:text-lg">
+              <p class="text-base font-semibold text-white sm:text-base md:text-lg">Grades 6, 7 and 8 earn UCAS points</p>
+              <p class="mt-1 text-base text-white/80 sm:text-base md:text-lg">
                 These count towards university applications, just like A-levels and BTECs.
                 A Grade 8 Distinction is worth 30 UCAS points.
               </p>

@@ -262,19 +262,24 @@ const faqs = [
     </section>
 
     <!-- IN THE ROOM (F2F) -->
-    <section class="bg-brand-bg">
-      <div class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      class="relative"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_7.jpg'); background-size: cover; background-position: center;"
+    >
+      <div class="absolute inset-0 bg-brand-primary/50" />
+      <div class="relative mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>In the exam room — face-to-face</template>
           </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg">
+          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/80 sm:text-base md:text-lg">
             Here's what happens step by step when you walk in.
           </p>
         </div>
@@ -285,12 +290,12 @@ const faqs = [
             :key="item.step"
             class="flex gap-4"
           >
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-primary text-lg font-bold text-brand-text-inverse">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary via-brand-accent to-brand-primary text-lg font-bold text-white shadow-md">
               {{ item.step }}
             </div>
             <div>
-              <p class="text-base font-semibold text-brand-text sm:text-base md:text-lg">{{ item.title }}</p>
-              <p class="mt-1 text-base text-brand-text-soft sm:text-base md:text-lg">{{ item.detail }}</p>
+              <p class="text-base font-semibold text-white sm:text-base md:text-lg">{{ item.title }}</p>
+              <p class="mt-1 text-base text-white/80 sm:text-base md:text-lg">{{ item.detail }}</p>
             </div>
           </div>
         </div>
@@ -419,7 +424,7 @@ const faqs = [
         <div :class="animClass('fade-up', 5)" class="mt-8 rounded-2xl border border-brand-accent/30 bg-brand-accent/5 p-5 sm:p-6">
           <p class="text-sm leading-snug text-brand-text-soft sm:text-base">
             <span class="font-semibold text-brand-accent">Special needs provisions:</span>
-            If a candidate has a specific educational need or disability, complete and submit Trinity's SEND provision form to trinity.csn@trinitycollege.com before the exam. This ensures any adjustments can be arranged in time.
+            If a candidate has a specific educational need or disability, Trinity offers access arrangements to support them. Visit <a href="https://www.trinitycollege.com/qualifications/music/special-needs" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand-accent underline hover:text-brand-primary">Trinity's special needs page</a> for full details and to download the application form. A new form must be submitted for every exam, at least 28 days before the exam date.
           </p>
         </div>
       </div>

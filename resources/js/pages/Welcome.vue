@@ -480,7 +480,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
           <div
             v-for="item in incentives"
             :key="item.title"
-            class="overflow-hidden rounded-2xl bg-white/10 shadow-2xl ring-1 ring-white/10 backdrop-blur-sm transition-all duration-200 hover:-translate-y-1 hover:bg-white/15 hover:shadow-[0_25px_60px_-12px_rgba(0,0,0,0.5)]"
+            class="overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm transition-all duration-200 hover:-translate-y-1 hover:bg-white/15 hover:shadow-[0_25px_60px_-12px_rgba(0,0,0,0.5)]"
           >
             <div class="p-6">
               <component :is="item.icon" class="mb-3 h-8 w-8 text-brand-accent" />

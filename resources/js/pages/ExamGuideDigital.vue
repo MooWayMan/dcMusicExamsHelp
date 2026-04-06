@@ -222,14 +222,19 @@ const faqs = [
     </section>
 
     <!-- HOW IT WORKS -->
-    <section class="bg-brand-bg">
-      <div class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      class="relative"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_5.jpg'); background-size: cover; background-position: center;"
+    >
+      <div class="absolute inset-0 bg-brand-primary/50" />
+      <div class="relative mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>How it works</template>
@@ -242,12 +247,12 @@ const faqs = [
             :key="item.step"
             class="flex gap-4"
           >
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-accent text-lg font-bold text-brand-text-inverse">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary via-brand-accent to-brand-primary text-lg font-bold text-white shadow-md">
               {{ item.step }}
             </div>
             <div>
-              <p class="text-base font-semibold text-brand-text sm:text-base md:text-lg">{{ item.title }}</p>
-              <p class="mt-1 text-base text-brand-text-soft sm:text-base md:text-lg">{{ item.detail }}</p>
+              <p class="text-base font-semibold text-white sm:text-base md:text-lg">{{ item.title }}</p>
+              <p class="mt-1 text-base text-white/80 sm:text-base md:text-lg">{{ item.detail }}</p>
             </div>
           </div>
         </div>
@@ -281,44 +286,49 @@ const faqs = [
     </section>
 
     <!-- DIGITAL PATHWAYS -->
-    <section class="bg-brand-bg">
-      <div class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      class="relative"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_11.jpg'); background-size: cover; background-position: center;"
+    >
+      <div class="absolute inset-0 bg-brand-primary/50" />
+      <div class="relative mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>Digital pathways</template>
           </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg">
+          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/80 sm:text-base md:text-lg">
             Classical &amp; Jazz digital exams offer two pathways. Rock &amp; Pop digital exams follow a single format — all three are explained below.
           </p>
         </div>
 
         <!-- Classical & Jazz pathways -->
         <div :class="animClass('fade-up', 2)" class="mt-8">
-          <p class="mb-4 text-base font-semibold text-brand-primary sm:text-base md:text-lg">Classical &amp; Jazz</p>
+          <p class="mb-4 text-base font-semibold text-brand-accent sm:text-base md:text-lg">Classical &amp; Jazz</p>
           <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div
               v-for="pathway in classicalJazzPathways"
               :key="pathway.title"
-              class="rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-sm"
+              class="rounded-2xl border-4 border-brand-accent bg-white/10 p-6 shadow-2xl backdrop-blur-sm"
             >
-              <p class="text-base font-bold text-brand-primary sm:text-base md:text-lg">{{ pathway.title }}</p>
-              <p class="mt-2 text-base text-brand-text-soft sm:text-base md:text-lg">{{ pathway.description }}</p>
+              <p class="text-base font-bold text-brand-accent sm:text-base md:text-lg">{{ pathway.title }}</p>
+              <p class="mt-2 text-base text-white/80 sm:text-base md:text-lg">{{ pathway.description }}</p>
             </div>
           </div>
         </div>
 
         <!-- Rock & Pop pathway -->
         <div :class="animClass('fade-up', 3)" class="mt-6">
-          <p class="mb-4 text-base font-semibold text-brand-primary sm:text-base md:text-lg">Rock &amp; Pop</p>
-          <div class="rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-sm">
-            <p class="text-base font-bold text-brand-primary sm:text-base md:text-lg">{{ rockPopPathway.title }}</p>
-            <p class="mt-2 text-base text-brand-text-soft sm:text-base md:text-lg">{{ rockPopPathway.description }}</p>
+          <p class="mb-4 text-base font-semibold text-brand-accent sm:text-base md:text-lg">Rock &amp; Pop</p>
+          <div class="rounded-2xl border-4 border-brand-accent bg-white/10 p-6 shadow-2xl backdrop-blur-sm">
+            <p class="text-base font-bold text-brand-accent sm:text-base md:text-lg">{{ rockPopPathway.title }}</p>
+            <p class="mt-2 text-base text-white/80 sm:text-base md:text-lg">{{ rockPopPathway.description }}</p>
           </div>
         </div>
       </div>

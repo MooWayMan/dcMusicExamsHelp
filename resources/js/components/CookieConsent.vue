@@ -74,21 +74,21 @@ function loadAnalytics() {
             We use cookies to improve your experience and understand how our site is used.
           </p>
 
-          <!-- OK button — prominent -->
+          <!-- Accept all — prominent -->
           <button
             @click="accept"
             class="mt-5 w-full cursor-pointer rounded-lg bg-brand-accent px-6 py-3 text-base font-semibold text-brand-text-inverse transition-colors hover:bg-brand-accent-dark sm:text-lg"
           >
-            OK, got it
+            Accept all cookies
           </button>
 
-          <!-- Decline + Cookie policy links — subtle -->
+          <!-- Necessary only + Cookie policy — smaller, underneath -->
           <div class="mt-3 flex items-center justify-center gap-4">
             <button
               @click="decline"
               class="cursor-pointer text-base text-brand-text-soft transition-colors hover:text-brand-accent hover:underline"
             >
-              No thanks
+              Accept only necessary cookies
             </button>
             <span class="text-brand-text-soft/40">|</span>
             <a

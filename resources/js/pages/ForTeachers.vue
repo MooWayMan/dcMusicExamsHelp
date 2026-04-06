@@ -9,8 +9,9 @@ import BookingModal from '@/components/BookingModal.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
+import MyGlassCardConstructor from '@/components/reusables/MyGlassCardConstructor.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
-import { Award, BookOpen, Gift, GraduationCap, CheckCircle, ArrowRight } from 'lucide-vue-next'
+import { Award, BookOpen, Gift, GraduationCap, CheckCircle } from 'lucide-vue-next'
 
 const { animClass } = usePageAnimation()
 const showBookingModal = ref(false)
@@ -52,32 +53,30 @@ const benefits = [
   {
     icon: Award,
     title: 'Recognition and digital badges',
-    detail: 'Teachers who enter 10 or more successful candidates earn a Certificate of Appreciation and a tiered digital badge (10+, 20+, 30+) to display on your website and social media.',
-    iconBg: 'bg-brand-success-soft',
-    iconColor: 'text-brand-success',
+    detail: 'Teachers who are linked to 10 or more successful candidates earn a Certificate of Appreciation and a tiered digital badge (10+, 20+, 30+) to display on your website and social media. It doesn\'t matter who books the exam — as long as we know the student is yours, it counts towards your total.',
+    link: '/contact',
+    linkText: 'Find out more',
   },
   {
     icon: Gift,
     title: 'Quarterly prize draws',
-    detail: 'Every exam entry through centre 120 earns an automatic entry into our quarterly teacher prize draw. The more students you enter, the more chances to win.',
-    iconBg: 'bg-brand-teal/10',
-    iconColor: 'text-brand-teal',
+    detail: 'Every exam entry through centre 120 earns an automatic entry into our quarterly teacher prize draw. The more students you enter, the more chances to win. If a parent books the exam themselves, just ask them to <a href="/contact" class="font-semibold text-brand-accent underline hover:text-white">let us know</a> which teacher the student is linked to — that way you still get the credit.',
+    link: '/contact',
+    linkText: 'Find out more',
   },
   {
     icon: BookOpen,
     title: 'Exam book discounts',
     detail: 'We show you how to access exclusive discounts on physical exam books published by Faber Music and Trinity College London Press. Plus access to discounted digital editions.',
-    iconBg: 'bg-brand-primary/10',
-    iconColor: 'text-brand-primary',
     link: '/for-teachers/faber-discounts',
+    linkText: 'Find out more',
   },
   {
     icon: GraduationCap,
     title: 'Your students get celebrated',
     detail: 'Every student entered through centre 120 gets listed on our Thank You page. Merit and Distinction students make the <strong>Hall of Fame</strong> — with a Take a Bow or Standing Ovation Certificate. The highest scorers each quarter get the top spot and a gift token. Parents love it.',
-    iconBg: 'bg-brand-accent/10',
-    iconColor: 'text-brand-accent',
     link: '/thank-you',
+    linkText: 'Find out more',
   },
 ]
 
@@ -147,19 +146,24 @@ const faqs = [
     </section>
 
     <!-- HOW TO BOOK -->
-    <section class="border-t border-brand-border bg-brand-bg">
-      <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      class="relative border-t border-brand-border"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_9.jpg'); background-size: cover; background-position: center;"
+    >
+      <div class="absolute inset-0 bg-brand-primary/50" />
+      <div class="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>How booking works</template>
           </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
+          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/80 sm:text-base md:text-lg lg:text-xl">
             Four steps. No extra cost. Your students are entered through centre 120 and qualify for everything.
           </p>
         </div>
@@ -168,20 +172,20 @@ const faqs = [
           <div
             v-for="item in bookingSteps"
             :key="item.step"
-            class="flex gap-4 rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm sm:gap-6 sm:p-6"
+            class="flex gap-4 rounded-2xl border-4 border-brand-accent bg-white/10 p-5 shadow-2xl backdrop-blur-sm sm:gap-6 sm:p-6"
           >
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-accent text-lg font-bold text-white sm:h-12 sm:w-12 sm:text-xl">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary via-brand-accent to-brand-primary text-lg font-bold text-white shadow-md sm:h-12 sm:w-12 sm:text-xl">
               {{ item.step }}
             </div>
             <div>
-              <p class="text-lg font-semibold text-brand-text sm:text-lg">{{ item.title }}</p>
-              <p class="mt-1 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg">{{ item.detail }}</p>
+              <p class="text-lg font-semibold text-white sm:text-lg">{{ item.title }}</p>
+              <p class="mt-1 text-base leading-snug text-white/80 sm:text-base md:text-lg">{{ item.detail }}</p>
             </div>
           </div>
         </div>
 
         <div :class="animClass('fade-up', 3)" class="mt-8 text-center">
-          <MyButtonConstructor variant="primary" size="large" @click="showBookingModal = true">
+          <MyButtonConstructor variant="light" size="large" @click="showBookingModal = true">
             Book Your Exam
           </MyButtonConstructor>
         </div>
@@ -189,144 +193,133 @@ const faqs = [
     </section>
 
     <!-- WHAT YOU GET -->
-    <section class="bg-brand-surface">
-      <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      class="relative border-t border-brand-border"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_5.jpg'); background-size: cover; background-position: center;"
+    >
+      <div class="absolute inset-0 bg-brand-primary/20" />
+
+      <div class="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>What you get as a teacher</template>
           </MyTextConstructor>
         </div>
 
-        <div :class="animClass('fade-up', 2)" class="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <div
-            v-for="benefit in benefits"
-            :key="benefit.title"
-            class="rounded-2xl border border-brand-border bg-brand-bg p-5 shadow-sm sm:p-6"
-          >
-            <div class="flex items-start gap-4">
-              <div :class="[benefit.iconBg, 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12']">
-                <component :is="benefit.icon" :class="[benefit.iconColor, 'h-5 w-5 sm:h-6 sm:w-6']" />
-              </div>
-              <div>
-                <p class="text-lg font-semibold text-brand-text sm:text-lg">{{ benefit.title }}</p>
-                <p class="mt-1 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg" v-html="benefit.detail"></p>
-                <a
-                  v-if="benefit.link"
-                  :href="benefit.link"
-                  class="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-brand-accent transition hover:opacity-70"
-                >
-                  Find out more
-                  <ArrowRight class="h-4 w-4" />
-                </a>
-              </div>
-            </div>
-          </div>
+        <div :class="animClass('fade-up', 2)" class="mt-10">
+          <MyGlassCardConstructor :cards="benefits" :columns="2" />
         </div>
       </div>
     </section>
 
     <!-- DIGITAL vs FACE TO FACE -->
-    <section class="border-t border-brand-border bg-brand-bg">
-      <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      class="relative border-t border-brand-border"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_6.jpg'); background-size: cover; background-position: center;"
+    >
+      <div class="absolute inset-0 bg-brand-primary/50" />
+      <div class="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>Digital or face-to-face?</template>
           </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
+          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/80 sm:text-base md:text-lg lg:text-xl">
             Trinity offers both options for Classical &amp; Jazz and Rock &amp; Pop graded exams and diplomas. Both carry the same Ofqual-regulated certificate and UCAS points — the difference is how the exam is taken and what it includes.
           </p>
         </div>
 
         <div :class="animClass('fade-up', 2)" class="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <!-- Digital -->
-          <div class="rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-sm">
+          <div class="rounded-2xl border-4 border-brand-accent bg-white/10 p-6 shadow-2xl backdrop-blur-sm">
             <p class="text-xl font-bold text-brand-accent sm:text-xl">Digital exams</p>
             <ul class="mt-4 space-y-3">
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                <span class="text-base text-brand-text sm:text-base md:text-lg">Record anywhere on your own schedule — 28 days to submit after booking</span>
+                <span class="text-base text-white/90 sm:text-base md:text-lg">Record anywhere on your own schedule — 28 days to submit after booking</span>
               </li>
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                <span class="text-base text-brand-text sm:text-base md:text-lg">Submit your video through Trinity's MyTrinity portal</span>
+                <span class="text-base text-white/90 sm:text-base md:text-lg">Submit your video through Trinity's MyTrinity portal</span>
               </li>
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                <span class="text-base text-brand-text sm:text-base md:text-lg">Use a recorded accompaniment instead of a live pianist — no scrambling to find an accompanist for exam day</span>
+                <span class="text-base text-white/90 sm:text-base md:text-lg">Use a recorded accompaniment instead of a live pianist — no scrambling to find an accompanist for exam day</span>
               </li>
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                <span class="text-base text-brand-text sm:text-base md:text-lg">No sight reading, aural or improvisation tests — digital replaces these with Overall Performance Criteria</span>
+                <span class="text-base text-white/90 sm:text-base md:text-lg">No sight reading, aural or improvisation tests — digital replaces these with Overall Performance Criteria</span>
               </li>
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                <span class="text-base text-brand-text sm:text-base md:text-lg">Repertoire-only pathway available — four pieces, no technical work at all</span>
+                <span class="text-base text-white/90 sm:text-base md:text-lg">Repertoire-only pathway available — four pieces, no technical work at all</span>
               </li>
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                <span class="text-base text-brand-text sm:text-base md:text-lg">Same certificate and UCAS points as face-to-face</span>
+                <span class="text-base text-white/90 sm:text-base md:text-lg">Same certificate and UCAS points as face-to-face</span>
               </li>
             </ul>
           </div>
 
           <!-- F2F -->
-          <div class="rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-sm">
+          <div class="rounded-2xl border-4 border-brand-accent bg-white/10 p-6 shadow-2xl backdrop-blur-sm">
             <p class="text-xl font-bold text-brand-accent sm:text-xl">Face-to-face exams</p>
             <ul class="mt-4 space-y-3">
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                <span class="text-base text-brand-text sm:text-base md:text-lg">Exam sessions in Liverpool and Wirral at scheduled dates throughout the year</span>
+                <span class="text-base text-white/90 sm:text-base md:text-lg">Exam sessions in Liverpool and Wirral at scheduled dates throughout the year</span>
               </li>
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                <span class="text-base text-brand-text sm:text-base md:text-lg">Live with a Trinity examiner in the room — traditional exam experience</span>
+                <span class="text-base text-white/90 sm:text-base md:text-lg">Live with a Trinity examiner in the room — traditional exam experience</span>
               </li>
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                <span class="text-base text-brand-text sm:text-base md:text-lg">Three pieces plus technical work and two supporting tests (sight reading, aural, improvisation or musical knowledge)</span>
+                <span class="text-base text-white/90 sm:text-base md:text-lg">Three pieces plus technical work and two supporting tests (sight reading, aural, improvisation or musical knowledge)</span>
               </li>
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                <span class="text-base text-brand-text sm:text-base md:text-lg">Live accompanist required for accompanied pieces from Grade 4 onwards — backing tracks are only permitted up to Grade 3</span>
+                <span class="text-base text-white/90 sm:text-base md:text-lg">Live accompanist required for accompanied pieces from Grade 4 onwards — backing tracks are only permitted up to Grade 3</span>
               </li>
             </ul>
           </div>
         </div>
 
         <!-- Accompaniment callout -->
-        <div :class="animClass('fade-up', 3)" class="mt-8 rounded-2xl border border-brand-accent/30 bg-brand-accent/5 p-5 sm:p-6">
+        <div :class="animClass('fade-up', 3)" class="mt-8 rounded-2xl border-4 border-brand-accent bg-white/10 p-5 backdrop-blur-sm sm:p-6">
           <p class="text-lg font-semibold text-brand-accent sm:text-lg">Why teachers love the digital option</p>
-          <p class="mt-2 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg">
+          <p class="mt-2 text-base leading-snug text-white/80 sm:text-base md:text-lg">
             Many instruments require a piano accompaniment for at least two of the three exam pieces. Finding a reliable pianist who can learn the parts, attend on the specific exam day, and perform under pressure is one of the biggest headaches in exam preparation. With digital exams, students can use a high-quality recorded accompaniment instead — removing the stress for both teacher and student.
           </p>
-          <p class="mt-3 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg">
-            <span class="font-semibold text-brand-text">In face-to-face exams</span> across brass, woodwind and singing, backing tracks are only permitted up to Grade 3. From Grade 4 onwards, a live accompanist must be in the room. <span class="font-semibold text-brand-text">Digital exams</span> remove this restriction entirely, letting candidates at any grade use a recorded accompaniment. For teachers who play their students' accompaniments themselves, digital also takes away the pressure of performing live in front of the examiner.
+          <p class="mt-3 text-base leading-snug text-white/80 sm:text-base md:text-lg">
+            <span class="font-semibold text-white">In face-to-face exams</span> across brass, woodwind and singing, backing tracks are only permitted up to Grade 3. From Grade 4 onwards, a live accompanist must be in the room. <span class="font-semibold text-white">Digital exams</span> remove this restriction entirely, letting candidates at any grade use a recorded accompaniment. For teachers who play their students' accompaniments themselves, digital also takes away the pressure of performing live in front of the examiner.
           </p>
         </div>
 
         <!-- Face-to-face callout -->
-        <div :class="animClass('fade-up', 4)" class="mt-6 rounded-2xl border border-brand-accent/30 bg-brand-accent/5 p-5 sm:p-6">
+        <div :class="animClass('fade-up', 4)" class="mt-6 rounded-2xl border-4 border-brand-accent bg-white/10 p-5 backdrop-blur-sm sm:p-6">
           <p class="text-lg font-semibold text-brand-accent sm:text-lg">Why face-to-face still matters</p>
-          <p class="mt-2 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg">
+          <p class="mt-2 text-base leading-snug text-white/80 sm:text-base md:text-lg">
             Face-to-face exams develop skills that digital simply cannot replicate. Students learn to perform in front of someone they have never met, in an unfamiliar room, under real pressure — and that experience is invaluable preparation for concerts, auditions and live performance. The supporting tests (sight reading, aural, improvisation) also build well-rounded musicianship that a repertoire-only digital exam does not assess.
           </p>
-          <p class="mt-3 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg">
+          <p class="mt-3 text-base leading-snug text-white/80 sm:text-base md:text-lg">
             There is also a real benefit to having a fixed exam date. With digital exams, students can spend months re-recording, chasing perfection — and the process can drift indefinitely. A face-to-face date creates focus: the student knows they have to be ready, and the teacher can plan a preparation schedule around it. Many teachers find their students actually perform better with that deadline in place.
           </p>
-          <p class="mt-3 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg">
-            <span class="font-semibold text-brand-text">A tip from experience:</span> with digital exams, do not pay until your student has actually recorded their performance. Once you pay, the 28-day submission window starts. If the recording is not ready, you are under pressure from day one. Get the recording done first, then book and submit.
+          <p class="mt-3 text-base leading-snug text-white/80 sm:text-base md:text-lg">
+            <span class="font-semibold text-white">A tip from experience:</span> with digital exams, do not pay until your student has actually recorded their performance. Once you pay, the 28-day submission window starts. If the recording is not ready, you are under pressure from day one. Get the recording done first, then book and submit.
           </p>
         </div>
       </div>
@@ -375,7 +368,7 @@ const faqs = [
             <template #myTitle>Ready to get your students recognised?</template>
           </MyTextConstructor>
           <div class="mt-4">
-            <MyButtonConstructor variant="primary" size="large" @click="showBookingModal = true">
+            <MyButtonConstructor variant="light" size="large" @click="showBookingModal = true">
               Book Your Exam
             </MyButtonConstructor>
           </div>

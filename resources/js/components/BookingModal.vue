@@ -179,8 +179,8 @@ onUnmounted(() => {
               </div>
 
               <p class="mt-5 text-center text-sm text-brand-text-soft">
-                All three options lead to official Trinity College London booking systems.
-                There is no extra charge for booking through centre 120.
+                All three options take you directly to official Trinity College London booking systems.
+                Using centre code 120 unlocks access to our incentives and recognition — at no extra cost.
               </p>
             </div>
           </div>

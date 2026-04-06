@@ -8,6 +8,7 @@ import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
 import BookingModal from '@/components/BookingModal.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
+import MyGlassCardConstructor from '@/components/reusables/MyGlassCardConstructor.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
 import { Music, GraduationCap, Users, Heart, Piano, Guitar } from 'lucide-vue-next'
 
@@ -104,21 +105,14 @@ const highlights = [
     </section>
 
     <!-- HIGHLIGHTS -->
-    <section class="bg-brand-bg">
-      <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
-        <div class="grid gap-8 sm:grid-cols-2">
-          <div
-            v-for="(item, index) in highlights"
-            :key="item.title"
-            :class="animClass('fade-up', index + 1)"
-            class="rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-lg sm:p-8"
-          >
-            <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-accent/10">
-              <component :is="item.icon" class="h-6 w-6 text-brand-accent" />
-            </div>
-            <p class="text-lg font-semibold text-brand-text sm:text-xl">{{ item.title }}</p>
-            <p class="mt-2 text-sm leading-relaxed text-brand-text-soft sm:text-base">{{ item.detail }}</p>
-          </div>
+    <section
+      class="relative"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_10.jpg'); background-size: cover; background-position: center;"
+    >
+      <div class="absolute inset-0 bg-brand-primary/50" />
+      <div class="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
+        <div :class="animClass('fade-up', 1)">
+          <MyGlassCardConstructor :cards="highlights" :columns="2" :showFooter="false" />
         </div>
       </div>
     </section>
