@@ -11,7 +11,7 @@ import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
 import MyGlassCardConstructor from '@/components/reusables/MyGlassCardConstructor.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
-import { Award, BookOpen, Gift, GraduationCap, CheckCircle, ChevronRight, Trophy } from 'lucide-vue-next'
+import { Award, ArrowRight, BookOpen, Gift, GraduationCap, CheckCircle, ChevronRight, Trophy } from 'lucide-vue-next'
 
 const { animClass } = usePageAnimation()
 const showBookingModal = ref(false)
@@ -52,7 +52,7 @@ const bookingSteps = [
 const benefits = [
   {
     icon: Award,
-    title: 'Recognition and digital badges',
+    title: 'Appreciation awards and digital badges',
     detail: 'Every entry through centre 120 counts towards your award — regardless of result. Totals refresh every quarter. Earn Bronze (10+), Silver (20+), Gold (30+) or Top Award (40+) status and display a digital badge on your website and social media. It doesn\'t matter who books the exam — as long as we know the student is yours, it counts towards your total.',
     link: '/for-teachers/awards',
     linkText: 'See the award tiers',
@@ -61,8 +61,8 @@ const benefits = [
     icon: Gift,
     title: 'Quarterly prize draws',
     detail: 'Every exam entry through centre 120 — face-to-face or digital — earns an automatic entry into our quarterly teacher prize draw. The more students you enter, the more chances to win. If a parent books the exam themselves, just ask them to <a href="/contact" class="font-semibold text-brand-accent underline hover:text-white">let us know</a> which teacher the student is linked to — that way you still get the credit.',
-    link: '/contact',
-    linkText: 'Find out more',
+    link: '/incentives?from=for-teachers',
+    linkText: 'See all incentives',
   },
   {
     icon: BookOpen,
@@ -75,17 +75,17 @@ const benefits = [
     icon: GraduationCap,
     title: 'Your students get celebrated',
     detail: 'Every student entered through centre 120 — face-to-face or digital — gets listed on our Recognition page. Merit and Distinction students make the <strong>Hall of Fame</strong> — with a Take a Bow or Standing Ovation Certificate. The highest scorers each quarter get the top spot and a gift token (£20, or divided equally if there is a tie — minimum £5 each). Parents love it.',
-    link: '/recognition',
+    link: '/recognition?from=for-teachers',
     linkText: 'Find out more',
   },
-  {
-    icon: BookOpen,
-    title: 'Everything in one place',
-    detail: 'All the exam guidance, booking information, fees, dates and procedures your students and parents need — in one place on musicExams.help. Save yourself time answering the same questions over and over. Just point parents and students to the site.',
-    link: '/',
-    linkText: 'Browse the site',
-  },
 ]
+
+/* ── Standalone full-width card ── */
+const everythingCard = {
+  icon: BookOpen,
+  title: 'Making your life easier',
+  detail: 'All the exam guidance, booking information, fees, dates and procedures your students and parents need — in one place on musicExams.help. Save yourself time answering the same questions over and over. Just point parents and students to the site.',
+}
 
 const faqs = [
   {
@@ -251,7 +251,24 @@ const faqs = [
           </MyTextConstructor>
         </div>
 
+        <!-- Full-width "Everything in one place" card — inverted colours -->
         <div :class="animClass('fade-up', 2)" class="mt-10">
+          <div class="overflow-hidden rounded-2xl border-4 border-brand-accent shadow-2xl transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_25px_60px_-12px_rgba(0,0,0,0.5)]">
+            <!-- Header — blue gradient bar -->
+            <div class="flex w-full items-center gap-3 bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary px-5 py-3 sm:px-6">
+              <component :is="everythingCard.icon" class="h-5 w-5 shrink-0 text-white sm:h-6 sm:w-6" />
+              <p class="text-lg font-semibold text-white sm:text-xl">{{ everythingCard.title }}</p>
+            </div>
+            <!-- Body — black -->
+            <div class="bg-black p-5 sm:p-6">
+              <p class="text-lg leading-relaxed text-white/90 sm:text-lg md:text-xl" v-html="everythingCard.detail"></p>
+            </div>
+            <!-- Footer — blue gradient bar (no CTA, just a visual close) -->
+            <div class="bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary px-5 py-2"></div>
+          </div>
+        </div>
+
+        <div :class="animClass('fade-up', 3)" class="mt-6">
           <MyGlassCardConstructor :cards="benefits" :columns="2" />
         </div>
       </div>

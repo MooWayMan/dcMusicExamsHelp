@@ -219,6 +219,11 @@ const faqs = [
     question: 'Do Trinity require a theory exam before higher grades?',
     answer: 'No. Unlike some other exam boards, Trinity has no theory requirement at any grade. You can go straight to Grade 8 without ever sitting a theory exam. Theory exams are available separately if you want them.',
   },
+  {
+    id: 7,
+    question: 'When do exam fees change?',
+    answer: 'Trinity sets fees on a calendar year basis — the current fees run from 1 January to 31 December 2026. Any changes are announced by Trinity ahead of the new year.',
+  },
 ]
 </script>
 

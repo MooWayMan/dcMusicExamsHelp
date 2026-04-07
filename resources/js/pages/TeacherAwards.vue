@@ -27,15 +27,12 @@ const breadcrumbPages = [
   { name: 'Awards', href: '/for-teachers/awards', current: true },
 ]
 
-/* ── Placeholder badge image — same one for all tiers until Canva graphics are done ── */
-const placeholderBadge =
-  'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/certThankTeacher_10.png'
-
 const awardTiers = [
   {
     name: 'Bronze Award',
     entries: '10+',
     icon: Shield,
+    badge: 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/awardTA10.png',
     borderColor: 'border-amber-700',
     bgColor: 'bg-amber-700/10',
     textColor: 'text-amber-700',
@@ -46,6 +43,7 @@ const awardTiers = [
     name: 'Silver Award',
     entries: '20+',
     icon: Award,
+    badge: 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/awardTA20.png',
     borderColor: 'border-slate-400',
     bgColor: 'bg-slate-400/10',
     textColor: 'text-slate-500',
@@ -56,6 +54,7 @@ const awardTiers = [
     name: 'Gold Award',
     entries: '30+',
     icon: Trophy,
+    badge: 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/awardTA30.png',
     borderColor: 'border-yellow-500',
     bgColor: 'bg-yellow-500/10',
     textColor: 'text-yellow-600',
@@ -66,6 +65,7 @@ const awardTiers = [
     name: 'Top Award',
     entries: '40+',
     icon: Crown,
+    badge: 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/awardTA40.png',
     borderColor: 'border-brand-accent',
     bgColor: 'bg-brand-accent/10',
     textColor: 'text-brand-accent',
@@ -261,17 +261,18 @@ const faqs = [
           </p>
         </div>
 
-        <div :class="animClass('zoom-in', 2)" class="mx-auto mt-8 max-w-md">
-          <div class="overflow-hidden rounded-2xl bg-white/10 p-3 shadow-2xl border-4 border-brand-accent backdrop-blur-sm">
+        <div :class="animClass('zoom-in', 2)" class="mx-auto mt-8 grid max-w-2xl grid-cols-2 gap-4 sm:grid-cols-4">
+          <div
+            v-for="tier in awardTiers"
+            :key="tier.name"
+            class="overflow-hidden rounded-2xl bg-white/10 p-2 shadow-2xl backdrop-blur-sm"
+          >
             <img
-              :src="placeholderBadge"
-              alt="Example teacher award certificate"
-              class="block w-full rounded-2xl"
+              :src="tier.badge"
+              :alt="tier.name + ' badge'"
+              class="block w-full object-contain"
             />
           </div>
-          <p class="mt-3 text-center text-xs text-white/60 italic">
-            Example certificate — your name, tier and total entries will appear on yours
-          </p>
         </div>
       </div>
     </section>

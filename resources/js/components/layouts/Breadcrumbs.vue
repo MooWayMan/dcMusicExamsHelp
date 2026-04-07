@@ -1,5 +1,6 @@
 <!-- resources/js/components/layouts/Breadcrumbs.vue -->
 <script setup lang="ts">
+import { computed, onMounted, ref } from 'vue'
 import { ChevronRightIcon, HomeIcon } from '@heroicons/vue/20/solid'
 import { Link } from '@inertiajs/vue3'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
@@ -17,6 +18,37 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   homeHref: '/',
+})
+
+/* ── Dynamic parent page from ?from= query parameter ── */
+const fromParam = ref('')
+onMounted(() => {
+  const params = new URLSearchParams(window.location.search)
+  fromParam.value = params.get('from') || ''
+})
+
+const parentPages: Record<string, { name: string; href: string }> = {
+  'for-teachers': { name: 'For Teachers', href: '/for-teachers' },
+  'for-students': { name: 'For Students', href: '/for-students' },
+  'for-parents': { name: 'For Parents', href: '/for-parents' },
+  'incentives': { name: 'Incentives', href: '/incentives' },
+  'exam-guide': { name: 'Exam Guide', href: '/exam-guide' },
+  'exam-fees': { name: 'Exam Fees', href: '/exam-fees' },
+  'faq': { name: 'FAQ', href: '/faq' },
+}
+
+const resolvedPages = computed(() => {
+  const parent = parentPages[fromParam.value]
+  if (!parent) return props.pages
+
+  // Don't add parent if it's already in the breadcrumb trail
+  const alreadyIncluded = props.pages.some(p => p.href === parent.href)
+  if (alreadyIncluded) return props.pages
+
+  return [
+    { name: parent.name, href: parent.href, current: false },
+    ...props.pages,
+  ]
 })
 </script>
 
@@ -40,7 +72,7 @@ const props = withDefaults(defineProps<Props>(), {
 
           <!-- Items -->
           <li
-            v-for="page in props.pages"
+            v-for="page in resolvedPages"
             :key="page.name"
             class="flex items-center gap-2"
           >

@@ -211,7 +211,7 @@ const faqs = [
         </div>
 
         <div :class="animClass('fade-up', 3)" class="mt-6 text-center">
-          <a href="/recognition" class="inline-block text-base font-semibold text-brand-accent underline hover:text-white sm:text-base md:text-lg">
+          <a href="/recognition?from=for-parents" class="inline-block text-base font-semibold text-brand-accent underline hover:text-white sm:text-base md:text-lg">
             See the Hall of Fame →
           </a>
         </div>

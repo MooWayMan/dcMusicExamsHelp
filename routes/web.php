@@ -24,6 +24,7 @@ Route::inertia('/exam-guide/digital-exams', 'ExamGuideDigital')->name('exam-guid
 Route::inertia('/exam-guide/grades-explained', 'ExamGuideGrades')->name('exam-guide.grades');
 Route::inertia('/exam-fees', 'ExamFees')->name('exam-fees');
 Route::inertia('/contact', 'Contact')->name('contact');
+Route::inertia('/incentives', 'Incentives')->name('incentives');
 Route::inertia('/about', 'About')->name('about');
 Route::inertia('/privacy', 'PrivacyPolicy')->name('privacy');
 Route::inertia('/cookies', 'CookiePolicy')->name('cookies');

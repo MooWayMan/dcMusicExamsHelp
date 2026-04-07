@@ -87,7 +87,7 @@ const incentives = [
     borderColor: 'border-l-brand-accent',
   },
   {
-    title: 'Teacher recognition and digital badges',
+    title: 'Teacher appreciation awards and digital badges',
     detail: 'Every entry counts, regardless of result. Earn tiered digital badges — Bronze, Silver, Gold and Top Award — at 10+, 20+, 30+ and 40+ entries. Display them on your website and call yourself an award-winning music teacher.',
     icon: Award,
     iconBg: 'bg-brand-success-soft',
@@ -160,7 +160,7 @@ const usefulLinks = [
     id: 3,
     title: 'Explore the incentives',
     subTitle: 'Prize draws, teacher recognition, student funding and discounts on exam materials.',
-    url: '#incentives',
+    url: '/incentives',
   },
 ]
 
@@ -504,6 +504,12 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
               </p>
             </div>
           </div>
+        </div>
+
+        <div class="mt-8 text-center">
+          <a href="/incentives" class="inline-flex items-center gap-1 text-base font-semibold text-brand-accent transition hover:opacity-70 sm:text-lg">
+            See all incentives →
+          </a>
         </div>
 
       </div>
