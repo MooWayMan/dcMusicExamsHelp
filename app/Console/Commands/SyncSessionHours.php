@@ -144,7 +144,7 @@ class SyncSessionHours extends Command
     /**
      * Parse git log for commit timestamps.
      */
-    private function getGitTimestamps(Carbon $since): \Illuminate\Support\Collection
+    private function getGitTimestamps(\DateTimeInterface $since): \Illuminate\Support\Collection
     {
         $output = [];
         $basePath = base_path();
