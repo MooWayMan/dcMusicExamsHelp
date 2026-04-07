@@ -22,7 +22,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 <template>
   <!-- Fixed bar sits directly below the h-20 navbar -->
-  <div class="fixed left-0 right-0 top-20 z-40 border-b border-brand-border/50 bg-brand-surface/95 backdrop-blur">
+  <div class="fixed left-0 right-0 top-20 z-40 border-b border-brand-border/50 bg-white">
     <div class="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
       <nav class="flex items-center text-brand-text-soft" aria-label="Breadcrumb">
         <ol role="list" class="flex items-center space-x-2">

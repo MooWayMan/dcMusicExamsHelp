@@ -28,7 +28,7 @@ const faqs = [
   {
     question: 'Do I book through this website?',
     answer:
-      'No — we guide you through the process and then link you directly to the official Trinity booking page. When you get there, centre code 120 will already be applied.',
+      'No — when you click Book Your Exam, you will see a short menu asking which type of exam you want. Each option takes you to the correct Trinity booking system. For digital exams, our link pre-fills centre code 120, but if you refresh or go back the code can disappear — always check the referral code box says 120 before you submit. For face-to-face exams, your centre is detected by the booking system.',
   },
   {
     question: 'Who is this for?',

@@ -24,13 +24,13 @@ const brandWordmark = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musi
     >
         <!-- Left: sidebar trigger + home -->
         <div class="flex items-center gap-1.5">
-            <SidebarTrigger class="-ml-1" />
+            <SidebarTrigger class="-ml-1 !h-9 !w-9 text-brand-accent" />
 
             <Link
                 href="/"
-                class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-brand-text-soft transition-colors hover:bg-brand-surface-soft hover:text-brand-accent"
+                class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-brand-accent transition-colors hover:bg-brand-surface-soft hover:text-brand-accent-dark"
             >
-                <Home class="h-4 w-4" />
+                <Home class="h-6 w-6" />
             </Link>
 
             <template v-if="breadcrumbs && breadcrumbs.length > 0">

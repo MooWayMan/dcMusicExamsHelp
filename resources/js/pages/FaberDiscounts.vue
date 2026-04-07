@@ -7,6 +7,7 @@ import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
+import MyGlassCardConstructor from '@/components/reusables/MyGlassCardConstructor.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
 import {
   Users,
@@ -50,30 +51,30 @@ const pathwaySteps = [
     icon: Percent,
     label: 'Earn commission on ebook sales',
     tagline: 'Parents save 10% — and you earn on every purchase',
-    colour: 'brand-teal',
-    bgRing: 'bg-brand-teal/10',
-    iconColour: 'text-brand-teal',
-    borderColour: 'border-brand-teal',
+    colour: 'brand-accent',
+    bgRing: 'bg-brand-accent/10',
+    iconColour: 'text-brand-accent',
+    borderColour: 'border-brand-accent',
   },
   {
     id: 3,
     icon: ShoppingBag,
     label: 'Set up your trade account',
     tagline: 'Exclusive discount on all physical Faber and Trinity Press books',
-    colour: 'brand-success',
-    bgRing: 'bg-brand-success-soft',
-    iconColour: 'text-brand-success',
-    borderColour: 'border-brand-success',
+    colour: 'brand-accent',
+    bgRing: 'bg-brand-accent/10',
+    iconColour: 'text-brand-accent',
+    borderColour: 'border-brand-accent',
   },
   {
     id: 4,
     icon: Gift,
     label: 'Claim your free book each year',
     tagline: 'Opens mid-June — first come, first served',
-    colour: 'brand-primary',
-    bgRing: 'bg-brand-primary/10',
-    iconColour: 'text-brand-primary',
-    borderColour: 'border-brand-primary',
+    colour: 'brand-accent',
+    bgRing: 'bg-brand-accent/10',
+    iconColour: 'text-brand-accent',
+    borderColour: 'border-brand-accent',
   },
 ]
 
@@ -85,47 +86,33 @@ const discountCards = [
     icon: Percent,
     title: 'Earn commission on ebook sales',
     detail:
-      'Trinity College London Press sells digital editions of exam books through their online store. As a teacher, you can sign up for a free affiliate link. When students or parents buy an ebook through your link, they get 10% off — and you earn commission on every sale. It costs nothing to set up and takes a few minutes.',
-    cta: 'Get in touch to set up your link',
-    ctaUrl: 'mailto:musicexams@musicexams.help?subject=Ebook%20affiliate%20link%20%E2%80%93%20earning%20commission%20on%20ebook%20sales&body=Hi%2C%0A%0AI%27d%20like%20to%20set%20up%20my%20ebook%20affiliate%20link%20so%20my%20students%20and%20parents%20can%20get%2010%25%20off.%20Could%20you%20walk%20me%20through%20how%20to%20get%20started%3F%0A%0AThanks',
-    ctaExternal: false,
-    cta2: 'Browse the ebook store now',
-    cta2Url: 'https://store.trinitycollege.com/?aff=99',
-    iconBg: 'bg-brand-teal/10',
-    iconColor: 'text-brand-teal',
+      'Trinity College London Press sells digital editions of exam books through their online store. As a teacher, you can sign up for a free affiliate link. When students or parents buy an ebook through your link, they get 10% off — and you earn commission on every sale. It costs nothing to set up and takes a few minutes.<br /><br /><a href="https://store.trinitycollege.com/?aff=99" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-sm font-semibold text-brand-accent transition hover:opacity-70">Browse the ebook store now →</a>',
+    link: 'mailto:musicexams@musicexams.help?subject=Ebook%20affiliate%20link%20%E2%80%93%20earning%20commission%20on%20ebook%20sales&body=Hi%2C%0A%0AI%27d%20like%20to%20set%20up%20my%20ebook%20affiliate%20link%20so%20my%20students%20and%20parents%20can%20get%2010%25%20off.%20Could%20you%20walk%20me%20through%20how%20to%20get%20started%3F%0A%0AThanks',
+    linkText: 'Get in touch to set up your link',
   },
   {
     icon: ShoppingBag,
     title: 'Exclusive trade discount on physical books',
     detail:
       'Registered music teachers can set up a Faber Education Trade Account and get an exclusive discount on all physical books published by Faber Music and Trinity College London Press — not just exam books, but everything in their catalogue. The ordering process is done by spreadsheet at the moment, but the saving is well worth it.',
-    cta: 'Get in touch to find out more',
-    ctaUrl: 'mailto:musicexams@musicexams.help?subject=Setting%20up%20a%20Faber%20trade%20account&body=Hi%2C%0A%0AI%27m%20interested%20in%20setting%20up%20a%20Faber%20trade%20account%20for%20the%20teacher%20discount%20on%20exam%20books.%20Could%20you%20let%20me%20know%20how%20to%20get%20started%3F%0A%0AThanks',
-    ctaExternal: false,
-    iconBg: 'bg-brand-success-soft',
-    iconColor: 'text-brand-success',
+    link: 'mailto:musicexams@musicexams.help?subject=Setting%20up%20a%20Faber%20trade%20account&body=Hi%2C%0A%0AI%27m%20interested%20in%20setting%20up%20a%20Faber%20trade%20account%20for%20the%20teacher%20discount%20on%20exam%20books.%20Could%20you%20let%20me%20know%20how%20to%20get%20started%3F%0A%0AThanks',
+    linkText: 'Get in touch to find out more',
   },
   {
     icon: Users,
     title: 'Faber Teachers\' Community',
     detail:
       'A free community of over 1,000 UK music teachers. Members get access to CPD webinars, exclusive discounts, giveaways, first-look at new publications, and author interviews. Loyal Teachers Club members get 40% off Faber Piano Adventures. You also need to be a member to take part in the Free Books programme each year.',
-    cta: 'Join the Teachers\' Community',
-    ctaUrl: 'https://www.fabermusic.com/ed/teachers-community',
-    ctaExternal: false,
-    iconBg: 'bg-brand-accent/10',
-    iconColor: 'text-brand-accent',
+    link: 'https://www.fabermusic.com/ed/teachers-community',
+    linkText: 'Join the Teachers\' Community',
   },
   {
     icon: Gift,
     title: 'Free Books for Teachers',
     detail:
       'Every year from mid-June, Faber opens a programme where teachers can claim one free book, posted free of charge. It is first come, first served and goes quickly — so mark mid-June in your diary and check the link as soon as it opens. You need to be a member of the Teachers\' Community to take part, so make sure you join before June.',
-    cta: 'Visit the Free Books page (opens mid-June)',
-    ctaUrl: 'https://www.fabermusic.com/freebooksforteachers',
-    ctaExternal: false,
-    iconBg: 'bg-brand-primary/10',
-    iconColor: 'text-brand-primary',
+    link: 'https://www.fabermusic.com/freebooksforteachers',
+    linkText: 'Visit the Free Books page (opens mid-June)',
   },
 ]
 
@@ -314,53 +301,8 @@ const faqs = [
           </MyTextConstructor>
         </div>
 
-        <div :class="animClass('fade-up', 2)" class="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <div
-            v-for="card in discountCards"
-            :key="card.title"
-            class="flex flex-col rounded-2xl border-4 border-brand-accent bg-white/10 p-5 shadow-2xl backdrop-blur-sm sm:p-6"
-          >
-            <div class="flex items-start gap-4">
-              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 sm:h-12 sm:w-12">
-                <component :is="card.icon" class="h-5 w-5 text-brand-accent sm:h-6 sm:w-6" />
-              </div>
-              <div class="flex-1">
-                <p class="text-lg font-semibold text-white sm:text-lg">{{ card.title }}</p>
-                <p class="mt-1 text-base leading-snug text-white/80 sm:text-base md:text-lg">{{ card.detail }}</p>
-              </div>
-            </div>
-            <!-- CTA links if present -->
-            <div v-if="card.cta" class="mt-4 flex flex-col gap-2 pl-14">
-              <a
-                v-if="card.ctaUrl"
-                :href="card.ctaUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex items-center gap-1 text-sm font-semibold text-brand-accent transition hover:opacity-70"
-              >
-                {{ card.cta }}
-                <ArrowRight class="h-4 w-4" />
-              </a>
-              <a
-                v-else
-                href="#get-in-touch"
-                class="inline-flex items-center gap-1 text-sm font-semibold text-brand-accent transition hover:opacity-70"
-              >
-                {{ card.cta }}
-                <ArrowRight class="h-4 w-4" />
-              </a>
-              <a
-                v-if="card.cta2"
-                :href="card.cta2Url"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex items-center gap-1 text-sm font-semibold text-brand-accent transition hover:opacity-70"
-              >
-                {{ card.cta2 }}
-                <ArrowRight class="h-4 w-4" />
-              </a>
-            </div>
-          </div>
+        <div :class="animClass('fade-up', 2)" class="mt-10">
+          <MyGlassCardConstructor :cards="discountCards" :columns="2" />
         </div>
       </div>
     </section>

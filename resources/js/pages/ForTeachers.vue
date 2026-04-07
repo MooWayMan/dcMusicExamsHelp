@@ -11,7 +11,7 @@ import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
 import MyGlassCardConstructor from '@/components/reusables/MyGlassCardConstructor.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
-import { Award, BookOpen, Gift, GraduationCap, CheckCircle } from 'lucide-vue-next'
+import { Award, BookOpen, Gift, GraduationCap, CheckCircle, ChevronRight, Trophy } from 'lucide-vue-next'
 
 const { animClass } = usePageAnimation()
 const showBookingModal = ref(false)
@@ -29,23 +29,23 @@ const breadcrumbPages = [
 const bookingSteps = [
   {
     step: 1,
-    title: 'Go to the Trinity booking page',
-    detail: 'Click the Book Your Exam button on this site — it takes you directly to the official Trinity College London booking page with centre code 120 already applied.',
+    title: 'Click Book Your Exam',
+    detail: 'Hit the Book Your Exam button anywhere on this site. You will see a short menu asking which type of exam you want to book — digital, Classical & Jazz face-to-face, or Rock & Pop face-to-face. Each one goes to a different Trinity booking system.',
   },
   {
     step: 2,
-    title: 'Choose digital or face-to-face',
-    detail: 'Digital exams let students record anywhere — at home, school or studio — and submit online. Anyone can submit the recording, not just the teacher. Face-to-face sessions run in Liverpool and Wirral throughout the year.',
+    title: 'Choose your pathway',
+    detail: '<span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Digital exams</span> use booking.trinitycollege.com — our link pre-fills centre code 120, but if you refresh the page or use the back button, the code can disappear. Look for a box that says "referral code" and make sure 120 is in it before you submit.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Classical &amp; Jazz face-to-face</span> use musicbooking.trinitycollege.co.uk<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Rock &amp; Pop face-to-face</span> use my-trinity.trinitycollege.com',
   },
   {
     step: 3,
     title: 'Enter your candidate details',
-    detail: 'Fill in the student\'s name, instrument, grade and contact details. For candidates under 18, a parent or guardian email is required.',
+    detail: 'Each booking system looks a little different, but you will need the student\'s name, instrument, grade and contact details. For candidates under 18, a parent or guardian email is required. A detailed step-by-step guide for each booking system is coming soon.',
   },
   {
     step: 4,
     title: 'Pay and confirm',
-    detail: 'Exam fees are the same as booking directly — no extra cost. Once confirmed, your student is automatically entered through centre 120 and qualifies for all our incentives.',
+    detail: 'You book and pay directly with Trinity — we do not handle bookings or payments. There is no extra cost for using centre code 120. By using code 120, your student is linked to us and qualifies for all our incentives.',
   },
 ]
 
@@ -53,9 +53,9 @@ const benefits = [
   {
     icon: Award,
     title: 'Recognition and digital badges',
-    detail: 'Teachers who are linked to 10 or more exam entries earn a Certificate of Appreciation and a tiered digital badge to display on your website and social media. The more entries, the higher the tier. Every entry counts, regardless of result. It doesn\'t matter who books the exam — as long as we know the student is yours, it counts towards your total.',
-    link: '/contact',
-    linkText: 'Find out more',
+    detail: 'Every entry through centre 120 counts towards your award — regardless of result. Earn Bronze (10+), Silver (20+), Gold (30+) or Top Award (40+) status and display a digital badge on your website and social media. It doesn\'t matter who books the exam — as long as we know the student is yours, it counts towards your total.',
+    link: '/for-teachers/awards',
+    linkText: 'See the award tiers',
   },
   {
     icon: Gift,
@@ -95,7 +95,7 @@ const faqs = [
   },
   {
     question: 'How does the teacher badge system work?',
-    answer: 'When your students pass exams through centre 120, your total builds up. At 10 successful candidates you earn a bronze badge and Certificate of Appreciation. At 20 you earn silver, and at 30 you earn gold. Badges are digital — display them on your website, email signature or social media.',
+    answer: 'Every entry through centre 120 counts — regardless of result. At 10 entries you earn the <strong>Bronze Award</strong>, at 20 the <strong>Silver Award</strong>, at 30 the <strong>Gold Award</strong>, and at 40+ the <strong>Top Award</strong>. Badges are digital — display them on your website, email signature or social media and call yourself an award-winning music teacher.',
   },
   {
     question: 'Do you offer face-to-face and digital exams?',
@@ -138,9 +138,40 @@ const faqs = [
           <div :class="animClass('fade-up', 2)">
             <p class="mx-auto mt-4 max-w-2xl text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
               musicExams.help takes the admin confusion out of Trinity exam entries.
-              Book through centre code 120 and your students get celebrated while you earn recognition, discounts and prize draw entries.
+              Book through centre code 120 and <span class="inline-block rounded-full bg-brand-accent/15 px-3 py-0.5 font-bold text-brand-accent">your students get celebrated</span> while you earn recognition, discounts and prize draw entries.
             </p>
           </div>
+        </div>
+
+        <!-- Quick links — same style as Exam Guide banner on homepage -->
+        <div :class="animClass('fade-up', 3)" class="mx-auto mt-8 max-w-4xl space-y-3">
+          <a
+            href="/for-teachers/awards"
+            class="flex items-center justify-between rounded-xl border border-brand-accent/30 bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary px-5 py-3 text-white shadow-lg transition hover:scale-[1.01] hover:shadow-xl sm:px-6 sm:py-4"
+          >
+            <div class="flex items-center gap-3">
+              <Trophy class="h-5 w-5 shrink-0 text-white/80 sm:h-6 sm:w-6" />
+              <div>
+                <span class="text-sm font-semibold sm:text-base lg:text-lg">Teacher & School Awards</span>
+                <span class="ml-2 text-xs text-white/70 sm:text-sm">Bronze, Silver, Gold and Top Award tiers</span>
+              </div>
+            </div>
+            <ChevronRight class="h-5 w-5 shrink-0 text-white/60" />
+          </a>
+
+          <a
+            href="/for-teachers/faber-discounts"
+            class="flex items-center justify-between rounded-xl border border-brand-accent/30 bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary px-5 py-3 text-white shadow-lg transition hover:scale-[1.01] hover:shadow-xl sm:px-6 sm:py-4"
+          >
+            <div class="flex items-center gap-3">
+              <BookOpen class="h-5 w-5 shrink-0 text-white/80 sm:h-6 sm:w-6" />
+              <div>
+                <span class="text-sm font-semibold sm:text-base lg:text-lg">Exam Book Discounts</span>
+                <span class="ml-2 text-xs text-white/70 sm:text-sm">Faber Music and Trinity Press discounts for teachers</span>
+              </div>
+            </div>
+            <ChevronRight class="h-5 w-5 shrink-0 text-white/60" />
+          </a>
         </div>
       </div>
     </section>
@@ -179,7 +210,7 @@ const faqs = [
             </div>
             <div>
               <p class="text-lg font-semibold text-white sm:text-lg">{{ item.title }}</p>
-              <p class="mt-1 text-base leading-snug text-white/80 sm:text-base md:text-lg">{{ item.detail }}</p>
+              <p class="mt-1 text-base leading-snug text-white/80 sm:text-base md:text-lg" v-html="item.detail"></p>
             </div>
           </div>
         </div>

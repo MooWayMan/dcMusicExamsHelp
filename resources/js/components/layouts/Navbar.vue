@@ -29,6 +29,7 @@ const currentPath = computed(() => page.url)
 interface NavChild {
   name: string
   href: string
+  highlight?: boolean
 }
 
 interface NavItem {
@@ -50,6 +51,8 @@ const navigation = computed<NavItem[]>(() => {
         { name: 'For Teachers', href: '/for-teachers' },
         { name: 'For Parents', href: '/for-parents' },
         { name: 'For Students', href: '/for-students' },
+        { name: '---', href: '#divider-thankyou' },
+        { name: '★ Thank You (click here)', href: '/thank-you', highlight: true },
         { name: '---', href: '#divider-1' },
         { name: 'Exam Guide', href: '/exam-guide' },
         { name: 'Grades Explained', href: '/exam-guide/grades-explained' },
@@ -116,8 +119,8 @@ const navIcon = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexams
 
 const navClasses = computed(() =>
   props.fixed
-    ? 'fixed top-0 z-50 w-full border-b border-slate-200 bg-white/95 backdrop-blur'
-    : 'sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur'
+    ? 'fixed top-0 z-50 w-full border-b border-slate-200 bg-white'
+    : 'sticky top-0 z-50 border-b border-slate-200 bg-white'
 )
 </script>
 
@@ -189,8 +192,11 @@ const navClasses = computed(() =>
                     <div v-if="child.name === '---'" class="border-t border-brand-border"></div>
                     <button
                       v-else
-                      class="block w-full px-4 py-3 text-left text-sm text-slate-700 transition hover:bg-brand-surface-soft hover:text-brand-accent"
-                      :class="{ 'pl-8 text-xs': child.href.includes('/exam-guide/') }"
+                      class="block w-full px-4 py-3 text-left text-sm transition hover:bg-brand-surface-soft hover:text-brand-accent"
+                      :class="[
+                        child.href.includes('/exam-guide/') ? 'pl-8 text-xs' : '',
+                        child.highlight ? 'font-bold text-brand-accent' : 'text-slate-700'
+                      ]"
                       @click="navigateTo(child.href)"
                     >
                       {{ child.name }}
@@ -286,8 +292,11 @@ const navClasses = computed(() =>
                 <div v-if="child.name === '---'" class="my-1 border-t border-brand-border"></div>
                 <button
                   v-else
-                  class="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-slate-600 transition hover:bg-slate-50 hover:text-brand-accent"
-                  :class="{ 'pl-6 text-xs': child.href.includes('/exam-guide/') }"
+                  class="block w-full rounded-lg px-3 py-2.5 text-left text-sm transition hover:bg-slate-50 hover:text-brand-accent"
+                  :class="[
+                    child.href.includes('/exam-guide/') ? 'pl-6 text-xs' : '',
+                    child.highlight ? 'font-bold text-brand-accent' : 'text-slate-600'
+                  ]"
                   @click="navigateTo(child.href)"
                 >
                   {{ child.name }}

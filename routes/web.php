@@ -13,6 +13,7 @@ Route::inertia('/', 'Welcome', [
 Route::inertia('/faq', 'Faq')->name('faq');
 Route::inertia('/for-teachers', 'ForTeachers')->name('for-teachers');
 Route::inertia('/for-teachers/faber-discounts', 'FaberDiscounts')->name('faber-discounts');
+Route::inertia('/for-teachers/awards', 'TeacherAwards')->name('teacher-awards');
 Route::inertia('/for-parents', 'ForParents')->name('for-parents');
 Route::inertia('/for-students', 'ForStudents')->name('for-students');
 Route::get('/thank-you', ThankYouController::class)->name('thank-you');

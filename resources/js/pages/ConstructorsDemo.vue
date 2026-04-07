@@ -129,7 +129,7 @@ const tableData = [
 
 const accordionItems = [
   { id: 1, question: 'What is centre code 120?', answer: 'Centre code 120 is the unique identifier for Music Exams Help when booking Trinity College London exams. It ensures your booking is linked to our support system.' },
-  { id: 2, question: 'How do I book a Trinity exam?', answer: 'Visit the official Trinity booking page, enter your details, and make sure centre code 120 is visible. We provide step-by-step guidance to make the process easier.' },
+  { id: 2, question: 'How do I book a Trinity exam?', answer: 'Click Book Your Exam on this site and choose your exam type. There are three Trinity booking systems — one for digital exams, one for Classical & Jazz face-to-face, and one for Rock & Pop face-to-face. We guide you to the right one.' },
   { id: 3, question: 'Are there any incentives for using code 120?', answer: 'Yes! We plan to offer quarterly prize draws, recognition features, and a Hall of Fame for students and teachers who book through centre code 120.' },
   { id: 4, question: 'Can teachers use this platform?', answer: 'Absolutely. Music Exams Help is designed to support both teachers and students. Teachers can guide their students through the booking process with confidence.' },
 ]

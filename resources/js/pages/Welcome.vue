@@ -88,7 +88,7 @@ const incentives = [
   },
   {
     title: 'Teacher recognition and digital badges',
-    detail: 'Teachers who enter 10 or more candidates earn a Certificate of Appreciation and a digital badge to display on their website. Tiered badges for 10+, 20+ and 30+ candidates.',
+    detail: 'Every entry counts, regardless of result. Earn tiered digital badges — Bronze, Silver, Gold and Top Award — at 10+, 20+, 30+ and 40+ entries. Display them on your website and call yourself an award-winning music teacher.',
     icon: Award,
     iconBg: 'bg-brand-success-soft',
     iconColor: 'text-brand-success',
@@ -116,7 +116,7 @@ const faqs = [
   {
     question: 'Do I book through this website?',
     answer:
-      'No — we guide you through the process and then link you directly to the official Trinity booking page. When you get there, centre code 120 will already be applied.',
+      'No — when you click Book Your Exam, you will see a short menu asking which type of exam you want. Each option takes you to the correct Trinity booking system. For digital exams, our link pre-fills centre code 120, but if you refresh or go back the code can disappear — always check the referral code box says 120 before you submit. For face-to-face exams, your centre is detected by the booking system.',
   },
   {
     question: 'Who is this for?',
@@ -147,7 +147,7 @@ const usefulLinks = [
   {
     id: 1,
     title: 'Book your exam now',
-    subTitle: 'Ready to go? Head straight to the official Trinity booking page with code 120 already applied.',
+    subTitle: 'Ready to go? Click here to choose your exam type and we will take you to the right Trinity booking system.',
     url: '#booking-modal',
   },
   {

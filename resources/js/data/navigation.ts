@@ -14,6 +14,7 @@ export const mainNavigation: NavigationLink[] = [
   { name: 'For Teachers', url: '/for-teachers' },
   { name: 'For Parents', url: '/for-parents' },
   { name: 'For Students', url: '/for-students' },
+  { name: 'Thank You', url: '/thank-you' },
   { name: 'FAQ', url: '/faq' },
   { name: 'Contact Us', url: '/contact' },
   { name: 'Book Your Exam', url: '#booking-modal' },
