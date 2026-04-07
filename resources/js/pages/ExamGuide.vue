@@ -331,9 +331,9 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             <template #myTitle>Ready to book?</template>
           </MyTextConstructor>
           <p class="mx-auto mt-3 max-w-xl text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
-            Use centre code 120 and your entry gets recognised on our Thank You page, <strong>Hall of Fame</strong> and more.
+            Use centre code 120 and your entry gets recognised on our Recognition page, <strong>Hall of Fame</strong> and more.
           </p>
-          <a href="/thank-you" class="mt-4 inline-block text-base font-semibold text-brand-accent underline hover:text-brand-primary sm:text-base md:text-lg">
+          <a href="/recognition" class="mt-4 inline-block text-base font-semibold text-brand-accent underline hover:text-brand-primary sm:text-base md:text-lg">
             See the Hall of Fame →
           </a>
           <div class="mt-6">

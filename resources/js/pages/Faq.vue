@@ -38,7 +38,7 @@ const faqs = [
   {
     question: 'What is centre code 120?',
     answer:
-      'Centre 120 is our registered Trinity College London exam centre code. When you use it at booking, your entry is connected to musicExams.help — which means your student gets listed on our <a href="/thank-you" class="font-semibold text-brand-accent underline hover:text-brand-primary">Thank You page</a>, qualifies for the <a href="/thank-you" class="font-semibold text-brand-accent underline hover:text-brand-primary">Hall of Fame</a>, and you get access to teacher recognition badges, prize draws and ongoing support.',
+      'Centre 120 is our registered Trinity College London exam centre code — it covers both our digital centre and our face-to-face centres in Liverpool and Wirral. When you use it at booking, your entry is connected to musicExams.help — which means your student gets listed on our <a href="/recognition" class="font-semibold text-brand-accent underline hover:text-brand-primary">Recognition page</a>, qualifies for the <a href="/recognition" class="font-semibold text-brand-accent underline hover:text-brand-primary">Hall of Fame</a>, and you get access to teacher recognition badges, prize draws and ongoing support.',
   },
   {
     question: 'Does it cost anything extra?',
@@ -68,22 +68,22 @@ const faqs = [
   {
     question: 'What results can I achieve?',
     answer:
-      'Trinity graded exams are marked out of 100. A Pass is 60–74, Merit is 75–86, and Distinction is 87–100. The highest scorers each quarter through centre 120 make our <a href="/thank-you" class="font-semibold text-brand-accent underline hover:text-brand-primary">Hall of Fame</a>.',
+      'Trinity graded exams are marked out of 100. A Pass is 60–74, Merit is 75–86, and Distinction is 87–100. Every student entered through centre 120 — whether face-to-face or digital — is listed on our <a href="/recognition" class="font-semibold text-brand-accent underline hover:text-brand-primary">Recognition page</a>. Every Merit and Distinction makes the <a href="/recognition" class="font-semibold text-brand-accent underline hover:text-brand-primary">Hall of Fame</a>, and the highest scorers each quarter get a special mention and a gift token.',
   },
   {
     question: 'Do I need to provide sheet music for the examiner?',
     answer:
-      'For pieces not published by Trinity, yes — the examiner needs a copy to follow along. Your teacher should provide printed copies or clear photos on a tablet in aeroplane mode.',
+      'Yes — you must bring a copy of the music for the examiner to follow, even if you have memorised the piece. For pieces not published by Trinity, the examiner needs a printed copy or a clear photo on a tablet in aeroplane mode. You should also bring proof of any authorised downloads. Your teacher can help make sure everything is in order.',
   },
   {
     question: 'How do teachers benefit from using centre 120?',
     answer:
-      'Teachers who enter candidates through centre 120 earn recognition through our tiered badge system (10+, 20+, 30+ candidates), receive Certificates of Appreciation, and are entered into quarterly prize draws.',
+      'Teachers who enter candidates through centre 120 earn recognition through our tiered badge system (10+, 20+, 30+ candidates), receive Certificates of Appreciation, and are entered into quarterly prize draws. They also get the added benefit of having all the guidance and exam information in one place on musicExams.help — saving time explaining procedures to parents and students.',
   },
   {
     question: 'What is the Hall of Fame?',
     answer:
-      'Each quarter, the students with the highest Distinction and highest Merit scores through centre 120 are celebrated on our <a href="/thank-you" class="font-semibold text-brand-accent underline hover:text-brand-primary">Hall of Fame</a> page. Winners receive a certificate and a gift token.',
+      'Every student entered through centre 120 is listed on our <a href="/recognition" class="font-semibold text-brand-accent underline hover:text-brand-primary">Recognition page</a>. Every Merit and Distinction earns a place in the Hall of Fame with a Take a Bow or Standing Ovation Certificate. The students with the highest Distinction and highest Merit scores each quarter get a special spotlight and a gift token (£20, or divided equally if there is a tie — minimum £5 each).',
   },
   {
     question: 'Can I book face-to-face exams through centre 120?',
@@ -164,7 +164,7 @@ const faqs = [
             <template #myTitle>Ready to book your exam?</template>
           </MyTextConstructor>
           <div class="mt-4">
-            <MyButtonConstructor variant="primary" size="large" @click="showBookingModal = true">
+            <MyButtonConstructor variant="light" size="large" @click="showBookingModal = true">
               Book Your Exam
             </MyButtonConstructor>
           </div>

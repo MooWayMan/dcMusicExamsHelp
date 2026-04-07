@@ -34,36 +34,36 @@ const journeySteps = [
   {
     step: 2,
     title: 'Book on the Trinity website using code 120',
-    detail: 'Either you or the teacher books the exam directly on the Trinity website. When booking, enter centre code 120 as your referral — this connects your entry to musicExams.help so your child can be recognised on our Thank You page and <strong>Hall of Fame</strong>. The fees are the standard Trinity prices — using code 120 doesn\'t cost anything extra.',
+    detail: 'Either you, the teacher or the school can book the exam directly on the Trinity website — whoever is the applicant. When booking, enter centre code 120 as your referral — this connects your entry to musicExams.help so your child can be recognised on our Recognition page and <strong>Hall of Fame</strong>. If your child has a teacher, please let us know so we can link the entry to them. The fees are the standard Trinity prices — using code 120 doesn\'t cost anything extra.',
   },
   {
     step: 3,
     title: 'Your child prepares for the exam',
-    detail: 'Your child will work on their exam pieces, scales, sight-reading and other elements — usually with their teacher, but self-taught candidates can prepare independently too. The syllabus sets out exactly what\'s needed for each grade.',
+    detail: 'Your child will work on their exam pieces, scales, sight-reading and other elements — usually with their teacher, but self-taught candidates can prepare independently too. The <a href="https://www.trinitycollege.com/qualifications/music/grade-exams" class="text-brand-accent underline hover:opacity-70" target="_blank">Trinity syllabus</a> sets out exactly what\'s needed for each grade.',
   },
   {
     step: 4,
     title: 'Exam day',
-    detail: 'For face-to-face exams, your child performs in front of a Trinity examiner at a local venue. For digital exams, they record anywhere — at home, school or studio — and submit the video online. Anyone can submit it, not just the teacher. Both count exactly the same.',
+    detail: '<span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Face-to-face exams</span> Your child performs in front of a Trinity examiner at a local venue. This applies to both Classical &amp; Jazz and Rock &amp; Pop — the format is the same, just the repertoire differs.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Digital exams</span> Your child records their performance anywhere — at home, school or studio — and submits the video online. Anyone can submit it, not just the teacher. Available for both Classical &amp; Jazz and Rock &amp; Pop.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Theory exams</span> Music Theory is a separate subject — it\'s about reading and understanding music rather than performing. Theory exams are taken online as a digital exam. All three count towards UCAS points at Grades 6–8 and all qualify for our Recognition page.',
   },
   {
     step: 5,
     title: 'Results and recognition',
-    detail: 'Results are graded as Pass (60–74), Merit (75–86) or Distinction (87–100). Every student entered through centre 120 gets listed on our Thank You page. Every Merit and Distinction makes the <strong>Hall of Fame</strong>.',
+    detail: 'Results are graded as Pass (60–74), Merit (75–86) or Distinction (87–100). Every student entered through centre 120 — whether face-to-face or digital — gets listed on our Recognition page. Every Merit and Distinction makes the <strong>Hall of Fame</strong>.',
   },
 ]
 
 const whatYourChildGets = [
-  'Listed on our Thank You page — first name and initial, instrument and grade (full name shown only with your permission)',
+  'Listed on our Recognition page — first name and initial, instrument and grade (full name shown only with your permission)',
   'A place in the <strong>Hall of Fame</strong> for Merit or Distinction — with a Take a Bow or Standing Ovation Certificate',
-  'The highest scorers each quarter get the top spot and a gift token',
+  'The highest scorers each quarter get the top spot and a gift token (£20, or divided equally if there is a tie — minimum £5 each)',
   'The same official Trinity certificate and result as any other centre — plus our own special certificates for Merit and Distinction',
 ]
 
 const faqs = [
   {
     question: 'What is a music exam?',
-    answer: 'A graded music exam is an assessment of your child\'s playing ability on their instrument. They perform prepared pieces, scales and other tests in front of a qualified examiner. It\'s a milestone that shows progress and gives them something to work towards.',
+    answer: 'A graded music exam is a formal assessment of your child\'s playing ability on their instrument. Depending on the grade and instrument, they may perform prepared pieces, scales, sight-reading, aural tests or a combination — not every exam includes all of these. It\'s a milestone that shows progress and gives them something to work towards.',
   },
   {
     question: 'What grades are there?',
@@ -83,15 +83,15 @@ const faqs = [
   },
   {
     question: 'Do I need to be present for the exam?',
-    answer: 'For face-to-face exams, parents are not usually in the exam room but should be nearby. For digital exams, you may need to help with the recording setup, but the performance itself is your child\'s. Anyone can submit the recording — it doesn\'t have to be the teacher.',
+    answer: 'For face-to-face exams, parents are not allowed in the exam room — but you should stay nearby so you\'re available if needed. For digital exams, you may need to help with the recording setup, but the performance itself is your child\'s. Anyone can submit the recording — it doesn\'t have to be the teacher.',
   },
   {
     question: 'What happens after we book?',
-    answer: 'For digital exams, you\'ll get a confirmation email straight away. Login details for the upload portal arrive within a week (check spam). You then have four weeks to record and submit. For face-to-face exams, you\'ll receive an email closer to the exam date with the venue, time and an appointment slip that must be printed and handed to the examiner.',
+    answer: 'The exam can be booked by you (the parent), the teacher or the school — whoever is named as the applicant will receive the correspondence. For digital exams, you\'ll get a confirmation email straight away. Login details for the upload portal arrive within a week (check spam). You then have four weeks to record and submit. For face-to-face exams, you\'ll receive an email closer to the exam date with the venue, time and an appointment slip that must be printed and handed to the examiner.',
   },
   {
     question: 'What does centre code 120 mean?',
-    answer: 'It\'s a registered Trinity exam centre code. When you use code 120, your child\'s entry is connected to musicExams.help — which means they qualify for the Thank You page, <strong>Hall of Fame</strong>, Take a Bow and Standing Ovation Certificates and other incentives at no extra cost.',
+    answer: 'It\'s a registered Trinity exam centre code. When you use code 120, your child\'s entry is connected to musicExams.help — which means they qualify for the Recognition page, <strong>Hall of Fame</strong>, Take a Bow and Standing Ovation Certificates and other incentives at no extra cost.',
   },
 ]
 </script>
@@ -211,7 +211,7 @@ const faqs = [
         </div>
 
         <div :class="animClass('fade-up', 3)" class="mt-6 text-center">
-          <a href="/thank-you" class="inline-block text-base font-semibold text-brand-accent underline hover:text-white sm:text-base md:text-lg">
+          <a href="/recognition" class="inline-block text-base font-semibold text-brand-accent underline hover:text-white sm:text-base md:text-lg">
             See the Hall of Fame →
           </a>
         </div>
@@ -267,7 +267,7 @@ const faqs = [
             <template #myTitle>Ready to book your child's exam?</template>
           </MyTextConstructor>
           <div class="mt-4">
-            <MyButtonConstructor variant="primary" size="large" @click="showBookingModal = true">
+            <MyButtonConstructor variant="light" size="large" @click="showBookingModal = true">
               Book Your Exam
             </MyButtonConstructor>
           </div>

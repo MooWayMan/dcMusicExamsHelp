@@ -16,7 +16,7 @@ Route::inertia('/for-teachers/faber-discounts', 'FaberDiscounts')->name('faber-d
 Route::inertia('/for-teachers/awards', 'TeacherAwards')->name('teacher-awards');
 Route::inertia('/for-parents', 'ForParents')->name('for-parents');
 Route::inertia('/for-students', 'ForStudents')->name('for-students');
-Route::get('/thank-you', ThankYouController::class)->name('thank-you');
+Route::get('/recognition', ThankYouController::class)->name('recognition');
 Route::inertia('/exam-guide', 'ExamGuide')->name('exam-guide');
 Route::inertia('/exam-guide/ucas-points', 'ExamGuideUcas')->name('exam-guide.ucas');
 Route::inertia('/exam-guide/what-to-expect', 'ExamGuideExpect')->name('exam-guide.expect');

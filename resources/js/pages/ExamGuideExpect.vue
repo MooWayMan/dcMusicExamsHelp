@@ -505,7 +505,7 @@ const faqs = [
           <p class="mx-auto mt-3 max-w-xl text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
             Book through centre 120 and your achievement gets celebrated here too — <strong>Hall of Fame</strong>, certificates and recognition.
           </p>
-          <a href="/thank-you" class="mt-4 inline-block text-base font-semibold text-brand-accent underline hover:text-brand-primary sm:text-base md:text-lg">
+          <a href="/recognition" class="mt-4 inline-block text-base font-semibold text-brand-accent underline hover:text-brand-primary sm:text-base md:text-lg">
             See the Hall of Fame →
           </a>
           <div class="mt-6 flex flex-wrap items-center justify-center gap-4">

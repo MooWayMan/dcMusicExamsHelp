@@ -33,8 +33,8 @@ const tiers = [
     icon: Trophy,
     title: 'Top Scorers',
     subtitle: 'Quarterly — the very best',
-    detail: 'The highest Distinction and highest Merit score each quarter earn the top spot on the <strong>Hall of Fame</strong> — plus a gift token. This is the ultimate recognition for outstanding achievement.',
-    link: '/thank-you',
+    detail: 'The highest Distinction and highest Merit score each quarter earn the top spot on the <strong>Hall of Fame</strong> — plus a gift token (£20, or divided equally if there is a tie — minimum £5 each). This is the ultimate recognition for outstanding achievement.',
+    link: '/recognition',
     linkText: 'See the Hall of Fame',
   },
   {
@@ -42,22 +42,22 @@ const tiers = [
     title: 'Hall of Fame',
     subtitle: 'Every Merit and Distinction',
     detail: 'Score a Merit and earn a Take a Bow Certificate. Score a Distinction and earn a Standing Ovation Certificate. Every Merit and Distinction student gets celebrated in the <strong>Hall of Fame</strong> — show it off, share it, put it on the wall.',
-    link: '/thank-you',
+    link: '/recognition',
     linkText: 'See the Hall of Fame',
   },
   {
     icon: Star,
-    title: 'Thank You page',
+    title: 'Recognition page',
     subtitle: 'Every student through centre 120',
-    detail: 'Every student who enters an exam through centre 120 gets listed on our Thank You page — your first name and initial, instrument and grade. This can later be changed to show your full name with permission. Your hard work is always recognised.',
-    link: '/thank-you',
-    linkText: 'Visit the Thank You page',
+    detail: 'Every student who enters an exam through centre 120 — whether face-to-face or digital — gets listed on our Recognition page. Your first name and initial, instrument and grade. This can later be changed to show your full name with permission. Your hard work is always recognised.',
+    link: '/recognition',
+    linkText: 'Visit the Recognition page',
   },
   {
     icon: Gift,
     title: 'Prize draws',
     subtitle: 'Automatic entry',
-    detail: 'Every exam entry through centre 120 earns an automatic entry into our quarterly prize draw. Just by sitting your exam, you\'re in with a chance to win a gift token!',
+    detail: 'Every exam entry through centre 120 — face-to-face or digital — earns an automatic entry into our quarterly prize draw. Just by sitting your exam, you\'re in with a chance to win a gift token!',
     link: '/contact',
     linkText: 'Find out more',
   },
@@ -114,7 +114,7 @@ const resultsBands = [
     <!-- HALL OF FAME BANNER -->
     <section class="bg-black">
       <div class="mx-auto max-w-4xl px-4 py-10 sm:px-6">
-        <a href="/thank-you" :class="animClass('zoom-in', 1)" class="group block overflow-hidden rounded-2xl bg-black shadow-2xl transition-transform duration-300 hover:scale-[1.005]">
+        <a href="/recognition" :class="animClass('zoom-in', 1)" class="group block overflow-hidden rounded-2xl bg-black shadow-2xl transition-transform duration-300 hover:scale-[1.005]">
           <img
             :src="hallOfFameLogo"
             alt="Hall of Fame — Highest Score"
@@ -151,11 +151,11 @@ const resultsBands = [
           <MyGlassCardConstructor :cards="tiers" :columns="2" />
         </div>
 
-        <!-- CTA to Thank You page -->
+        <!-- CTA to Recognition page -->
         <div :class="animClass('fade-up', 3)" class="mt-10 text-center">
-          <a href="/thank-you">
+          <a href="/recognition">
             <MyButtonConstructor variant="light" size="large">
-              Visit the Thank You Page
+              Visit the Recognition Page
             </MyButtonConstructor>
           </a>
         </div>

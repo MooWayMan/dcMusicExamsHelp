@@ -60,7 +60,7 @@ const benefits = [
   {
     icon: Gift,
     title: 'Quarterly prize draws',
-    detail: 'Every exam entry through centre 120 earns an automatic entry into our quarterly teacher prize draw. The more students you enter, the more chances to win. If a parent books the exam themselves, just ask them to <a href="/contact" class="font-semibold text-brand-accent underline hover:text-white">let us know</a> which teacher the student is linked to — that way you still get the credit.',
+    detail: 'Every exam entry through centre 120 — face-to-face or digital — earns an automatic entry into our quarterly teacher prize draw. The more students you enter, the more chances to win. If a parent books the exam themselves, just ask them to <a href="/contact" class="font-semibold text-brand-accent underline hover:text-white">let us know</a> which teacher the student is linked to — that way you still get the credit.',
     link: '/contact',
     linkText: 'Find out more',
   },
@@ -74,9 +74,16 @@ const benefits = [
   {
     icon: GraduationCap,
     title: 'Your students get celebrated',
-    detail: 'Every student entered through centre 120 gets listed on our Thank You page. Merit and Distinction students make the <strong>Hall of Fame</strong> — with a Take a Bow or Standing Ovation Certificate. The highest scorers each quarter get the top spot and a gift token. Parents love it.',
-    link: '/thank-you',
+    detail: 'Every student entered through centre 120 — face-to-face or digital — gets listed on our Recognition page. Merit and Distinction students make the <strong>Hall of Fame</strong> — with a Take a Bow or Standing Ovation Certificate. The highest scorers each quarter get the top spot and a gift token (£20, or divided equally if there is a tie — minimum £5 each). Parents love it.',
+    link: '/recognition',
     linkText: 'Find out more',
+  },
+  {
+    icon: BookOpen,
+    title: 'Everything in one place',
+    detail: 'All the exam guidance, booking information, fees, dates and procedures your students and parents need — in one place on musicExams.help. Save yourself time answering the same questions over and over. Just point parents and students to the site.',
+    link: '/',
+    linkText: 'Browse the site',
   },
 ]
 
@@ -87,7 +94,7 @@ const faqs = [
   },
   {
     question: 'Can I still use a different centre code?',
-    answer: 'If you already have a different centre code, you can keep using it. But your students will miss out on the Thank You page, the <strong>Hall of Fame</strong>, Take a Bow and Standing Ovation Certificates, prize draws and other incentives that come with centre 120.',
+    answer: 'If you already have a different centre code, you can keep using it. But your students will miss out on the Recognition page, the <strong>Hall of Fame</strong>, Take a Bow and Standing Ovation Certificates, prize draws and other incentives that come with centre 120.',
   },
   {
     question: 'How do the Faber book discounts work?',

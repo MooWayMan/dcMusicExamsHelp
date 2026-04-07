@@ -333,7 +333,7 @@ const faqs = [
           </div>
           <div class="p-6">
             <p class="text-base text-white/80 sm:text-base md:text-lg">
-              Book through centre 120 and you'll receive extra recognition: a Take a Bow Certificate for Merit or a Standing Ovation Certificate for Distinction, plus your name on our <a href="/thank-you" class="font-semibold text-brand-accent underline hover:text-brand-accent/80">Hall of Fame</a>.
+              Book through centre 120 and you'll receive extra recognition: a Take a Bow Certificate for Merit or a Standing Ovation Certificate for Distinction, plus your name on our <a href="/recognition" class="font-semibold text-brand-accent underline hover:text-brand-accent/80">Hall of Fame</a>.
             </p>
           </div>
         </div>
@@ -456,7 +456,7 @@ const faqs = [
           <p class="mx-auto mt-3 max-w-xl text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
             Book through centre 120 and your achievement gets celebrated here too — <strong>Hall of Fame</strong>, certificates and recognition.
           </p>
-          <a href="/thank-you" class="mt-4 inline-block text-base font-semibold text-brand-accent underline hover:text-brand-primary sm:text-base md:text-lg">
+          <a href="/recognition" class="mt-4 inline-block text-base font-semibold text-brand-accent underline hover:text-brand-primary sm:text-base md:text-lg">
             See the Hall of Fame →
           </a>
           <div class="mt-6 flex flex-wrap items-center justify-center gap-4">

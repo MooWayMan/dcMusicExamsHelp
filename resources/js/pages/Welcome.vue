@@ -70,7 +70,7 @@ const whyCards = [
     id: 3,
     title: 'For Students',
     subTitle: 'Find out more →',
-    descript: 'Your hard work deserves to be celebrated. Incentives, prize draws and a Hall of Fame for students who go the distance.',
+    descript: 'Your hard work deserves more than a certificate. Incentives, prize draws and a Hall of Fame for students who go the distance — face-to-face or digital.',
     icon: Trophy,
     showIcon: true,
     url: '/for-students',
@@ -80,7 +80,7 @@ const whyCards = [
 const incentives = [
   {
     title: 'Students featured on our website',
-    detail: 'Every student who enters through centre 120 gets listed on our <a href="/thank-you" class="font-semibold text-white underline hover:text-brand-accent">Thank You page</a>. Score a Merit or Distinction and you make the <strong>Hall of Fame</strong> — with a Take a Bow or Standing Ovation Certificate. The highest scorers each quarter get the top spot and a gift token.',
+    detail: 'Every student who enters through centre 120 — whether face-to-face or digital — gets listed on our <a href="/recognition" class="font-semibold text-white underline hover:text-brand-accent">Recognition page</a>. Score a Merit or Distinction and you make the <strong>Hall of Fame</strong> — with a Take a Bow or Standing Ovation Certificate. The highest scorers each quarter get the top spot and a gift token (£20, or divided equally if there is a tie — minimum £5 each).',
     icon: Trophy,
     iconBg: 'bg-brand-accent/10',
     iconColor: 'text-brand-accent',
@@ -96,7 +96,7 @@ const incentives = [
   },
   {
     title: 'Quarterly prize draws',
-    detail: 'Teachers earn one prize draw entry for every exam booked through centre code 120. The more students entered, the more chances to win — with gift tokens to help invest back into their teaching. Parents and students — let your teacher know about code 120 and help them win too.',
+    detail: 'Teachers earn one prize draw entry for every exam booked through centre code 120 — face-to-face or digital. The more students entered, the more chances to win — with gift tokens to help invest back into their teaching. Parents and students — let your teacher know about code 120 and help them win too.',
     icon: Gift,
     iconBg: 'bg-brand-teal/10',
     iconColor: 'text-brand-teal',
@@ -695,7 +695,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
     <section class="bg-black">
       <div class="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
         <!-- Student Hall of Fame — banner (links to Thank You page) -->
-        <a href="/thank-you" class="group block overflow-hidden rounded-2xl bg-black p-4 shadow-2xl transition-transform duration-300 hover:scale-[1.005]">
+        <a href="/recognition" class="group block overflow-hidden rounded-2xl bg-black p-4 shadow-2xl transition-transform duration-300 hover:scale-[1.005]">
           <img
             src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/Highest+score+In5.png"
             alt="Student Hall of Fame — celebrating every exam result through centre 120"
@@ -705,14 +705,14 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
 
         <!-- Certificates (link to Thank You page) -->
         <div class="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2">
-          <a href="/thank-you" class="group block overflow-hidden rounded-2xl bg-brand-surface p-3 shadow-2xl border-4 border-brand-accent transition-transform duration-300 hover:scale-[1.01]">
+          <a href="/recognition" class="group block overflow-hidden rounded-2xl bg-brand-surface p-3 shadow-2xl border-4 border-brand-accent transition-transform duration-300 hover:scale-[1.01]">
             <img
               src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/certThankTeacher_10.png"
               alt="Teacher Certificate of Appreciation"
               class="block w-full rounded-2xl"
             />
           </a>
-          <a href="/thank-you" class="group block overflow-hidden rounded-2xl bg-brand-surface p-3 shadow-2xl border-4 border-brand-accent transition-transform duration-300 hover:scale-[1.01]">
+          <a href="/recognition" class="group block overflow-hidden rounded-2xl bg-brand-surface p-3 shadow-2xl border-4 border-brand-accent transition-transform duration-300 hover:scale-[1.01]">
             <img
               src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/certAceiveStu_Dis.png"
               alt="Student Certificate of Achievement — Highest Distinction"
@@ -721,11 +721,11 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
           </a>
         </div>
 
-        <!-- CTA to Thank You page -->
+        <!-- CTA to Recognition page -->
         <div class="mt-8 text-center">
-          <a href="/thank-you">
+          <a href="/recognition">
             <MyButtonConstructor variant="light" size="large">
-              Visit the Thank You Page
+              Visit the Recognition Page
             </MyButtonConstructor>
           </a>
         </div>
@@ -736,7 +736,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
     <section class="bg-brand-surface">
       <div class="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
         <!-- Thank You banner — links to /thank-you -->
-        <a href="/thank-you" class="group block overflow-hidden rounded-2xl shadow-2xl transition-transform duration-300 hover:scale-[1.005]">
+        <a href="/recognition" class="group block overflow-hidden rounded-2xl shadow-2xl transition-transform duration-300 hover:scale-[1.005]">
           <img
             src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/thank_you_banner.jpg"
             alt="Thank You — Every student. Every exam. Recognised."

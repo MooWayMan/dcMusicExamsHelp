@@ -150,11 +150,11 @@ onMounted(() => window.addEventListener('scroll', handleScroll))
 onUnmounted(() => window.removeEventListener('scroll', handleScroll))
 
 const pageMeta = {
-  title: 'Thank You — musicExams.help',
+  title: 'Recognition — musicExams.help',
   description: 'Every student who enters a Trinity exam through centre 120 gets recognised here. Thank you for your hard work.',
 }
 
-const breadcrumbPages = [{ name: 'Thank You', href: '/thank-you', current: true }]
+const breadcrumbPages = [{ name: 'Recognition', href: '/recognition', current: true }]
 
 const hallOfFameLogo = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/Highest+score+In5.png'
 const certStudent = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/certAceiveStu_Dis.png'
