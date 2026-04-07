@@ -53,7 +53,7 @@ const benefits = [
   {
     icon: Award,
     title: 'Recognition and digital badges',
-    detail: 'Every entry through centre 120 counts towards your award — regardless of result. Earn Bronze (10+), Silver (20+), Gold (30+) or Top Award (40+) status and display a digital badge on your website and social media. It doesn\'t matter who books the exam — as long as we know the student is yours, it counts towards your total.',
+    detail: 'Every entry through centre 120 counts towards your award — regardless of result. Totals refresh every quarter. Earn Bronze (10+), Silver (20+), Gold (30+) or Top Award (40+) status and display a digital badge on your website and social media. It doesn\'t matter who books the exam — as long as we know the student is yours, it counts towards your total.',
     link: '/for-teachers/awards',
     linkText: 'See the award tiers',
   },
@@ -95,7 +95,7 @@ const faqs = [
   },
   {
     question: 'How does the teacher badge system work?',
-    answer: 'Every entry through centre 120 counts — regardless of result. At 10 entries you earn the <strong>Bronze Award</strong>, at 20 the <strong>Silver Award</strong>, at 30 the <strong>Gold Award</strong>, and at 40+ the <strong>Top Award</strong>. Badges are digital — display them on your website, email signature or social media and call yourself an award-winning music teacher.',
+    answer: 'Every entry through centre 120 counts — regardless of result. Totals refresh every quarter. At 10 entries you earn the <strong>Bronze Award</strong>, at 20 the <strong>Silver Award</strong>, at 30 the <strong>Gold Award</strong>, and at 40+ the <strong>Top Award</strong>. Badges are digital — display them on your website, email signature or social media and call yourself an award-winning music teacher.',
   },
   {
     question: 'Do you offer face-to-face and digital exams?',

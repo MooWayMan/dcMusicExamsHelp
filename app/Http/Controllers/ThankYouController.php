@@ -43,6 +43,7 @@ class ThankYouController extends Controller
 
         $entries = ExamEntry::with('instrument')
             ->whereNotNull('score')
+            ->where('show_on_thank_you', true)
             ->where('exam_date', '>=', $start)
             ->where('exam_date', '<=', $end)
             ->orderByDesc('score')
@@ -95,7 +96,6 @@ class ThankYouController extends Controller
         // Summary counts
         $distinctions = $entries->where('score', '>=', 87)->count();
         $merits = $entries->filter(fn ($e) => $e->score >= 75 && $e->score < 87)->count();
-        $passes = $entries->filter(fn ($e) => $e->score < 75)->count();
 
         return [
             'quarter' => $quarter,
@@ -106,7 +106,6 @@ class ThankYouController extends Controller
             'summary' => [
                 'distinctions' => $distinctions,
                 'merits' => $merits,
-                'passes' => $passes,
                 'total' => $entries->count(),
             ],
         ];

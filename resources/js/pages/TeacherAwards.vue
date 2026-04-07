@@ -198,7 +198,7 @@ const faqs = [
           </MyTextConstructor>
 
           <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/70 sm:text-base md:text-lg lg:text-xl">
-            The more students you enter, the higher your award. Display your badge with pride.
+            The more students you enter, the higher your award. Totals refresh every quarter. Every entry through centre 120 counts — regardless of result. It doesn't matter who books the exam — as long as we know the student is yours, it counts towards your total. Display your badge with pride.
           </p>
         </div>
 

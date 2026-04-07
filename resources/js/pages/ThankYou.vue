@@ -32,7 +32,6 @@ interface ThankYouEntry {
 interface Summary {
   distinctions: number
   merits: number
-  passes: number
   total: number
 }
 
@@ -75,7 +74,7 @@ const activeData = computed<QuarterData | null>(() =>
 const currentQuarterLabel = computed(() => `Q${activeQuarter.value} ${activeYear.value}`)
 const hallOfFameEntries = computed(() => activeData.value?.hallOfFameEntries ?? [])
 const thankYouEntries = computed(() => activeData.value?.thankYouEntries ?? [])
-const summary = computed(() => activeData.value?.summary ?? { distinctions: 0, merits: 0, passes: 0, total: 0 })
+const summary = computed(() => activeData.value?.summary ?? { distinctions: 0, merits: 0, total: 0 })
 
 /* ── Fade transition for dynamic content ── */
 const contentVisible = ref(true)
@@ -122,6 +121,14 @@ const filteredEntries = computed(() => {
   )
 })
 
+/* ── Split entries: certificate holders vs everyone else ── */
+const certificateEntries = computed(() =>
+  filteredEntries.value.filter((e) => e.result === 'Distinction' || e.result === 'Merit')
+)
+const everyoneElseEntries = computed(() =>
+  filteredEntries.value.filter((e) => e.result !== 'Distinction' && e.result !== 'Merit')
+)
+
 /* ── Quarter tabs ── */
 const quarterLabel = (q: QuarterOption) => `Q${q.quarter} ${q.year}`
 const isActiveQuarter = (q: QuarterOption) =>
@@ -132,7 +139,6 @@ const resultBadgeClass = (result: string) => {
   switch (result) {
     case 'Distinction': return 'bg-brand-accent text-white'
     case 'Merit': return 'bg-brand-success text-white'
-    case 'Pass': return 'bg-brand-teal text-white'
     default: return 'bg-brand-surface-soft text-brand-text'
   }
 }
@@ -315,8 +321,13 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
               </p>
             </div>
 
+            <!-- Opt-out notice -->
+            <p class="mt-4 text-center text-sm text-white/70 sm:text-base">
+              Don't want your name listed? Ask your teacher or parent to get in touch and we'll remove it straight away.
+            </p>
+
             <!-- Search bar -->
-            <div class="mx-auto mt-6 max-w-md">
+            <div class="mx-auto mt-4 max-w-md">
               <div class="relative">
                 <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
                 <input
@@ -368,11 +379,11 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
                   </div>
                 </div>
 
-                <!-- Table rows -->
-                <div v-if="filteredEntries.length > 0" class="divide-y divide-white/10">
+                <!-- Certificate holders — Distinction & Merit -->
+                <div v-if="certificateEntries.length > 0" class="divide-y divide-white/10">
                   <div
-                    v-for="(entry, index) in filteredEntries"
-                    :key="entry.name + entry.instrument"
+                    v-for="(entry, index) in certificateEntries"
+                    :key="'cert-' + entry.name + entry.instrument"
                     class="grid grid-cols-12 items-center gap-2 px-4 py-3 sm:px-6"
                     :class="index % 2 === 1 ? 'bg-white/15' : 'bg-white/10'"
                   >
@@ -395,6 +406,38 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
                       <span :class="[resultBadgeClass(entry.result), 'inline-block rounded-full px-2.5 py-0.5 text-xs font-bold sm:text-sm']">
                         {{ entry.result }}
                       </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Divider — Thank you to everyone -->
+                <div v-if="everyoneElseEntries.length > 0 && filteredEntries.length > 0" class="border-t border-white/20 bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary px-4 py-3 sm:px-6">
+                  <div class="flex items-center justify-center gap-2">
+                    <Heart class="h-4 w-4 text-white" />
+                    <p class="text-sm font-bold text-white sm:text-base">Thank you to everyone who sat their exam</p>
+                    <Heart class="h-4 w-4 text-white" />
+                  </div>
+                </div>
+
+                <!-- Everyone else — just name, instrument, grade -->
+                <div v-if="everyoneElseEntries.length > 0" class="divide-y divide-white/10">
+                  <div
+                    v-for="(entry, index) in everyoneElseEntries"
+                    :key="'ty-' + entry.name + entry.instrument"
+                    class="grid grid-cols-12 items-center gap-2 px-4 py-3 sm:px-6"
+                    :class="index % 2 === 1 ? 'bg-white/15' : 'bg-white/10'"
+                  >
+                    <div class="col-span-5 sm:col-span-4">
+                      <div class="flex items-center gap-2">
+                        <Music class="hidden h-4 w-4 shrink-0 text-brand-accent sm:block" />
+                        <p class="text-sm font-semibold text-white sm:text-base">{{ entry.name }}</p>
+                      </div>
+                    </div>
+                    <div class="col-span-4 sm:col-span-4">
+                      <p class="text-sm text-white/70 sm:text-base">{{ entry.instrument }}</p>
+                    </div>
+                    <div class="col-span-3 sm:col-span-4">
+                      <p class="text-sm text-white/70 sm:text-base">{{ entry.grade }}</p>
                     </div>
                   </div>
                 </div>
@@ -430,15 +473,12 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
               </div>
 
               <!-- Summary counts -->
-              <div v-if="summary.total > 0" class="mt-4 flex flex-wrap justify-center gap-3">
+              <div v-if="summary.total > 0" class="mt-3 flex flex-wrap justify-center gap-3">
                 <span class="inline-flex items-center gap-1.5 rounded-full bg-brand-accent/20 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm ring-1 ring-white/10">
                   <Trophy class="h-3 w-3" /> {{ summary.distinctions }} Distinction{{ summary.distinctions !== 1 ? 's' : '' }}
                 </span>
                 <span class="inline-flex items-center gap-1.5 rounded-full bg-brand-success/20 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm ring-1 ring-white/10">
                   <Award class="h-3 w-3" /> {{ summary.merits }} Merit{{ summary.merits !== 1 ? 's' : '' }}
-                </span>
-                <span class="inline-flex items-center gap-1.5 rounded-full bg-brand-teal/20 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm ring-1 ring-white/10">
-                  <Star class="h-3 w-3" /> {{ summary.passes }} Pass{{ summary.passes !== 1 ? 'es' : '' }}
                 </span>
                 <span class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm ring-1 ring-white/10">
                   <Music class="h-3 w-3" /> {{ summary.total }} entries
