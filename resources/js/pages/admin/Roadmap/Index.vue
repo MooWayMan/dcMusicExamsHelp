@@ -7,6 +7,7 @@ import { usePageAnimation } from '@/composables/usePageAnimation'
 interface Milestone {
     title: string
     done: boolean
+    description?: string
 }
 
 interface Phase {
@@ -147,9 +148,14 @@ function progressBarColor(status: string): string {
                             :class="milestone.done ? 'opacity-70' : ''">
                             <CheckCircle2 v-if="milestone.done" class="mt-0.5 h-5 w-5 shrink-0 text-brand-success" />
                             <Circle v-else class="mt-0.5 h-5 w-5 shrink-0 text-brand-border" />
-                            <span class="text-base" :class="milestone.done ? 'text-brand-text-soft line-through' : 'text-brand-text'">
-                                {{ milestone.title }}
-                            </span>
+                            <div>
+                                <span class="text-base" :class="milestone.done ? 'text-brand-text-soft line-through' : 'text-brand-text'">
+                                    {{ milestone.title }}
+                                </span>
+                                <p v-if="milestone.description" class="mt-0.5 text-sm text-brand-text-soft">
+                                    {{ milestone.description }}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
