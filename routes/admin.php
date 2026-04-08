@@ -2,6 +2,7 @@
 
 // routes/admin.php
 
+use App\Http\Controllers\Admin\CertificateController;
 use App\Http\Controllers\Admin\ContactLogController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderController;
@@ -49,6 +50,11 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])->pref
 
     // AJAX: sync calendar + return fresh active task count (for sidebar polling)
     Route::post('tasks/sync', [TaskController::class, 'sync'])->name('tasks.sync');
+
+    // Certificates — generate personalised certificates
+    Route::get('certificates', [CertificateController::class, 'index'])->name('certificates.index');
+    Route::post('certificates/student', [CertificateController::class, 'generateStudent'])->name('certificates.generate-student');
+    Route::post('certificates/teacher', [CertificateController::class, 'generateTeacher'])->name('certificates.generate-teacher');
 
     // Roadmap — visual project roadmap
     Route::get('roadmap', [RoadmapController::class, 'index'])->name('roadmap');

@@ -153,7 +153,7 @@ const highlights = [
           <p class="text-base leading-relaxed text-brand-text-soft sm:text-base md:text-lg">
             Everything on this site is free. The exam fees are set by Trinity and are exactly the same
             whether you use centre code 120 or book directly. The only difference is that your students
-            get access to the <a href="/recognition" class="font-semibold text-brand-accent underline hover:text-brand-primary">Recognition page</a>, the <a href="/recognition" class="font-semibold text-brand-accent underline hover:text-brand-primary">Hall of Fame</a>, Take a Bow and Standing Ovation Certificates,
+            get at least a <strong>Bravo Certificate</strong>, access to the <a href="/recognition" class="font-semibold text-brand-accent underline hover:text-brand-primary">Recognition page</a>, the <a href="/recognition" class="font-semibold text-brand-accent underline hover:text-brand-primary">Hall of Fame</a>,
             prize draws and other incentives — at no extra cost to anyone.
           </p>
         </div>

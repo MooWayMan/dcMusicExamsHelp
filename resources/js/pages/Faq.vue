@@ -38,7 +38,7 @@ const faqs = [
   {
     question: 'What is centre code 120?',
     answer:
-      'Centre 120 is our registered Trinity College London exam centre code — it covers both our digital centre and our face-to-face centres in Liverpool and Wirral. When you use it at booking, your entry is connected to musicExams.help — which means your student gets listed on our <a href="/recognition" class="font-semibold text-brand-accent underline hover:text-brand-primary">Recognition page</a>, qualifies for the <a href="/recognition" class="font-semibold text-brand-accent underline hover:text-brand-primary">Hall of Fame</a>, and you get access to teacher recognition badges, prize draws and ongoing support.',
+      'Centre 120 is our registered Trinity College London exam centre code — it covers both our digital centre and our face-to-face centres in Liverpool and Wirral. When you use it at booking, your entry is connected to musicExams.help — which means your student receives at least a <strong>Bravo Certificate</strong>, gets listed on our <a href="/recognition" class="font-semibold text-brand-accent underline hover:text-brand-primary">Recognition page</a>, qualifies for the <a href="/recognition" class="font-semibold text-brand-accent underline hover:text-brand-primary">Hall of Fame</a>, and you get access to teacher recognition badges, prize draws and ongoing support.',
   },
   {
     question: 'Does it cost anything extra?',
@@ -68,7 +68,7 @@ const faqs = [
   {
     question: 'What results can I achieve?',
     answer:
-      'Trinity graded exams are marked out of 100. A Pass is 60–74, Merit is 75–86, and Distinction is 87–100. Every student entered through centre 120 — whether face-to-face or digital — is listed on our <a href="/recognition" class="font-semibold text-brand-accent underline hover:text-brand-primary">Recognition page</a>. Every Merit and Distinction makes the <a href="/recognition" class="font-semibold text-brand-accent underline hover:text-brand-primary">Hall of Fame</a>, and the highest scorers each quarter get a special mention and a gift token.',
+      'Trinity graded exams are marked out of 100. A Pass is 60–74, Merit is 75–86, and Distinction is 87–100. Every student entered through centre 120 — whether face-to-face or digital — receives at least a <strong>Bravo Certificate</strong> and is listed on our <a href="/recognition" class="font-semibold text-brand-accent underline hover:text-brand-primary">Recognition page</a>. Merit earns a Take a Bow Certificate and Distinction earns a Standing Ovation Certificate — plus a place in the <a href="/recognition" class="font-semibold text-brand-accent underline hover:text-brand-primary">Hall of Fame</a>. The highest scorers each quarter earn a Showstopper or Centre Stage Certificate and a gift token.',
   },
   {
     question: 'Do I need to provide sheet music for the examiner?',
@@ -83,7 +83,7 @@ const faqs = [
   {
     question: 'What is the Hall of Fame?',
     answer:
-      'Every student entered through centre 120 is listed on our <a href="/recognition" class="font-semibold text-brand-accent underline hover:text-brand-primary">Recognition page</a>. Every Merit and Distinction earns a place in the Hall of Fame with a Take a Bow or Standing Ovation Certificate. The students with the highest Distinction and highest Merit scores each quarter get a special spotlight and a gift token (£20, or divided equally if there is a tie — minimum £5 each).',
+      'Every student entered through centre 120 receives at least a <strong>Bravo Certificate</strong> and is listed on our <a href="/recognition" class="font-semibold text-brand-accent underline hover:text-brand-primary">Recognition page</a>. Merit earns a Take a Bow Certificate and Distinction earns a Standing Ovation Certificate instead — plus a place in the Hall of Fame. The students with the highest Distinction and highest Merit scores each quarter earn the top awards — a Showstopper Certificate and a Centre Stage Certificate — plus a gift token (£20, or divided equally if there is a tie — minimum £5 each).',
   },
   {
     question: 'Can I book face-to-face exams through centre 120?',

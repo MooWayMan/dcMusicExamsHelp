@@ -12,6 +12,7 @@ import {
     CheckSquare,
     Map,
     Clock,
+    Award,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
@@ -83,6 +84,11 @@ const adminNavItems: NavItem[] = [
             { title: 'All Tasks', href: '/admin/tasks' },
             { title: 'Add Task', href: '/admin/tasks/create' },
         ],
+    },
+    {
+        title: 'Certificates',
+        href: '/admin/certificates',
+        icon: Award,
     },
     {
         title: 'Roadmap',

@@ -333,7 +333,7 @@ const faqs = [
           </div>
           <div class="p-6">
             <p class="text-base text-white/80 sm:text-base md:text-lg">
-              Book through centre 120 and you'll receive extra recognition: a Take a Bow Certificate for Merit or a Standing Ovation Certificate for Distinction, plus your name on our <a href="/recognition" class="font-semibold text-brand-accent underline hover:text-brand-accent/80">Hall of Fame</a>.
+              Book through centre 120 and every entry earns at least a <strong>Bravo Certificate</strong>. Score a Merit and you'll receive a Take a Bow Certificate. Score a Distinction and you'll receive a Standing Ovation Certificate — plus your name on our <a href="/recognition" class="font-semibold text-brand-accent underline hover:text-brand-accent/80">Hall of Fame</a>.
             </p>
           </div>
         </div>
@@ -454,7 +454,7 @@ const faqs = [
             <template #myTitle>Start your grade journey</template>
           </MyTextConstructor>
           <p class="mx-auto mt-3 max-w-xl text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
-            Book through centre 120 and your achievement gets celebrated here too — <strong>Hall of Fame</strong>, certificates and recognition.
+            Book through centre 120 and every entry earns at least a <strong>Bravo Certificate</strong> — plus the <strong>Hall of Fame</strong> and more for Merit and Distinction.
           </p>
           <a href="/recognition" class="mt-4 inline-block text-base font-semibold text-brand-accent underline hover:text-brand-primary sm:text-base md:text-lg">
             See the Hall of Fame →

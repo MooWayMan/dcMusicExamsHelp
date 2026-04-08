@@ -572,7 +572,7 @@ const faqs = [
             <template #myTitle>Record your best performance</template>
           </MyTextConstructor>
           <p class="mx-auto mt-3 max-w-xl text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
-            Book through centre 120 and your achievement gets celebrated here too — <strong>Hall of Fame</strong>, certificates and recognition.
+            Book through centre 120 and every entry earns at least a <strong>Bravo Certificate</strong> — plus the <strong>Hall of Fame</strong> and more for Merit and Distinction.
           </p>
           <a href="/recognition" class="mt-4 inline-block text-base font-semibold text-brand-accent underline hover:text-brand-primary sm:text-base md:text-lg">
             See the Hall of Fame →

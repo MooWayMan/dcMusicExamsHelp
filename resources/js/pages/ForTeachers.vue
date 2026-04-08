@@ -74,7 +74,7 @@ const benefits = [
   {
     icon: GraduationCap,
     title: 'Your students get celebrated',
-    detail: 'Every student entered through centre 120 — face-to-face or digital — gets listed on our Recognition page. Merit and Distinction students make the <strong>Hall of Fame</strong> — with a Take a Bow or Standing Ovation Certificate. The highest scorers each quarter get the top spot and a gift token (£20, or divided equally if there is a tie — minimum £5 each). Parents love it.',
+    detail: 'Every student entered through centre 120 — face-to-face or digital — receives at least a <strong>Bravo Certificate</strong> and gets listed on our Recognition page. Merit earns a <strong>Take a Bow Certificate</strong> and Distinction earns a <strong>Standing Ovation Certificate</strong> instead — plus a place in the <strong>Hall of Fame</strong>. The highest scorers each quarter earn a <strong>Showstopper</strong> or <strong>Centre Stage Certificate</strong> and a gift token (£20, or divided equally if there is a tie — minimum £5 each). Parents love it.',
     link: '/recognition?from=for-teachers',
     linkText: 'Find out more',
   },
@@ -94,7 +94,7 @@ const faqs = [
   },
   {
     question: 'Can I still use a different centre code?',
-    answer: 'If you already have a different centre code, you can keep using it. But your students will miss out on the Recognition page, the <strong>Hall of Fame</strong>, Take a Bow and Standing Ovation Certificates, prize draws and other incentives that come with centre 120.',
+    answer: 'If you already have a different centre code, you can keep using it. But your students will miss out on our certificates (Bravo, Take a Bow, Standing Ovation), the Recognition page, the <strong>Hall of Fame</strong>, prize draws and other incentives that come with centre 120.',
   },
   {
     question: 'How do the Faber book discounts work?',

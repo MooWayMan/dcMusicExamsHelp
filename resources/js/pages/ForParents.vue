@@ -49,15 +49,15 @@ const journeySteps = [
   {
     step: 5,
     title: 'Results and recognition',
-    detail: 'Results are graded as Pass (60–74), Merit (75–86) or Distinction (87–100). Every student entered through centre 120 — whether face-to-face or digital — gets listed on our Recognition page. Every Merit and Distinction makes the <strong>Hall of Fame</strong>.',
+    detail: 'Results are graded as Pass (60–74), Merit (75–86) or Distinction (87–100). Every student entered through centre 120 — whether face-to-face or digital — receives at least a <strong>Bravo Certificate</strong> and gets listed on our Recognition page. Merit earns a Take a Bow Certificate and Distinction earns a Standing Ovation Certificate — plus a place in the <strong>Hall of Fame</strong>.',
   },
 ]
 
 const whatYourChildGets = [
-  'Listed on our Recognition page — first name and initial, instrument and grade (full name shown only with your permission)',
-  'A place in the <strong>Hall of Fame</strong> for Merit or Distinction — with a Take a Bow or Standing Ovation Certificate',
-  'The highest scorers each quarter get the top spot and a gift token (£20, or divided equally if there is a tie — minimum £5 each)',
-  'The same official Trinity certificate and result as any other centre — plus our own special certificates for Merit and Distinction',
+  'At least a <strong>Bravo Certificate</strong> for every entry — Merit earns a Take a Bow Certificate and Distinction earns a Standing Ovation Certificate instead — plus listed on our Recognition page (first name and initial, instrument and grade; full name shown only with your permission)',
+  'A place in the <strong>Hall of Fame</strong> for every Merit and Distinction',
+  'The highest scorers each quarter earn a <strong>Showstopper</strong> or <strong>Centre Stage Certificate</strong> and a gift token (£20, or divided equally if there is a tie — minimum £5 each)',
+  'The same official Trinity certificate and result as any other centre — plus a personalised certificate from us (Bravo, Take a Bow or Standing Ovation depending on their result)',
 ]
 
 const faqs = [
@@ -91,7 +91,7 @@ const faqs = [
   },
   {
     question: 'What does centre code 120 mean?',
-    answer: 'It\'s a registered Trinity exam centre code. When you use code 120, your child\'s entry is connected to musicExams.help — which means they qualify for the Recognition page, <strong>Hall of Fame</strong>, Take a Bow and Standing Ovation Certificates and other incentives at no extra cost.',
+    answer: 'It\'s a registered Trinity exam centre code. When you use code 120, your child\'s entry is connected to musicExams.help — which means they receive at least a <strong>Bravo Certificate</strong>, qualify for the Recognition page, the <strong>Hall of Fame</strong> and other incentives at no extra cost.',
   },
 ]
 </script>

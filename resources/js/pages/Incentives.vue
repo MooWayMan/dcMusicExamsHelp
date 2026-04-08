@@ -32,7 +32,7 @@ const studentTiers = [
     icon: Star,
     title: 'Recognition page',
     subtitle: 'Every student',
-    detail: 'Every student entered through centre 120 — whether face-to-face or digital — gets listed on our Recognition page. First name and initial, instrument and grade. Full name shown only with permission.',
+    detail: 'Every student entered through centre 120 — whether face-to-face or digital — receives at least a <strong>Bravo Certificate</strong> and gets listed on our Recognition page. First name and initial, instrument and grade. Full name shown only with permission.',
     link: '/recognition?from=incentives',
     linkText: 'See the Recognition page',
   },
@@ -48,7 +48,7 @@ const studentTiers = [
     icon: Trophy,
     title: 'Top Scorers',
     subtitle: 'Quarterly — the very best',
-    detail: 'The highest Distinction and highest Merit score each quarter earn the top spot on the Hall of Fame — plus a gift token (£20, or divided equally if there is a tie — minimum £5 each).',
+    detail: 'The highest Distinction each quarter earns a <strong>Showstopper Certificate</strong>. The highest Merit earns a <strong>Centre Stage Certificate</strong>. Both earn the top spot on the Hall of Fame — plus a gift token (£20, or divided equally if there is a tie — minimum £5 each).',
     link: '/recognition?from=incentives',
     linkText: 'See the Hall of Fame',
   },
@@ -74,7 +74,7 @@ const teacherTiers = [
     icon: Users,
     title: 'Your students get celebrated',
     subtitle: 'Through centre 120',
-    detail: 'When your students enter through centre 120, they get listed on the Recognition page, qualify for the Hall of Fame, earn certificates for Merit and Distinction, and go into prize draws — all at no cost to you or them.',
+    detail: 'When your students enter through centre 120, every one of them receives at least a Bravo Certificate and gets listed on the Recognition page. Merit earns a Take a Bow Certificate and Distinction earns a Standing Ovation Certificate instead, and every entry goes into prize draws — all at no cost to you or them.',
     link: '/for-teachers?from=incentives',
     linkText: 'Find out more for teachers',
   },
@@ -84,9 +84,9 @@ const teacherTiers = [
 const howItWorks = [
   'Book any Trinity exam — face-to-face or digital — using centre code 120',
   'Your child sits the exam and the result comes through as normal',
-  'Every entry gets listed on the Recognition page automatically',
-  'Merit and Distinction students are added to the <strong>Hall of Fame</strong> with certificates',
-  'The highest scorers each quarter earn the top spot and a gift token',
+  'Every entry earns at least a <strong>Bravo Certificate</strong> and gets listed on the Recognition page',
+  'Merit and Distinction students are added to the <strong>Hall of Fame</strong> with a Take a Bow or Standing Ovation Certificate',
+  'The highest scorers each quarter earn a <strong>Showstopper</strong> or <strong>Centre Stage Certificate</strong> and a gift token',
   'Every entry goes into a quarterly prize draw',
 ]
 
@@ -100,7 +100,7 @@ const faqs = [
   {
     id: 2,
     question: 'What are the certificates?',
-    answer: 'Merit students receive a Take a Bow Certificate. Distinction students receive a Standing Ovation Certificate. These are digital certificates you can print at home, display on a tablet or iPad for photos, or share straight to social media. No colour printer needed — just hold it up on the screen and snap a photo with your child. These are in addition to the official Trinity certificate that every Pass, Merit and Distinction receives.',
+    answer: 'Every student entered through centre 120 receives at least a Bravo Certificate. Score a Merit and you receive a Take a Bow Certificate instead. Score a Distinction and you receive a Standing Ovation Certificate instead. The highest scorers each quarter earn the top awards — a Showstopper Certificate for the highest Distinction and a Centre Stage Certificate for the highest Merit. These are digital certificates you can print at home, display on a tablet or iPad for photos, or share straight to social media. No colour printer needed — just hold it up on the screen and snap a photo with your child. These are in addition to the official Trinity certificate that every Pass, Merit and Distinction receives.',
   },
   {
     id: 3,
@@ -192,7 +192,7 @@ const faqs = [
             />
           </div>
         </div>
-        <p class="mt-3 text-center text-sm text-white/50">Recognition — Take a Bow — Standing Ovation</p>
+        <p class="mt-3 text-center text-sm text-white/50">Bravo — Take a Bow — Standing Ovation</p>
       </div>
     </section>
 

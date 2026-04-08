@@ -268,11 +268,11 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
               </div>
               <div class="flex items-center justify-center gap-2">
                 <Star class="h-4 w-4 text-brand-accent" />
-                <p class="text-xs font-bold uppercase tracking-widest text-brand-accent">Highest Distinction</p>
+                <p class="text-xs font-bold uppercase tracking-widest text-brand-accent">Showstopper</p>
               </div>
               <p class="mt-4 text-lg font-bold text-white sm:text-xl">Could this be you?</p>
               <p class="mx-auto mt-2 max-w-xs text-sm text-white/60">
-                The highest scoring Distinction each quarter gets the spotlight here. Aim for the top mark.
+                The highest scoring Distinction each quarter earns a Showstopper Certificate. Aim for the top mark.
               </p>
               <div class="mt-4">
                 <span class="inline-block rounded-full bg-brand-accent/20 px-4 py-1.5 text-sm font-bold text-brand-accent ring-1 ring-brand-accent/30">
@@ -288,11 +288,11 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
               </div>
               <div class="flex items-center justify-center gap-2">
                 <Star class="h-4 w-4 text-brand-success" />
-                <p class="text-xs font-bold uppercase tracking-widest text-brand-success">Highest Merit</p>
+                <p class="text-xs font-bold uppercase tracking-widest text-brand-success">Centre Stage</p>
               </div>
               <p class="mt-4 text-lg font-bold text-white sm:text-xl">Could this be you?</p>
               <p class="mx-auto mt-2 max-w-xs text-sm text-white/60">
-                The highest scoring Merit each quarter earns their place here. Play your best and shine.
+                The highest scoring Merit each quarter earns a Centre Stage Certificate. Play your best and shine.
               </p>
               <div class="mt-4">
                 <span class="inline-block rounded-full bg-brand-success/20 px-4 py-1.5 text-sm font-bold text-brand-success ring-1 ring-brand-success/30">
@@ -317,7 +317,7 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
               </MyTextConstructor>
               <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/70 sm:text-base md:text-lg lg:text-xl">
                 Every student who enters through centre 120 is a star to us. You sat the exam, you did the work,
-                and your name belongs here.
+                and you've earned your Bravo Certificate. Your name belongs here.
               </p>
             </div>
 
@@ -497,12 +497,24 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
       <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)" class="mx-auto max-w-xl space-y-3">
           <div class="flex items-center gap-3 rounded-xl bg-brand-surface p-4 shadow-sm border-4 border-brand-accent">
+            <Star class="h-6 w-6 shrink-0 text-brand-accent" />
+            <p class="text-base font-semibold text-brand-text sm:text-base md:text-lg">Every entry earns at least a <span class="text-brand-accent">Bravo Certificate</span></p>
+          </div>
+          <div class="flex items-center gap-3 rounded-xl bg-brand-surface p-4 shadow-sm border-4 border-brand-accent">
             <Award class="h-6 w-6 shrink-0 text-brand-success" />
             <p class="text-base font-semibold text-brand-text sm:text-base md:text-lg">Do well and earn a <span class="text-brand-success">Take a Bow Certificate</span></p>
           </div>
           <div class="flex items-center gap-3 rounded-xl bg-brand-surface p-4 shadow-sm border-4 border-brand-accent">
             <Trophy class="h-6 w-6 shrink-0 text-brand-accent" />
             <p class="text-base font-semibold text-brand-text sm:text-base md:text-lg">Aim high and earn a <span class="text-brand-accent">Standing Ovation Certificate</span></p>
+          </div>
+          <div class="flex items-center gap-3 rounded-xl bg-brand-surface p-4 shadow-sm border-4 border-brand-accent">
+            <Music class="h-6 w-6 shrink-0 text-brand-success" />
+            <p class="text-base font-semibold text-brand-text sm:text-base md:text-lg">Highest Merit each quarter earns a <span class="text-brand-success">Centre Stage Certificate</span></p>
+          </div>
+          <div class="flex items-center gap-3 rounded-xl bg-brand-surface p-4 shadow-sm border-4 border-brand-accent">
+            <Trophy class="h-6 w-6 shrink-0 text-brand-accent" />
+            <p class="text-base font-semibold text-brand-text sm:text-base md:text-lg">Highest Distinction each quarter earns a <span class="text-brand-accent">Showstopper Certificate</span></p>
           </div>
         </div>
 

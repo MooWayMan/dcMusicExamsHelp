@@ -80,7 +80,7 @@ const whyCards = [
 const incentives = [
   {
     title: 'Students featured on our website',
-    detail: 'Every student who enters through centre 120 — whether face-to-face or digital — gets listed on our <a href="/recognition" class="font-semibold text-white underline hover:text-brand-accent">Recognition page</a>. Score a Merit or Distinction and you make the <strong>Hall of Fame</strong> — with a Take a Bow or Standing Ovation Certificate. The highest scorers each quarter get the top spot and a gift token (£20, or divided equally if there is a tie — minimum £5 each).',
+    detail: 'Every student who enters through centre 120 — whether face-to-face or digital — receives at least a <strong>Bravo Certificate</strong> and gets listed on our <a href="/recognition" class="font-semibold text-white underline hover:text-brand-accent">Recognition page</a>. Score a Merit and you earn a <strong>Take a Bow Certificate</strong> instead. Score a Distinction and you earn a <strong>Standing Ovation Certificate</strong> instead — plus a place in the <strong>Hall of Fame</strong>. The highest scorers each quarter earn a <strong>Showstopper</strong> or <strong>Centre Stage Certificate</strong> and a gift token (£20, or divided equally if there is a tie — minimum £5 each).',
     icon: Trophy,
     iconBg: 'bg-brand-accent/10',
     iconColor: 'text-brand-accent',
@@ -721,7 +721,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
           <a href="/recognition" class="group block overflow-hidden rounded-2xl bg-brand-surface p-3 shadow-2xl border-4 border-brand-accent transition-transform duration-300 hover:scale-[1.01]">
             <img
               src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/certAceiveStu_Dis.png"
-              alt="Student Certificate of Achievement — Highest Distinction"
+              alt="Showstopper Certificate — Highest Distinction"
               class="block w-full rounded-2xl"
             />
           </a>

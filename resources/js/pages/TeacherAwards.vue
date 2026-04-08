@@ -74,6 +74,15 @@ const awardTiers = [
   },
 ]
 
+const s3Base = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/'
+
+const teacherCertificates = [
+  { name: 'Bronze Certificate', image: `${s3Base}certTeach_1.png` },
+  { name: 'Silver Certificate', image: `${s3Base}certTeach_2.png` },
+  { name: 'Gold Certificate', image: `${s3Base}certTeach_3.png` },
+  { name: 'Top Award Certificate', image: `${s3Base}certTeach_4.png` },
+]
+
 const benefits = [
   'A digital badge to display on your website, social media and email signature',
   'A printable certificate for your studio, classroom or office wall',
@@ -163,7 +172,7 @@ const faqs = [
           <div :class="animClass('fade-up', 2)">
             <p class="mx-auto mt-4 max-w-2xl text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
               Enter students through centre 120 and build towards your award.
-              It does not matter whether they pass or fail — every single entry counts.
+              It does not matter whether they pass or fail — every single entry counts. Every student receives at least a Bravo Certificate.
             </p>
           </div>
         </div>
@@ -272,6 +281,22 @@ const faqs = [
               :alt="tier.name + ' badge'"
               class="block w-full object-contain"
             />
+          </div>
+        </div>
+
+        <!-- Teacher certificates -->
+        <div :class="animClass('zoom-in', 3)" class="mx-auto mt-8 grid max-w-3xl grid-cols-2 gap-4 sm:grid-cols-4">
+          <div
+            v-for="cert in teacherCertificates"
+            :key="cert.name"
+            class="overflow-hidden rounded-2xl bg-white/10 p-2 shadow-2xl backdrop-blur-sm"
+          >
+            <img
+              :src="cert.image"
+              :alt="cert.name + ' certificate'"
+              class="block w-full object-contain"
+            />
+            <p class="mt-2 text-center text-sm font-semibold text-white/80">{{ cert.name }}</p>
           </div>
         </div>
       </div>
