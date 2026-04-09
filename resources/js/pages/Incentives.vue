@@ -82,7 +82,7 @@ const teacherTiers = [
 
 /* ── How it works steps ── */
 const howItWorks = [
-  'Book any Trinity exam — face-to-face, digital or theory — using centre code 120',
+  'Book any Trinity exam — face-to-face, digital or theory — through centre 120. For digital exams, use code 120 when booking. For face-to-face exams in Liverpool or Wirral, it\'s automatic',
   'The candidate sits the exam and the result comes through as normal',
   'Every entry earns at least a <strong>Bravo Certificate</strong> and gets listed on the Recognition page',
   'Merit and Distinction students are added to the <strong>Hall of Fame</strong> with a Take a Bow or Standing Ovation Certificate',

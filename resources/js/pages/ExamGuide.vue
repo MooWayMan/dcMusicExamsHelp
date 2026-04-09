@@ -42,7 +42,7 @@ const rockPopHighlights = [
   'Five instruments — guitar, bass, drums, keyboards and vocals',
   'Three songs from the Rock & Pop books — real songs you know from the radio',
   'One must be a Technical Focus song — a dedicated song that tests your technique',
-  'Option to replace your third song with an own choice, as long as it meets the syllabus criteria',
+  'Option to replace your second song with an own choice or your own composition',
   'Session Skills — choose between Improvising or Playback',
   'Song choices cover rock, pop, indie, funk, soul, metal and more',
   'Digital option available with the same flexibility as Classical & Jazz',

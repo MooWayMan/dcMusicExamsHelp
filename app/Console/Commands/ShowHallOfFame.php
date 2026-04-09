@@ -43,18 +43,18 @@ class ShowHallOfFame extends Command
         $topMerit = $entries->where('score', '>=', 75)->where('score', '<', 87)->first();
 
         if ($topDistinction) {
-            $this->info("  ⭐ HIGHEST DISTINCTION");
+            $this->info("  ⭐ SHOWSTOPPER — HIGHEST DISTINCTION");
             $this->line("     {$topDistinction->candidate_name}");
             $this->line("     {$topDistinction->grade} — Score: {$topDistinction->score}");
-            $this->line("     Standing Ovation Certificate + Gift Token");
+            $this->line("     Showstopper Certificate + Gift Token");
             $this->newLine();
         }
 
         if ($topMerit) {
-            $this->info("  ⭐ HIGHEST MERIT");
+            $this->info("  ⭐ CENTRE STAGE — HIGHEST MERIT");
             $this->line("     {$topMerit->candidate_name}");
             $this->line("     {$topMerit->grade} — Score: {$topMerit->score}");
-            $this->line("     Take a Bow Certificate + Gift Token");
+            $this->line("     Centre Stage Certificate + Gift Token");
             $this->newLine();
         }
 
@@ -95,7 +95,7 @@ class ShowHallOfFame extends Command
         $passes = $entries->where('score', '<', 75);
         $this->newLine();
         $this->info("──────────────────────────────────────────────────");
-        $this->info("  ⭐ THANK YOU — ALL ENTRIES");
+        $this->info("  ⭐ BRAVO — ALL ENTRIES");
         $this->info("──────────────────────────────────────────────────");
         $this->table(
             ['Name', 'Instrument', 'Grade', 'Score', 'School'],
@@ -116,7 +116,7 @@ class ShowHallOfFame extends Command
             [
                 ['Distinction (Standing Ovation)', $distinctions->count()],
                 ['Merit (Take a Bow)', $merits->count()],
-                ['Pass (Thank You)', $passes->count()],
+                ['Pass (Bravo)', $passes->count()],
                 ['Total Entries', $entries->count()],
             ]
         );

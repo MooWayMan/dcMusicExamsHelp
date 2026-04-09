@@ -40,7 +40,7 @@ const beforeTheDay = [
 const whatToBring = [
   'Your instrument (tuned and in good working order)',
   'Your sheet music — original copies, not photocopies (copyright rules). If your piece isn\'t published by Trinity, you\'ll also need to provide a copy for the examiner to follow along with. A tablet or iPad with photos of the music works well — just make sure it\'s in aeroplane mode',
-  'Any backing tracks if required (Rock & Pop candidates)',
+  'Any backing tracks if required — at our Liverpool and Wirral centres, playback equipment and all cables and adapters are provided. Just have your backing track ready on your phone or device',
   'A bottle of water',
   'Your exam confirmation or appointment details',
   'A positive attitude — the examiner wants you to do well!',
@@ -55,23 +55,23 @@ const inTheRoom = [
   },
   {
     step: '2',
-    title: 'Pieces first',
-    detail: 'You\'ll play your prepared pieces. For Classical & Jazz, that\'s three pieces from the repertoire list — and one can be your own composition if you like. For Rock & Pop, you play three songs from the book (one must be a Technical Focus song), with the option to replace your third song with an own choice. You choose the order.',
+    title: 'You choose the order',
+    detail: 'You can present the sections of your exam in any order — just write your preferred order on the appointment slip. If you don\'t indicate a preference, the examiner will follow the default order (which varies by instrument). For Classical & Jazz, the three sections are pieces, technical work and supporting tests. For Rock & Pop, it\'s three songs and Session Skills.',
   },
   {
     step: '3',
-    title: 'Technical work',
-    detail: 'For Classical & Jazz, the examiner will ask for scales, arpeggios and exercises from the syllabus. Rock & Pop candidates play their Technical Focus song as one of their three songs.',
+    title: 'Pieces or songs',
+    detail: 'For Classical & Jazz, you play three pieces from the repertoire list — one can be your own composition if you like. For Rock & Pop, you play three songs from the book (one must be a Technical Focus song), with the option to replace the second song with an own choice or your own composition.',
   },
   {
     step: '4',
-    title: 'Supporting tests',
-    detail: 'Classical & Jazz exams include supporting tests — sight-reading, aural, improvisation or musical knowledge (depending on your grade and choices). Rock & Pop has Session Skills — either Improvising or Playback.',
+    title: 'Technical work and supporting tests',
+    detail: 'Classical & Jazz exams include scales, arpeggios and exercises, plus supporting tests — sight-reading, aural, improvisation or musical knowledge (depending on your grade and choices). Rock & Pop has Session Skills instead — either Improvising or Playback.',
   },
   {
     step: '5',
     title: 'That\'s it!',
-    detail: 'The examiner will thank you and you\'re done. The whole thing typically takes 12–30 minutes depending on the grade. Through centre 120, results are checked and posted to you within days of the exam — much faster than the usual turnaround. A digital certificate is included — if you want a printed paper certificate, that\'s an extra £5.',
+    detail: 'The examiner will thank you and you\'re done. The whole thing typically takes 12–30 minutes depending on the grade. There are no results on the day — see the results section below for what happens next.',
   },
 ]
 
@@ -134,7 +134,7 @@ const afterBookingF2F = [
   {
     step: '5',
     title: 'Results and certificate',
-    detail: 'A written report form is provided after the exam. Results are provisional until validated by Trinity. Your digital certificate is issued within 24–48 hours of validation. If you want a printed paper certificate, that\'s an extra £5.',
+    detail: '<strong class="text-white">Important: there are no results on the day.</strong> The process differs depending on the type of exam you took:<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Classical &amp; Jazz face-to-face</span> The examiner completes a detailed written report form for each candidate. These are collected by your centre representative, who checks the marks, scans each report and posts the original to you by second-class post. This means you typically receive your written report within days of the exam — much faster than the standard turnaround. The examiner separately enters the results onto Trinity\'s system, which can take longer. Once validated, Trinity sends an email with a link to download your official digital certificate (free, included). From that same link you can order a printed paper certificate for £5 if you\'d like one.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Rock &amp; Pop face-to-face</span> The same process applies — your centre representative checks, scans and posts the examiner\'s written report to you. Results also appear on your MyTrinity account online. Your official digital certificate is issued by Trinity once the result is validated.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Digital exams</span> Results and feedback are sent to you by email directly from Trinity. There is no paper report — everything is online. Your official digital certificate is issued once the result is validated.<br /><br />In all cases, results are provisional until validated by Trinity. Occasionally results may be delayed — for example if an exam is referred for further review. If you have any concerns about a delayed result, contact <a href="mailto:support@trinitycollege.com" class="font-semibold text-white underline hover:text-white/70" target="_blank">support@trinitycollege.com</a>.',
   },
 ]
 
@@ -148,7 +148,7 @@ const faqs = [
   {
     question: 'Can a parent or teacher come into the room?',
     answer:
-      'No — parents and teachers are not allowed in the exam room during a face-to-face exam. You should stay nearby so you\'re available if needed, but the candidate goes in on their own. For digital exams, you may need to help with the recording setup, but the performance itself is the candidate\'s.',
+      'No — parents and teachers are not allowed in the exam room during a face-to-face exam. The only exception is if a very young child needs help setting up equipment (e.g. an electric keyboard) — a parent can come in to help with setup but must then leave and go to the designated waiting area. For digital exams, you may need to help with the recording setup, but the performance itself is the candidate\'s.',
   },
   {
     question: 'What happens if I make a mistake?',

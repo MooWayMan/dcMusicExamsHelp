@@ -61,8 +61,8 @@ class ThankYouController extends Controller
                 'grade' => $topDistinction->grade,
                 'score' => $topDistinction->score,
                 'result' => 'Distinction',
-                'award' => 'Highest Distinction',
-                'certificate' => 'Standing Ovation Certificate + Gift Token',
+                'award' => 'Showstopper',
+                'certificate' => 'Showstopper Certificate + Gift Token',
             ]);
         }
         if ($topMerit) {
@@ -72,8 +72,8 @@ class ThankYouController extends Controller
                 'grade' => $topMerit->grade,
                 'score' => $topMerit->score,
                 'result' => 'Merit',
-                'award' => 'Highest Merit',
-                'certificate' => 'Take a Bow Certificate + Gift Token',
+                'award' => 'Centre Stage',
+                'certificate' => 'Centre Stage Certificate + Gift Token',
             ]);
         }
 

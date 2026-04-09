@@ -100,7 +100,7 @@ const mockUpCards = [
   {
     icon: Star,
     title: 'On social media',
-    detail: 'Share your achievement on Facebook, Instagram or LinkedIn. Tag your school. Let parents see that your students are entering — and achieving. "Gold Award — 30+ Exam Entries" says it all.',
+    detail: 'Share your achievement on Facebook, Instagram or LinkedIn. Tag us at musicExams.help so we can share it too. Let parents see that your students are entering — and achieving. "Gold Award — 30+ Exam Entries" says it all.',
   },
 ]
 
@@ -118,7 +118,7 @@ const faqs = [
   {
     id: 'school-or-teacher',
     question: 'Can a school earn an award, or just individual teachers?',
-    answer: 'Both. The recognition goes to whoever is named as the applicant on the booking. If a school enters candidates under the school name, the entries count towards the school\'s total. If a teacher enters under their own name, it counts towards theirs. This is worth discussing with your school — if a teacher books on behalf of a school, the entry will be recorded against the teacher\'s name unless the school is listed as the applicant.',
+    answer: 'Both. By default, entries are linked to the teacher. If you\'d prefer the recognition to go to your school instead, just let us know — it\'s your choice. Schools and teachers can also split recognition across both if they prefer. The key thing is that every entry counts, regardless of who actually books the exam.',
   },
   {
     id: 'display',
@@ -128,7 +128,7 @@ const faqs = [
   {
     id: 'how-tracked',
     question: 'How are my entries tracked?',
-    answer: 'We track entries through Trinity\'s centre 120 booking records. You do not need to do anything extra — just make sure exams are booked through centre code 120.',
+    answer: 'We track entries through Trinity\'s centre 120 booking records. For digital exams, use code 120 when booking online. For face-to-face exams in Liverpool or Wirral, your entry is automatically connected to centre 120 — no code needed. You do not need to do anything extra.',
   },
   {
     id: 'cumulative',

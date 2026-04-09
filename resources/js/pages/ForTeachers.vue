@@ -46,12 +46,12 @@ const bookingSteps = [
   {
     step: 1,
     title: 'Click Book Your Exam',
-    detail: 'Hit the Book Your Exam button anywhere on this site. You will see a short menu asking which type of exam you want to book — digital, Classical & Jazz face-to-face, or Rock & Pop face-to-face. Each one goes to a different Trinity booking system.',
+    detail: 'Hit the Book Your Exam button anywhere on this site. You will see a short menu asking which type of exam you want to book — digital practical, digital theory, Classical &amp; Jazz face-to-face, or Rock &amp; Pop face-to-face. Each option takes you straight to the correct Trinity booking system.',
   },
   {
     step: 2,
     title: 'Choose your pathway',
-    detail: '<span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Digital exams</span> use booking.trinitycollege.com — our link pre-fills centre code 120, but if you refresh the page or use the back button, the code can disappear. Look for a box that says "referral code" and make sure 120 is in it before you submit.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Classical &amp; Jazz face-to-face</span> use musicbooking.trinitycollege.co.uk<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Rock &amp; Pop face-to-face</span> use my-trinity.trinitycollege.com',
+    detail: 'When you click Book Your Exam, our link takes you straight to the right Trinity booking system — you don\'t need to copy any web addresses.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Digital exams</span> Our link pre-fills centre code 120 automatically, but if you refresh the page or use the back button the code can disappear. Look for a box that says "referral code" and make sure 120 is in it before you submit.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Classical &amp; Jazz face-to-face</span> Our link takes you straight to the booking page — no code needed. Your entry is automatically connected to centre 120 because the exam is held at our Liverpool or Wirral venue.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Rock &amp; Pop face-to-face</span> Our link takes you straight to the booking page — no code needed. Your entry is automatically connected to centre 120.',
   },
   {
     step: 3,
@@ -335,7 +335,7 @@ const faqs = [
             <template #myTitle>How booking works</template>
           </MyTextConstructor>
           <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/80 sm:text-base md:text-lg lg:text-xl">
-            Four steps. No extra cost. Your students are entered through centre 120 and qualify for everything.
+            Four steps. No extra cost. Your students are connected to centre 120 and qualify for everything.
           </p>
         </div>
 
@@ -401,7 +401,7 @@ const faqs = [
               </li>
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                <span class="text-base text-white/90 sm:text-base md:text-lg">Use a recorded accompaniment instead of a live pianist — no scrambling to find an accompanist for exam day</span>
+                <span class="text-base text-white/90 sm:text-base md:text-lg">Option to use a recorded accompaniment — or still use a live accompanist if you prefer</span>
               </li>
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
@@ -416,6 +416,10 @@ const faqs = [
                 <span class="text-base text-white/90 sm:text-base md:text-lg">Same certificate and UCAS points as face-to-face</span>
               </li>
             </ul>
+            <div class="mt-4 rounded-xl bg-white/10 p-3">
+              <p class="text-sm font-semibold text-white">Tip from experience</p>
+              <p class="mt-1 text-sm leading-snug text-white/80">Don't pay until your student has actually recorded their performance. Once you pay, the 28-day submission window starts. Get the recording done first, then book and submit.</p>
+            </div>
           </div>
 
           <!-- F2F -->
@@ -446,7 +450,7 @@ const faqs = [
         <div :class="animClass('fade-up', 3)" class="mt-8 rounded-2xl border-4 border-brand-accent bg-white/10 p-5 backdrop-blur-sm sm:p-6">
           <p class="text-lg font-semibold text-white sm:text-lg">Why teachers love the digital option</p>
           <p class="mt-2 text-base leading-snug text-white/80 sm:text-base md:text-lg">
-            Many instruments require a piano accompaniment for at least two of the three exam pieces. Finding a reliable pianist who can learn the parts, attend on the specific exam day, and perform under pressure is one of the biggest headaches in exam preparation. With digital exams, students can use a high-quality recorded accompaniment instead — removing the stress for both teacher and student.
+            For <span class="font-semibold text-white">Classical &amp; Jazz</span> exams, many instruments require a piano accompaniment for at least two of the three pieces. Finding a reliable pianist who can learn the parts, attend on the specific exam day, and perform under pressure is one of the biggest headaches in exam preparation. With digital exams, students have the option to use a high-quality recorded accompaniment instead — removing the stress for both teacher and student. (<span class="font-semibold text-white">Rock &amp; Pop</span> exams use backing tracks as standard, so accompaniment is not an issue either way.)
           </p>
           <p class="mt-3 text-base leading-snug text-white/80 sm:text-base md:text-lg">
             <span class="font-semibold text-white">In face-to-face exams</span> across brass, woodwind and singing, backing tracks are only permitted up to Grade 3. From Grade 4 onwards, a live accompanist must be in the room. <span class="font-semibold text-white">Digital exams</span> remove this restriction entirely, letting candidates at any grade use a recorded accompaniment. For teachers who play their students' accompaniments themselves, digital also takes away the pressure of performing live in front of the examiner.
@@ -461,9 +465,6 @@ const faqs = [
           </p>
           <p class="mt-3 text-base leading-snug text-white/80 sm:text-base md:text-lg">
             There is also a real benefit to having a fixed exam date. With digital exams, students can spend months re-recording, chasing perfection — and the process can drift indefinitely. A face-to-face date creates focus: the student knows they have to be ready, and the teacher can plan a preparation schedule around it. Many teachers find their students actually perform better with that deadline in place.
-          </p>
-          <p class="mt-3 text-base leading-snug text-white/80 sm:text-base md:text-lg">
-            <span class="font-semibold text-white">A tip from experience:</span> with digital exams, do not pay until your student has actually recorded their performance. Once you pay, the 28-day submission window starts. If the recording is not ready, you are under pressure from day one. Get the recording done first, then book and submit.
           </p>
         </div>
       </div>

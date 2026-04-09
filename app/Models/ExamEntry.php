@@ -77,7 +77,7 @@ class ExamEntry extends Model
         return match (true) {
             $this->score >= 87 => 'Standing Ovation Certificate',
             $this->score >= 75 => 'Take a Bow Certificate',
-            default => null,
+            default => 'Bravo Certificate',
         };
     }
 

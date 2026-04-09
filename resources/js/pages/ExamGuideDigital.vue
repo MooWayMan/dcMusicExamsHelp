@@ -67,7 +67,7 @@ const equipment = [
 /* ── Digital pathways ── */
 const classicalJazzPathways = [
   {
-    title: 'Performance pathway',
+    title: 'Technical work pathway',
     description: 'The standard digital option. You record your three pieces (one can be your own composition) plus technical work. The supporting tests (sight-reading, aural etc.) are replaced by Overall Performance Criteria — the examiner assesses your overall musicianship across the whole performance.',
   },
   {
@@ -91,7 +91,7 @@ const comparison = [
   { feature: 'Supporting tests', digital: 'Overall Performance Criteria (or repertoire-only)', faceToFace: 'Sight-reading, aural, etc.' },
   { feature: 'Feedback', digital: 'Written feedback online', faceToFace: 'Written feedback by post and online' },
   { feature: 'Results', digital: 'Normally within 14 days', faceToFace: 'Through centre 120, checked and posted within days' },
-  { feature: 'Accompaniment', digital: 'Recorded accompaniment at all grades', faceToFace: 'Live accompanist required from Grade 4' },
+  { feature: 'Accompaniment', digital: 'Option to use recorded or live accompaniment at all grades', faceToFace: 'Live accompanist required from Grade 4' },
   { feature: 'Marking', digital: 'Same marking criteria', faceToFace: 'Same marking criteria' },
   { feature: 'Diplomas', digital: 'ATCL, LTCL and FTCL Recital available digitally', faceToFace: 'ATCL, LTCL and FTCL Recital plus teaching and theory diplomas' },
 ]

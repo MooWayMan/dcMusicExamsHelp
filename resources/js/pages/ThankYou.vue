@@ -330,6 +330,7 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
 
             <!-- Opt-out notice -->
             <p class="mt-4 text-center text-sm text-white/70 sm:text-base">
+              Names are listed in alphabetical order — the order does not imply any ranking.
               Don't want your name listed? Ask your teacher or parent to get in touch and we'll remove it straight away.
             </p>
 
@@ -538,6 +539,9 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
         <MyTextConstructor variant="muted" alignment="center" textColor="text-brand-text-soft" spacing="tight">
           Your name, instrument, grade and result will appear on yours
         </MyTextConstructor>
+        <p class="mx-auto mt-4 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg">
+          These are in addition to the official Trinity certificate you receive automatically for any Pass, Merit or Distinction.
+        </p>
       </div>
     </section>
 

@@ -39,7 +39,7 @@ const journeySteps = [
   {
     step: 3,
     title: 'Your child prepares for the exam',
-    detail: 'Your child will work on their exam pieces, scales, sight-reading and other elements — usually with their teacher, but self-taught candidates can prepare independently too. The <a href="https://www.trinitycollege.com/qualifications/music/grade-exams" class="font-semibold text-white underline hover:text-white/70" target="_blank">Trinity syllabus</a> sets out exactly what\'s needed for each grade.',
+    detail: 'Your child will work on their exam pieces, scales, sight-reading and other elements — usually with their teacher, but self-taught candidates can prepare independently too. The Trinity syllabus sets out exactly what\'s needed for each grade — see the <a href="https://www.trinitycollege.com/qualifications/music/grade-exams" class="font-semibold text-white underline hover:text-white/70" target="_blank">Classical &amp; Jazz syllabus</a> or the <a href="https://www.trinitycollege.com/qualifications/music/rock-and-pop" class="font-semibold text-white underline hover:text-white/70" target="_blank">Rock &amp; Pop syllabus</a>.',
   },
   {
     step: 4,
@@ -83,11 +83,11 @@ const faqs = [
   },
   {
     question: 'Do I need to be present for the exam?',
-    answer: 'For face-to-face exams, parents are not allowed in the exam room — but you should stay nearby so you\'re available if needed. For digital exams, you may need to help with the recording setup, but the performance itself is your child\'s. Anyone can submit the recording — it doesn\'t have to be the teacher.',
+    answer: 'For face-to-face exams, parents are not allowed in the exam room. The only exception is if a very young child needs help setting up equipment (e.g. an electric keyboard) — a parent can come in to help with setup but must then leave and go to the designated waiting area. For digital exams, you may need to help with the recording setup, but the performance itself is your child\'s. Anyone can submit the recording — it doesn\'t have to be the teacher.',
   },
   {
     question: 'What happens after we book?',
-    answer: 'The exam can be booked by you (the parent), the teacher or the school — whoever is named as the applicant will receive the correspondence. For digital exams, you\'ll get a confirmation email straight away. Login details for the upload portal arrive within a week (check spam). You then have four weeks to record and submit. For face-to-face exams, you\'ll receive an email closer to the exam date with the venue, time and an appointment slip that must be printed and handed to the examiner.',
+    answer: 'The exam can be booked by you (the parent), the teacher or the school — whoever is named as the applicant will receive the correspondence.<br /><br /><strong>Digital exams:</strong> You\'ll get a confirmation email straight away. Login details for the upload portal arrive within a week (check spam). You then have four weeks to record and submit.<br /><br /><strong>Classical &amp; Jazz face-to-face:</strong> You\'ll know your exam day and time straight away when you book through the MOB booking system. An appointment slip must be printed and handed to the examiner.<br /><br /><strong>Rock &amp; Pop face-to-face:</strong> Your exam date and time will be confirmed closer to the session — usually around three weeks before. An appointment slip must be printed and handed to the examiner.',
   },
   {
     question: 'What does centre code 120 mean?',
