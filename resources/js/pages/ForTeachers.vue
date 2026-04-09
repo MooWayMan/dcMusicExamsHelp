@@ -60,7 +60,7 @@ const benefits = [
   {
     icon: Gift,
     title: 'Quarterly prize draws',
-    detail: 'Every exam entry through centre 120 — face-to-face or digital — earns an automatic entry into our quarterly teacher prize draw. The more students you enter, the more chances to win. If a parent books the exam themselves, just ask them to <a href="/contact" class="font-semibold text-brand-accent underline hover:text-white">let us know</a> which teacher the student is linked to — that way you still get the credit.',
+    detail: 'Every exam entry through centre 120 — face-to-face or digital — earns an automatic entry into our quarterly teacher prize draw. The more students you enter, the more chances to win. If a parent books the exam themselves, just ask them to <a href="/contact" class="font-semibold text-white underline hover:text-white/70">let us know</a> which teacher the student is linked to — that way you still get the credit.',
     link: '/incentives?from=for-teachers',
     linkText: 'See all incentives',
   },
@@ -98,7 +98,7 @@ const faqs = [
   },
   {
     question: 'How do the Faber book discounts work?',
-    answer: 'Faber Music offers an exclusive trade discount on physical books to registered music teachers. We walk you through the simple setup process. Once registered, the discount applies to all Faber and Trinity College London Press publications — not just exam books. Visit our Exam Book Discounts page for the full breakdown.',
+    answer: 'Faber Music offers an exclusive trade discount on physical books to registered music teachers. We walk you through the simple setup process. Once registered, the discount applies to all Faber and Trinity College London Press publications — not just exam books. Visit our <a href="/for-teachers/faber-discounts?from=for-teachers" class="font-semibold text-white underline hover:text-white/70">Exam Book Discounts page</a> for the full breakdown.',
   },
   {
     question: 'How does the teacher badge system work?',

@@ -369,7 +369,7 @@ const faqs = [
 
         <div :class="animClass('fade-up', 3)" class="mt-8 text-center">
           <a href="mailto:musicexams@musicexams.help?subject=Exam%20book%20discounts%20%E2%80%93%20I%27d%20like%20to%20know%20more&body=Hi%2C%0A%0AI%27m%20a%20music%20teacher%20and%20I%27d%20like%20to%20know%20more%20about%20the%20exam%20book%20discounts%20available.%0A%0AThanks">
-            <MyButtonConstructor variant="primary" size="large" :icon="Mail" icon-position="left">
+            <MyButtonConstructor variant="light" size="large" :icon="Mail" icon-position="left">
               Email Us
             </MyButtonConstructor>
           </a>
@@ -421,7 +421,7 @@ const faqs = [
           </MyTextConstructor>
           <div class="mt-4">
             <a href="mailto:musicexams@musicexams.help?subject=Question%20about%20exam%20book%20discounts&body=Hi%2C%0A%0A">
-              <MyButtonConstructor variant="primary" size="large" :icon="Mail" icon-position="left">
+              <MyButtonConstructor variant="light" size="large" :icon="Mail" icon-position="left">
                 Email Us
               </MyButtonConstructor>
             </a>

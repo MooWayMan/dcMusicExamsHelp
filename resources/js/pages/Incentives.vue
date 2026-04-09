@@ -83,7 +83,7 @@ const teacherTiers = [
 /* ── How it works steps ── */
 const howItWorks = [
   'Book any Trinity exam — face-to-face or digital — using centre code 120',
-  'Your child sits the exam and the result comes through as normal',
+  'The candidate sits the exam and the result comes through as normal',
   'Every entry earns at least a <strong>Bravo Certificate</strong> and gets listed on the Recognition page',
   'Merit and Distinction students are added to the <strong>Hall of Fame</strong> with a Take a Bow or Standing Ovation Certificate',
   'The highest scorers each quarter earn a <strong>Showstopper</strong> or <strong>Centre Stage Certificate</strong> and a gift token',
@@ -100,7 +100,7 @@ const faqs = [
   {
     id: 2,
     question: 'What are the certificates?',
-    answer: 'Every student entered through centre 120 receives at least a Bravo Certificate. Score a Merit and you receive a Take a Bow Certificate instead. Score a Distinction and you receive a Standing Ovation Certificate instead. The highest scorers each quarter earn the top awards — a Showstopper Certificate for the highest Distinction and a Centre Stage Certificate for the highest Merit. These are digital certificates you can print at home, display on a tablet or iPad for photos, or share straight to social media. No colour printer needed — just hold it up on the screen and snap a photo with your child. These are in addition to the official Trinity certificate that every Pass, Merit and Distinction receives.',
+    answer: 'Every student entered through centre 120 receives at least a Bravo Certificate. Score a Merit and you receive a Take a Bow Certificate instead. Score a Distinction and you receive a Standing Ovation Certificate instead. The highest scorers each quarter earn the top awards — a Showstopper Certificate for the highest Distinction and a Centre Stage Certificate for the highest Merit. These are digital certificates you can print at home, display on a tablet or iPad for photos, or share straight to social media. No colour printer needed — just hold it up on the screen and snap a photo. These are in addition to the official Trinity certificate that every Pass, Merit and Distinction receives.',
   },
   {
     id: 3,

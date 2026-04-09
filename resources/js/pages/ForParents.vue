@@ -71,7 +71,7 @@ const faqs = [
   },
   {
     question: 'How much does it cost?',
-    answer: 'Exam fees vary by grade and are set by Trinity College London. Using centre code 120 when booking doesn\'t cost anything extra — the fees are the standard Trinity prices. You can see the full fee breakdown on our Exam Fees page.',
+    answer: 'Exam fees vary by grade and are set by Trinity College London. Using centre code 120 when booking doesn\'t cost anything extra — the fees are the standard Trinity prices. You can see the full fee breakdown on our <a href="/exam-fees?from=for-parents" class="font-semibold text-white underline hover:text-white/70">Exam Fees page</a>.',
   },
   {
     question: 'What is the difference between digital and face-to-face?',

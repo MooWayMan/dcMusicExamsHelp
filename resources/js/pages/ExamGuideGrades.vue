@@ -333,7 +333,7 @@ const faqs = [
           </div>
           <div class="p-6">
             <p class="text-base text-white/80 sm:text-base md:text-lg">
-              Book through centre 120 and every entry earns at least a <strong>Bravo Certificate</strong>. Score a Merit and you'll receive a Take a Bow Certificate. Score a Distinction and you'll receive a Standing Ovation Certificate — plus your name on our <a href="/recognition" class="font-semibold text-brand-accent underline hover:text-brand-accent/80">Hall of Fame</a>.
+              Book through centre 120 and every entry earns at least a <strong>Bravo Certificate</strong>. Score a Merit and you'll receive a Take a Bow Certificate. Score a Distinction and you'll receive a Standing Ovation Certificate — plus your name on our <a href="/recognition" class="font-semibold text-white underline hover:text-white/70">Hall of Fame</a>.
             </p>
           </div>
         </div>

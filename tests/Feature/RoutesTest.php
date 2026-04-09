@@ -137,3 +137,13 @@ test('GET /for-teachers/awards?from=incentives returns 200', function () {
     $this->get('/for-teachers/awards?from=incentives')
         ->assertStatus(200);
 });
+
+test('GET /exam-fees?from=for-parents returns 200', function () {
+    $this->get('/exam-fees?from=for-parents')
+        ->assertStatus(200);
+});
+
+test('GET /for-teachers/faber-discounts?from=for-teachers returns 200', function () {
+    $this->get('/for-teachers/faber-discounts?from=for-teachers')
+        ->assertStatus(200);
+});

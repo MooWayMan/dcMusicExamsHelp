@@ -148,7 +148,7 @@ const faqs = [
   {
     question: 'Can a parent or teacher come into the room?',
     answer:
-      'For younger candidates (under 16), a parent or guardian can sit quietly in the room if the candidate wants. Teachers can\'t be in the room during the exam itself, but they can wait nearby.',
+      'No — parents and teachers are not allowed in the exam room during a face-to-face exam. You should stay nearby so you\'re available if needed, but the candidate goes in on their own. For digital exams, you may need to help with the recording setup, but the performance itself is the candidate\'s.',
   },
   {
     question: 'What happens if I make a mistake?',
