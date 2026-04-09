@@ -25,8 +25,17 @@ const breadcrumbPages = [
   { name: 'For Students', href: '/for-students', current: true },
 ]
 
-const hallOfFameLogo =
-  'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/Highest+score+In5.png'
+const s3Base = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/'
+
+const hallOfFameLogo = `${s3Base}Highest+score+In5.png`
+
+const studentCertificates = [
+  { name: 'Bravo Certificate', image: `${s3Base}certStu_1.png` },
+  { name: 'Take a Bow Certificate', image: `${s3Base}certStu_2.png` },
+  { name: 'Standing Ovation Certificate', image: `${s3Base}certStu_3.png` },
+  { name: 'Centre Stage Certificate', image: `${s3Base}certStu_4.png` },
+  { name: 'Showstopper Certificate', image: `${s3Base}certStu_5.png` },
+]
 
 const tiers = [
   {
@@ -49,7 +58,7 @@ const tiers = [
     icon: Star,
     title: 'Recognition page',
     subtitle: 'Every student through centre 120',
-    detail: 'Every student who enters an exam through centre 120 — whether face-to-face or digital — receives at least a <strong>Bravo Certificate</strong> and gets listed on our Recognition page. Your first name and initial, instrument and grade. This can later be changed to show your full name with permission. Your hard work is always recognised.',
+    detail: 'Every student who enters an exam through centre 120 — whether face-to-face, digital or theory — receives at least a <strong>Bravo Certificate</strong> and gets listed on our Recognition page. Your first name and initial, instrument and grade. This can later be changed to show your full name with permission. Your hard work is always recognised.',
     link: '/recognition?from=for-students',
     linkText: 'Visit the Recognition page',
   },
@@ -57,16 +66,16 @@ const tiers = [
     icon: Gift,
     title: 'Prize draws',
     subtitle: 'Automatic entry',
-    detail: 'Every exam entry through centre 120 — face-to-face or digital — earns an automatic entry into our quarterly prize draw. Just by sitting your exam, you\'re in with a chance to win a gift token!',
+    detail: 'Every exam entry through centre 120 — face-to-face, digital or theory — earns an automatic entry into our quarterly prize draw. Just by sitting your exam, you\'re in with a chance to win a gift token!',
     link: '/incentives?from=for-students',
     linkText: 'See all incentives',
   },
 ]
 
 const resultsBands = [
-  { label: 'Distinction', range: '87–100', color: 'bg-brand-accent', textColor: 'text-white' },
-  { label: 'Merit', range: '75–86', color: 'bg-brand-success', textColor: 'text-white' },
-  { label: 'Pass', range: '60–74', color: 'bg-brand-teal', textColor: 'text-white' },
+  { label: 'Distinction', range: '87–100', color: 'bg-brand-accent', textColor: 'text-white', cert: 'You will receive a Standing Ovation Certificate' },
+  { label: 'Merit', range: '75–86', color: 'bg-brand-success', textColor: 'text-white', cert: 'You will receive a Take a Bow Certificate' },
+  { label: 'Pass', range: '60–74', color: 'bg-brand-teal', textColor: 'text-white', cert: 'You will receive a Bravo Certificate' },
 ]
 </script>
 
@@ -162,6 +171,63 @@ const resultsBands = [
       </div>
     </section>
 
+    <!-- CERTIFICATE SUITE + MOCKUP -->
+    <section
+      class="relative border-t border-white/10"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_5.jpg'); background-size: cover; background-position: center;"
+    >
+      <div class="absolute inset-0 bg-brand-primary/20" />
+      <div class="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
+        <div :class="animClass('fade-up', 1)" class="text-center">
+          <MyTextConstructor
+            variant="subheading"
+            fontFamily="display"
+            alignment="center"
+            spacing="tight"
+            textColor="text-white"
+            class="md:!text-2xl lg:!text-3xl"
+          >
+            <template #myTitle>The full certificate suite</template>
+          </MyTextConstructor>
+          <p class="mx-auto mt-3 max-w-2xl text-base text-white/80 sm:text-base md:text-lg lg:text-xl">
+            Every student gets at least a Bravo. Score higher and earn something even better.
+          </p>
+        </div>
+
+        <!-- Student certificates -->
+        <div :class="animClass('zoom-in', 2)" class="mx-auto mt-8 flex max-w-3xl flex-wrap items-start justify-center gap-4">
+          <div
+            v-for="cert in studentCertificates"
+            :key="cert.name"
+            class="w-[calc(50%-0.5rem)] overflow-hidden rounded-2xl bg-white/10 p-2 shadow-2xl backdrop-blur-sm sm:w-[calc(33.333%-0.75rem)] lg:w-[calc(20%-0.8rem)]"
+          >
+            <img
+              :src="cert.image"
+              :alt="cert.name"
+              class="block w-full object-contain"
+            />
+            <p class="mt-2 text-center text-sm font-semibold text-white/80">{{ cert.name }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Living room mockup — full width, cropped to remove Canva white border -->
+    <section class="bg-black">
+      <div :class="animClass('zoom-in', 3)">
+        <img
+          src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/mockLivingRommCerts.png"
+          alt="musicExams.help certificates framed on a living room wall"
+          class="h-auto w-full object-cover"
+        />
+      </div>
+      <div class="mx-auto max-w-4xl px-4 pb-10 pt-4 sm:px-6">
+        <MyTextConstructor variant="muted" alignment="center" textColor="text-white/80" spacing="none">
+          Your certificates deserve a spot on the wall — frame them, share them, celebrate them.
+        </MyTextConstructor>
+      </div>
+    </section>
+
     <!-- RESULTS EXPLAINED -->
     <section class="bg-brand-surface">
       <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
@@ -180,16 +246,23 @@ const resultsBands = [
           </p>
         </div>
 
-        <div :class="animClass('fade-up', 2)" class="mx-auto mt-8 max-w-sm space-y-3">
+        <div :class="animClass('fade-up', 2)" class="mx-auto mt-8 max-w-md space-y-3">
           <div
             v-for="band in resultsBands"
             :key="band.label"
-            :class="[band.color, band.textColor, 'flex items-center justify-between rounded-xl px-5 py-3 font-semibold shadow-sm']"
+            :class="[band.color, band.textColor, 'rounded-xl px-5 py-3 shadow-sm']"
           >
-            <span class="text-base sm:text-lg">{{ band.label }}</span>
-            <span class="text-sm sm:text-base">{{ band.range }}</span>
+            <div class="flex items-center justify-between font-semibold">
+              <span class="text-base sm:text-lg">{{ band.label }}</span>
+              <span class="text-sm sm:text-base">{{ band.range }}</span>
+            </div>
+            <p class="mt-1 text-sm text-white/80 sm:text-base">{{ band.cert }}</p>
           </div>
         </div>
+
+        <p class="mx-auto mt-6 max-w-lg text-center text-sm text-brand-text-soft sm:text-base">
+          These are in addition to the official Trinity certificate you receive automatically for any Pass, Merit or Distinction.
+        </p>
 
         <div :class="animClass('fade-up', 3)" class="mt-10 text-center">
           <MyTextConstructor

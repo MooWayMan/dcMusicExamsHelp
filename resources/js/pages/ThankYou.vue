@@ -157,7 +157,14 @@ const pageMeta = {
 const breadcrumbPages = [{ name: 'Recognition', href: '/recognition', current: true }]
 
 const hallOfFameLogo = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/Highest+score+In5.png'
-const certStudent = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/certAceiveStu_Dis.png'
+const s3Base = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/'
+const studentCertificates = [
+  { name: 'Bravo', image: `${s3Base}certStu_1.png` },
+  { name: 'Take a Bow', image: `${s3Base}certStu_2.png` },
+  { name: 'Standing Ovation', image: `${s3Base}certStu_3.png` },
+  { name: 'Centre Stage', image: `${s3Base}certStu_4.png` },
+  { name: 'Showstopper', image: `${s3Base}certStu_5.png` },
+]
 const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/Thank_You_card.png'
 </script>
 
@@ -518,18 +525,19 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
           </div>
         </div>
 
-        <div :class="animClass('zoom-in', 2)" class="mx-auto mt-8 max-w-md">
-          <div class="overflow-hidden rounded-2xl bg-brand-surface p-3 shadow-2xl border-4 border-brand-accent">
-            <img
-              :src="certStudent"
-              alt="Standing Ovation Certificate — Distinction"
-              class="block w-full rounded-2xl"
-            />
+        <div :class="animClass('zoom-in', 2)" class="mx-auto mt-8 flex max-w-3xl flex-wrap items-start justify-center gap-4">
+          <div
+            v-for="cert in studentCertificates"
+            :key="cert.name"
+            class="w-[calc(50%-0.5rem)] overflow-hidden rounded-2xl bg-brand-surface p-2 shadow-2xl border-4 border-brand-accent sm:w-[calc(33.333%-0.75rem)] lg:w-[calc(20%-0.8rem)]"
+          >
+            <img :src="cert.image" :alt="cert.name + ' Certificate'" class="block w-full object-contain" />
+            <p class="mt-2 text-center text-sm font-semibold text-brand-text-soft">{{ cert.name }}</p>
           </div>
-          <p class="mt-3 text-center text-xs text-brand-text-soft italic">
-            Example certificate — your name, instrument, grade and result will appear on yours
-          </p>
         </div>
+        <MyTextConstructor variant="muted" alignment="center" textColor="text-brand-text-soft" spacing="tight">
+          Your name, instrument, grade and result will appear on yours
+        </MyTextConstructor>
       </div>
     </section>
 

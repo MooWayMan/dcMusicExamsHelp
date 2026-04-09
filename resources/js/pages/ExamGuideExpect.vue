@@ -61,7 +61,7 @@ const inTheRoom = [
   {
     step: '3',
     title: 'Technical work',
-    detail: 'For Classical & Jazz, the examiner will ask for scales, arpeggios and exercises from the syllabus. Rock & Pop candidates play their Technical Focus song as one of their four pieces.',
+    detail: 'For Classical & Jazz, the examiner will ask for scales, arpeggios and exercises from the syllabus. Rock & Pop candidates play their Technical Focus song as one of their three songs.',
   },
   {
     step: '4',
@@ -114,7 +114,7 @@ const afterBookingF2F = [
   {
     step: '1',
     title: 'Booking confirmation',
-    detail: 'You\'ll receive a confirmation email with your order reference, candidate name, instrument, grade and the amount paid. Check the details carefully — if anything is wrong, contact support@trinitycollege.com straight away.',
+    detail: 'You\'ll receive a confirmation email with your order reference, candidate name, instrument, grade and the amount paid. Check the details carefully — if anything is wrong, contact <a href="mailto:support@trinitycollege.com" class="font-semibold text-white underline hover:text-white/70" target="_blank">support@trinitycollege.com</a> straight away.',
   },
   {
     step: '2',

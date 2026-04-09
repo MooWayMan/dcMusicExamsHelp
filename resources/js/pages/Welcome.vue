@@ -80,7 +80,7 @@ const whyCards = [
 const incentives = [
   {
     title: 'Students featured on our website',
-    detail: 'Every student who enters through centre 120 — whether face-to-face or digital — receives at least a <strong>Bravo Certificate</strong> and gets listed on our <a href="/recognition" class="font-semibold text-white underline hover:text-brand-accent">Recognition page</a>. Score a Merit and you earn a <strong>Take a Bow Certificate</strong> instead. Score a Distinction and you earn a <strong>Standing Ovation Certificate</strong> instead — plus a place in the <strong>Hall of Fame</strong>. The highest scorers each quarter earn a <strong>Showstopper</strong> or <strong>Centre Stage Certificate</strong> and a gift token (£20, or divided equally if there is a tie — minimum £5 each).',
+    detail: 'Every student who enters through centre 120 — whether face-to-face, digital or theory — receives at least a <strong>Bravo Certificate</strong> and gets listed on our <a href="/recognition" class="font-semibold text-white underline hover:text-brand-accent">Recognition page</a>. Score a Merit and you earn a <strong>Take a Bow Certificate</strong> instead. Score a Distinction and you earn a <strong>Standing Ovation Certificate</strong> instead — plus a place in the <strong>Hall of Fame</strong>. The highest scorers each quarter earn a <strong>Showstopper</strong> or <strong>Centre Stage Certificate</strong> and a gift token (£20, or divided equally if there is a tie — minimum £5 each).',
     icon: Trophy,
     iconBg: 'bg-brand-accent/10',
     iconColor: 'text-brand-accent',
@@ -96,7 +96,7 @@ const incentives = [
   },
   {
     title: 'Quarterly prize draws',
-    detail: 'Teachers earn one prize draw entry for every exam booked through centre code 120 — face-to-face or digital. The more students entered, the more chances to win — with gift tokens to help invest back into their teaching. Parents and students — let your teacher know about code 120 and help them win too.',
+    detail: 'Teachers earn one prize draw entry for every exam booked through centre code 120 — face-to-face, digital or theory. The more students entered, the more chances to win — with gift tokens to help invest back into their teaching. Parents and students — let your teacher know about code 120 and help them win too.',
     icon: Gift,
     iconBg: 'bg-brand-teal/10',
     iconColor: 'text-brand-teal',

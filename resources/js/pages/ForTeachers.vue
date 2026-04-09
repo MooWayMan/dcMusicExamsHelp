@@ -26,6 +26,22 @@ const breadcrumbPages = [
   { name: 'For Teachers', href: '/for-teachers', current: true },
 ]
 
+const s3Base = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/'
+
+const teacherBadges = [
+  { name: 'Bronze Award', image: `${s3Base}awardTA10.png` },
+  { name: 'Silver Award', image: `${s3Base}awardTA20.png` },
+  { name: 'Gold Award', image: `${s3Base}awardTA30.png` },
+  { name: 'Top Award', image: `${s3Base}awardTA40.png` },
+]
+
+const teacherCertificates = [
+  { name: 'Bronze Certificate', image: `${s3Base}certTeach_1.png` },
+  { name: 'Silver Certificate', image: `${s3Base}certTeach_2.png` },
+  { name: 'Gold Certificate', image: `${s3Base}certTeach_3.png` },
+  { name: 'Top Award Certificate', image: `${s3Base}certTeach_4.png` },
+]
+
 const bookingSteps = [
   {
     step: 1,
@@ -60,7 +76,7 @@ const benefits = [
   {
     icon: Gift,
     title: 'Quarterly prize draws',
-    detail: 'Every exam entry through centre 120 — face-to-face or digital — earns an automatic entry into our quarterly teacher prize draw. The more students you enter, the more chances to win. If a parent books the exam themselves, just ask them to <a href="/contact" class="font-semibold text-white underline hover:text-white/70">let us know</a> which teacher the student is linked to — that way you still get the credit.',
+    detail: 'Every exam entry through centre 120 — face-to-face, digital or theory — earns an automatic entry into our quarterly teacher prize draw. The more students you enter, the more chances to win. If a parent books the exam themselves, just ask them to <a href="/contact" class="font-semibold text-white underline hover:text-white/70">let us know</a> which teacher the student is linked to — that way you still get the credit.',
     link: '/incentives?from=for-teachers',
     linkText: 'See all incentives',
   },
@@ -74,7 +90,7 @@ const benefits = [
   {
     icon: GraduationCap,
     title: 'Your students get celebrated',
-    detail: 'Every student entered through centre 120 — face-to-face or digital — receives at least a <strong>Bravo Certificate</strong> and gets listed on our Recognition page. Merit earns a <strong>Take a Bow Certificate</strong> and Distinction earns a <strong>Standing Ovation Certificate</strong> instead — plus a place in the <strong>Hall of Fame</strong>. The highest scorers each quarter earn a <strong>Showstopper</strong> or <strong>Centre Stage Certificate</strong> and a gift token (£20, or divided equally if there is a tie — minimum £5 each). Parents love it.',
+    detail: 'Every student entered through centre 120 — face-to-face, digital or theory — receives at least a <strong>Bravo Certificate</strong> and gets listed on our Recognition page, even if they don\'t pass. It takes the sting out of a disappointing result — the student still gets recognised for entering. Merit earns a <strong>Take a Bow Certificate</strong> and Distinction earns a <strong>Standing Ovation Certificate</strong> instead — plus a place in the <strong>Hall of Fame</strong>. The highest scorers each quarter earn a <strong>Showstopper</strong> or <strong>Centre Stage Certificate</strong> and a gift token (£20, or divided equally if there is a tie — minimum £5 each). Parents love it.',
     link: '/recognition?from=for-teachers',
     linkText: 'Find out more',
   },
@@ -84,7 +100,7 @@ const benefits = [
 const everythingCard = {
   icon: BookOpen,
   title: 'Making your life easier',
-  detail: 'All the exam guidance, booking information, fees, dates and procedures your students and parents need — in one place on musicExams.help. Save yourself time answering the same questions over and over. Just point parents and students to the site.',
+  detail: '<span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 mb-2 text-sm font-bold text-white">Save yourself time answering the same questions over and over</span><br />All the exam guidance, booking information, fees, dates and procedures your students and parents need — in one place on musicExams.help. Just point parents and students to the site. You can even subscribe to our <strong>shared Google Calendar</strong> with all the important Trinity dates, closing dates and Faber offers — so nothing gets missed.',
 }
 
 const faqs = [
@@ -98,11 +114,11 @@ const faqs = [
   },
   {
     question: 'How do the Faber book discounts work?',
-    answer: 'Faber Music offers an exclusive trade discount on physical books to registered music teachers. We walk you through the simple setup process. Once registered, the discount applies to all Faber and Trinity College London Press publications — not just exam books. Visit our <a href="/for-teachers/faber-discounts?from=for-teachers" class="font-semibold text-white underline hover:text-white/70">Exam Book Discounts page</a> for the full breakdown.',
+    answer: 'Faber Music offers an exclusive trade discount on physical books to registered music teachers. We walk you through the simple setup process. Once registered, the discount applies to all Faber and Trinity College London Press publications — not just exam books. Visit our <a href="/for-teachers/faber-discounts?from=for-teachers" class="font-semibold text-brand-accent underline hover:opacity-70">Exam Book Discounts page</a> for the full breakdown.',
   },
   {
     question: 'How does the teacher badge system work?',
-    answer: 'Every entry through centre 120 counts — regardless of result. Totals refresh every quarter. At 10 entries you earn the <strong>Bronze Award</strong>, at 20 the <strong>Silver Award</strong>, at 30 the <strong>Gold Award</strong>, and at 40+ the <strong>Top Award</strong>. Badges are digital — display them on your website, email signature or social media and call yourself an award-winning music teacher.',
+    answer: 'Every entry through centre 120 counts — regardless of result. That includes face-to-face exams, digital practical exams and digital theory exams. Totals refresh every quarter. At 10 entries you earn the <strong>Bronze Award</strong>, at 20 the <strong>Silver Award</strong>, at 30 the <strong>Gold Award</strong>, and at 40+ the <strong>Top Award</strong>. Badges are digital — display them on your website, email signature or social media and call yourself an award-winning music teacher.',
   },
   {
     question: 'Do you offer face-to-face and digital exams?',
@@ -183,9 +199,126 @@ const faqs = [
       </div>
     </section>
 
+    <!-- BADGE & CERTIFICATE SUITE + STUDIO MOCKUP -->
+    <section
+      class="relative border-t border-white/10"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_5.jpg'); background-size: cover; background-position: center;"
+    >
+      <div class="absolute inset-0 bg-brand-primary/20" />
+      <div class="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
+        <div :class="animClass('fade-up', 1)" class="text-center">
+          <MyTextConstructor
+            variant="subheading"
+            fontFamily="display"
+            alignment="center"
+            spacing="tight"
+            textColor="text-white"
+            class="md:!text-2xl lg:!text-3xl"
+          >
+            <template #myTitle>Your badges. Your certificates.</template>
+          </MyTextConstructor>
+          <p class="mx-auto mt-3 max-w-2xl text-base text-white/80 sm:text-base md:text-lg lg:text-xl">
+            Every tier comes with a digital badge and a printable certificate personalised to you or your school.
+          </p>
+        </div>
+
+        <!-- Teacher badges -->
+        <div :class="animClass('zoom-in', 2)" class="mx-auto mt-8 grid max-w-2xl grid-cols-2 gap-4 sm:grid-cols-4">
+          <div
+            v-for="badge in teacherBadges"
+            :key="badge.name"
+            class="overflow-hidden rounded-2xl bg-white/10 p-2 shadow-2xl backdrop-blur-sm"
+          >
+            <img
+              :src="badge.image"
+              :alt="badge.name + ' badge'"
+              class="block w-full object-contain"
+            />
+          </div>
+        </div>
+
+        <!-- Teacher certificates -->
+        <div :class="animClass('zoom-in', 3)" class="mx-auto mt-8 grid max-w-3xl grid-cols-2 gap-4 sm:grid-cols-4">
+          <div
+            v-for="cert in teacherCertificates"
+            :key="cert.name"
+            class="overflow-hidden rounded-2xl bg-white/10 p-2 shadow-2xl backdrop-blur-sm"
+          >
+            <img
+              :src="cert.image"
+              :alt="cert.name"
+              class="block w-full object-contain"
+            />
+            <p class="mt-2 text-center text-sm font-semibold text-white/80">{{ cert.name }}</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Studio mockup — full width, cropped to remove Canva white border -->
+    <section class="bg-black">
+      <div :class="animClass('zoom-in', 4)" class="overflow-hidden">
+        <img
+          src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/musicStudioTeachCerts.png"
+          alt="Music studio wall displaying teacher appreciation badge and student certificates from musicExams.help"
+          class="h-auto w-[102%] max-w-none -ml-[1%] -mt-[1%] -mb-[1%] object-cover"
+        />
+      </div>
+      <div class="mx-auto max-w-4xl px-4 pb-10 pt-4 sm:px-6">
+        <MyTextConstructor variant="muted" alignment="center" textColor="text-white/80" spacing="none">
+          Your students' achievements on your studio wall — plus your own Teacher Appreciation award.
+        </MyTextConstructor>
+      </div>
+    </section>
+
+    <!-- WHAT YOU GET (moved above booking — hook them first) -->
+    <section
+      class="relative"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_5.jpg'); background-size: cover; background-position: center;"
+    >
+      <div class="absolute inset-0 bg-brand-primary/20" />
+
+      <div class="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
+        <div :class="animClass('fade-up', 1)">
+          <MyTextConstructor
+            variant="subheading"
+            fontFamily="display"
+            alignment="center"
+            spacing="tight"
+            textColor="text-white"
+            class="md:!text-2xl lg:!text-3xl"
+          >
+            <template #myTitle>What you get as a teacher</template>
+          </MyTextConstructor>
+        </div>
+
+        <!-- Full-width "Everything in one place" card — inverted colours -->
+        <div :class="animClass('fade-up', 2)" class="mt-10">
+          <div class="overflow-hidden rounded-2xl border-4 border-brand-accent shadow-2xl transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_25px_60px_-12px_rgba(0,0,0,0.5)]">
+            <!-- Header — blue gradient bar -->
+            <div class="flex w-full items-center gap-3 bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary px-5 py-3 sm:px-6">
+              <component :is="everythingCard.icon" class="h-5 w-5 shrink-0 text-white sm:h-6 sm:w-6" />
+              <p class="text-lg font-semibold text-white sm:text-xl">{{ everythingCard.title }}</p>
+            </div>
+            <!-- Body — black -->
+            <div class="bg-black p-5 sm:p-6">
+              <p class="text-lg leading-relaxed text-white/90 sm:text-lg md:text-xl" v-html="everythingCard.detail"></p>
+            </div>
+            <!-- Footer — blue gradient bar (no CTA, just a visual close) -->
+            <div class="bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary px-5 py-2"></div>
+          </div>
+        </div>
+
+        <div :class="animClass('fade-up', 3)" class="mt-6">
+          <MyGlassCardConstructor :cards="benefits" :columns="2" />
+        </div>
+      </div>
+    </section>
+
     <!-- HOW TO BOOK -->
     <section
-      class="relative border-t border-brand-border"
+      class="relative"
       style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_9.jpg'); background-size: cover; background-position: center;"
     >
       <div class="absolute inset-0 bg-brand-primary/50" />
@@ -230,53 +363,9 @@ const faqs = [
       </div>
     </section>
 
-    <!-- WHAT YOU GET -->
-    <section
-      class="relative border-t border-brand-border"
-      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_5.jpg'); background-size: cover; background-position: center;"
-    >
-      <div class="absolute inset-0 bg-brand-primary/20" />
-
-      <div class="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
-        <div :class="animClass('fade-up', 1)">
-          <MyTextConstructor
-            variant="subheading"
-            fontFamily="display"
-            alignment="center"
-            spacing="tight"
-            textColor="text-white"
-            class="md:!text-2xl lg:!text-3xl"
-          >
-            <template #myTitle>What you get as a teacher</template>
-          </MyTextConstructor>
-        </div>
-
-        <!-- Full-width "Everything in one place" card — inverted colours -->
-        <div :class="animClass('fade-up', 2)" class="mt-10">
-          <div class="overflow-hidden rounded-2xl border-4 border-brand-accent shadow-2xl transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_25px_60px_-12px_rgba(0,0,0,0.5)]">
-            <!-- Header — blue gradient bar -->
-            <div class="flex w-full items-center gap-3 bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary px-5 py-3 sm:px-6">
-              <component :is="everythingCard.icon" class="h-5 w-5 shrink-0 text-white sm:h-6 sm:w-6" />
-              <p class="text-lg font-semibold text-white sm:text-xl">{{ everythingCard.title }}</p>
-            </div>
-            <!-- Body — black -->
-            <div class="bg-black p-5 sm:p-6">
-              <p class="text-lg leading-relaxed text-white/90 sm:text-lg md:text-xl" v-html="everythingCard.detail"></p>
-            </div>
-            <!-- Footer — blue gradient bar (no CTA, just a visual close) -->
-            <div class="bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary px-5 py-2"></div>
-          </div>
-        </div>
-
-        <div :class="animClass('fade-up', 3)" class="mt-6">
-          <MyGlassCardConstructor :cards="benefits" :columns="2" />
-        </div>
-      </div>
-    </section>
-
     <!-- DIGITAL vs FACE TO FACE -->
     <section
-      class="relative border-t border-brand-border"
+      class="relative"
       style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_6.jpg'); background-size: cover; background-position: center;"
     >
       <div class="absolute inset-0 bg-brand-primary/50" />

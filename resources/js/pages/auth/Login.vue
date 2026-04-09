@@ -102,5 +102,11 @@ defineProps<{
             Don't have an account?
             <TextLink :href="register()" class="font-semibold text-brand-accent hover:underline">Sign up</TextLink>
         </div>
+
+        <div class="text-center">
+            <a href="/" class="text-base text-brand-text-soft hover:text-brand-accent hover:underline sm:text-lg">
+                ← Return to home page
+            </a>
+        </div>
     </Form>
 </template>

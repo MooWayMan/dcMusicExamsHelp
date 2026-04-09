@@ -29,17 +29,17 @@ const journeySteps = [
   {
     step: 1,
     title: 'Decide when your child is ready',
-    detail: 'Usually a teacher will recommend the right grade and instrument when the time is right. If your child doesn\'t have a teacher, that\'s fine — you can still enter them for an exam. Get in touch and we\'ll help you choose the right starting point.',
+    detail: 'Usually a teacher will recommend the right grade and exam type when the time is right. If your child doesn\'t have a teacher, that\'s fine — you can still enter them for an exam. Get in touch and we\'ll help you choose the right starting point.',
   },
   {
     step: 2,
-    title: 'Book on the Trinity website using code 120',
-    detail: 'Either you, the teacher or the school can book the exam directly on the Trinity website — whoever is the applicant. When booking, enter centre code 120 as your referral — this connects your entry to musicExams.help so your child can be recognised on our Recognition page and <strong>Hall of Fame</strong>. If your child has a teacher, please let us know so we can link the entry to them. The fees are the standard Trinity prices — using code 120 doesn\'t cost anything extra.',
+    title: 'Book your exam using code 120',
+    detail: 'Either you, the teacher or the school can book — whoever is the applicant. Use the <strong>Book Your Exam</strong> button on our site and it will guide you to the right Trinity booking system with centre code 120 built in. This connects your entry to musicExams.help so your child can be recognised on our Recognition page and <strong>Hall of Fame</strong>. If your child has a teacher, please let us know so we can link the entry to them. The fees are the standard Trinity prices — using code 120 doesn\'t cost anything extra.',
   },
   {
     step: 3,
     title: 'Your child prepares for the exam',
-    detail: 'Your child will work on their exam pieces, scales, sight-reading and other elements — usually with their teacher, but self-taught candidates can prepare independently too. The <a href="https://www.trinitycollege.com/qualifications/music/grade-exams" class="text-brand-accent underline hover:opacity-70" target="_blank">Trinity syllabus</a> sets out exactly what\'s needed for each grade.',
+    detail: 'Your child will work on their exam pieces, scales, sight-reading and other elements — usually with their teacher, but self-taught candidates can prepare independently too. The <a href="https://www.trinitycollege.com/qualifications/music/grade-exams" class="font-semibold text-white underline hover:text-white/70" target="_blank">Trinity syllabus</a> sets out exactly what\'s needed for each grade.',
   },
   {
     step: 4,
@@ -49,7 +49,7 @@ const journeySteps = [
   {
     step: 5,
     title: 'Results and recognition',
-    detail: 'Results are graded as Pass (60–74), Merit (75–86) or Distinction (87–100). Every student entered through centre 120 — whether face-to-face or digital — receives at least a <strong>Bravo Certificate</strong> and gets listed on our Recognition page. Merit earns a Take a Bow Certificate and Distinction earns a Standing Ovation Certificate — plus a place in the <strong>Hall of Fame</strong>.',
+    detail: 'Results are graded as Pass (60–74), Merit (75–86) or Distinction (87–100). Every student entered through centre 120 — whether face-to-face, digital or theory — receives at least a <strong>Bravo Certificate</strong> and gets listed on our Recognition page. Merit earns a Take a Bow Certificate and Distinction earns a Standing Ovation Certificate — plus a place in the <strong>Hall of Fame</strong>.',
   },
 ]
 
@@ -71,7 +71,7 @@ const faqs = [
   },
   {
     question: 'How much does it cost?',
-    answer: 'Exam fees vary by grade and are set by Trinity College London. Using centre code 120 when booking doesn\'t cost anything extra — the fees are the standard Trinity prices. You can see the full fee breakdown on our <a href="/exam-fees?from=for-parents" class="font-semibold text-white underline hover:text-white/70">Exam Fees page</a>.',
+    answer: 'Exam fees vary by grade and are set by Trinity College London. Using centre code 120 when booking doesn\'t cost anything extra — the fees are the standard Trinity prices. You can see the full fee breakdown on our <a href="/exam-fees?from=for-parents" class="font-semibold text-brand-accent underline hover:opacity-70">Exam Fees page</a>.',
   },
   {
     question: 'What is the difference between digital and face-to-face?',
@@ -137,9 +137,25 @@ const faqs = [
       </div>
     </section>
 
+    <!-- CERTIFICATE MOCKUP — full width, cropped to remove Canva white border -->
+    <section class="bg-black">
+      <div :class="animClass('zoom-in', 1)" class="overflow-hidden">
+        <img
+          src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/mockLivingRommCerts.png"
+          alt="musicExams.help certificates framed on a living room wall"
+          class="h-auto w-[102%] max-w-none -ml-[1%] -mt-[1%] -mb-[1%] object-cover"
+        />
+      </div>
+      <div class="mx-auto max-w-4xl px-4 pb-10 pt-4 sm:px-6">
+        <MyTextConstructor variant="muted" alignment="center" textColor="text-white/80" spacing="none">
+          Every student receives a personalised certificate — frame it, share it, celebrate it.
+        </MyTextConstructor>
+      </div>
+    </section>
+
     <!-- THE JOURNEY -->
     <section
-      class="relative border-t border-brand-border"
+      class="relative"
       style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_7.jpg'); background-size: cover; background-position: center;"
     >
       <div class="absolute inset-0 bg-brand-primary/50" />

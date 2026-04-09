@@ -32,7 +32,7 @@ const studentTiers = [
     icon: Star,
     title: 'Recognition page',
     subtitle: 'Every student',
-    detail: 'Every student entered through centre 120 — whether face-to-face or digital — receives at least a <strong>Bravo Certificate</strong> and gets listed on our Recognition page. First name and initial, instrument and grade. Full name shown only with permission.',
+    detail: 'Every student entered through centre 120 — whether face-to-face, digital or theory — receives at least a <strong>Bravo Certificate</strong> and gets listed on our Recognition page. First name and initial, instrument and grade. Full name shown only with permission.',
     link: '/recognition?from=incentives',
     linkText: 'See the Recognition page',
   },
@@ -56,7 +56,7 @@ const studentTiers = [
     icon: Gift,
     title: 'Prize draws',
     subtitle: 'Automatic entry',
-    detail: 'Every exam entry through centre 120 — face-to-face or digital — earns an automatic entry into our quarterly prize draw. Just by sitting your exam, you\'re in with a chance to win.',
+    detail: 'Every exam entry through centre 120 — face-to-face, digital or theory — earns an automatic entry into our quarterly prize draw. Just by sitting your exam, you\'re in with a chance to win.',
   },
 ]
 
@@ -82,7 +82,7 @@ const teacherTiers = [
 
 /* ── How it works steps ── */
 const howItWorks = [
-  'Book any Trinity exam — face-to-face or digital — using centre code 120',
+  'Book any Trinity exam — face-to-face, digital or theory — using centre code 120',
   'The candidate sits the exam and the result comes through as normal',
   'Every entry earns at least a <strong>Bravo Certificate</strong> and gets listed on the Recognition page',
   'Merit and Distinction students are added to the <strong>Hall of Fame</strong> with a Take a Bow or Standing Ovation Certificate',
@@ -105,7 +105,7 @@ const faqs = [
   {
     id: 3,
     question: 'How does the prize draw work?',
-    answer: 'Every exam entry through centre 120 — face-to-face or digital — goes into a quarterly prize draw. Winners are drawn at the end of each quarter and receive a gift token. You don\'t need to do anything extra — you\'re entered automatically.',
+    answer: 'Every exam entry through centre 120 — face-to-face, digital or theory — goes into a quarterly prize draw. Winners are drawn at the end of each quarter and receive a gift token. You don\'t need to do anything extra — you\'re entered automatically.',
   },
   {
     id: 4,
@@ -166,33 +166,31 @@ const faqs = [
       </div>
     </section>
 
-    <!-- STUDENT ACHIEVEMENT BADGES -->
+    <!-- STUDENT CERTIFICATES -->
     <section class="bg-black">
       <div class="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-        <div :class="animClass('zoom-in', 1)" class="grid grid-cols-3 gap-4">
-          <div class="overflow-hidden rounded-2xl bg-white/10 p-2 shadow-2xl backdrop-blur-sm">
-            <img
-              src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/awardSR_1.png"
-              alt="Student Achievement — Recognition badge"
-              class="block w-full object-contain"
-            />
+        <div :class="animClass('zoom-in', 1)" class="flex flex-wrap items-start justify-center gap-4">
+          <div class="w-[calc(50%-0.5rem)] overflow-hidden rounded-2xl bg-white/10 p-2 shadow-2xl backdrop-blur-sm sm:w-[calc(33.333%-0.75rem)] lg:w-[calc(20%-0.8rem)]">
+            <img src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/certStu_1.png" alt="Bravo Certificate" class="block w-full object-contain" />
+            <p class="mt-2 text-center text-sm font-semibold text-white/80">Bravo</p>
           </div>
-          <div class="overflow-hidden rounded-2xl bg-white/10 p-2 shadow-2xl backdrop-blur-sm">
-            <img
-              src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/awardSR_2.png"
-              alt="Student Achievement — Take a Bow badge"
-              class="block w-full object-contain"
-            />
+          <div class="w-[calc(50%-0.5rem)] overflow-hidden rounded-2xl bg-white/10 p-2 shadow-2xl backdrop-blur-sm sm:w-[calc(33.333%-0.75rem)] lg:w-[calc(20%-0.8rem)]">
+            <img src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/certStu_2.png" alt="Take a Bow Certificate" class="block w-full object-contain" />
+            <p class="mt-2 text-center text-sm font-semibold text-white/80">Take a Bow</p>
           </div>
-          <div class="overflow-hidden rounded-2xl bg-white/10 p-2 shadow-2xl backdrop-blur-sm">
-            <img
-              src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/awardSR_3.png"
-              alt="Student Achievement — Standing Ovation badge"
-              class="block w-full object-contain"
-            />
+          <div class="w-[calc(50%-0.5rem)] overflow-hidden rounded-2xl bg-white/10 p-2 shadow-2xl backdrop-blur-sm sm:w-[calc(33.333%-0.75rem)] lg:w-[calc(20%-0.8rem)]">
+            <img src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/certStu_3.png" alt="Standing Ovation Certificate" class="block w-full object-contain" />
+            <p class="mt-2 text-center text-sm font-semibold text-white/80">Standing Ovation</p>
+          </div>
+          <div class="w-[calc(50%-0.5rem)] overflow-hidden rounded-2xl bg-white/10 p-2 shadow-2xl backdrop-blur-sm sm:w-[calc(33.333%-0.75rem)] lg:w-[calc(20%-0.8rem)]">
+            <img src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/certStu_4.png" alt="Centre Stage Certificate" class="block w-full object-contain" />
+            <p class="mt-2 text-center text-sm font-semibold text-white/80">Centre Stage</p>
+          </div>
+          <div class="w-[calc(50%-0.5rem)] overflow-hidden rounded-2xl bg-white/10 p-2 shadow-2xl backdrop-blur-sm sm:w-[calc(33.333%-0.75rem)] lg:w-[calc(20%-0.8rem)]">
+            <img src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/certStu_5.png" alt="Showstopper Certificate" class="block w-full object-contain" />
+            <p class="mt-2 text-center text-sm font-semibold text-white/80">Showstopper</p>
           </div>
         </div>
-        <p class="mt-3 text-center text-sm text-white/50">Bravo — Take a Bow — Standing Ovation</p>
       </div>
     </section>
 

@@ -31,7 +31,7 @@ const howItWorks = [
   {
     step: '1',
     title: 'Book your digital exam',
-    detail: 'Book through Trinity\'s online portal using centre code 120. Choose the digital option when selecting your exam type. Digital exams are available for both Classical & Jazz and Rock & Pop.',
+    detail: 'Use the <strong>Book Your Exam</strong> button on our site — it guides you to the right Trinity booking system with centre code 120 built in. Choose the digital option when selecting your exam type. Digital exams are available for both Classical & Jazz and Rock & Pop.',
     icon: Music,
   },
   {
@@ -105,6 +105,7 @@ const recordingTips = [
   'Use natural light or a well-lit room — avoid backlighting (don\'t sit in front of a window)',
   'Place your device on a stable surface or use a tripod — no hand-held filming',
   'Warm up before you hit record, then take a breath and begin when you\'re ready',
+  'Top tip: record your performance first, make sure you\'re happy with it, then book and pay. There\'s no rush — don\'t pay until you\'ve got a take you\'re confident with',
 ]
 
 /* ── What happens after you book (digital) ── */
