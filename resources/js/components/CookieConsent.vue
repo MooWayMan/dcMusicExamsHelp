@@ -2,7 +2,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { Cookie } from 'lucide-vue-next'
+import { useCookieConsent } from '@/composables/useCookieConsent'
 
+const { markResponded } = useCookieConsent()
 const isVisible = ref(false)
 
 onMounted(() => {
@@ -23,12 +25,14 @@ onMounted(() => {
 function accept() {
   localStorage.setItem('cookie-consent', 'accepted')
   isVisible.value = false
+  markResponded()
   loadAnalytics()
 }
 
 function decline() {
   localStorage.setItem('cookie-consent', 'declined')
   isVisible.value = false
+  markResponded()
 }
 
 function loadAnalytics() {

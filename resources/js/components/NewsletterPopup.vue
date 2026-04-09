@@ -1,25 +1,41 @@
 <!-- resources/js/components/NewsletterPopup.vue -->
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { X, Mail } from 'lucide-vue-next'
 import { useSubscription } from '@/composables/useSubscription'
+import { useCookieConsent } from '@/composables/useCookieConsent'
 import EmailCapture from '@/components/EmailCapture.vue'
 
 const { isSubscribed } = useSubscription()
+const { hasResponded: cookieHandled } = useCookieConsent()
 const isVisible = ref(false)
 
-onMounted(() => {
+function showAfterDelay() {
   // Don't show if already subscribed or already dismissed this session
   if (isSubscribed.value) return
   if (sessionStorage.getItem('newsletter-popup-dismissed')) return
 
-  // Show after 5 seconds
+  // Wait 3 seconds after cookie consent is resolved
   setTimeout(() => {
-    // Re-check in case they subscribed via an inline form in the meantime
     if (!isSubscribed.value) {
       isVisible.value = true
     }
-  }, 5000)
+  }, 3000)
+}
+
+onMounted(() => {
+  // If cookie consent already handled (returning visitor), start the timer
+  if (cookieHandled.value) {
+    showAfterDelay()
+    return
+  }
+
+  // Otherwise, wait for cookie consent to be resolved first
+  watch(cookieHandled, (handled) => {
+    if (handled) {
+      showAfterDelay()
+    }
+  })
 })
 
 function dismiss() {
