@@ -1,7 +1,7 @@
 <!-- resources/js/pages/ExamGuideExpect.vue -->
 <script setup lang="ts">
-import { ref } from 'vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
+import { useBookingModal } from '@/composables/useBookingModal'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
 import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
@@ -13,7 +13,7 @@ import MyFooter from '@/components/layouts/MyFooter.vue'
 import { Clock, CheckCircle, AlertCircle, Music, ArrowRight } from 'lucide-vue-next'
 
 const { animClass } = usePageAnimation()
-const showBookingModal = ref(false)
+const { showBookingModal } = useBookingModal()
 
 const pageMeta = {
   title: 'What to Expect on Exam Day — musicExams.help',
@@ -30,7 +30,6 @@ const breadcrumbPages = [
 const beforeTheDay = [
   'Practise your pieces until they feel comfortable — not just note-perfect, but musically confident',
   'Check your exam date, time and venue well in advance',
-  'Make sure you have the correct sheet music — original copies, not photocopies (Trinity requires this for copyright reasons). If any pieces aren\'t from a Trinity publication, prepare an extra copy for the examiner',
   'Prepare any scales, arpeggios or technical work required for your grade',
   'If you play an instrument that needs accompaniment, arrange your accompanist early',
   'Get a good night\'s sleep — it makes more difference than a last-minute practice session',
@@ -39,7 +38,7 @@ const beforeTheDay = [
 /* ── What to bring ── */
 const whatToBring = [
   'Your instrument (tuned and in good working order)',
-  'Your sheet music — original copies, not photocopies (copyright rules). If your piece isn\'t published by Trinity, you\'ll also need to provide a copy for the examiner to follow along with. A tablet or iPad with photos of the music works well — just make sure it\'s in aeroplane mode',
+  'Your original sheet music — the examiner has all Trinity-published pieces on their laptop, but you must bring the original book to prove it was purchased (copyright rules). If any of your pieces are not published by Trinity, you\'ll need to provide a copy for the examiner to follow — a photocopy or a tablet in aeroplane mode is fine',
   'Any backing tracks if required — at our Liverpool and Wirral centres, playback equipment and all cables and adapters are provided. Just have your backing track ready on your phone or device',
   'A bottle of water',
   'Your exam confirmation or appointment details',
@@ -123,8 +122,8 @@ const afterBookingF2F = [
   },
   {
     step: '3',
-    title: 'Print the appointment slip',
-    detail: 'The appointment slip must be printed and filled in with your choices (pieces, scales, supporting tests). It must be handed to the examiner when you walk into the room. Without it, the examiner won\'t know what you\'re performing.',
+    title: 'Prepare the appointment slip',
+    detail: 'The appointment slip needs to be filled in with your choices (pieces, scales, supporting tests) and handed to the examiner when you walk into the room. Print it if you can — but if you can\'t print it or you forget it on the day, don\'t panic. You can write out the information by hand: your name, instrument, grade, and the pieces and options you\'ve chosen. The examiner just needs to know what you\'re performing.',
   },
   {
     step: '4',
@@ -134,7 +133,7 @@ const afterBookingF2F = [
   {
     step: '5',
     title: 'Results and certificate',
-    detail: '<strong class="text-white">Important: there are no results on the day.</strong> The process differs depending on the type of exam you took:<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Classical &amp; Jazz face-to-face</span> The examiner completes a detailed written report form for each candidate. These are collected by your centre representative, who checks the marks, scans each report and posts the original to you by second-class post. This means you typically receive your written report within days of the exam — much faster than the standard turnaround. The examiner separately enters the results onto Trinity\'s system, which can take longer. Once validated, Trinity sends an email with a link to download your official digital certificate (free, included). From that same link you can order a printed paper certificate for £5 if you\'d like one.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Rock &amp; Pop face-to-face</span> The same process applies — your centre representative checks, scans and posts the examiner\'s written report to you. Results also appear on your MyTrinity account online. Your official digital certificate is issued by Trinity once the result is validated.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Digital exams</span> Results and feedback are sent to you by email directly from Trinity. There is no paper report — everything is online. Your official digital certificate is issued once the result is validated.<br /><br />In all cases, results are provisional until validated by Trinity. Occasionally results may be delayed — for example if an exam is referred for further review. If you have any concerns about a delayed result, contact <a href="mailto:support@trinitycollege.com" class="font-semibold text-white underline hover:text-white/70" target="_blank">support@trinitycollege.com</a>.',
+    detail: '<strong class="text-white">Important: there are no results on the day.</strong> The process differs depending on the type of exam you took:<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Classical &amp; Jazz face-to-face</span> The examiner completes a detailed written report form for each candidate. These are collected by your centre representative, who checks the marks, scans each report and posts the original to the applicant by second-class post. This means the written report typically arrives within days of the exam — much faster than the standard turnaround. The examiner separately enters the results onto Trinity\'s system, which can take longer. Once validated, Trinity sends an email with a link to download your official digital certificate (free, included). From that same link you can order a printed paper certificate for £5 if you\'d like one.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Rock &amp; Pop face-to-face</span> The same process applies — your centre representative checks, scans and posts the examiner\'s written report to the applicant. Results also appear on your MyTrinity account online. Your official digital certificate is issued by Trinity once the result is validated.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Digital exams</span> Results and feedback are sent to you by email directly from Trinity. There is no paper report — everything is online. Your official digital certificate is issued once the result is validated.<br /><br />In all cases, results are provisional until validated by Trinity. Occasionally results may be delayed — for example if an exam is referred for further review. If you have any concerns about a delayed result, contact <a href="mailto:support@trinitycollege.com" class="font-semibold text-white underline hover:text-white/70" target="_blank">support@trinitycollege.com</a>.',
   },
 ]
 
@@ -148,7 +147,7 @@ const faqs = [
   {
     question: 'Can a parent or teacher come into the room?',
     answer:
-      'No — parents and teachers are not allowed in the exam room during a face-to-face exam. The only exception is if a very young child needs help setting up equipment (e.g. an electric keyboard) — a parent can come in to help with setup but must then leave and go to the designated waiting area. For digital exams, you may need to help with the recording setup, but the performance itself is the candidate\'s.',
+      'Parents are not allowed in the exam room during a face-to-face exam. The only exception is if a very young child needs help setting up equipment (e.g. an electric keyboard) — a parent can come in to help with setup but must then leave and go to the designated waiting area. A teacher or accompanist may be present if they are performing with the candidate. For digital exams, you may need to help with the recording setup, but the performance itself is the candidate\'s.',
   },
   {
     question: 'What happens if I make a mistake?',
@@ -158,12 +157,12 @@ const faqs = [
   {
     question: 'Do I need to memorise my pieces?',
     answer:
-      'No — you can use your sheet music. However, for Rock & Pop exams, performing from memory is encouraged (and more natural for those styles). Classical & Jazz candidates can have music on the stand.',
+      'No — you don\'t have to, but you can if you want to. Either way, your original sheet music must be present. For face-to-face exams, the examiner has all Trinity-published pieces on their laptop — but you still need to bring the original book to prove it was purchased (copyright rules). If any of your pieces are not published by Trinity, you\'ll need to provide a copy for the examiner to follow — a photocopy or a tablet in aeroplane mode is fine. For digital exams, copies of any non-Trinity pieces must be uploaded with your recording.',
   },
   {
     question: 'What if I\'m ill on exam day?',
     answer:
-      'Contact Trinity as soon as possible. They have procedures for rescheduling in cases of illness. Don\'t try to push through a serious illness — it\'s better to rearrange and perform at your best.',
+      'Let us know as soon as possible — contact musicExams.help straight away so we can notify Trinity on your behalf. If you can provide a doctor\'s note, nurse\'s note or school nurse\'s note confirming the illness, Trinity will offer a 50% re-entry permit — meaning the candidate can retake the exam at half the usual fee. Don\'t try to push through a serious illness — it\'s better to rearrange and perform at your best.',
   },
 ]
 </script>
@@ -287,7 +286,7 @@ const faqs = [
               </div>
               <div>
                 <p class="text-base font-semibold text-white sm:text-base md:text-lg">{{ item.title }}</p>
-                <p class="mt-1 text-base text-white/80 sm:text-base md:text-lg">{{ item.detail }}</p>
+                <p class="mt-1 text-base text-white/80 sm:text-base md:text-lg" v-html="item.detail"></p>
               </div>
             </div>
           </div>
@@ -334,7 +333,7 @@ const faqs = [
               </div>
               <div>
                 <p class="text-base font-semibold text-white sm:text-base md:text-lg">{{ item.title }}</p>
-                <p class="mt-1 text-base text-white/80 sm:text-base md:text-lg">{{ item.detail }}</p>
+                <p class="mt-1 text-base text-white/80 sm:text-base md:text-lg" v-html="item.detail"></p>
               </div>
             </div>
           </div>
@@ -439,7 +438,7 @@ const faqs = [
               </div>
               <div>
                 <p class="text-base font-semibold text-white sm:text-lg">{{ item.title }}</p>
-                <p class="mt-1 text-sm leading-relaxed text-white/80 sm:text-base">{{ item.detail }}</p>
+                <p class="mt-1 text-sm leading-relaxed text-white/80 sm:text-base" v-html="item.detail"></p>
               </div>
             </div>
           </div>
@@ -452,7 +451,10 @@ const faqs = [
           </div>
           <div class="p-6">
             <p class="text-base leading-snug text-white/80 sm:text-base md:text-lg">
-              If a candidate has a specific educational need or disability, Trinity offers access arrangements to support them. Visit <a href="https://www.trinitycollege.com/qualifications/music/special-needs" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand-accent underline hover:text-white">Trinity's special needs page</a> for full details and to download the application form. A new form must be submitted for every exam, at least 28 days before the exam date.
+              If a candidate has a specific educational need or disability, Trinity offers access arrangements to support them. Visit <a href="https://www.trinitycollege.com/qualifications/music/special-needs" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand-accent underline hover:text-white">Trinity's special needs page</a> for full details and to download the application form.
+            </p>
+            <p class="mt-4 inline-block rounded-full bg-white px-5 py-2 text-sm font-bold text-red-600 sm:text-base">
+              A new form must be submitted for every exam — at least 28 days before the exam date. This cannot be arranged verbally through your teacher or the centre.
             </p>
           </div>
         </div>

@@ -1,7 +1,7 @@
 <!-- resources/js/pages/TeacherAwards.vue -->
 <script setup lang="ts">
-import { ref } from 'vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
+import { useBookingModal } from '@/composables/useBookingModal'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
 import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
@@ -14,7 +14,7 @@ import MyFooter from '@/components/layouts/MyFooter.vue'
 import { Award, Trophy, Star, Shield, Crown, CheckCircle, Globe } from 'lucide-vue-next'
 
 const { animClass } = usePageAnimation()
-const showBookingModal = ref(false)
+const { showBookingModal } = useBookingModal()
 
 const pageMeta = {
   title: 'Teacher & School Awards — musicExams.help',
@@ -88,7 +88,7 @@ const benefits = [
   'A printable certificate for your studio, classroom or office wall',
   'The right to call yourself an "Award-Winning Music Teacher" or "Award-Winning Music Department"',
   'Every entry counts — regardless of exam result',
-  'It doesn\'t matter who books the exam — if the student is yours, it counts',
+  'It doesn\'t matter who books the exam — if a parent books, just let us know which teacher the student belongs to',
 ]
 
 const mockUpCards = [
@@ -100,7 +100,7 @@ const mockUpCards = [
   {
     icon: Star,
     title: 'On social media',
-    detail: 'Share your achievement on Facebook, Instagram or LinkedIn. Tag us at musicExams.help so we can share it too. Let parents see that your students are entering — and achieving. "Gold Award — 30+ Exam Entries" says it all.',
+    detail: 'Share your achievement on Facebook, Instagram or LinkedIn using #MusicExamsHelp so we can share it too. Let parents see that your students are entering — and achieving. "Gold Award — 30+ Exam Entries #MusicExamsHelp" says it all.',
   },
 ]
 
@@ -108,7 +108,7 @@ const faqs = [
   {
     id: 'what-counts',
     question: 'What counts as an entry?',
-    answer: 'Every student entered through centre 120 counts towards your total — regardless of whether they pass, get a merit, distinction or any other result. The entry itself is what matters. If a parent books the exam directly, just let us know which teacher the student belongs to so we can link it to the right person.',
+    answer: 'Every student entered through centre 120 counts towards your total — whether digital, face-to-face or theory, and regardless of whether they pass, get a merit, distinction or any other result. The entry itself is what matters. If a parent books the exam directly, just let us know which teacher the student belongs to so we can link it to the right person.',
   },
   {
     id: 'who-books',
@@ -118,7 +118,7 @@ const faqs = [
   {
     id: 'school-or-teacher',
     question: 'Can a school earn an award, or just individual teachers?',
-    answer: 'Both. By default, entries are linked to the teacher. If you\'d prefer the recognition to go to your school instead, just let us know — it\'s your choice. Schools and teachers can also split recognition across both if they prefer. The key thing is that every entry counts, regardless of who actually books the exam.',
+    answer: 'Either teachers or schools can earn awards. By default, entries are linked to the teacher. If you\'d prefer the recognition to go to your school instead, just let us know — it\'s your choice. The key thing is that every entry counts, regardless of who actually books the exam.',
   },
   {
     id: 'display',
@@ -128,7 +128,7 @@ const faqs = [
   {
     id: 'how-tracked',
     question: 'How are my entries tracked?',
-    answer: 'We track entries through Trinity\'s centre 120 booking records. For digital exams, use code 120 when booking online. For face-to-face exams in Liverpool or Wirral, your entry is automatically connected to centre 120 — no code needed. You do not need to do anything extra.',
+    answer: 'We track entries through Trinity\'s centre 120 booking records. For digital exams, our link pre-fills centre 120 automatically when you use the Book Your Exam button — but if you refresh the page or use the back button the code can disappear. Always check the referral code box says 120 before you submit. For face-to-face exams in Liverpool or Wirral, your entry is automatically connected to centre 120 — no code needed.',
   },
   {
     id: 'cumulative',
@@ -207,7 +207,7 @@ const faqs = [
           </MyTextConstructor>
 
           <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/70 sm:text-base md:text-lg lg:text-xl">
-            The more students you enter, the higher your award. Totals refresh every quarter. Every entry through centre 120 counts — regardless of result. It doesn't matter who books the exam — as long as we know the student is yours, it counts towards your total. Display your badge with pride.
+            The more students you enter, the higher your award. Totals refresh every quarter. Every entry through centre 120 counts — regardless of result. It doesn't matter who books the exam — as long as we know the student is yours, it counts towards your total. If a parent books the exam, just ask them to let us know which teacher the student belongs to. Display your badge with pride.
           </p>
         </div>
 
@@ -365,11 +365,25 @@ const faqs = [
       </div>
     </section>
 
+    <!-- Studio mockup — full width, cropped to remove Canva white border -->
+    <section class="bg-black">
+      <div :class="animClass('zoom-in', 3)" class="overflow-hidden">
+        <img
+          src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/musicStudioTeachCerts.png"
+          alt="Music studio wall displaying Teacher Appreciation awards from musicExams.help"
+          class="h-auto w-[102%] max-w-none -ml-[1%] -mt-[1%] -mb-[1%] object-cover"
+        />
+      </div>
+      <div class="mx-auto max-w-4xl px-4 pb-10 pt-4 sm:px-6">
+        <MyTextConstructor variant="muted" alignment="center" textColor="text-white/80" spacing="none">
+          Your Teacher Appreciation awards on your studio wall — recognition for the work you do.
+        </MyTextConstructor>
+      </div>
+    </section>
+
     <!-- FAQ -->
-    <section
-      class="relative border-t border-white/10"
-      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_5.jpg'); background-size: cover; background-position: center;"
-    >
+    <section class="relative overflow-hidden border-t border-white/10">
+      <div class="absolute inset-x-0 top-0 min-h-[1200px]" style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_5.jpg'); background-size: cover; background-position: center;"></div>
       <div class="absolute inset-0 bg-brand-primary/20"></div>
       <div class="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)" class="text-center">

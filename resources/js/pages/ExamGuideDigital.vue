@@ -1,7 +1,7 @@
 <!-- resources/js/pages/ExamGuideDigital.vue -->
 <script setup lang="ts">
-import { ref } from 'vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
+import { useBookingModal } from '@/composables/useBookingModal'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
 import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
@@ -13,7 +13,7 @@ import MyFooter from '@/components/layouts/MyFooter.vue'
 import { Monitor, CheckCircle, AlertCircle, Video, Upload, Music, ArrowRight, Clock } from 'lucide-vue-next'
 
 const { animClass } = usePageAnimation()
-const showBookingModal = ref(false)
+const { showBookingModal } = useBookingModal()
 
 const pageMeta = {
   title: 'Digital Exams Guide — musicExams.help',
@@ -31,7 +31,7 @@ const howItWorks = [
   {
     step: '1',
     title: 'Book your digital exam',
-    detail: 'Use the <strong>Book Your Exam</strong> button on our site — it guides you to the right Trinity booking system with centre code 120 built in. Choose the digital option when selecting your exam type. Digital exams are available for both Classical & Jazz and Rock & Pop.',
+    detail: 'Use the <strong>Book Your Exam</strong> button on our site — it guides you to the right Trinity booking system with centre 120 built in. Choose the digital option when selecting your exam type. Digital exams are available for both Classical & Jazz and Rock & Pop.',
     icon: Music,
   },
   {
@@ -49,7 +49,7 @@ const howItWorks = [
   {
     step: '4',
     title: 'Receive your result',
-    detail: 'A qualified Trinity examiner watches your video and marks it using the same criteria as a face-to-face exam. Results are normally provided within 14 days of submission (28 days for diploma exams). The exam report is emailed as an attachment to the email address provided at booking — no portal or login needed. A digital certificate is issued automatically for any Pass, Merit or Distinction. If you want a printed paper certificate posted to you, that\'s an extra £5.',
+    detail: 'A qualified Trinity examiner watches your video and marks it using the same criteria as a face-to-face exam. Results are normally provided within 14 days of submission (28 days for diploma exams). The exam report is emailed as an attachment to the email address provided at booking — no portal or login needed. A digital certificate is issued automatically for any Pass, Merit or Distinction. If you want a printed paper certificate, that\'s an extra £5.',
     icon: Monitor,
   },
 ]
@@ -72,7 +72,7 @@ const classicalJazzPathways = [
   },
   {
     title: 'Repertoire-only pathway',
-    description: 'A simpler option: you record four pieces with no technical work and no supporting tests at all. The examiner assesses everything through your repertoire performances. This is a great option if you want to focus purely on playing pieces.',
+    description: 'You record four pieces with no technical work and no supporting tests at all. The examiner assesses everything through your repertoire performances. This is a great option if you want to focus purely on playing pieces.',
   },
 ]
 
@@ -177,7 +177,7 @@ const faqs = [
   {
     question: 'Can I use a recorded accompaniment?',
     answer:
-      'Yes — recorded accompaniments are permitted at all grades for digital exams. This is a big advantage over face-to-face, where a live accompanist is required from Grade 4 onwards. Trinity publishes its own recorded accompaniments, or you can use any suitable recording.',
+      'Yes — recorded accompaniments are permitted at all grades for digital exams. This is a big advantage over face-to-face, where a live accompanist is required from Grade 4 onwards. You can use any suitable recorded accompaniment.',
   },
 ]
 </script>
@@ -258,7 +258,7 @@ const faqs = [
               </div>
               <div>
                 <p class="text-base font-semibold text-white sm:text-base md:text-lg">{{ item.title }}</p>
-                <p class="mt-1 text-base text-white/80 sm:text-base md:text-lg">{{ item.detail }}</p>
+                <p class="mt-1 text-base text-white/80 sm:text-base md:text-lg" v-html="item.detail"></p>
               </div>
             </div>
           </div>
@@ -509,7 +509,7 @@ const faqs = [
               </div>
               <div>
                 <p class="text-base font-semibold text-white sm:text-lg">{{ item.title }}</p>
-                <p class="mt-1 text-sm leading-relaxed text-white/80 sm:text-base">{{ item.detail }}</p>
+                <p class="mt-1 text-sm leading-relaxed text-white/80 sm:text-base" v-html="item.detail"></p>
               </div>
             </div>
           </div>

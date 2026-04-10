@@ -1,7 +1,7 @@
 <!-- resources/js/pages/ForStudents.vue -->
 <script setup lang="ts">
-import { ref } from 'vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
+import { useBookingModal } from '@/composables/useBookingModal'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
 import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
@@ -13,12 +13,12 @@ import MyFooter from '@/components/layouts/MyFooter.vue'
 import { Trophy, Award, Star, Gift } from 'lucide-vue-next'
 
 const { animClass } = usePageAnimation()
-const showBookingModal = ref(false)
+const { showBookingModal } = useBookingModal()
 
 const pageMeta = {
   title: 'For Students — musicExams.help',
   description:
-    'Your hard work deserves to be celebrated. See how students get recognised through musicExams.help centre code 120 — Hall of Fame, certificates, prize draws and more.',
+    'Your hard work deserves to be celebrated. See how students get recognised through musicExams.help centre 120 — Hall of Fame, certificates, prize draws and more.',
 }
 
 const breadcrumbPages = [

@@ -72,7 +72,7 @@ const lastUpdated = '4 April 2026'
             <h2 class="text-lg font-bold text-brand-primary sm:text-xl">Who we are</h2>
             <p class="mt-2 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
               musicExams.help is operated by Paul Sheridan, a sole trader based in Wirral, England.
-              We are a registered exam centre (centre code 120) for Trinity College London music examinations.
+              We are a registered exam centre (centre 120) for Trinity College London music examinations.
               For the purposes of exam-related data, Trinity College London and musicExams.help act as co-controllers
               under the UK General Data Protection Regulation (UK GDPR).
             </p>
@@ -101,7 +101,7 @@ const lastUpdated = '4 April 2026'
             </p>
             <p class="mt-3 text-base font-semibold text-brand-text sm:text-base md:text-lg">Student and exam data</p>
             <p class="mt-1 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
-              We process student names, instruments, grades and exam results submitted through centre code 120.
+              We process student names, instruments, grades and exam results submitted through centre 120.
               Where students are under 18, we treat this data with additional care (see "Children's data" below).
               On public-facing pages such as our <strong>Hall of Fame</strong>, we display anonymised information only (e.g. "Fred B — Trumpet, Grade 3, Distinction").
               A student's full name will only appear publicly if a parent or guardian has explicitly opted in via their account.

@@ -7,6 +7,7 @@ export type NavigationLink = {
   params?: Record<string, any>
   url?: string
   external?: boolean
+  action?: string
 }
 
 export const mainNavigation: NavigationLink[] = [
@@ -17,5 +18,5 @@ export const mainNavigation: NavigationLink[] = [
   { name: 'Recognition', url: '/recognition' },
   { name: 'FAQ', url: '/faq' },
   { name: 'Contact Us', url: '/contact' },
-  { name: 'Book Your Exam', url: '#booking-modal' },
+  { name: 'Book Your Exam', url: '#', action: 'open-booking-modal' },
 ]

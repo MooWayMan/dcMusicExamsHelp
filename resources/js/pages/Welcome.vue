@@ -3,6 +3,7 @@
 import { ref } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { useSubscription } from '@/composables/useSubscription'
+import { useBookingModal } from '@/composables/useBookingModal'
 import { GraduationCap, Users, Trophy, Gift, Award, HeartHandshake, BookOpen, ChevronRight } from 'lucide-vue-next'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
@@ -16,7 +17,7 @@ import MyFooter from '@/components/layouts/MyFooter.vue'
 import EmailCapture from '@/components/EmailCapture.vue'
 
 const { isSubscribed } = useSubscription()
-const showBookingModal = ref(false)
+const { showBookingModal } = useBookingModal()
 
 const pageMeta = {
   title: 'musicExams.help — Your Guide to Trinity Music Exams',
@@ -96,7 +97,7 @@ const incentives = [
   },
   {
     title: 'Quarterly prize draws',
-    detail: 'Teachers earn one prize draw entry for every exam booked through centre code 120 — face-to-face, digital or theory. The more students entered, the more chances to win — with gift tokens to help invest back into their teaching. Parents and students — let your teacher know about code 120 and help them win too.',
+    detail: 'Teachers earn one prize draw entry for every exam booked through centre 120 — face-to-face, digital or theory. The more students entered, the more chances to win — with gift tokens to help invest back into their teaching. Parents and students — let your teacher know about centre 120 and help them win too.',
     icon: Gift,
     iconBg: 'bg-brand-teal/10',
     iconColor: 'text-brand-teal',
@@ -116,7 +117,7 @@ const faqs = [
   {
     question: 'Do I book through this website?',
     answer:
-      'No — when you click Book Your Exam, you will see a short menu asking which type of exam you want. Each option takes you to the correct Trinity booking system. For digital exams, our link pre-fills centre code 120, but if you refresh or go back the code can disappear — always check the referral code box says 120 before you submit. For face-to-face exams, your centre is detected by the booking system.',
+      'No — when you click Book Your Exam, you will see a short menu asking which type of exam you want. Each option takes you to the correct Trinity booking system. For digital exams, our link pre-fills centre 120 automatically, but if you refresh or go back it can disappear — always check the referral code box says 120 before you submit. For face-to-face exams, your entry is automatically connected to centre 120.',
   },
   {
     question: 'Who is this for?',
@@ -124,14 +125,14 @@ const faqs = [
       'Anyone involved in music exams. Teachers looking for a smoother booking process and recognition. Parents wanting clear guidance on how exams work. Students preparing for their next grade.',
   },
   {
-    question: 'What is centre code 120?',
+    question: 'What is centre 120?',
     answer:
-      'It is a Trinity College London registered exam centre code. Using code 120 when booking connects your entry to this centre, which unlocks access to incentives, recognition and ongoing support.',
+      'Centre 120 is our registered Trinity College London exam centre. It covers digital exams, face-to-face exams in Liverpool and Wirral, and digital theory exams. When your entry is connected to centre 120, you unlock access to incentives, recognition and ongoing support.',
   },
   {
     question: 'Does it cost anything extra?',
     answer:
-      'No. The exam fees are the same regardless of which centre code you use. Code 120 simply gives you access to the extra benefits and support offered through musicExams.help.',
+      'No. The exam fees are the same regardless of which centre you use. Centre 120 simply gives you access to the extra benefits and support offered through musicExams.help.',
   },
   {
     question: 'Can I use this if I already have a teacher?',

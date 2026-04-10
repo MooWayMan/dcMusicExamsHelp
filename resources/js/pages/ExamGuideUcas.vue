@@ -1,7 +1,7 @@
 <!-- resources/js/pages/ExamGuideUcas.vue -->
 <script setup lang="ts">
-import { ref } from 'vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
+import { useBookingModal } from '@/composables/useBookingModal'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
 import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
@@ -14,7 +14,7 @@ import MyFooter from '@/components/layouts/MyFooter.vue'
 import { GraduationCap, AlertCircle, CheckCircle, ArrowRight } from 'lucide-vue-next'
 
 const { animClass } = usePageAnimation()
-const showBookingModal = ref(false)
+const { showBookingModal } = useBookingModal()
 
 const pageMeta = {
   title: 'UCAS Points for Music Exams — musicExams.help',
@@ -33,6 +33,13 @@ const ucasData = [
   { grade: 'Grade 8', pass: 18, merit: 24, distinction: 30 },
 ]
 
+/* Theory has its own UCAS points scale — lower than performance exams */
+const theoryData = [
+  { grade: 'Grade 6', pass: 4, merit: 5, distinction: 6 },
+  { grade: 'Grade 7', pass: 6, merit: 7, distinction: 8 },
+  { grade: 'Grade 8', pass: 8, merit: 9, distinction: 10 },
+]
+
 const ucasColumns = [
   { key: 'grade', title: 'Grade', sortable: false },
   { key: 'pass', title: 'Pass', sortable: false, align: 'center' as const },
@@ -42,7 +49,7 @@ const ucasColumns = [
 
 const keyFacts = [
   'UCAS points apply to both Classical & Jazz and Rock & Pop exams equally',
-  'Music Theory Grades 6–8 also earn UCAS points on the same scale',
+  'Music Theory Grades 6–8 also earn UCAS points — on a separate, lower scale (see table below)',
   'Trinity automatically sends your results to UCAS — you don\'t need to request it',
   'Your exam must take place by the second Friday in June for that year\'s UCAS cycle',
   'For digital exams, you must upload your recording at least three weeks before that deadline (mid to late May)',
@@ -145,8 +152,37 @@ const faqs = [
           />
         </div>
 
+        <!-- Theory UCAS table -->
+        <div :class="animClass('fade-up', 3)" class="mt-8">
+          <MyTextConstructor
+            variant="subheading"
+            fontFamily="display"
+            alignment="center"
+            spacing="tight"
+            textColor="text-white"
+            class="md:!text-2xl lg:!text-3xl"
+          >
+            <template #myTitle>Theory exam points</template>
+          </MyTextConstructor>
+          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/80 sm:text-base md:text-lg">
+            Theory exams earn UCAS points on a separate, lower scale. Theory counts as a different subject, so a student can earn UCAS points from both a performance exam and a theory exam.
+          </p>
+        </div>
+
+        <div :class="animClass('fade-up', 4)" class="mt-6">
+          <MyTableConstructor
+            :data="theoryData"
+            :columns="ucasColumns"
+            rowKey="grade"
+            :sortable="false"
+            :striped="true"
+            :bordered="true"
+            size="medium"
+          />
+        </div>
+
         <!-- Highlight box -->
-        <div :class="animClass('fade-up', 3)" class="mt-6 overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
+        <div :class="animClass('fade-up', 5)" class="mt-6 overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
           <div class="flex items-center gap-3 bg-black px-5 py-3 sm:px-6">
             <GraduationCap class="h-5 w-5 shrink-0 text-brand-accent sm:h-6 sm:w-6" />
             <p class="text-base font-semibold text-white sm:text-lg">Grade 8 Distinction = 30 UCAS points</p>

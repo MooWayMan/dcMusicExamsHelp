@@ -49,8 +49,8 @@ const pathwaySteps = [
   {
     id: 2,
     icon: Percent,
-    label: 'Earn commission on ebook sales',
-    tagline: 'Parents save 10% — and you earn on every purchase',
+    label: '10% off ebooks for your students',
+    tagline: 'Parents and students save 10% on digital exam books',
     colour: 'brand-accent',
     bgRing: 'bg-brand-accent/10',
     iconColour: 'text-brand-accent',
@@ -59,7 +59,7 @@ const pathwaySteps = [
   {
     id: 3,
     icon: ShoppingBag,
-    label: 'Set up your trade account',
+    label: 'Get set up with a trade account',
     tagline: 'Exclusive discount on all physical Faber and Trinity Press books',
     colour: 'brand-accent',
     bgRing: 'bg-brand-accent/10',
@@ -84,17 +84,17 @@ const pathwaySteps = [
 const discountCards = [
   {
     icon: Percent,
-    title: 'Earn commission on ebook sales',
+    title: '10% off ebooks for your students',
     detail:
-      'Trinity College London Press sells digital editions of exam books through their online store. As a teacher, you can sign up for a free affiliate link. When students or parents buy an ebook through your link, they get 10% off — and you earn commission on every sale. It costs nothing to set up and takes a few minutes.<br /><br /><a href="https://store.trinitycollege.com/?aff=99" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-sm font-semibold text-brand-accent transition hover:opacity-70">Browse the ebook store now →</a>',
-    link: 'mailto:musicexams@musicexams.help?subject=Ebook%20affiliate%20link%20%E2%80%93%20earning%20commission%20on%20ebook%20sales&body=Hi%2C%0A%0AI%27d%20like%20to%20set%20up%20my%20ebook%20affiliate%20link%20so%20my%20students%20and%20parents%20can%20get%2010%25%20off.%20Could%20you%20walk%20me%20through%20how%20to%20get%20started%3F%0A%0AThanks',
-    linkText: 'Get in touch to set up your link',
+      'Trinity College London Press sells digital editions of exam books through their online store. When students or parents buy an ebook through the link on our site, they get 10% off automatically. Just point your parents to musicExams.help and tell them to use our ebook link when ordering — no setup needed, the discount is built in.',
+    link: 'https://store.trinitycollege.com/?aff=99',
+    linkText: 'Browse the ebook store',
   },
   {
     icon: ShoppingBag,
     title: 'Exclusive trade discount on physical books',
     detail:
-      'Registered music teachers can set up a Faber Education Trade Account and get an exclusive discount on all physical books published by Faber Music and Trinity College London Press — not just exam books, but everything in their catalogue. The ordering process is done by spreadsheet at the moment, but the saving is well worth it.',
+      'Registered music teachers can get an exclusive discount on all physical books published by Faber Music and Trinity College London Press — not just exam books, but everything in their catalogue. Get in touch and we\'ll walk you through the setup — it only takes a few minutes and we\'ll make sure you\'re on the right pricing tier from day one.',
     link: 'mailto:musicexams@musicexams.help?subject=Setting%20up%20a%20Faber%20trade%20account&body=Hi%2C%0A%0AI%27m%20interested%20in%20setting%20up%20a%20Faber%20trade%20account%20for%20the%20teacher%20discount%20on%20exam%20books.%20Could%20you%20let%20me%20know%20how%20to%20get%20started%3F%0A%0AThanks',
     linkText: 'Get in touch to find out more',
   },
@@ -110,7 +110,7 @@ const discountCards = [
     icon: Gift,
     title: 'Free Books for Teachers',
     detail:
-      'Every year from mid-June, Faber opens a programme where teachers can claim one free book, posted free of charge. It is first come, first served and goes quickly — so mark mid-June in your diary and check the link as soon as it opens. You need to be a member of the Teachers\' Community to take part, so make sure you join before June.',
+      'Every year from mid-June, Faber opens a programme where teachers can claim one free book, posted free of charge. It is first come, first served and goes quickly — <a href="https://calendar.google.com/calendar/u/0?cid=Y19lMjgzOGE4YmE2OTMyNWFhNWRlYzdhNGVlYzcwNTFmMjNiZjhmMmUzMDdhOWM3ZTQ4NDM1MzgyYTA1YzRhN2VlQGdyb3VwLmNhbGVuZGFyLmdvb2dsZS5jb20" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand-accent underline hover:opacity-70">subscribe to our Google Calendar</a> and we\'ll remind you when it opens. You need to be a member of the Teachers\' Community to take part, so make sure you join before June.',
     link: 'https://www.fabermusic.com/freebooksforteachers',
     linkText: 'Visit the Free Books page (opens mid-June)',
   },
@@ -128,7 +128,7 @@ const faqs = [
   {
     question: 'How do I set up a trade account?',
     answer:
-      'Get in touch with us and we\'ll guide you through the process. It\'s straightforward — you fill out a short form and the account is usually set up within a few days.',
+      'Get in touch with us and we\'ll walk you through the setup — we\'ll make sure you\'re on the right pricing tier from day one. It\'s straightforward — you fill out a short form and the account is usually set up within a few days.',
   },
   {
     question: 'Is there a minimum order for the trade discount?',
@@ -138,7 +138,7 @@ const faqs = [
   {
     question: 'Do I need to be a Trinity teacher to get these discounts?',
     answer:
-      'The trade account is available to any registered music teacher — you don\'t need to teach Trinity syllabuses specifically. The ebook discount link works for anyone.',
+      'The trade account is available to any registered music teacher — you don\'t need to teach Trinity syllabuses specifically. The 10% ebook discount is available to anyone who uses the link on our site.',
   },
   {
     question: 'Can parents order directly with the trade discount?',
@@ -328,7 +328,7 @@ const faqs = [
           </MyTextConstructor>
           <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/80 sm:text-base md:text-lg lg:text-xl">
             Setting up discount accounts can feel confusing if you haven't done it before.
-            We've been through the process ourselves and are happy to walk you through it — just get in touch.
+            We've been through the process ourselves and are happy to walk you through it — we'll make sure you're on the right pricing tier from day one. Just get in touch.
           </p>
         </div>
 
@@ -348,7 +348,7 @@ const faqs = [
               <li class="flex items-start gap-3">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
                 <span class="text-base text-white sm:text-base md:text-lg">
-                  We'll guide you through the trade account setup if you want one
+                  We'll guide you through the trade account setup and make sure you're on the right pricing tier from day one
                 </span>
               </li>
               <li class="flex items-start gap-3">

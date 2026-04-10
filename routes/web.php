@@ -22,12 +22,14 @@ Route::inertia('/exam-guide/ucas-points', 'ExamGuideUcas')->name('exam-guide.uca
 Route::inertia('/exam-guide/what-to-expect', 'ExamGuideExpect')->name('exam-guide.expect');
 Route::inertia('/exam-guide/digital-exams', 'ExamGuideDigital')->name('exam-guide.digital');
 Route::inertia('/exam-guide/grades-explained', 'ExamGuideGrades')->name('exam-guide.grades');
+Route::inertia('/exam-guide/syllabuses', 'ExamGuideSyllabuses')->name('exam-guide.syllabuses');
 Route::inertia('/exam-fees', 'ExamFees')->name('exam-fees');
 Route::inertia('/contact', 'Contact')->name('contact');
 Route::inertia('/incentives', 'Incentives')->name('incentives');
 Route::inertia('/about', 'About')->name('about');
 Route::inertia('/privacy', 'PrivacyPolicy')->name('privacy');
 Route::inertia('/cookies', 'CookiePolicy')->name('cookies');
+Route::inertia('/terms', 'TermsOfUse')->name('terms');
 
 Route::post('/subscribe', [SubscriberController::class, 'store'])->name('subscribe');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');

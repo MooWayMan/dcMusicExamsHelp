@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
-import { Monitor, Users, Music, X } from 'lucide-vue-next'
+import { Monitor, Users, Music, BookOpen, X } from 'lucide-vue-next'
 
 interface Props {
   show: boolean
@@ -24,7 +24,7 @@ const bookingOptions = [
     iconBg: 'bg-brand-accent/10',
     iconColor: 'text-brand-accent',
     borderColor: 'border-brand-accent',
-    note: 'Centre code 120 is applied automatically',
+    note: 'Centre 120 is applied automatically',
   },
   {
     id: 'f2f-classical',
@@ -49,6 +49,18 @@ const bookingOptions = [
     iconColor: 'text-brand-teal',
     borderColor: 'border-brand-teal',
     note: 'Opens the MyTrinity booking system',
+  },
+  {
+    id: 'theory',
+    icon: BookOpen,
+    title: 'Digital Theory Exam',
+    subtitle: 'Grades 1–8 — available any time',
+    detail: 'Take your theory exam online from home or school. All you need is an internet connection and Google Chrome.',
+    url: 'https://trinity.musicgurus.com/?repcode=120',
+    iconBg: 'bg-brand-accent/10',
+    iconColor: 'text-brand-accent',
+    borderColor: 'border-brand-accent',
+    note: 'Centre 120 is applied automatically',
   },
 ]
 
@@ -179,8 +191,8 @@ onUnmounted(() => {
               </div>
 
               <p class="mt-5 text-center text-sm text-brand-text-soft">
-                All three options take you directly to official Trinity College London booking systems.
-                Using centre code 120 unlocks access to our incentives and recognition — at no extra cost.
+                All options take you directly to official Trinity College London booking systems.
+                Booking through centre 120 unlocks access to our incentives and recognition — at no extra cost.
               </p>
             </div>
           </div>

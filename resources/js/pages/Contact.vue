@@ -81,7 +81,7 @@ const faqs = [
   {
     id: 3,
     question: 'I need help booking an exam — can you walk me through it?',
-    answer: 'Absolutely. Drop us a message with the instrument, grade and whether you want face-to-face or digital, and we\'ll guide you through the process step by step.',
+    answer: 'Absolutely. Drop us a message with the instrument, grade and whether you want face-to-face, digital or theory, and we\'ll guide you through the process step by step.',
   },
 ]
 </script>

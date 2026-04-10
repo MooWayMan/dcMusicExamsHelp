@@ -1,8 +1,8 @@
 <!-- resources/js/pages/ExamGuide.vue -->
 <script setup lang="ts">
-import { ref } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { usePageAnimation } from '@/composables/usePageAnimation'
+import { useBookingModal } from '@/composables/useBookingModal'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
 import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
@@ -15,7 +15,7 @@ import MyFooter from '@/components/layouts/MyFooter.vue'
 import { Music, Guitar, CheckCircle, ArrowRight, GraduationCap, BookOpen, Clock, Award } from 'lucide-vue-next'
 
 const { animClass } = usePageAnimation()
-const showBookingModal = ref(false)
+const { showBookingModal } = useBookingModal()
 
 const pageMeta = {
   title: 'Exam Guide — musicExams.help',
@@ -97,6 +97,15 @@ const guidePages = [
     icon: Award,
     showIcon: true,
   },
+  {
+    id: 5,
+    title: 'Syllabuses',
+    subTitle: 'Find your instrument',
+    descript: 'Direct links to every Trinity syllabus — Classical & Jazz, Rock & Pop and diplomas. Pick your instrument and see the full requirements.',
+    url: '/exam-guide/syllabuses',
+    icon: BookOpen,
+    showIcon: true,
+  },
 ]
 
 /* ── FAQ ── */
@@ -173,8 +182,8 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
 
         <div :class="animClass('fade-up', 3)">
           <p class="mx-auto mt-4 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
-            Trinity College London offers two main types of graded music exam — Classical &amp; Jazz and Rock &amp; Pop.
-            Both are proper, regulated qualifications. The difference is the style of music and how the exam works.
+            Trinity College London offers graded music exams in three areas — Classical &amp; Jazz, Rock &amp; Pop, and Music Theory.
+            All are proper, regulated qualifications. The performance exams differ in style and how the exam works, while theory exams test musical knowledge and can be taken online from home.
           </p>
         </div>
       </div>
@@ -258,19 +267,24 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
     </section>
 
     <!-- EXPLORE MORE GUIDES -->
-    <section class="bg-brand-surface">
-      <div class="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:py-16">
+    <section
+      class="relative bg-cover bg-center bg-no-repeat"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_9.jpg')"
+    >
+      <div class="absolute inset-0 bg-black/50"></div>
+      <div class="relative mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
           <MyTextConstructor
             variant="subheading"
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>Explore our exam guides</template>
           </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
+          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/80 sm:text-base md:text-lg lg:text-xl">
             Everything you need to know, explained clearly — no jargon, no waffle.
           </p>
         </div>
@@ -289,7 +303,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
     </section>
 
     <!-- FAQ -->
-    <section class="bg-brand-bg">
+    <section class="bg-black">
       <div class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
         <div :class="animClass('fade-up', 1)">
           <MyTextConstructor
@@ -297,6 +311,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
             <template #myTitle>Common questions</template>
@@ -331,7 +346,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             <template #myTitle>Ready to book?</template>
           </MyTextConstructor>
           <p class="mx-auto mt-3 max-w-xl text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
-            Use centre code 120 and every entry earns at least a <strong>Bravo Certificate</strong> — plus the Recognition page, <strong>Hall of Fame</strong> and more.
+            Book through centre 120 and every entry earns at least a <strong>Bravo Certificate</strong> — plus the Recognition page, <strong>Hall of Fame</strong> and more.
           </p>
           <a href="/recognition" class="mt-4 inline-block text-base font-semibold text-brand-accent underline hover:text-brand-primary sm:text-base md:text-lg">
             See the Hall of Fame →

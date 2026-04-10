@@ -1,7 +1,7 @@
 <!-- resources/js/pages/ExamGuideGrades.vue -->
 <script setup lang="ts">
-import { ref } from 'vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
+import { useBookingModal } from '@/composables/useBookingModal'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
 import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
@@ -14,7 +14,7 @@ import MyFooter from '@/components/layouts/MyFooter.vue'
 import { Award, CheckCircle, GraduationCap, ArrowRight, Music } from 'lucide-vue-next'
 
 const { animClass } = usePageAnimation()
-const showBookingModal = ref(false)
+const { showBookingModal } = useBookingModal()
 
 const pageMeta = {
   title: 'Grades Explained — musicExams.help',
@@ -95,7 +95,7 @@ const diplomas = [
   {
     title: 'ATCL — Associate',
     level: 'Equivalent to the first year of a music degree',
-    description: 'The first diploma level, for performers who\'ve passed Grade 8 and want to continue developing. You perform a 25–35 minute recital programme.',
+    description: 'The first diploma level, for performers who want to continue developing beyond the graded exams. You perform a 25–35 minute recital programme.',
   },
   {
     title: 'LTCL — Licentiate',
@@ -114,7 +114,7 @@ const faqs = [
   {
     question: 'Do I have to start at Grade 1?',
     answer:
-      'No. You can enter at any grade. If your teacher thinks you\'re ready for Grade 3, you can go straight to Grade 3. There\'s no requirement to pass earlier grades first. The only exception is diplomas — you need Grade 8 before entering for ATCL.',
+      'No. You can enter at any grade. If your teacher thinks you\'re ready for Grade 3, you can go straight to Grade 3. There\'s no requirement to pass earlier grades first.',
   },
   {
     question: 'Can I skip grades?',
@@ -124,7 +124,7 @@ const faqs = [
   {
     question: 'What happens if I don\'t pass?',
     answer:
-      'You\'ll receive detailed feedback from the examiner explaining what went well and what to work on. You can retake the exam at the next available session. There\'s no limit on retakes and no penalty — it\'s just another chance to show what you can do.',
+      'You\'ll receive detailed feedback from the examiner explaining what went well and what to work on. You can retake the same grade if you want to, or you can move on to the next grade and use the feedback to improve — there\'s no requirement to pass one grade before entering the next.',
   },
   {
     question: 'Are Rock & Pop grades the same level as Classical & Jazz?',

@@ -3,9 +3,11 @@
 import { computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
+import { ref } from 'vue'
 import MySocials from '@/components/layouts/MySocials.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
+import BookingModal from '@/components/BookingModal.vue'
 import { mainNavigation, type NavigationLink } from '@/data/navigation'
 
 interface Props {
@@ -102,8 +104,14 @@ const isExternal = (link: NavigationLink): boolean => {
   }
 }
 
+const showBookingModal = ref(false)
+
 /** Click handler for internal SPA nav */
 const handleInternalClick = (link: NavigationLink) => {
+  if (link.action === 'open-booking-modal') {
+    showBookingModal.value = true
+    return
+  }
   const href = hrefFor(link)
   if (href && href !== '#') router.get(href)
 }
@@ -168,6 +176,18 @@ const handleInternalClick = (link: NavigationLink) => {
               ]"
             >
               Cookie Policy
+            </button>
+            <button
+              type="button"
+              @click="router.get('/terms')"
+              :class="[
+                'inline-block cursor-pointer rounded-full border px-3 py-1.5 text-xs font-medium transition-colors sm:text-sm',
+                isDark
+                  ? 'border-white/30 text-white hover:bg-white/10'
+                  : 'border-brand-border text-brand-text hover:bg-brand-surface-soft'
+              ]"
+            >
+              Terms of Use
             </button>
             <button
               type="button"
@@ -237,7 +257,7 @@ const handleInternalClick = (link: NavigationLink) => {
 
               <!-- Internal -->
               <button
-                v-else-if="hrefFor(link) !== '#'"
+                v-else-if="hrefFor(link) !== '#' || link.action"
                 type="button"
                 @click="handleInternalClick(link)"
                 :class="[
@@ -266,4 +286,6 @@ const handleInternalClick = (link: NavigationLink) => {
       </div>
     </div>
   </footer>
+
+  <BookingModal :show="showBookingModal" @close="showBookingModal = false" />
 </template>

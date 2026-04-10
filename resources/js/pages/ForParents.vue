@@ -1,7 +1,7 @@
 <!-- resources/js/pages/ForParents.vue -->
 <script setup lang="ts">
-import { ref } from 'vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
+import { useBookingModal } from '@/composables/useBookingModal'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
 import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
@@ -13,12 +13,12 @@ import MyFooter from '@/components/layouts/MyFooter.vue'
 import { CheckCircle } from 'lucide-vue-next'
 
 const { animClass } = usePageAnimation()
-const showBookingModal = ref(false)
+const { showBookingModal } = useBookingModal()
 
 const pageMeta = {
   title: 'For Parents — musicExams.help',
   description:
-    'A parent\'s guide to Trinity music exams. What to expect, how booking works, and how your child gets recognised through centre code 120.',
+    'A parent\'s guide to Trinity music exams. What to expect, how booking works, and how your child gets recognised through centre 120.',
 }
 
 const breadcrumbPages = [
@@ -29,17 +29,17 @@ const journeySteps = [
   {
     step: 1,
     title: 'Decide when your child is ready',
-    detail: 'Usually a teacher will recommend the right grade and exam type when the time is right. If your child doesn\'t have a teacher, that\'s fine — you can still enter them for an exam. Get in touch and we\'ll help you choose the right starting point.',
+    detail: 'Usually a teacher will recommend the right grade and exam type when the time is right. If your child doesn\'t have a teacher, that\'s fine — you can still enter them for an exam. <a href="mailto:musicexams@musicexams.help?subject=Help%20choosing%20the%20right%20exam&body=Hi%2C%0A%0AMy%20child%20is%20interested%20in%20taking%20a%20Trinity%20music%20exam%20and%20I%27d%20like%20some%20advice%20on%20the%20right%20starting%20point.%0A%0AThanks" class="font-semibold text-white underline hover:text-white/70">Get in touch</a> and we\'ll help you choose the right starting point.',
   },
   {
     step: 2,
-    title: 'Book your exam using code 120',
-    detail: 'Either you, the teacher or the school can book — whoever is the applicant. Use the <strong>Book Your Exam</strong> button on our site and it will guide you to the right Trinity booking system with centre code 120 built in. This connects your entry to musicExams.help so your child can be recognised on our Recognition page and <strong>Hall of Fame</strong>. If your child has a teacher, please let us know so we can link the entry to them. The fees are the standard Trinity prices — using code 120 doesn\'t cost anything extra.',
+    title: 'Book your exam through centre 120',
+    detail: 'Either you, the teacher or the school can book — whoever is the applicant. Use the <strong>Book Your Exam</strong> button on our site and it will guide you to the right Trinity booking system. For digital exams, our link pre-fills centre 120 automatically — but if you refresh the page or use the back button the code can disappear, so always check the referral code box says 120 before you submit. For face-to-face exams, your entry is connected to centre 120 automatically. This connects your entry to musicExams.help so your child can be recognised on our Recognition page and <strong>Hall of Fame</strong>. If your child has a teacher, please let us know so we can link the entry to them. The fees are the standard Trinity prices — there is no extra cost.',
   },
   {
     step: 3,
     title: 'Your child prepares for the exam',
-    detail: 'Your child will work on their exam pieces, scales, sight-reading and other elements — usually with their teacher, but self-taught candidates can prepare independently too. The Trinity syllabus sets out exactly what\'s needed for each grade — see the <a href="https://www.trinitycollege.com/qualifications/music/grade-exams" class="font-semibold text-white underline hover:text-white/70" target="_blank">Classical &amp; Jazz syllabus</a> or the <a href="https://www.trinitycollege.com/qualifications/music/rock-and-pop" class="font-semibold text-white underline hover:text-white/70" target="_blank">Rock &amp; Pop syllabus</a>.',
+    detail: 'Your child will work on their exam pieces, scales, sight-reading and other elements — usually with their teacher, but self-taught candidates can prepare independently too. The Trinity syllabus sets out exactly what\'s needed for each grade — see our <a href="/exam-guide/syllabuses?from=for-parents" class="font-semibold text-white underline hover:text-white/70">syllabuses page</a> for direct links to every instrument.',
   },
   {
     step: 4,
@@ -71,7 +71,7 @@ const faqs = [
   },
   {
     question: 'How much does it cost?',
-    answer: 'Exam fees vary by grade and are set by Trinity College London. Using centre code 120 when booking doesn\'t cost anything extra — the fees are the standard Trinity prices. You can see the full fee breakdown on our <a href="/exam-fees?from=for-parents" class="font-semibold text-brand-accent underline hover:opacity-70">Exam Fees page</a>.',
+    answer: 'Exam fees vary by grade and are set by Trinity College London. Using centre 120 doesn\'t cost anything extra — the fees are the standard Trinity prices. You can see the full fee breakdown on our <a href="/exam-fees?from=for-parents" class="font-semibold text-brand-accent underline hover:opacity-70">Exam Fees page</a>.',
   },
   {
     question: 'What is the difference between digital and face-to-face?',
@@ -79,19 +79,19 @@ const faqs = [
   },
   {
     question: 'How long until we get the result?',
-    answer: 'For digital exams, results are normally provided within 14 days of submission. The exam report is sent as an attachment to the email address provided at booking — no login or portal needed. If you gave your own email when the exam was booked, you\'ll receive it directly. For face-to-face exams through centre 120, results are checked and posted to you within days of the exam — much faster than the usual turnaround. In both cases, a digital certificate is issued automatically for any Pass, Merit or Distinction. If you\'d like a printed paper certificate posted to you, that\'s an extra £5.',
+    answer: 'For digital exams, results are normally provided within 14 days of submission. The exam report is sent as an attachment to the email address provided at booking — no login or portal needed. If you gave your own email when the exam was booked, you\'ll receive it directly. For face-to-face exams through centre 120, results are checked and posted to the applicant within days of the exam — much faster than the usual turnaround. In both cases, a digital certificate is issued automatically for any Pass, Merit or Distinction. If you\'d like a printed paper certificate, that\'s an extra £5.',
   },
   {
     question: 'Do I need to be present for the exam?',
-    answer: 'For face-to-face exams, parents are not allowed in the exam room. The only exception is if a very young child needs help setting up equipment (e.g. an electric keyboard) — a parent can come in to help with setup but must then leave and go to the designated waiting area. For digital exams, you may need to help with the recording setup, but the performance itself is your child\'s. Anyone can submit the recording — it doesn\'t have to be the teacher.',
+    answer: 'For face-to-face exams, parents are not allowed in the exam room. The only exception is if a very young child needs help setting up equipment (e.g. an electric keyboard) — a parent can come in to help with setup but must then leave and go to the designated waiting area. A teacher or accompanist may be present in the room if they are performing with the candidate. For digital exams, you may need to help with the recording setup, but the performance itself is your child\'s. Anyone can submit the recording — it doesn\'t have to be the teacher.',
   },
   {
     question: 'What happens after we book?',
-    answer: 'The exam can be booked by you (the parent), the teacher or the school — whoever is named as the applicant will receive the correspondence.<br /><br /><strong>Digital exams:</strong> You\'ll get a confirmation email straight away. Login details for the upload portal arrive within a week (check spam). You then have four weeks to record and submit.<br /><br /><strong>Classical &amp; Jazz face-to-face:</strong> You\'ll know your exam day and time straight away when you book through the MOB booking system. An appointment slip must be printed and handed to the examiner.<br /><br /><strong>Rock &amp; Pop face-to-face:</strong> Your exam date and time will be confirmed closer to the session — usually around three weeks before. An appointment slip must be printed and handed to the examiner.',
+    answer: 'The exam can be booked by you (the parent), the teacher or the school — whoever is named as the applicant will receive the correspondence.<br /><br /><strong>Digital exams:</strong> You\'ll get a confirmation email straight away. Login details for the upload portal arrive within a week (check spam). You then have four weeks to record and submit.<br /><br /><strong>Classical &amp; Jazz face-to-face:</strong> You\'ll know your exam day and time straight away when you book through the MOB booking system. An appointment slip needs to be filled in and handed to the examiner — printed if possible, but handwritten is fine if you can\'t print it.<br /><br /><strong>Rock &amp; Pop face-to-face:</strong> Your exam date and time will be confirmed closer to the session — usually around three weeks before. An appointment slip needs to be filled in and handed to the examiner — printed if possible, but handwritten is fine if you can\'t print it.',
   },
   {
-    question: 'What does centre code 120 mean?',
-    answer: 'It\'s a registered Trinity exam centre code. When you use code 120, your child\'s entry is connected to musicExams.help — which means they receive at least a <strong>Bravo Certificate</strong>, qualify for the Recognition page, the <strong>Hall of Fame</strong> and other incentives at no extra cost.',
+    question: 'What does centre 120 mean?',
+    answer: 'Centre 120 is our registered Trinity exam centre. It covers digital exams, face-to-face exams in Liverpool and Wirral, and digital theory exams. When your child\'s entry is connected to centre 120, they receive at least a <strong>Bravo Certificate</strong>, qualify for the Recognition page, the <strong>Hall of Fame</strong> and other incentives at no extra cost.',
   },
 ]
 </script>

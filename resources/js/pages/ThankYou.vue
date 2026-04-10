@@ -2,6 +2,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
+import { useBookingModal } from '@/composables/useBookingModal'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
 import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
@@ -49,6 +50,8 @@ interface QuarterData {
   summary: Summary
 }
 
+const { showBookingModal } = useBookingModal()
+
 const props = defineProps<{
   defaultQuarter: number
   defaultYear: number
@@ -57,7 +60,6 @@ const props = defineProps<{
 }>()
 
 const { animClass } = usePageAnimation()
-const showBookingModal = ref(false)
 const searchQuery = ref('')
 const showBackToTop = ref(false)
 

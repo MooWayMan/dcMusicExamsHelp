@@ -74,6 +74,11 @@ test('GET /exam-guide/grades-explained returns 200', function () {
         ->assertStatus(200);
 });
 
+test('GET /exam-guide/syllabuses returns 200', function () {
+    $this->get('/exam-guide/syllabuses')
+        ->assertStatus(200);
+});
+
 test('GET /exam-fees returns 200', function () {
     $this->get('/exam-fees')
         ->assertStatus(200);
@@ -96,6 +101,11 @@ test('GET /contact returns 200', function () {
 
 test('GET /about returns 200', function () {
     $this->get('/about')
+        ->assertStatus(200);
+});
+
+test('GET /terms returns 200', function () {
+    $this->get('/terms')
         ->assertStatus(200);
 });
 
@@ -145,5 +155,10 @@ test('GET /exam-fees?from=for-parents returns 200', function () {
 
 test('GET /for-teachers/faber-discounts?from=for-teachers returns 200', function () {
     $this->get('/for-teachers/faber-discounts?from=for-teachers')
+        ->assertStatus(200);
+});
+
+test('GET /exam-guide/syllabuses?from=for-parents returns 200', function () {
+    $this->get('/exam-guide/syllabuses?from=for-parents')
         ->assertStatus(200);
 });

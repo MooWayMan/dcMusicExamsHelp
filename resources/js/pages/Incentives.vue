@@ -1,7 +1,7 @@
 <!-- resources/js/pages/Incentives.vue -->
 <script setup lang="ts">
-import { ref } from 'vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
+import { useBookingModal } from '@/composables/useBookingModal'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
 import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
@@ -14,7 +14,7 @@ import MyFooter from '@/components/layouts/MyFooter.vue'
 import { Trophy, Award, Star, Gift, Users, CheckCircle } from 'lucide-vue-next'
 
 const { animClass } = usePageAnimation()
-const showBookingModal = ref(false)
+const { showBookingModal } = useBookingModal()
 
 const pageMeta = {
   title: 'Incentives — musicExams.help',
@@ -82,7 +82,7 @@ const teacherTiers = [
 
 /* ── How it works steps ── */
 const howItWorks = [
-  'Book any Trinity exam — face-to-face, digital or theory — through centre 120. For digital exams, use code 120 when booking. For face-to-face exams in Liverpool or Wirral, it\'s automatic',
+  'Book any Trinity exam — face-to-face, digital or theory — through centre 120. For digital exams, our link pre-fills the code automatically — but if you refresh or go back it can disappear, so always check the referral code box says 120 before you submit. For face-to-face exams in Liverpool or Wirral, your entry is connected automatically',
   'The candidate sits the exam and the result comes through as normal',
   'Every entry earns at least a <strong>Bravo Certificate</strong> and gets listed on the Recognition page',
   'Merit and Distinction students are added to the <strong>Hall of Fame</strong> with a Take a Bow or Standing Ovation Certificate',

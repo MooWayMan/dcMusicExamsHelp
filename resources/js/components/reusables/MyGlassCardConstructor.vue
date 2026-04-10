@@ -40,6 +40,11 @@ const gridClass = {
   3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
   4: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4',
 }
+
+const isExternal = (url?: string) => {
+  if (!url) return false
+  return url.startsWith('http') || url.startsWith('mailto:')
+}
 </script>
 
 <template>
@@ -68,6 +73,8 @@ const gridClass = {
       <a
         v-if="showFooter && card.link"
         :href="card.link"
+        :target="isExternal(card.link) ? '_blank' : undefined"
+        :rel="isExternal(card.link) ? 'noopener noreferrer' : undefined"
         class="flex items-center justify-center gap-2 bg-black px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
       >
         {{ card.linkText || 'Find out more' }}

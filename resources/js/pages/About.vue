@@ -1,7 +1,7 @@
 <!-- resources/js/pages/About.vue -->
 <script setup lang="ts">
-import { ref } from 'vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
+import { useBookingModal } from '@/composables/useBookingModal'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
 import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
@@ -13,7 +13,7 @@ import MyFooter from '@/components/layouts/MyFooter.vue'
 import { Music, GraduationCap, Users, Heart, Piano, Guitar } from 'lucide-vue-next'
 
 const { animClass } = usePageAnimation()
-const showBookingModal = ref(false)
+const { showBookingModal } = useBookingModal()
 
 const pageMeta = {
   title: 'About — musicExams.help',
@@ -96,7 +96,7 @@ const highlights = [
       <div class="mx-auto max-w-4xl px-4 py-5 sm:px-6 sm:py-6">
         <div :class="animClass('fade-up', 3)">
           <p class="text-center text-base leading-snug text-white sm:text-base md:text-lg lg:text-xl">
-            <span class="font-semibold">Centre code 120</span> — a registered Trinity exam centre
+            <span class="font-semibold">Centre 120</span> — a registered Trinity exam centre
             offering the same exam fees, the same certificates, and the same UCAS points as any other centre.
             Plus recognition, support and incentives for everyone involved.
           </p>
@@ -152,7 +152,7 @@ const highlights = [
           </p>
           <p class="text-base leading-relaxed text-brand-text-soft sm:text-base md:text-lg">
             Everything on this site is free. The exam fees are set by Trinity and are exactly the same
-            whether you use centre code 120 or book directly. The only difference is that your students
+            whether you use centre 120 or book directly. The only difference is that your students
             get at least a <strong>Bravo Certificate</strong>, access to the <a href="/recognition" class="font-semibold text-brand-accent underline hover:text-brand-primary">Recognition page</a>, the <a href="/recognition" class="font-semibold text-brand-accent underline hover:text-brand-primary">Hall of Fame</a>,
             prize draws and other incentives — at no extra cost to anyone.
           </p>
@@ -173,7 +173,7 @@ const highlights = [
             <template #myTitle>Ready to get started?</template>
           </MyTextConstructor>
           <p class="mx-auto mt-2 max-w-xl text-base text-white/80 sm:text-base md:text-lg">
-            Use centre code 120 when you book on Trinity's website — same fees, plus all the extras.
+            Book through centre 120 — same fees, plus all the extras. For digital and theory exams you enter the code at booking; for face-to-face it's automatic.
           </p>
         </div>
         <div :class="animClass('fade-up', 2)" class="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">

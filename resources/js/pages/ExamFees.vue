@@ -2,6 +2,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick, Transition } from 'vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
+import { useBookingModal } from '@/composables/useBookingModal'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
 import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
@@ -14,7 +15,7 @@ import MyFooter from '@/components/layouts/MyFooter.vue'
 import { PoundSterling, Calendar, FileText } from 'lucide-vue-next'
 
 const { animClass } = usePageAnimation()
-const showBookingModal = ref(false)
+const { showBookingModal } = useBookingModal()
 const activeTab = ref<'fees' | 'dates'>('fees')
 const crossRefVisible = ref(true)
 const headerVisible = ref(true)
@@ -28,7 +29,7 @@ const pageTitle = computed(() =>
 )
 const pageSubtitle = computed(() =>
   activeTab.value === 'fees'
-    ? 'Official Trinity College London fees for 2026. The fees are set by Trinity and are exactly the same whether you use centre code 120 or book directly — no extra cost.'
+    ? 'Official Trinity College London fees for 2026. The fees are set by Trinity and are exactly the same whether you use centre 120 or book directly — no extra cost.'
     : 'Face-to-face exam sessions for 2026 in Liverpool and Wirral, plus booking window dates. Digital exams can be booked and submitted at any time.'
 )
 
@@ -624,7 +625,7 @@ const faqs = [
             <template #myTitle>Ready to book?</template>
           </MyTextConstructor>
           <p class="mx-auto mt-2 max-w-xl text-base text-white/80 sm:text-base md:text-lg">
-            Use centre code 120 on Trinity's booking page — same fees, plus incentives, recognition and support.
+            Book through centre 120 — same fees, plus incentives, recognition and support.
           </p>
         </div>
         <div :class="animClass('fade-up', 2)" class="mt-6">

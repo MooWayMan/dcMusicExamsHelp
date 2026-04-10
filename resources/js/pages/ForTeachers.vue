@@ -1,7 +1,7 @@
 <!-- resources/js/pages/ForTeachers.vue -->
 <script setup lang="ts">
-import { ref } from 'vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
+import { useBookingModal } from '@/composables/useBookingModal'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
 import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
@@ -14,12 +14,12 @@ import MyFooter from '@/components/layouts/MyFooter.vue'
 import { Award, ArrowRight, BookOpen, Gift, GraduationCap, CheckCircle, ChevronRight, Trophy } from 'lucide-vue-next'
 
 const { animClass } = usePageAnimation()
-const showBookingModal = ref(false)
+const { showBookingModal } = useBookingModal()
 
 const pageMeta = {
   title: 'For Teachers — musicExams.help',
   description:
-    'How musicExams.help supports music teachers with a clear booking route, recognition, Faber book discounts and more through Trinity centre code 120.',
+    'How musicExams.help supports music teachers with a clear booking route, recognition, Faber book discounts and more through Trinity centre 120.',
 }
 
 const breadcrumbPages = [
@@ -51,17 +51,17 @@ const bookingSteps = [
   {
     step: 2,
     title: 'Choose your pathway',
-    detail: 'When you click Book Your Exam, our link takes you straight to the right Trinity booking system — you don\'t need to copy any web addresses.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Digital exams</span> Our link pre-fills centre code 120 automatically, but if you refresh the page or use the back button the code can disappear. Look for a box that says "referral code" and make sure 120 is in it before you submit.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Classical &amp; Jazz face-to-face</span> Our link takes you straight to the booking page — no code needed. Your entry is automatically connected to centre 120 because the exam is held at our Liverpool or Wirral venue.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Rock &amp; Pop face-to-face</span> Our link takes you straight to the booking page — no code needed. Your entry is automatically connected to centre 120.',
+    detail: 'When you click Book Your Exam, our link takes you straight to the right Trinity booking system — you don\'t need to copy any web addresses.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Digital exams</span> Our link pre-fills centre code 120 automatically, but if you refresh the page or use the back button the code can disappear. Look for a box that says "referral code" and make sure 120 is in it before you submit.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Classical &amp; Jazz face-to-face</span> Our link takes you straight to the booking page — no code needed. Your entry is automatically connected to centre 120 because the exam is held at our Liverpool or Wirral venue.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Rock &amp; Pop face-to-face</span> Our link takes you straight to the booking page — no code needed. Your entry is automatically connected to centre 120.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Digital theory</span> Our link takes you to the MusicGurus platform with centre 120 applied automatically. Theory exams are Grades 1–8, taken online from home or school — all you need is an internet connection and Google Chrome.',
   },
   {
     step: 3,
     title: 'Enter your candidate details',
-    detail: 'Each booking system looks a little different, but you will need the student\'s name, instrument, grade and contact details. For candidates under 18, a parent or guardian email is required. A detailed step-by-step guide for each booking system is coming soon.',
+    detail: 'Each booking system looks a little different, but you will need the student\'s name, instrument, grade and contact details. For candidates under 18, a parent or guardian email is required. If you get stuck at any point, just <a href="/contact" class="font-semibold text-white underline hover:text-white/70">get in touch</a> and we\'ll walk you through it.',
   },
   {
     step: 4,
     title: 'Pay and confirm',
-    detail: 'You book and pay directly with Trinity — we do not handle bookings or payments. There is no extra cost for using centre code 120. By using code 120, your student is linked to us and qualifies for all our incentives.',
+    detail: 'You book and pay directly with Trinity — we do not handle bookings or payments. There is no extra cost. Your entry is linked to centre 120 and your student qualifies for all our incentives.',
   },
 ]
 
@@ -69,7 +69,7 @@ const benefits = [
   {
     icon: Award,
     title: 'Appreciation awards and digital badges',
-    detail: 'Every entry through centre 120 counts towards your award — regardless of result. Totals refresh every quarter. Earn Bronze (10+), Silver (20+), Gold (30+) or Top Award (40+) status and display a digital badge on your website and social media. It doesn\'t matter who books the exam — as long as we know the student is yours, it counts towards your total.',
+    detail: 'Every entry through centre 120 counts towards your award — regardless of result. Totals refresh every quarter. Earn Bronze (10+), Silver (20+), Gold (30+) or Top Award (40+) status and display a digital badge on your website and social media. It doesn\'t matter who books the exam — if a parent books, just let us know which teacher the student belongs to and it counts towards your total.',
     link: '/for-teachers/awards',
     linkText: 'See the award tiers',
   },
@@ -83,7 +83,7 @@ const benefits = [
   {
     icon: BookOpen,
     title: 'Exam book discounts',
-    detail: 'We show you how to access exclusive discounts on physical exam books published by Faber Music and Trinity College London Press. Plus access to discounted digital editions.',
+    detail: 'Get in touch and we\'ll help you access exclusive discounts on physical exam books published by Faber Music and Trinity College London Press. Plus 10% off digital editions for your students.',
     link: '/for-teachers/faber-discounts',
     linkText: 'Find out more',
   },
@@ -100,7 +100,7 @@ const benefits = [
 const everythingCard = {
   icon: BookOpen,
   title: 'Making your life easier',
-  detail: '<span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 mb-2 text-sm font-bold text-white">Save yourself time answering the same questions over and over</span><br />All the exam guidance, booking information, fees, dates and procedures your students and parents need — in one place on musicExams.help. Just point parents and students to the site. You can even subscribe to our <strong>shared Google Calendar</strong> with all the important Trinity dates, closing dates and Faber offers — so nothing gets missed.',
+  detail: '<span class="inline-block rounded-full bg-brand-accent/20 px-4 py-1 -ml-3 mb-3 text-base font-bold text-white sm:text-lg">Save yourself time answering the same questions over and over</span><br />All the exam guidance, booking information, fees, dates and procedures your students and parents need — in one place on musicExams.help. Just point parents and students to the site. You can even subscribe to our <strong>shared Google Calendar</strong> with all the important Trinity dates, closing dates and Faber offers — so nothing gets missed.',
 }
 
 const faqs = [
@@ -114,15 +114,15 @@ const faqs = [
   },
   {
     question: 'How do the Faber book discounts work?',
-    answer: 'Faber Music offers an exclusive trade discount on physical books to registered music teachers. We walk you through the simple setup process. Once registered, the discount applies to all Faber and Trinity College London Press publications — not just exam books. Visit our <a href="/for-teachers/faber-discounts?from=for-teachers" class="font-semibold text-brand-accent underline hover:opacity-70">Exam Book Discounts page</a> for the full breakdown.',
+    answer: 'Faber Music offers an exclusive trade discount on physical books to registered music teachers. Get in touch and we\'ll walk you through the setup — we\'ll make sure you\'re on the right pricing tier from day one. The discount applies to all Faber and Trinity College London Press publications — not just exam books. Visit our <a href="/for-teachers/faber-discounts?from=for-teachers" class="font-semibold text-brand-accent underline hover:opacity-70">Exam Book Discounts page</a> for the full breakdown.',
   },
   {
     question: 'How does the teacher badge system work?',
     answer: 'Every entry through centre 120 counts — regardless of result. That includes face-to-face exams, digital practical exams and digital theory exams. Totals refresh every quarter. At 10 entries you earn the <strong>Bronze Award</strong>, at 20 the <strong>Silver Award</strong>, at 30 the <strong>Gold Award</strong>, and at 40+ the <strong>Top Award</strong>. Badges are digital — display them on your website, email signature or social media and call yourself an award-winning music teacher.',
   },
   {
-    question: 'Do you offer face-to-face and digital exams?',
-    answer: 'Yes, both. Face-to-face sessions run at venues in Liverpool and Wirral throughout the year. Digital exams can be recorded anywhere — at home, school or studio — and submitted online through Trinity. Anyone can submit the recording, not just the teacher.',
+    question: 'Do you offer face-to-face, digital and theory exams?',
+    answer: 'Yes, all three. Face-to-face sessions run at venues in Liverpool and Wirral throughout the year. Digital practical exams can be recorded anywhere — at home, school or studio — and submitted online through Trinity. Digital theory exams (Grades 1–8) are taken online through the MusicGurus platform. All exam types are available through our Book Your Exam button.',
   },
 ]
 </script>
@@ -161,7 +161,7 @@ const faqs = [
           <div :class="animClass('fade-up', 2)">
             <p class="mx-auto mt-4 max-w-2xl text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
               musicExams.help takes the admin confusion out of Trinity exam entries.
-              Book through centre code 120 and <span class="inline-block rounded-full bg-brand-accent/15 px-3 py-0.5 font-bold text-brand-accent">your students get celebrated</span> while you earn recognition, discounts and prize draw entries.
+              Exams booked through our centre mean <span class="inline-block rounded-full bg-brand-accent/15 px-3 py-0.5 font-bold text-brand-accent">your students get celebrated</span> while you earn recognition, discounts and prize draw entries.
             </p>
           </div>
         </div>
@@ -261,13 +261,13 @@ const faqs = [
       <div :class="animClass('zoom-in', 4)" class="overflow-hidden">
         <img
           src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/musicStudioTeachCerts.png"
-          alt="Music studio wall displaying teacher appreciation badge and student certificates from musicExams.help"
+          alt="Music studio wall displaying Teacher Appreciation awards from musicExams.help"
           class="h-auto w-[102%] max-w-none -ml-[1%] -mt-[1%] -mb-[1%] object-cover"
         />
       </div>
       <div class="mx-auto max-w-4xl px-4 pb-10 pt-4 sm:px-6">
         <MyTextConstructor variant="muted" alignment="center" textColor="text-white/80" spacing="none">
-          Your students' achievements on your studio wall — plus your own Teacher Appreciation award.
+          Your Teacher Appreciation awards on your studio wall — recognition for the work you do.
         </MyTextConstructor>
       </div>
     </section>
@@ -379,10 +379,10 @@ const faqs = [
             textColor="text-white"
             class="md:!text-2xl lg:!text-3xl"
           >
-            <template #myTitle>Digital or face-to-face?</template>
+            <template #myTitle>How can your students take their exam?</template>
           </MyTextConstructor>
           <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/80 sm:text-base md:text-lg lg:text-xl">
-            Trinity offers both options for Classical &amp; Jazz and Rock &amp; Pop graded exams and diplomas. Both carry the same Ofqual-regulated certificate and UCAS points — the difference is how the exam is taken and what it includes.
+            Trinity exams come in three formats. Digital practical exams are recorded at home, school or studio and submitted online. Face-to-face exams are live with a Trinity examiner at our Liverpool or Wirral venue. Digital theory exams (Grades 1–8) are taken online through the MusicGurus platform. Hit the Book Your Exam button and pick the option you need.
           </p>
         </div>
 
