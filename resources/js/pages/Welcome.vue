@@ -204,7 +204,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             <img
               :src="heroLogo"
               alt="musicExams.help"
-              class="h-auto w-64 object-contain sm:w-80 md:w-96"
+              class="mx-auto h-auto w-64 object-contain sm:w-80 md:w-96 lg:mx-0"
             />
 
             <MyTextConstructor

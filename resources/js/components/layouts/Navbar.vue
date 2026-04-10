@@ -1,6 +1,6 @@
 <!-- resources/js/components/layouts/Navbar.vue -->
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { Link, usePage, router } from '@inertiajs/vue3'
 import { Bars3Icon, XMarkIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
@@ -20,6 +20,11 @@ const user = computed(() => (page.props.auth as any)?.user)
 const isAdmin = computed(() => user.value?.role === 'admin')
 
 const isOpen = ref(false)
+
+/* Lock body scroll when mobile nav is open */
+watch(isOpen, (open) => {
+  document.body.style.overflow = open ? 'hidden' : ''
+})
 const openDropdown = ref<string | null>(null)
 const openMobileDropdown = ref<string | null>(null)
 const showBookingModal = ref(false)
@@ -199,7 +204,7 @@ const navClasses = computed(() =>
                       v-else
                       class="block w-full px-4 py-3 text-left text-sm transition hover:bg-brand-surface-soft hover:text-brand-accent"
                       :class="[
-                        child.href.includes('/exam-guide/') ? 'pl-8 text-xs' : '',
+                        child.href.includes('/exam-guide/') || child.href.includes('/for-teachers/') ? 'pl-8 text-xs' : '',
                         child.highlight ? 'font-bold text-brand-accent' : 'text-slate-700'
                       ]"
                       @click="navigateTo(child.href)"
@@ -263,7 +268,7 @@ const navClasses = computed(() =>
     </div>
 
     <!-- MOBILE NAV -->
-    <div v-if="isOpen" class="border-t border-slate-200 bg-white lg:hidden">
+    <div v-if="isOpen" class="max-h-[calc(100vh-5rem)] overflow-y-auto border-t border-slate-200 bg-white lg:hidden">
       <div class="space-y-1 px-4 py-4 sm:px-6">
         <template v-for="item in navigation" :key="item.name">
           <!-- Item WITH children — accordion style -->
@@ -299,7 +304,7 @@ const navClasses = computed(() =>
                   v-else
                   class="block w-full rounded-lg px-3 py-2.5 text-left text-sm transition hover:bg-slate-50 hover:text-brand-accent"
                   :class="[
-                    child.href.includes('/exam-guide/') ? 'pl-6 text-xs' : '',
+                    child.href.includes('/exam-guide/') || child.href.includes('/for-teachers/') ? 'pl-6 text-xs' : '',
                     child.highlight ? 'font-bold text-brand-accent' : 'text-slate-600'
                   ]"
                   @click="navigateTo(child.href)"

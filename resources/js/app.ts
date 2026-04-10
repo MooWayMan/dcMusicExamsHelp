@@ -8,6 +8,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers'
 import { ZiggyVue } from 'ziggy-js'
 
 import { initializeTheme } from '@/composables/useAppearance'
+import { installScrollMemory } from '@/composables/useScrollMemory'
 import { authConfig } from '@/composables/useAuthConfig'
 
 // Layouts
@@ -84,6 +85,9 @@ createInertiaApp({
 // ===============================
 if (typeof window !== 'undefined') {
     initializeTheme()
+
+    // Scroll position memory (back button, breadcrumbs, nav links)
+    installScrollMemory()
 
     // ===============================
     // Session expiry handler
