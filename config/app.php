@@ -30,6 +30,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Coming Soon Mode
+    |--------------------------------------------------------------------------
+    |
+    | When true, all public pages show a coming soon landing page.
+    | Admin and auth routes still work so you can log in.
+    | Set COMING_SOON=true in environment variables to enable.
+    |
+    */
+
+    'coming_soon' => env('COMING_SOON', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Debug Mode
     |--------------------------------------------------------------------------
     |
