@@ -100,7 +100,7 @@ const benefits = [
 const everythingCard = {
   icon: BookOpen,
   title: 'Making your life easier',
-  detail: '<span class="inline-block rounded-full bg-brand-accent/20 px-4 py-1 -ml-3 mb-3 text-base font-bold text-white sm:text-lg">Save yourself time answering the same questions over and over</span><br />All the exam guidance, booking information, fees, dates and procedures your students and parents need — in one place on musicExams.help. Just point parents and students to the site. You can even subscribe to our <strong>shared Google Calendar</strong> with all the important Trinity dates, closing dates and Faber offers — so nothing gets missed.',
+  detail: '<span class="inline-block rounded-full bg-brand-accent/20 px-4 py-1 -ml-3 mb-3 text-base font-bold text-white sm:text-lg">Save yourself time answering the same questions over and over</span><br />All the exam guidance, booking information, fees, dates and procedures your students and parents need — in one place on musicExams.help. Just point parents and students to the site. You can even subscribe to our <a href="https://calendar.google.com/calendar/embed?src=c_d0b19bec3822af138ec574d2af5368c4dfd1502ffaf265da2a292321aa562a22%40group.calendar.google.com&ctz=Europe%2FLondon" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand-accent underline hover:opacity-80">shared Google Calendar</a> with all the important Trinity dates, closing dates and Faber offers — so nothing gets missed.',
 }
 
 const faqs = [
