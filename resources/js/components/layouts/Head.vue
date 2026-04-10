@@ -44,7 +44,7 @@ const computedTitle = computed(() => {
 })
 
 const computedDescription = computed(() => {
-  return props.description || `${APP_NAME} website`
+  return props.description || 'Book Trinity College London music exams through centre 120. Digital and face-to-face grades, free certificates, recognition and incentives for students and teachers.'
 })
 
 const computedOgTitle = computed(() => {
@@ -53,6 +53,12 @@ const computedOgTitle = computed(() => {
 
 const computedOgDescription = computed(() => {
   return props.ogDescription || computedDescription.value
+})
+
+const DEFAULT_OG_IMAGE = 'https://dcmusicexamshelp.s3.eu-west-2.amazonaws.com/logos/musicexamshelp_logo2.png'
+
+const computedOgImage = computed(() => {
+  return props.ogImage || DEFAULT_OG_IMAGE
 })
 </script>
 
@@ -69,13 +75,18 @@ const computedOgDescription = computed(() => {
     <meta v-if="props.author" name="author" :content="props.author" />
 
     <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="musicExams.help" />
     <meta property="og:title" :content="computedOgTitle" />
     <meta property="og:description" :content="computedOgDescription" />
-    <meta v-if="props.ogImage" property="og:image" :content="props.ogImage" />
+    <meta property="og:image" :content="computedOgImage" />
     <meta v-if="props.ogUrl" property="og:url" :content="props.ogUrl" />
 
     <!-- Twitter -->
     <meta name="twitter:card" :content="props.twitterCard" />
+    <meta name="twitter:title" :content="computedOgTitle" />
+    <meta name="twitter:description" :content="computedOgDescription" />
+    <meta name="twitter:image" :content="computedOgImage" />
     <meta v-if="props.twitterSite" name="twitter:site" :content="props.twitterSite" />
 
     <!-- Canonical -->

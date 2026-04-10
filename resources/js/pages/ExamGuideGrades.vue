@@ -232,7 +232,7 @@ const faqs = [
                 These count towards university applications, just like A-levels and BTECs.
                 A Grade 8 Distinction is worth 30 UCAS points.
               </p>
-              <a href="/exam-guide/ucas-points" class="mt-2 inline-flex items-center gap-1 text-base font-semibold text-brand-accent hover:underline sm:text-base md:text-lg">
+              <a href="/exam-guide/ucas-points?from=grades-explained" class="mt-2 inline-flex items-center gap-1 text-base font-semibold text-brand-accent hover:underline sm:text-base md:text-lg">
                 See full UCAS points table
                 <ArrowRight class="h-4 w-4" />
               </a>
@@ -265,7 +265,7 @@ const faqs = [
         <div :class="animClass('fade-up', 2)" class="mt-6 overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
           <div class="p-6 space-y-4">
             <p class="text-base text-white/80 sm:text-base md:text-lg">
-              One of the biggest advantages of Trinity's Classical &amp; Jazz exams is that the repertoire list has no end date. Pieces stay valid indefinitely, and Trinity adds new ones regularly — so the list keeps growing.
+              One of the biggest advantages of Trinity exams is that the repertoire lists have no end date — this applies to both Classical &amp; Jazz and Rock &amp; Pop. Pieces stay valid indefinitely, and Trinity adds new ones regularly — so the list keeps growing.
             </p>
             <p class="text-base text-white/80 sm:text-base md:text-lg">
               For example, a Grade 3 Piano exam currently has around 56 pieces to choose from. Compare that to some other boards where you might only have 10 or 12 options, and those change every two to three years — meaning teachers have to buy new books and learn new pieces all over again.
@@ -333,7 +333,7 @@ const faqs = [
           </div>
           <div class="p-6">
             <p class="text-base text-white/80 sm:text-base md:text-lg">
-              Book through centre 120 and every entry earns at least a <strong>Bravo Certificate</strong>. Score a Merit and you'll receive a Take a Bow Certificate. Score a Distinction and you'll receive a Standing Ovation Certificate — plus your name on our <a href="/recognition" class="font-semibold text-white underline hover:text-white/70">Hall of Fame</a>.
+              Book through centre 120 and every entry earns at least a <strong>Bravo Certificate</strong>. Score a Merit and you'll receive a Take a Bow Certificate. Score a Distinction and you'll receive a Standing Ovation Certificate — plus your name on our <a href="/recognition?from=grades-explained" class="font-semibold text-white underline hover:text-white/70">Hall of Fame</a>.
             </p>
           </div>
         </div>
@@ -456,14 +456,14 @@ const faqs = [
           <p class="mx-auto mt-3 max-w-xl text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
             Book through centre 120 and every entry earns at least a <strong>Bravo Certificate</strong> — plus the <strong>Hall of Fame</strong> and more for Merit and Distinction.
           </p>
-          <a href="/recognition" class="mt-4 inline-block text-base font-semibold text-brand-accent underline hover:text-brand-primary sm:text-base md:text-lg">
+          <a href="/recognition?from=grades-explained" class="mt-4 inline-block text-base font-semibold text-brand-accent underline hover:text-brand-primary sm:text-base md:text-lg">
             See the Hall of Fame →
           </a>
           <div class="mt-6 flex flex-wrap items-center justify-center gap-4">
             <MyButtonConstructor variant="primary" size="large" @click="showBookingModal = true">
               Book Your Exam
             </MyButtonConstructor>
-            <a href="/exam-guide">
+            <a href="/exam-guide?from=grades-explained">
               <MyButtonConstructor variant="outline" size="large">
                 Back to Exam Guide
               </MyButtonConstructor>

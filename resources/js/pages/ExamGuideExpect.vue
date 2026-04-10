@@ -202,7 +202,7 @@ const faqs = [
           <p class="mx-auto mt-4 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
             This guide covers what happens at a face-to-face exam. Whether it's your first or your eighth,
             knowing what to expect takes the mystery out of exam day. Taking a digital exam instead?
-            <a href="/exam-guide/digital-exams" class="font-semibold text-brand-accent hover:underline">See our digital exams guide</a>.
+            <a href="/exam-guide/digital-exams?from=what-to-expect" class="font-semibold text-brand-accent hover:underline">See our digital exams guide</a>.
           </p>
         </div>
       </div>
@@ -340,7 +340,7 @@ const faqs = [
         </div>
 
         <div :class="animClass('fade-up', 3)" class="mt-6 text-center">
-          <a href="/exam-guide/digital-exams">
+          <a href="/exam-guide/digital-exams?from=what-to-expect">
             <MyButtonConstructor variant="light" size="medium">
               Full Digital Exams Guide
             </MyButtonConstructor>
@@ -507,14 +507,14 @@ const faqs = [
           <p class="mx-auto mt-3 max-w-xl text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
             Book through centre 120 and every entry earns at least a <strong>Bravo Certificate</strong> — plus the <strong>Hall of Fame</strong> and more for Merit and Distinction.
           </p>
-          <a href="/recognition" class="mt-4 inline-block text-base font-semibold text-brand-accent underline hover:text-brand-primary sm:text-base md:text-lg">
+          <a href="/recognition?from=what-to-expect" class="mt-4 inline-block text-base font-semibold text-brand-accent underline hover:text-brand-primary sm:text-base md:text-lg">
             See the Hall of Fame →
           </a>
           <div class="mt-6 flex flex-wrap items-center justify-center gap-4">
             <MyButtonConstructor variant="primary" size="large" @click="showBookingModal = true">
               Book Your Exam
             </MyButtonConstructor>
-            <a href="/exam-guide">
+            <a href="/exam-guide?from=what-to-expect">
               <MyButtonConstructor variant="outline" size="large">
                 Back to Exam Guide
               </MyButtonConstructor>

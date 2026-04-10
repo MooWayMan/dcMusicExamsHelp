@@ -127,7 +127,7 @@ onUnmounted(() => {
             class="relative w-full max-w-2xl overflow-hidden rounded-2xl bg-brand-surface shadow-2xl ring-1 ring-brand-border"
           >
             <!-- Header -->
-            <div class="bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary px-6 py-5">
+            <div class="bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary px-4 py-3 sm:px-6 sm:py-5">
               <div class="flex items-center justify-between">
                 <div>
                   <MyTextConstructor
@@ -152,16 +152,16 @@ onUnmounted(() => {
             </div>
 
             <!-- Options -->
-            <div class="max-h-[70vh] overflow-y-auto p-5 sm:p-6">
-              <div class="space-y-4">
+            <div class="max-h-[70vh] overflow-y-auto p-3 sm:p-6">
+              <div class="space-y-2 sm:space-y-4">
                 <button
                   v-for="option in bookingOptions"
                   :key="option.id"
                   @click="handleOptionClick(option.url)"
-                  class="group flex w-full items-start gap-4 rounded-xl border-2 border-brand-border bg-brand-bg p-4 text-left transition-all duration-200 hover:border-brand-accent hover:shadow-lg sm:p-5"
+                  class="group flex w-full items-center gap-3 rounded-xl border-2 border-brand-border bg-brand-bg p-3 text-left transition-all duration-200 hover:border-brand-accent hover:shadow-lg sm:items-start sm:gap-4 sm:p-5"
                 >
                   <div
-                    :class="[option.iconBg, 'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12']"
+                    :class="[option.iconBg, 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12']"
                   >
                     <component
                       :is="option.icon"
@@ -169,20 +169,21 @@ onUnmounted(() => {
                     />
                   </div>
                   <div class="min-w-0 flex-1">
-                    <p class="text-lg font-semibold text-brand-text group-hover:text-brand-accent sm:text-lg">
+                    <p class="text-base font-semibold text-brand-text group-hover:text-brand-accent sm:text-lg">
                       {{ option.title }}
                     </p>
-                    <p class="mt-0.5 text-sm font-medium text-brand-accent sm:text-sm">
+                    <p class="mt-0.5 text-xs font-medium text-brand-accent sm:text-sm">
                       {{ option.subtitle }}
                     </p>
-                    <p class="mt-1.5 text-sm leading-snug text-brand-text-soft sm:text-base">
+                    <!-- Detail & note hidden on mobile, shown on sm+ -->
+                    <p class="mt-1.5 hidden text-sm leading-snug text-brand-text-soft sm:block sm:text-base">
                       {{ option.detail }}
                     </p>
-                    <p class="mt-2 text-xs text-brand-text-soft/70 sm:text-sm">
+                    <p class="mt-2 hidden text-xs text-brand-text-soft/70 sm:block sm:text-sm">
                       {{ option.note }}
                     </p>
                   </div>
-                  <div class="mt-1 shrink-0 text-brand-text-soft transition group-hover:text-brand-accent">
+                  <div class="shrink-0 text-brand-text-soft transition group-hover:text-brand-accent sm:mt-1">
                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
@@ -190,7 +191,7 @@ onUnmounted(() => {
                 </button>
               </div>
 
-              <p class="mt-5 text-center text-sm text-brand-text-soft">
+              <p class="mt-4 text-center text-xs text-brand-text-soft sm:mt-5 sm:text-sm">
                 All options take you directly to official Trinity College London booking systems.
                 Booking through centre 120 unlocks access to our incentives and recognition — at no extra cost.
               </p>

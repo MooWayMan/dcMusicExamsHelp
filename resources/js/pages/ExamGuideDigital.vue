@@ -113,12 +113,12 @@ const afterBookingDigital = [
   {
     step: '1',
     title: 'Confirmation email',
-    detail: 'You\'ll receive a booking confirmation straight away with your order reference, candidate details and the amount paid. Check the details carefully — if anything is wrong, contact support@trinitycollege.com immediately.',
+    detail: 'You\'ll receive a booking confirmation straight away with your order reference, candidate details and the amount paid. Check the details carefully — if anything is wrong, contact <a href="mailto:support@trinitycollege.com" class="font-semibold text-white underline hover:text-white/70">support@trinitycollege.com</a> immediately.',
   },
   {
     step: '2',
-    title: 'Login details arrive within one week',
-    detail: 'Within the next week, the candidate will receive an email from noreply@trinitycollege.com with login details for the upload portal. Check your junk/spam folder — add that address as a safe sender. If nothing arrives after a week, contact support@trinitycollege.com.',
+    title: 'Login details arrive quickly — usually within the hour',
+    detail: 'After booking, the candidate will receive an email from noreply@trinitycollege.com with login details for the upload portal. This usually arrives within the same hour, but can take up to a week. Check your junk/spam folder — add that address as a safe sender. If nothing arrives after a week, contact <a href="mailto:support@trinitycollege.com" class="font-semibold text-white underline hover:text-white/70">support@trinitycollege.com</a>.',
   },
   {
     step: '3',
@@ -575,14 +575,14 @@ const faqs = [
           <p class="mx-auto mt-3 max-w-xl text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
             Book through centre 120 and every entry earns at least a <strong>Bravo Certificate</strong> — plus the <strong>Hall of Fame</strong> and more for Merit and Distinction.
           </p>
-          <a href="/recognition" class="mt-4 inline-block text-base font-semibold text-brand-accent underline hover:text-brand-primary sm:text-base md:text-lg">
+          <a href="/recognition?from=digital-exams" class="mt-4 inline-block text-base font-semibold text-brand-accent underline hover:text-brand-primary sm:text-base md:text-lg">
             See the Hall of Fame →
           </a>
           <div class="mt-6 flex flex-wrap items-center justify-center gap-4">
             <MyButtonConstructor variant="primary" size="large" @click="showBookingModal = true">
               Book Your Exam
             </MyButtonConstructor>
-            <a href="/exam-guide">
+            <a href="/exam-guide?from=digital-exams">
               <MyButtonConstructor variant="outline" size="large">
                 Back to Exam Guide
               </MyButtonConstructor>
