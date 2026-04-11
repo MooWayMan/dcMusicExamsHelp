@@ -2,7 +2,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
-import axios from 'axios'
 import {
   Award, CheckCircle2, Circle, Download, Mail, Package,
   Trophy, Users, Clock, Star, ChevronDown, ChevronUp, Copy,
@@ -177,14 +176,25 @@ const drawingTeacher = ref(false)
 const studentWinner = ref<{ name: string; instrument: string; grade: string; teacher: string } | null>(null)
 const teacherWinner = ref<{ name: string; entries: number; is_registered: boolean } | null>(null)
 
+function getXsrfToken(): string {
+  const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/)
+  return match ? decodeURIComponent(match[1]) : ''
+}
+
 async function runStudentDraw() {
   drawingStudent.value = true
   try {
-    const { data } = await axios.post('/admin/quarter-end/draw', {
-      type: 'student',
-      quarter: props.quarter,
-      year: props.year,
+    const res = await fetch('/admin/quarter-end/draw', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-XSRF-TOKEN': getXsrfToken(),
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({ type: 'student', quarter: props.quarter, year: props.year }),
     })
+    if (!res.ok) throw new Error('Failed')
+    const data = await res.json()
     studentWinner.value = data.winner
   } catch (e) {
     alert('Could not run student draw — no entries available')
@@ -196,11 +206,17 @@ async function runStudentDraw() {
 async function runTeacherDraw() {
   drawingTeacher.value = true
   try {
-    const { data } = await axios.post('/admin/quarter-end/draw', {
-      type: 'teacher',
-      quarter: props.quarter,
-      year: props.year,
+    const res = await fetch('/admin/quarter-end/draw', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-XSRF-TOKEN': getXsrfToken(),
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({ type: 'teacher', quarter: props.quarter, year: props.year }),
     })
+    if (!res.ok) throw new Error('Failed')
+    const data = await res.json()
     teacherWinner.value = data.winner
   } catch (e) {
     alert('Could not run teacher draw — no eligible teachers')
