@@ -30,18 +30,15 @@ class ImportQ1Digital extends Command
     public function handle(): int
     {
         if ($this->option('fresh')) {
-            $deleted = ExamEntry::whereHas('order', function ($q) {
-                $q->where('requested_start_date', '>=', '2026-01-01')
-                  ->where('requested_start_date', '<=', '2026-03-31')
-                  ->where('delivery_method', 'Digital');
+            $orderNumbers = array_keys($this->getOrders());
+
+            $deleted = ExamEntry::whereHas('order', function ($q) use ($orderNumbers) {
+                $q->whereIn('trinity_order_number', $orderNumbers);
             })->delete();
 
-            $deletedOrders = Order::where('requested_start_date', '>=', '2026-01-01')
-                ->where('requested_start_date', '<=', '2026-03-31')
-                ->where('delivery_method', 'Digital')
-                ->delete();
+            $deletedOrders = Order::whereIn('trinity_order_number', $orderNumbers)->delete();
 
-            $this->info("Deleted {$deleted} existing Q1 2026 digital entries and {$deletedOrders} digital orders.");
+            $this->info("Deleted {$deleted} entries and {$deletedOrders} orders by order number.");
         }
 
         $orders = $this->getOrders();
