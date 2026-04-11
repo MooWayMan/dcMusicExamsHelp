@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { ChevronRightIcon, HomeIcon } from '@heroicons/vue/20/solid'
-import { Link } from '@inertiajs/vue3'
+import { Link, router } from '@inertiajs/vue3'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 
 interface BreadcrumbItem {
@@ -35,6 +35,12 @@ const parentPages: Record<string, { name: string; href: string }> = {
   'exam-guide': { name: 'Exam Guide', href: '/exam-guide' },
   'exam-fees': { name: 'Exam Fees', href: '/exam-fees' },
   'faq': { name: 'FAQ', href: '/faq' },
+  'about': { name: 'About', href: '/about' },
+  'what-to-expect': { name: 'What to Expect', href: '/exam-guide/what-to-expect' },
+  'digital-exams': { name: 'Digital Exams', href: '/exam-guide/digital-exams' },
+  'grades-explained': { name: 'Grades Explained', href: '/exam-guide/grades-explained' },
+  'ucas-points': { name: 'UCAS Points', href: '/exam-guide/ucas-points' },
+  'syllabuses': { name: 'Syllabuses', href: '/exam-guide/syllabuses' },
 }
 
 const resolvedPages = computed(() => {
@@ -50,6 +56,20 @@ const resolvedPages = computed(() => {
     ...props.pages,
   ]
 })
+
+/**
+ * For non-current breadcrumb links, use history.back() to preserve
+ * scroll position instead of a fresh Inertia visit.
+ * This works because breadcrumbs represent the path you came from.
+ */
+function handleBreadcrumbClick(e: MouseEvent, page: BreadcrumbItem) {
+  // Don't do anything for the current page breadcrumb
+  if (page.current) return
+
+  // Use browser back — preserves scroll position
+  e.preventDefault()
+  window.history.back()
+}
 </script>
 
 <template>
@@ -85,6 +105,7 @@ const resolvedPages = computed(() => {
                 ? 'text-brand-primary font-semibold'
                 : 'hover:text-brand-primary'"
               :aria-current="page.current ? 'page' : undefined"
+              @click="(e: MouseEvent) => handleBreadcrumbClick(e, page)"
             >
               <MyTextConstructor
                 variant="muted"

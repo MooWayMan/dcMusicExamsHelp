@@ -10,6 +10,7 @@ import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
 import MyGlassCardConstructor from '@/components/reusables/MyGlassCardConstructor.vue'
+import MyBanner from '@/components/reusables/MyBanner.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
 import { Award, ArrowRight, BookOpen, Gift, GraduationCap, CheckCircle, ChevronRight, Trophy } from 'lucide-vue-next'
 
@@ -76,7 +77,7 @@ const benefits = [
   {
     icon: Gift,
     title: 'Quarterly prize draws',
-    detail: 'Every exam entry through centre 120 — face-to-face, digital or theory — earns an automatic entry into our quarterly teacher prize draw — a £50 gift token to invest back into your teaching. The more students you enter, the more chances to win. If a parent books the exam themselves, just ask them to <a href="/contact" class="font-semibold text-white underline hover:text-white/70">let us know</a> which teacher the student is linked to — that way you still get the credit.',
+    detail: 'Every exam entry through centre 120 — face-to-face, digital or theory — earns an automatic entry into our quarterly teacher prize draw — a <strong>£50 gift token</strong> to invest back into your teaching. The more students you enter, the more chances to win. If a parent books the exam themselves, just ask them to <a href="/contact" class="font-semibold text-white underline hover:text-white/70">let us know</a> which teacher the student is linked to — that way you still get the credit.',
     link: '/incentives?from=for-teachers',
     linkText: 'See all incentives',
   },
@@ -312,6 +313,25 @@ const faqs = [
 
         <div :class="animClass('fade-up', 3)" class="mt-6">
           <MyGlassCardConstructor :cards="benefits" :columns="2" />
+        </div>
+      </div>
+    </section>
+
+    <!-- PRIZE DRAW ADVERT -->
+    <section class="bg-brand-danger py-12 sm:py-16">
+      <div :class="animClass('zoom-in', 1)" class="mx-auto max-w-4xl px-4 text-center sm:px-6">
+        <Gift class="mx-auto mb-4 h-12 w-12 text-white sm:h-16 sm:w-16" />
+        <p class="text-lg font-bold uppercase tracking-widest text-white/80 sm:text-xl">Quarterly Prize Draw</p>
+        <p class="mt-3 text-4xl font-extrabold text-white sm:text-5xl md:text-6xl">Win a £50 Gift Token</p>
+        <p class="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-white/90 sm:text-lg md:text-xl">
+          Every exam you book through centre 120 — face-to-face, digital or theory — earns you an automatic entry into our quarterly teacher prize draw. The more students you enter, the more chances to win.
+        </p>
+        <div class="mt-8">
+          <a href="/incentives?from=for-teachers">
+            <MyButtonConstructor variant="light" size="large">
+              See all incentives
+            </MyButtonConstructor>
+          </a>
         </div>
       </div>
     </section>

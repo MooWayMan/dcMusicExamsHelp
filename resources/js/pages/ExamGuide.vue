@@ -348,7 +348,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
           <p class="mx-auto mt-3 max-w-xl text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
             Book through centre 120 and every entry earns at least a <strong>Bravo Certificate</strong> — plus the Recognition page, <strong>Hall of Fame</strong> and more.
           </p>
-          <a href="/recognition" class="mt-4 inline-block text-base font-semibold text-brand-accent underline hover:text-brand-primary sm:text-base md:text-lg">
+          <a href="/recognition?from=exam-guide" class="mt-4 inline-block text-base font-semibold text-brand-accent underline hover:text-brand-primary sm:text-base md:text-lg">
             See the Hall of Fame →
           </a>
           <div class="mt-6">

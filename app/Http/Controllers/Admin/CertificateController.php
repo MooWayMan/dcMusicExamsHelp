@@ -183,8 +183,8 @@ class CertificateController extends Controller
         $width = $image->width();
         $height = $image->height();
 
-        // Text centred horizontally on the certificate
-        $textX = (int) ($width * 0.50);
+        // Text shifted right to avoid badge on the left
+        $textX = (int) ($width * 0.60);
 
         // Font — Georgia preferred, DejaVu as fallback (GD built-in only supports size 1-5)
         $fontPath = resource_path('fonts/Georgia.ttf');
@@ -196,39 +196,51 @@ class CertificateController extends Controller
         }
 
         // Scale font sizes relative to image width (designed for ~2480px wide A4)
-        $nameSize = (int) ($width * 0.030);
-        $detailSize = (int) ($width * 0.020);
-        $quarterSize = (int) ($width * 0.025);
+        $nameSize = (int) ($width * 0.038);
+        $detailSize = (int) ($width * 0.028);
+        $quarterSize = (int) ($width * 0.042);
 
-        // Name — positioned at ~43% from top (below "Proudly Presented To", above badge)
-        $nameY = (int) ($height * 0.43);
-        $image->text($name, $textX, $nameY, function (FontFactory $font) use ($fontPath, $nameSize) {
+        // Right-side text X — right edge anchor, aligned with body text area
+        $rightTextX = (int) ($width * 0.92);
+
+        // Bold font for date (try Bold variant, fall back to regular)
+        $boldFontPath = resource_path('fonts/Georgia-Bold.ttf');
+        if (! file_exists($boldFontPath)) {
+            $boldFontPath = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf';
+        }
+        if (! file_exists($boldFontPath)) {
+            $boldFontPath = $fontPath; // fall back to regular
+        }
+
+        // Name — positioned at ~47% from top, right-aligned
+        $nameY = (int) ($height * 0.47);
+        $image->text($name, $rightTextX, $nameY, function (FontFactory $font) use ($fontPath, $nameSize) {
             if ($fontPath) {
                 $font->filename($fontPath);
             }
             $font->size($nameSize);
             $font->color('#1e3a5f');
-            $font->align('center');
+            $font->align('right');
         });
 
-        // Instrument & Grade — positioned at ~48% from top (below name, above badge)
+        // Instrument & Grade — positioned at ~52% from top, right-aligned to same anchor
         $detail = trim("$instrument Grade $grade");
-        $detailY = (int) ($height * 0.48);
-        $image->text($detail, $textX, $detailY, function (FontFactory $font) use ($fontPath, $detailSize) {
+        $detailY = (int) ($height * 0.52);
+        $image->text($detail, $rightTextX, $detailY, function (FontFactory $font) use ($fontPath, $detailSize) {
             if ($fontPath) {
                 $font->filename($fontPath);
             }
             $font->size($detailSize);
             $font->color('#1e3a5f');
-            $font->align('center');
+            $font->align('right');
         });
 
-        // Quarter — at the bottom (~89% from top, above the logos)
+        // Quarter — at the bottom (~96% from top, bold and bigger)
         $quarterX = (int) ($width * 0.50);
-        $quarterY = (int) ($height * 0.89);
-        $image->text($quarter, $quarterX, $quarterY, function (FontFactory $font) use ($fontPath, $quarterSize) {
-            if ($fontPath) {
-                $font->filename($fontPath);
+        $quarterY = (int) ($height * 0.96);
+        $image->text($quarter, $quarterX, $quarterY, function (FontFactory $font) use ($boldFontPath, $quarterSize) {
+            if ($boldFontPath) {
+                $font->filename($boldFontPath);
             }
             $font->size($quarterSize);
             $font->color('#1e3a5f');

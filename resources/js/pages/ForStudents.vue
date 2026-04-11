@@ -9,6 +9,7 @@ import BookingModal from '@/components/BookingModal.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyGlassCardConstructor from '@/components/reusables/MyGlassCardConstructor.vue'
+import MyBanner from '@/components/reusables/MyBanner.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
 import { Trophy, Award, Star, Gift } from 'lucide-vue-next'
 
@@ -66,7 +67,7 @@ const tiers = [
     icon: Gift,
     title: 'Prize draws',
     subtitle: 'Automatic entry',
-    detail: 'Every exam entry through centre 120 — face-to-face, digital or theory — earns an automatic entry into our quarterly student prize draw. Just by sitting your exam, you\'re in with a chance to win a £50 gift token! Your teacher gets entered into a separate teacher prize draw too — so everyone benefits.',
+    detail: 'Every exam entry through centre 120 — face-to-face, digital or theory — earns an automatic entry into our quarterly student prize draw. Just by sitting your exam, you\'re in with a chance to win a <strong>£50 gift token</strong>! Your teacher gets entered into a separate teacher prize draw too — so everyone benefits.',
     link: '/incentives?from=for-students',
     linkText: 'See all incentives',
   },
@@ -165,6 +166,25 @@ const resultsBands = [
           <a href="/recognition?from=for-students">
             <MyButtonConstructor variant="light" size="large">
               Visit the Recognition Page
+            </MyButtonConstructor>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRIZE DRAW ADVERT -->
+    <section class="bg-brand-danger py-12 sm:py-16">
+      <div :class="animClass('zoom-in', 1)" class="mx-auto max-w-4xl px-4 text-center sm:px-6">
+        <Gift class="mx-auto mb-4 h-12 w-12 text-white sm:h-16 sm:w-16" />
+        <p class="text-lg font-bold uppercase tracking-widest text-white/80 sm:text-xl">Quarterly Prize Draw</p>
+        <p class="mt-3 text-4xl font-extrabold text-white sm:text-5xl md:text-6xl">Win a £50 Gift Token</p>
+        <p class="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-white/90 sm:text-lg md:text-xl">
+          Every exam entry through centre 120 — face-to-face, digital or theory — earns you an automatic entry into our quarterly student prize draw. Just by sitting your exam, you're in with a chance to win. Your teacher gets entered into a separate teacher prize draw too.
+        </p>
+        <div class="mt-8">
+          <a href="/incentives?from=for-students">
+            <MyButtonConstructor variant="light" size="large">
+              See all incentives
             </MyButtonConstructor>
           </a>
         </div>

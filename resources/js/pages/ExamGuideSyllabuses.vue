@@ -400,7 +400,7 @@ const faqs = [
             <MyButtonConstructor variant="primary" size="large" @click="showBookingModal = true">
               Book Your Exam
             </MyButtonConstructor>
-            <a href="/exam-guide">
+            <a href="/exam-guide?from=syllabuses">
               <MyButtonConstructor variant="outline" size="large">
                 Back to Exam Guide
               </MyButtonConstructor>

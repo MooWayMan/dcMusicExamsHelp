@@ -62,12 +62,14 @@ createInertiaApp({
     setup({ el, App, props, plugin }) {
         const CookieConsent = defineAsyncComponent(() => import('@/components/CookieConsent.vue'))
         const NewsletterPopup = defineAsyncComponent(() => import('@/components/NewsletterPopup.vue'))
+        const ScrollToTop = defineAsyncComponent(() => import('@/components/ScrollToTop.vue'))
 
         createApp({
             render: () => h('div', [
                 h(App, props),
                 h(CookieConsent),
                 h(NewsletterPopup),
+                h(ScrollToTop),
             ])
         })
             .use(plugin)

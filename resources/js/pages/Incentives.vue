@@ -56,7 +56,7 @@ const studentTiers = [
     icon: Gift,
     title: 'Prize draws',
     subtitle: 'Students and teachers',
-    detail: 'We run two separate quarterly prize draws. <strong>Students</strong> — every exam entry through centre 120 earns an automatic entry. Just by sitting your exam, you\'re in with a chance to win a £50 gift token. <strong>Teachers</strong> — every exam booked through centre 120 earns you an entry too. The more students you enter, the more chances to win — with a £50 gift token to help invest back into your teaching.',
+    detail: 'We run two separate quarterly prize draws. <strong>Students</strong> — every exam entry through centre 120 earns an automatic entry. Just by sitting your exam, you\'re in with a chance to win a <strong>£50 gift token</strong>. <strong>Teachers</strong> — every exam booked through centre 120 earns you an entry too. The more students you enter, the more chances to win — with a <strong>£50 gift token</strong> to help invest back into your teaching.',
   },
 ]
 
@@ -105,7 +105,7 @@ const faqs = [
   {
     id: 3,
     question: 'How does the prize draw work?',
-    answer: 'We run two separate quarterly prize draws — one for students and one for teachers. Every exam entry through centre 120 — face-to-face, digital or theory — earns the student an automatic entry. Teachers also get one entry for every exam booked through centre 120 — the more students entered, the more chances to win. Winners are drawn at the end of each quarter and receive a £50 gift token. You don\'t need to do anything extra — entries are automatic.',
+    answer: 'We run two separate quarterly prize draws — one for students and one for teachers. Every exam entry through centre 120 — face-to-face, digital or theory — earns the student an automatic entry. Teachers also get one entry for every exam booked through centre 120 — the more students entered, the more chances to win. Winners are drawn at the end of each quarter and receive a <strong>£50 gift token</strong>. You don\'t need to do anything extra — entries are automatic.',
   },
   {
     id: 4,

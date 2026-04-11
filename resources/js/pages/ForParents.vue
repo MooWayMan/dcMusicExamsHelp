@@ -9,8 +9,9 @@ import BookingModal from '@/components/BookingModal.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
+import MyBanner from '@/components/reusables/MyBanner.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
-import { CheckCircle } from 'lucide-vue-next'
+import { CheckCircle, Gift } from 'lucide-vue-next'
 
 const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
@@ -57,7 +58,7 @@ const whatYourChildGets = [
   'At least a <strong>Bravo Certificate</strong> for every entry — Merit earns a Take a Bow Certificate and Distinction earns a Standing Ovation Certificate instead — plus listed on our Recognition page (first name and initial, instrument and grade; full name shown only with your permission)',
   'A place in the <strong>Hall of Fame</strong> for every Merit and Distinction',
   'The highest scorers each quarter earn a <strong>Showstopper</strong> or <strong>Centre Stage Certificate</strong> and a gift token (£20, or divided equally if there is a tie — minimum £5 each)',
-  'An automatic entry into our quarterly <strong>student prize draw</strong> (£50 gift token) — plus your child\'s teacher gets entered into a separate <strong>teacher prize draw</strong> too',
+  'An automatic entry into our quarterly <strong>student prize draw</strong> (<strong>£50 gift token</strong>) — plus your child\'s teacher gets entered into a separate <strong>teacher prize draw</strong> too',
   'The same official Trinity certificate and result as any other centre — plus a personalised certificate from us (Bravo, Take a Bow or Standing Ovation depending on their result)',
 ]
 
@@ -188,6 +189,25 @@ const faqs = [
               <p class="mt-1 text-base leading-snug text-white/80 sm:text-base md:text-lg" v-html="item.detail"></p>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRIZE DRAW ADVERT -->
+    <section class="bg-brand-danger py-12 sm:py-16">
+      <div :class="animClass('zoom-in', 1)" class="mx-auto max-w-4xl px-4 text-center sm:px-6">
+        <Gift class="mx-auto mb-4 h-12 w-12 text-white sm:h-16 sm:w-16" />
+        <p class="text-lg font-bold uppercase tracking-widest text-white/80 sm:text-xl">Quarterly Prize Draw</p>
+        <p class="mt-3 text-4xl font-extrabold text-white sm:text-5xl md:text-6xl">Win a £50 Gift Token</p>
+        <p class="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-white/90 sm:text-lg md:text-xl">
+          Every exam booked through centre 120 — face-to-face, digital or theory — enters your child into our quarterly student prize draw. Their teacher gets entered into a separate teacher prize draw too. Everyone benefits.
+        </p>
+        <div class="mt-8">
+          <a href="/incentives?from=for-parents">
+            <MyButtonConstructor variant="light" size="large">
+              See all incentives
+            </MyButtonConstructor>
+          </a>
         </div>
       </div>
     </section>
