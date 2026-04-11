@@ -134,31 +134,22 @@ function copyEmailTemplate(teacher: Teacher) {
     ? `\n\nTop Scorer this quarter: ${props.summary.top_scorer.name} with ${props.summary.top_scorer.score} marks on ${props.summary.top_scorer.instrument} — they'll receive a gift token as our highest achiever.\n`
     : ''
 
-  // Student prize draw winner
+  // Student prize draw winner — teacher needs to pass the gift token on
   const studentDrawText = studentWinner.value
-    ? `\n\nStudent Prize Draw Winner: ${studentWinner.value.name} (${studentWinner.value.instrument} Grade ${studentWinner.value.grade}) has won the quarterly student prize draw! Every student entered through centre 120 was in the draw.\n`
-    : ''
-
-  // Teacher prize draw winner
-  const teacherDrawText = teacherWinner.value
-    ? `\n\nTeacher Prize Draw Winner: ${teacherWinner.value.name} has won the quarterly teacher prize draw! ${teacher.teacher_name === teacherWinner.value.name ? "Congratulations — that's you!" : ''}\n`
-    : ''
-
-  // If this teacher IS the teacher draw winner, add congratulations
-  const isTeacherWinner = teacherWinner.value && teacher.teacher_name === teacherWinner.value.name
-  const personalWinText = isTeacherWinner
-    ? `\n\nCongratulations — you've also won the Teacher Prize Draw this quarter! I'll be in touch separately about your prize.\n`
+    ? `\n\nStudent Prize Draw: ${studentWinner.value.name} (${studentWinner.value.instrument} Grade ${studentWinner.value.grade}) has won the ${props.quarterLabel} student prize draw and will receive a gift token. Every student entered through centre 120 was in the draw.${studentWinner.value.teacher === teacher.teacher_name ? ' As their teacher, I\'ll be in touch with you separately about getting the prize to them.' : ''}\n`
     : ''
 
   const template = `Hi ${teacher.applicant_name || teacher.teacher_name},
 
-I hope you're well! I'm writing with great news — the ${props.quarterLabel} exam results are in and your students have done brilliantly.
+Quick question before I get to the good stuff — do you have any students who entered through centre 120 in 2026 but booked themselves or through a parent? If so, just reply to this email and let me know their names so I can link them to you. This affects your Teacher Appreciation badge and your eligibility for the quarterly teacher prize draw.
+
+Now the good news — the ${props.quarterLabel} exam results are in and your students have done brilliantly!
 
 Here are the results:
 ${studentList}
 
-I've attached their personalised certificates for you to pass on. Every student receives at least a Bravo Certificate, with Merit earning a Take a Bow Certificate and Distinction earning a Standing Ovation Certificate.${badgeText}${topScorerText}${studentDrawText}${personalWinText}
-Every quarter we run two prize draws — one for students and one for teachers. Every student entry through centre 120 earns one ticket in the student draw. For the teacher draw, registered teachers are automatically entered with one ticket per student they submit. If you'd like to make sure you're registered for future draws, just let me know and I'll get you set up on the system.
+I've attached their personalised certificates for you to pass on. Every student receives at least a Bravo Certificate, with Merit earning a Take a Bow Certificate and Distinction earning a Standing Ovation Certificate.${badgeText}${topScorerText}${studentDrawText}
+Every quarter we run two prize draws — one for students and one for teachers. Every student entry through centre 120 earns one ticket in the student draw. The teacher draw will take place next week once everyone has had a chance to claim any students — I'll be in touch with the result.
 
 I've recently launched musicExams.help, a free resource for teachers, parents and students booking Trinity exams through centre 120. It includes:
   • Exam guides, fees and session dates all in one place
@@ -169,7 +160,7 @@ I've recently launched musicExams.help, a free resource for teachers, parents an
 
 Have a look when you get a chance: https://musicexams.help
 
-If you have any questions or need help with upcoming entries, just reply to this email.
+We'd really appreciate any feedback — even a quick "looks good" or "I couldn't find X" helps us improve the site for everyone.
 
 Best wishes,
 Paul Sheridan

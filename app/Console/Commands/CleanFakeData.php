@@ -12,7 +12,7 @@ use Illuminate\Console\Command;
 
 class CleanFakeData extends Command
 {
-    protected $signature = 'data:clean-fake {--dry-run : Show what would be deleted without actually deleting}';
+    protected $signature = 'data:clean-fake {--dry-run : Show what would be deleted without actually deleting} {--force : Skip confirmation prompt}';
     protected $description = 'Remove ALL seeder/fake data: teachers, schools, students, orders, entries, contact logs';
 
     public function handle(): int
@@ -64,7 +64,7 @@ class CleanFakeData extends Command
             return Command::SUCCESS;
         }
 
-        if (!$this->confirm('This will permanently delete all the above. Continue?')) {
+        if (!$this->option('force') && !$this->confirm('This will permanently delete all the above. Continue?')) {
             $this->info('Cancelled.');
             return Command::SUCCESS;
         }
