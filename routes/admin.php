@@ -58,6 +58,7 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])->pref
 
     // Quarter End — step-by-step workflow for sending certs, badges and emails
     Route::get('quarter-end', [QuarterEndController::class, 'index'])->name('quarter-end.index');
+    Route::post('quarter-end/draw', [QuarterEndController::class, 'runDraw'])->name('quarter-end.draw');
 
     // Certificates — generate personalised certificates
     Route::get('certificates', [CertificateController::class, 'index'])->name('certificates.index');

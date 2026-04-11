@@ -2,9 +2,11 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
+import axios from 'axios'
 import {
   Award, CheckCircle2, Circle, Download, Mail, Package,
-  Trophy, Users, Clock, Star, ChevronDown, ChevronUp, Copy
+  Trophy, Users, Clock, Star, ChevronDown, ChevronUp, Copy,
+  Gift, Sparkles, Loader2
 } from 'lucide-vue-next'
 import PageHeader from '@/components/reusables/PageHeader.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
@@ -43,12 +45,29 @@ interface Summary {
   top_scorer: { name: string; score: number; instrument: string } | null
 }
 
+interface EligibleTeacher {
+  name: string
+  entries: number
+  is_registered: boolean
+  eligible: boolean
+  reason: string
+}
+
+interface PrizeDraw {
+  student_tickets: Array<{ name: string; instrument: string; grade: string; teacher: string }>
+  teacher_tickets: Array<{ name: string; entries: number; is_registered: boolean }>
+  eligible_teachers: EligibleTeacher[]
+  student_ticket_count: number
+  teacher_ticket_count: number
+}
+
 const props = defineProps<{
   quarter: number
   year: number
   quarterLabel: string
   teachers: Teacher[]
   summary: Summary
+  prizeDraw: PrizeDraw
 }>()
 
 const page = usePage()
@@ -97,6 +116,27 @@ function copyEmailTemplate(teacher: Teacher) {
     ? `\n\nI'm also pleased to award you a ${teacher.badge_tier} Certificate of Appreciation for entering ${teacher.total_all_time}+ candidates through centre 120. Thank you for your continued support!\n`
     : ''
 
+  // Top scorer mention
+  const topScorerText = props.summary.top_scorer
+    ? `\n\nTop Scorer this quarter: ${props.summary.top_scorer.name} with ${props.summary.top_scorer.score} marks on ${props.summary.top_scorer.instrument} — they'll receive a gift token as our highest achiever.\n`
+    : ''
+
+  // Student prize draw winner
+  const studentDrawText = studentWinner.value
+    ? `\n\nStudent Prize Draw Winner: ${studentWinner.value.name} (${studentWinner.value.instrument} Grade ${studentWinner.value.grade}) has won the quarterly student prize draw! Every student entered through centre 120 was in the draw.\n`
+    : ''
+
+  // Teacher prize draw winner
+  const teacherDrawText = teacherWinner.value
+    ? `\n\nTeacher Prize Draw Winner: ${teacherWinner.value.name} has won the quarterly teacher prize draw! ${teacher.teacher_name === teacherWinner.value.name ? "Congratulations — that's you!" : ''}\n`
+    : ''
+
+  // If this teacher IS the teacher draw winner, add congratulations
+  const isTeacherWinner = teacherWinner.value && teacher.teacher_name === teacherWinner.value.name
+  const personalWinText = isTeacherWinner
+    ? `\n\nCongratulations — you've also won the Teacher Prize Draw this quarter! I'll be in touch separately about your prize.\n`
+    : ''
+
   const template = `Hi ${teacher.applicant_name || teacher.teacher_name},
 
 I hope you're well! I'm writing with great news — the ${props.quarterLabel} exam results are in and your students have done brilliantly.
@@ -104,9 +144,10 @@ I hope you're well! I'm writing with great news — the ${props.quarterLabel} ex
 Here are the results:
 ${studentList}
 
-I've attached their personalised certificates for you to pass on. Every student receives at least a Bravo Certificate, with Merit earning a Take a Bow Certificate and Distinction earning a Standing Ovation Certificate.${badgeText}
+I've attached their personalised certificates for you to pass on. Every student receives at least a Bravo Certificate, with Merit earning a Take a Bow Certificate and Distinction earning a Standing Ovation Certificate.${badgeText}${topScorerText}${studentDrawText}${personalWinText}
+Every quarter we run two prize draws — one for students and one for teachers. Every student entry through centre 120 earns one ticket in the student draw. For the teacher draw, registered teachers are automatically entered with one ticket per student they submit. If you'd like to make sure you're registered for future draws, just let me know and I'll get you set up on the system.
 
-As a quick heads-up — I've recently launched musicExams.help, a free resource for teachers, parents and students booking Trinity exams through centre 120. It has:
+I've recently launched musicExams.help, a free resource for teachers, parents and students booking Trinity exams through centre 120. It includes:
   • Exam guides, fees and session dates all in one place
   • Student recognition — Hall of Fame, certificates and quarterly prize draws
   • Teacher awards — Bronze, Silver, Gold and Top Award badges
@@ -128,6 +169,44 @@ musicExams.help — Centre 120`
 // Quarter selector
 function changeQuarter(q: number, y: number) {
   router.get('/admin/quarter-end', { quarter: q, year: y }, { preserveState: false })
+}
+
+// --- PRIZE DRAW ---
+const drawingStudent = ref(false)
+const drawingTeacher = ref(false)
+const studentWinner = ref<{ name: string; instrument: string; grade: string; teacher: string } | null>(null)
+const teacherWinner = ref<{ name: string; entries: number; is_registered: boolean } | null>(null)
+
+async function runStudentDraw() {
+  drawingStudent.value = true
+  try {
+    const { data } = await axios.post('/admin/quarter-end/draw', {
+      type: 'student',
+      quarter: props.quarter,
+      year: props.year,
+    })
+    studentWinner.value = data.winner
+  } catch (e) {
+    alert('Could not run student draw — no entries available')
+  } finally {
+    drawingStudent.value = false
+  }
+}
+
+async function runTeacherDraw() {
+  drawingTeacher.value = true
+  try {
+    const { data } = await axios.post('/admin/quarter-end/draw', {
+      type: 'teacher',
+      quarter: props.quarter,
+      year: props.year,
+    })
+    teacherWinner.value = data.winner
+  } catch (e) {
+    alert('Could not run teacher draw — no eligible teachers')
+  } finally {
+    drawingTeacher.value = false
+  }
 }
 </script>
 
@@ -265,6 +344,12 @@ function changeQuarter(q: number, y: number) {
           </p>
 
           <div v-if="currentStep >= 2" class="space-y-3">
+            <!-- Advance to Step 3 -->
+            <div class="flex justify-end">
+              <MyButtonConstructor size="small" variant="outline" @click="currentStep = 3">
+                Next: Prize Draws →
+              </MyButtonConstructor>
+            </div>
             <div
               v-for="teacher in teachers"
               :key="teacher.teacher_name"
@@ -391,15 +476,128 @@ function changeQuarter(q: number, y: number) {
           </div>
         </div>
 
-        <!-- STEP 3: Prize draws (future) -->
-        <div class="rounded-xl border-2 border-brand-border bg-brand-surface-soft p-5 opacity-60">
-          <div class="flex items-center gap-3 mb-2">
-            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-brand-border text-sm font-bold text-brand-text-soft">3</div>
-            <h3 class="text-lg font-bold text-brand-text-soft">Prize Draws & Top Scorer Awards</h3>
+        <!-- STEP 3: Prize Draws -->
+        <div class="rounded-xl border-2 p-5" :class="currentStep >= 3 ? 'border-brand-accent bg-brand-surface' : 'border-brand-border bg-brand-surface-soft'">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold"
+              :class="(studentWinner && teacherWinner) ? 'bg-brand-success text-white' : currentStep >= 3 ? 'bg-brand-accent text-white' : 'bg-brand-border text-brand-text-soft'">
+              <CheckCircle2 v-if="studentWinner && teacherWinner" class="h-5 w-5" />
+              <span v-else>3</span>
+            </div>
+            <h3 class="text-lg font-bold text-brand-text">Prize Draws & Top Scorer Awards</h3>
           </div>
-          <p class="text-sm text-brand-text-soft">
-            Coming soon — after the 6-week cut-off, run the quarterly prize draws and assign Centre Stage / Showstopper certificates to top scorers.
+          <p class="text-sm text-brand-text-soft mb-4">
+            Run the quarterly prize draws. Every student entry = one ticket. Eligible teachers get one ticket per entry they submitted.
           </p>
+
+          <div class="space-y-6">
+
+            <!-- Top Scorer -->
+            <div v-if="summary.top_scorer" class="rounded-lg border border-yellow-300 bg-yellow-50 p-4">
+              <div class="flex items-center gap-2 mb-1">
+                <Trophy class="h-5 w-5 text-yellow-600" />
+                <span class="font-bold text-yellow-800">Top Scorer — {{ quarterLabel }}</span>
+              </div>
+              <p class="text-sm text-yellow-700">
+                {{ summary.top_scorer.name }} — {{ summary.top_scorer.instrument }} — {{ summary.top_scorer.score }} marks
+              </p>
+            </div>
+
+            <!-- Student Prize Draw -->
+            <div class="rounded-lg border border-brand-border p-4">
+              <div class="flex items-center gap-2 mb-2">
+                <Gift class="h-5 w-5 text-brand-accent" />
+                <span class="font-bold text-brand-text">Student Prize Draw</span>
+                <span class="ml-auto text-xs text-brand-text-soft">{{ prizeDraw.student_ticket_count }} tickets in the draw</span>
+              </div>
+
+              <div v-if="!studentWinner">
+                <p class="text-sm text-brand-text-soft mb-3">Every student who entered through centre 120 this quarter has one ticket per entry.</p>
+                <MyButtonConstructor
+                  size="medium"
+                  variant="primary"
+                  :icon="drawingStudent ? Loader2 : Sparkles"
+                  :disabled="drawingStudent"
+                  @click="runStudentDraw"
+                >
+                  {{ drawingStudent ? 'Drawing...' : 'Run Student Prize Draw' }}
+                </MyButtonConstructor>
+              </div>
+
+              <div v-else class="rounded-lg border-2 border-brand-success bg-brand-success-soft p-4">
+                <div class="flex items-center gap-2 mb-1">
+                  <Sparkles class="h-5 w-5 text-brand-success" />
+                  <span class="font-bold text-brand-text">Winner!</span>
+                </div>
+                <p class="text-lg font-bold text-brand-text">{{ studentWinner.name }}</p>
+                <p class="text-sm text-brand-text-soft">{{ studentWinner.instrument }} Grade {{ studentWinner.grade }} — Teacher: {{ studentWinner.teacher }}</p>
+                <button class="mt-2 text-xs text-brand-accent hover:underline" @click="studentWinner = null">Re-draw</button>
+              </div>
+            </div>
+
+            <!-- Teacher Prize Draw -->
+            <div class="rounded-lg border border-brand-border p-4">
+              <div class="flex items-center gap-2 mb-2">
+                <Award class="h-5 w-5 text-brand-accent" />
+                <span class="font-bold text-brand-text">Teacher Prize Draw</span>
+                <span class="ml-auto text-xs text-brand-text-soft">{{ prizeDraw.teacher_ticket_count }} tickets in the draw</span>
+              </div>
+
+              <!-- Eligibility table -->
+              <div class="mb-3 overflow-x-auto rounded-lg border border-brand-border">
+                <table class="w-full text-sm">
+                  <thead class="bg-brand-surface-soft">
+                    <tr>
+                      <th class="px-3 py-2 text-left font-semibold text-brand-text">Applicant/Teacher</th>
+                      <th class="px-3 py-2 text-center font-semibold text-brand-text">Entries</th>
+                      <th class="px-3 py-2 text-center font-semibold text-brand-text">Eligible?</th>
+                      <th class="px-3 py-2 text-left font-semibold text-brand-text">Reason</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="t in prizeDraw.eligible_teachers" :key="t.name" class="border-t border-brand-border">
+                      <td class="px-3 py-2 font-medium">
+                        {{ t.name }}
+                        <span v-if="t.is_registered" class="ml-1 inline-block rounded-full bg-brand-accent/10 px-1.5 py-0.5 text-xs text-brand-accent">registered</span>
+                      </td>
+                      <td class="px-3 py-2 text-center">{{ t.entries }}</td>
+                      <td class="px-3 py-2 text-center">
+                        <CheckCircle2 v-if="t.eligible" class="inline h-4 w-4 text-brand-success" />
+                        <span v-else class="text-brand-text-soft">—</span>
+                      </td>
+                      <td class="px-3 py-2 text-brand-text-soft">{{ t.reason }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div v-if="!teacherWinner">
+                <MyButtonConstructor
+                  size="medium"
+                  variant="primary"
+                  :icon="drawingTeacher ? Loader2 : Sparkles"
+                  :disabled="drawingTeacher"
+                  @click="runTeacherDraw"
+                >
+                  {{ drawingTeacher ? 'Drawing...' : 'Run Teacher Prize Draw' }}
+                </MyButtonConstructor>
+              </div>
+
+              <div v-else class="rounded-lg border-2 border-brand-success bg-brand-success-soft p-4">
+                <div class="flex items-center gap-2 mb-1">
+                  <Sparkles class="h-5 w-5 text-brand-success" />
+                  <span class="font-bold text-brand-text">Winner!</span>
+                </div>
+                <p class="text-lg font-bold text-brand-text">{{ teacherWinner.name }}</p>
+                <p class="text-sm text-brand-text-soft">
+                  {{ teacherWinner.entries }} entries this quarter
+                  <span v-if="teacherWinner.is_registered"> — Registered teacher</span>
+                </p>
+                <button class="mt-2 text-xs text-brand-accent hover:underline" @click="teacherWinner = null">Re-draw</button>
+              </div>
+            </div>
+
+          </div>
         </div>
 
       </div>
