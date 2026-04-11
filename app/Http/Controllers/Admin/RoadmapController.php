@@ -79,7 +79,6 @@ class RoadmapController extends Controller
                     ['title' => 'Session hours tracking page', 'done' => true],
                     ['title' => 'Student Certificate of Achievement — Merit (Canva)', 'done' => true],
                     ['title' => 'Rewards graphic with correct logo', 'done' => true],
-                    ['title' => 'Disable public registration for launch', 'done' => false],
                     ['title' => 'Turn off hibernation', 'done' => false, 'description' => 'Remove sleep mode for musicexams.help at go-live'],
                 ],
             ],

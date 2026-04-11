@@ -48,7 +48,7 @@ class CertificateController extends Controller
     {
         // Get exam entries with scores for student certificates
         $students = ExamEntry::whereNotNull('score')
-            ->with(['student:id,first_name,last_name', 'instrument:id,name'])
+            ->with(['student:id,first_name,last_name', 'instrument:id,name', 'order:id,requested_start_date'])
             ->orderBy('exam_date', 'desc')
             ->get()
             ->map(fn ($entry) => [
@@ -59,7 +59,7 @@ class CertificateController extends Controller
                 'score'           => $entry->score,
                 'result_band'     => $entry->result_band,
                 'certificate'     => $entry->certificate_name,
-                'exam_date'       => $entry->exam_date?->format('j F Y'),
+                'exam_date'       => ($entry->exam_date ?? $entry->order?->requested_start_date)?->format('j F Y'),
             ]);
 
         // Get teachers with entry counts for teacher certificates
@@ -101,7 +101,7 @@ class CertificateController extends Controller
             'quarter'      => 'nullable|string|max:30',
         ]);
 
-        $entry = ExamEntry::with(['instrument'])->findOrFail($validated['entry_id']);
+        $entry = ExamEntry::with(['instrument', 'order:id,requested_start_date'])->findOrFail($validated['entry_id']);
         $templateKey = $validated['template'];
 
         if (! isset(self::STUDENT_TEMPLATES[$templateKey])) {
@@ -112,8 +112,9 @@ class CertificateController extends Controller
         $instrument = $entry->instrument?->name ?? '';
         $grade = $entry->grade ?? '';
 
-        // Auto-detect quarter from exam date if not provided
-        $quarter = $validated['quarter'] ?? $this->getQuarterLabel($entry->exam_date);
+        // Auto-detect quarter from exam date, falling back to order date
+        $effectiveDate = $entry->exam_date ?? $entry->order?->requested_start_date;
+        $quarter = $validated['quarter'] ?? $this->getQuarterLabel($effectiveDate);
 
         try {
             $templateUrl = self::S3_BASE . self::STUDENT_TEMPLATES[$templateKey];
