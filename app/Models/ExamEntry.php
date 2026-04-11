@@ -16,6 +16,7 @@ class ExamEntry extends Model
         'order_id',
         'student_id',
         'instrument_id',
+        'candidate_number',
         'candidate_name',
         'teacher_name',
         'school_name',
@@ -26,6 +27,7 @@ class ExamEntry extends Model
         'delivery_method',
         'result',
         'score',
+        'fee',
         'exam_date',
         'notes',
     ];

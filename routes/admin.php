@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\CertificateController;
 use App\Http\Controllers\Admin\ContactLogController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\PendingResultsController;
 use App\Http\Controllers\Admin\RoadmapController;
 use App\Http\Controllers\Admin\SchoolController;
 use App\Http\Controllers\Admin\SessionLogController;
@@ -39,6 +40,9 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])->pref
     // Orders (read-only for now — data comes from Trinity portal)
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+
+    // Pending Results — candidates awaiting exam scores
+    Route::get('pending-results', [PendingResultsController::class, 'index'])->name('pending-results.index');
 
     // Students (read-only — managed via teacher profiles)
     Route::get('students', [StudentController::class, 'index'])->name('students.index');

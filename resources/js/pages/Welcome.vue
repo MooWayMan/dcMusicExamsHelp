@@ -97,7 +97,7 @@ const incentives = [
   },
   {
     title: 'Quarterly prize draws',
-    detail: 'Teachers earn one prize draw entry for every exam booked through centre 120 — face-to-face, digital or theory. The more students entered, the more chances to win — with a £50 gift token to help invest back into their teaching. Students get their own separate prize draw too — £50 gift token, automatic entry just by sitting the exam.',
+    detail: 'Teachers earn one prize draw entry for every exam booked through centre 120 — face-to-face, digital or theory. The more students entered, the more chances to win — with a <strong>£50 gift token</strong> to help invest back into their teaching. Students get their own separate prize draw too — <strong>£50 gift token</strong>, automatic entry just by sitting the exam.',
     icon: Gift,
     iconBg: 'bg-brand-teal/10',
     iconColor: 'text-brand-teal',
@@ -755,6 +755,25 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
           <MyButtonConstructor variant="primary" size="large" @click="showBookingModal = true">
             Continue to Official Booking
           </MyButtonConstructor>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRIZE DRAW BANNER -->
+    <section class="bg-brand-danger py-12 sm:py-16">
+      <div class="mx-auto max-w-4xl px-4 text-center sm:px-6">
+        <Gift class="mx-auto mb-4 h-12 w-12 text-white sm:h-16 sm:w-16" />
+        <p class="text-lg font-bold uppercase tracking-widest text-white/80 sm:text-xl">Quarterly Prize Draws</p>
+        <p class="mt-3 text-4xl font-extrabold text-white sm:text-5xl md:text-6xl">Win a £50 Gift Token</p>
+        <p class="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-white/90 sm:text-lg md:text-xl">
+          Teachers and students each have their own separate prize draw every quarter — just by booking through centre 120. The more exams entered, the more chances to win.
+        </p>
+        <div class="mt-8">
+          <a href="/incentives">
+            <MyButtonConstructor variant="light" size="large">
+              See all incentives
+            </MyButtonConstructor>
+          </a>
         </div>
       </div>
     </section>

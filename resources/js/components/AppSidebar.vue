@@ -7,6 +7,7 @@ import {
     Users,
     School,
     ClipboardList,
+    AlertCircle,
     GraduationCap,
     BarChart3,
     CheckSquare,
@@ -70,6 +71,11 @@ const adminNavItems: NavItem[] = [
         title: 'Orders',
         href: '/admin/orders',
         icon: ClipboardList,
+    },
+    {
+        title: 'Pending Results',
+        href: '/admin/pending-results',
+        icon: AlertCircle,
     },
     {
         title: 'Students',
