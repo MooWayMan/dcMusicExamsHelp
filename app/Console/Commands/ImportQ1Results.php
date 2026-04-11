@@ -15,6 +15,25 @@ class ImportQ1Results extends Command
     protected $description = 'Import Q1 2026 (Jan-Mar) exam results into the database';
 
     /**
+     * F2F fee schedule by grade (from Trinity Summary of Entries PDFs).
+     */
+    private function feeForGrade(string $grade): float
+    {
+        return match ($grade) {
+            'Initial' => 55.00,
+            '1' => 61.00,
+            '2' => 68.00,
+            '3' => 76.00,
+            '4' => 86.00,
+            '5' => 99.00,
+            '6' => 109.00,
+            '7' => 122.00,
+            '8' => 138.00,
+            default => 0.00,
+        };
+    }
+
+    /**
      * Map Trinity instrument names to our seeded instrument names.
      */
     private function instrumentMap(): array
@@ -40,11 +59,15 @@ class ImportQ1Results extends Command
     public function handle(): int
     {
         if ($this->option('fresh')) {
-            $deleted = ExamEntry::whereHas('order', function ($q) {
-                $q->where('requested_start_date', '>=', '2026-01-01')
-                  ->where('requested_start_date', '<=', '2026-03-31');
-            })->delete();
-            $this->info("Deleted {$deleted} existing Q1 2026 entries.");
+            $orderNumbers = array_keys($this->getOrders());
+
+            // Force delete to bypass soft deletes — soft-deleted rows still block unique constraints
+            $orderIds = Order::withTrashed()->whereIn('trinity_order_number', $orderNumbers)->pluck('id');
+
+            $deleted = ExamEntry::whereIn('order_id', $orderIds)->forceDelete();
+            $deletedOrders = Order::withTrashed()->whereIn('trinity_order_number', $orderNumbers)->forceDelete();
+
+            $this->info("Deleted {$deleted} entries and {$deletedOrders} orders (force).");
         }
 
         $orders = $this->getOrders();
@@ -66,7 +89,7 @@ class ImportQ1Results extends Command
                     continue;
                 }
 
-                $orderCache[$orderKey] = Order::firstOrCreate(
+                $orderCache[$orderKey] = Order::updateOrCreate(
                     ['trinity_order_number' => $orderKey],
                     [
                         'delivery_method' => $orderData['delivery_method'],
@@ -75,7 +98,9 @@ class ImportQ1Results extends Command
                         'venue' => $orderData['venue'],
                         'order_status' => $orderData['order_status'],
                         'requested_start_date' => $orderData['requested_start_date'],
-                        'commission_rate' => $orderData['delivery_method'] === 'Default' ? 28.00 : 20.00,
+                        'commission_rate' => 10.00, // 10% net (28% gross minus ~18% overheads)
+                        'applicant_name' => $orderData['applicant_name'] ?? null,
+                        'applicant_email' => $orderData['applicant_email'] ?? null,
                     ]
                 );
             }
@@ -116,6 +141,7 @@ class ImportQ1Results extends Command
                 'grade' => $entry['grade'],
                 'subject_area' => $order->subject_area,
                 'delivery_method' => $order->delivery_method,
+                'fee' => $this->feeForGrade($entry['grade']),
                 'result' => $entry['result'],
                 'score' => $entry['score'],
                 'exam_date' => $entry['exam_date'],
@@ -186,6 +212,8 @@ class ImportQ1Results extends Command
                 'venue' => 'Learn Music Ltd',
                 'order_status' => 'Delivered',
                 'requested_start_date' => '2026-03-05',
+                'applicant_name' => 'Paul Sheridan',
+                'applicant_email' => 'madmusic6@hotmail.com',
             ],
             '1-11508308070' => [
                 'delivery_method' => 'Default',
@@ -194,6 +222,8 @@ class ImportQ1Results extends Command
                 'venue' => 'Wirral School of Music',
                 'order_status' => 'Delivered',
                 'requested_start_date' => '2026-03-06',
+                'applicant_name' => 'Paul Sheridan',
+                'applicant_email' => 'madmusic6@hotmail.com',
             ],
             '1-12208881501' => [
                 'delivery_method' => 'Default',
@@ -202,6 +232,8 @@ class ImportQ1Results extends Command
                 'venue' => 'Learn Music Ltd',
                 'order_status' => 'Delivered',
                 'requested_start_date' => '2026-03-07',
+                'applicant_name' => 'Paul Sheridan',
+                'applicant_email' => 'madmusic6@hotmail.com',
             ],
             '1-11478141779' => [
                 'delivery_method' => 'Default',
@@ -210,6 +242,8 @@ class ImportQ1Results extends Command
                 'venue' => 'Learn Music Ltd',
                 'order_status' => 'Delivered',
                 'requested_start_date' => '2026-03-07',
+                'applicant_name' => 'Paul Sheridan',
+                'applicant_email' => 'madmusic6@hotmail.com',
             ],
         ];
     }
