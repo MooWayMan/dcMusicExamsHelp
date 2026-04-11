@@ -26,6 +26,8 @@ class Order extends Model
         'requested_start_date',
         'commission_rate',
         'commission_amount',
+        'applicant_name',
+        'applicant_email',
         'notes',
     ];
 

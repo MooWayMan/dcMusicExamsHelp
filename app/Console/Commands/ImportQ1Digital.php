@@ -32,13 +32,13 @@ class ImportQ1Digital extends Command
         if ($this->option('fresh')) {
             $orderNumbers = array_keys($this->getOrders());
 
-            $deleted = ExamEntry::whereHas('order', function ($q) use ($orderNumbers) {
-                $q->whereIn('trinity_order_number', $orderNumbers);
-            })->delete();
+            // Force delete to bypass soft deletes — soft-deleted rows still block unique constraints
+            $orderIds = Order::withTrashed()->whereIn('trinity_order_number', $orderNumbers)->pluck('id');
 
-            $deletedOrders = Order::whereIn('trinity_order_number', $orderNumbers)->delete();
+            $deleted = ExamEntry::whereIn('order_id', $orderIds)->forceDelete();
+            $deletedOrders = Order::withTrashed()->whereIn('trinity_order_number', $orderNumbers)->forceDelete();
 
-            $this->info("Deleted {$deleted} entries and {$deletedOrders} orders by order number.");
+            $this->info("Deleted {$deleted} entries and {$deletedOrders} orders (force).");
         }
 
         $orders = $this->getOrders();
