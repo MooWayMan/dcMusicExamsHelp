@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ExamEntry;
 use App\Models\Order;
+use App\Models\PrizeDraw;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -158,11 +159,21 @@ class QuarterEndController extends Controller
             ];
         })->values()->toArray();
 
+        // Check if real draws have already been run for this quarter
+        $existingDraws = PrizeDraw::where('quarter', $quarter)
+            ->where('year', $year)
+            ->get()
+            ->keyBy('type');
+
         return Inertia::render('admin/QuarterEnd/Index', [
             'quarter' => $quarter,
             'year' => $year,
             'quarterLabel' => $quarterLabel,
             'teachers' => $teachers,
+            'existingDraws' => [
+                'student' => $existingDraws->get('student')?->only(['winner_name', 'winner_instrument', 'winner_grade', 'winner_teacher', 'total_tickets', 'created_at']),
+                'teacher' => $existingDraws->get('teacher')?->only(['winner_name', 'winner_entries', 'total_tickets', 'created_at']),
+            ],
             'summary' => [
                 'total_entries' => $totalEntries,
                 'with_results' => $totalWithResults,
@@ -187,6 +198,7 @@ class QuarterEndController extends Controller
 
     /**
      * Run a prize draw (AJAX) — picks a random winner from the ticket pool.
+     * mode = 'test' (practice, not saved) or 'real' (saved to DB, one-shot)
      */
     public function runDraw(Request $request): JsonResponse
     {
@@ -194,7 +206,24 @@ class QuarterEndController extends Controller
             'type' => 'required|in:student,teacher',
             'quarter' => 'required|integer|min:1|max:4',
             'year' => 'required|integer',
+            'mode' => 'required|in:test,real',
         ]);
+
+        $isReal = $validated['mode'] === 'real';
+
+        // Check if real draw already exists
+        if ($isReal) {
+            $existing = PrizeDraw::where('type', $validated['type'])
+                ->where('quarter', $validated['quarter'])
+                ->where('year', $validated['year'])
+                ->first();
+
+            if ($existing) {
+                return response()->json([
+                    'error' => "The real {$validated['type']} draw for Q{$validated['quarter']} {$validated['year']} has already been run. Winner: {$existing->winner_name}",
+                ], 422);
+            }
+        }
 
         $quarter = $validated['quarter'];
         $year = $validated['year'];
@@ -220,15 +249,36 @@ class QuarterEndController extends Controller
             }
 
             $winner = $allEntries->random();
+            $winnerData = [
+                'name' => $winner->candidate_name ?? ($winner->student ? "{$winner->student->first_name} {$winner->student->last_name}" : 'Unknown'),
+                'instrument' => $winner->instrument?->name ?? 'Unknown',
+                'grade' => $winner->grade,
+                'teacher' => $winner->teacher_name ?? 'Unknown',
+            ];
+
+            if ($isReal) {
+                PrizeDraw::create([
+                    'type' => 'student',
+                    'quarter' => $quarter,
+                    'year' => $year,
+                    'winner_name' => $winnerData['name'],
+                    'winner_instrument' => $winnerData['instrument'],
+                    'winner_grade' => $winnerData['grade'],
+                    'winner_teacher' => $winnerData['teacher'],
+                    'total_tickets' => $allEntries->count(),
+                    'all_eligible' => $allEntries->map(fn ($e) => [
+                        'name' => $e->candidate_name,
+                        'instrument' => $e->instrument?->name,
+                        'grade' => $e->grade,
+                    ])->values()->toArray(),
+                    'drawn_by' => $request->user()->id,
+                ]);
+            }
 
             return response()->json([
                 'type' => 'student',
-                'winner' => [
-                    'name' => $winner->candidate_name ?? ($winner->student ? "{$winner->student->first_name} {$winner->student->last_name}" : 'Unknown'),
-                    'instrument' => $winner->instrument?->name ?? 'Unknown',
-                    'grade' => $winner->grade,
-                    'teacher' => $winner->teacher_name ?? 'Unknown',
-                ],
+                'mode' => $validated['mode'],
+                'winner' => $winnerData,
                 'total_tickets' => $allEntries->count(),
             ]);
         }
@@ -263,8 +313,32 @@ class QuarterEndController extends Controller
         $winnerEntries = $applicantEntries[$winnerName]->count();
         $isRegistered = in_array(strtolower(trim($winnerName)), $registeredTeacherNames);
 
+        if ($isReal) {
+            // Build eligible list snapshot for audit
+            $eligibleSnapshot = [];
+            foreach ($applicantEntries as $name => $entries) {
+                $count = $entries->count();
+                $reg = in_array(strtolower(trim($name)), $registeredTeacherNames);
+                if ($reg || $count >= 2) {
+                    $eligibleSnapshot[] = ['name' => $name, 'entries' => $count, 'registered' => $reg];
+                }
+            }
+
+            PrizeDraw::create([
+                'type' => 'teacher',
+                'quarter' => $quarter,
+                'year' => $year,
+                'winner_name' => $winnerName,
+                'winner_entries' => $winnerEntries,
+                'total_tickets' => count($tickets),
+                'all_eligible' => $eligibleSnapshot,
+                'drawn_by' => $request->user()->id,
+            ]);
+        }
+
         return response()->json([
             'type' => 'teacher',
+            'mode' => $validated['mode'],
             'winner' => [
                 'name' => $winnerName,
                 'entries' => $winnerEntries,

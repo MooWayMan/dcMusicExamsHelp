@@ -52,12 +52,22 @@ interface EligibleTeacher {
   reason: string
 }
 
-interface PrizeDraw {
+interface PrizeDrawData {
   student_tickets: Array<{ name: string; instrument: string; grade: string; teacher: string }>
   teacher_tickets: Array<{ name: string; entries: number; is_registered: boolean }>
   eligible_teachers: EligibleTeacher[]
   student_ticket_count: number
   teacher_ticket_count: number
+}
+
+interface ExistingDraw {
+  winner_name: string
+  winner_instrument?: string
+  winner_grade?: string
+  winner_teacher?: string
+  winner_entries?: number
+  total_tickets: number
+  created_at: string
 }
 
 const props = defineProps<{
@@ -66,7 +76,11 @@ const props = defineProps<{
   quarterLabel: string
   teachers: Teacher[]
   summary: Summary
-  prizeDraw: PrizeDraw
+  prizeDraw: PrizeDrawData
+  existingDraws: {
+    student: ExistingDraw | null
+    teacher: ExistingDraw | null
+  }
 }>()
 
 const page = usePage()
@@ -173,16 +187,33 @@ function changeQuarter(q: number, y: number) {
 // --- PRIZE DRAW ---
 const drawingStudent = ref(false)
 const drawingTeacher = ref(false)
-const studentWinner = ref<{ name: string; instrument: string; grade: string; teacher: string } | null>(null)
-const teacherWinner = ref<{ name: string; entries: number; is_registered: boolean } | null>(null)
+const studentTestWinner = ref<{ name: string; instrument: string; grade: string; teacher: string } | null>(null)
+const teacherTestWinner = ref<{ name: string; entries: number; is_registered: boolean } | null>(null)
+const studentRealDone = ref(!!props.existingDraws.student)
+const teacherRealDone = ref(!!props.existingDraws.teacher)
+const studentRealWinner = ref(props.existingDraws.student)
+const teacherRealWinner = ref(props.existingDraws.teacher)
+const testDrawCount = ref({ student: 0, teacher: 0 })
 
 function getXsrfToken(): string {
   const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/)
   return match ? decodeURIComponent(match[1]) : ''
 }
 
-async function runStudentDraw() {
-  drawingStudent.value = true
+async function runDraw(type: 'student' | 'teacher', mode: 'test' | 'real') {
+  if (type === 'student') drawingStudent.value = true
+  else drawingTeacher.value = true
+
+  // Real draw confirmation
+  if (mode === 'real') {
+    const confirmed = confirm(`This is the REAL ${type} prize draw. The result will be permanently recorded and cannot be changed. Continue?`)
+    if (!confirmed) {
+      if (type === 'student') drawingStudent.value = false
+      else drawingTeacher.value = false
+      return
+    }
+  }
+
   try {
     const res = await fetch('/admin/quarter-end/draw', {
       method: 'POST',
@@ -191,39 +222,60 @@ async function runStudentDraw() {
         'X-XSRF-TOKEN': getXsrfToken(),
         'Accept': 'application/json',
       },
-      body: JSON.stringify({ type: 'student', quarter: props.quarter, year: props.year }),
+      body: JSON.stringify({ type, quarter: props.quarter, year: props.year, mode }),
     })
-    if (!res.ok) throw new Error('Failed')
+
+    if (!res.ok) {
+      const err = await res.json()
+      alert(err.error || `Could not run ${type} draw`)
+      return
+    }
+
     const data = await res.json()
-    studentWinner.value = data.winner
+
+    if (type === 'student') {
+      if (mode === 'test') {
+        studentTestWinner.value = data.winner
+        testDrawCount.value.student++
+      } else {
+        studentRealWinner.value = { ...data.winner, total_tickets: data.total_tickets, created_at: new Date().toISOString() }
+        studentRealDone.value = true
+      }
+    } else {
+      if (mode === 'test') {
+        teacherTestWinner.value = data.winner
+        testDrawCount.value.teacher++
+      } else {
+        teacherRealWinner.value = { winner_name: data.winner.name, winner_entries: data.winner.entries, total_tickets: data.total_tickets, created_at: new Date().toISOString() }
+        teacherRealDone.value = true
+      }
+    }
   } catch (e) {
-    alert('Could not run student draw — no entries available')
+    alert(`Could not run ${type} draw`)
   } finally {
-    drawingStudent.value = false
+    if (type === 'student') drawingStudent.value = false
+    else drawingTeacher.value = false
   }
 }
 
-async function runTeacherDraw() {
-  drawingTeacher.value = true
-  try {
-    const res = await fetch('/admin/quarter-end/draw', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-XSRF-TOKEN': getXsrfToken(),
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify({ type: 'teacher', quarter: props.quarter, year: props.year }),
-    })
-    if (!res.ok) throw new Error('Failed')
-    const data = await res.json()
-    teacherWinner.value = data.winner
-  } catch (e) {
-    alert('Could not run teacher draw — no eligible teachers')
-  } finally {
-    drawingTeacher.value = false
+// For the email template — use real winner if available, otherwise null
+const studentWinner = computed(() => {
+  if (studentRealWinner.value) return {
+    name: studentRealWinner.value.winner_name,
+    instrument: studentRealWinner.value.winner_instrument ?? '',
+    grade: studentRealWinner.value.winner_grade ?? '',
+    teacher: studentRealWinner.value.winner_teacher ?? '',
   }
-}
+  return null
+})
+const teacherWinner = computed(() => {
+  if (teacherRealWinner.value) return {
+    name: teacherRealWinner.value.winner_name,
+    entries: teacherRealWinner.value.winner_entries ?? 0,
+    is_registered: false,
+  }
+  return null
+})
 </script>
 
 <template>
@@ -527,27 +579,53 @@ async function runTeacherDraw() {
                 <span class="ml-auto text-xs text-brand-text-soft">{{ prizeDraw.student_ticket_count }} tickets in the draw</span>
               </div>
 
-              <div v-if="!studentWinner">
-                <p class="text-sm text-brand-text-soft mb-3">Every student who entered through centre 120 this quarter has one ticket per entry.</p>
-                <MyButtonConstructor
-                  size="medium"
-                  variant="primary"
-                  :icon="drawingStudent ? Loader2 : Sparkles"
-                  :disabled="drawingStudent"
-                  @click="runStudentDraw"
-                >
-                  {{ drawingStudent ? 'Drawing...' : 'Run Student Prize Draw' }}
-                </MyButtonConstructor>
+              <p class="text-sm text-brand-text-soft mb-3">Every student who entered through centre 120 this quarter has one ticket per entry.</p>
+
+              <!-- Already drawn (real) -->
+              <div v-if="studentRealDone && studentRealWinner" class="rounded-lg border-2 border-brand-success bg-brand-success-soft p-4">
+                <div class="flex items-center gap-2 mb-1">
+                  <Trophy class="h-5 w-5 text-brand-success" />
+                  <span class="font-bold text-brand-text">Official Winner (recorded)</span>
+                </div>
+                <p class="text-lg font-bold text-brand-text">{{ studentRealWinner.winner_name }}</p>
+                <p class="text-sm text-brand-text-soft">{{ studentRealWinner.winner_instrument }} Grade {{ studentRealWinner.winner_grade }} — Teacher: {{ studentRealWinner.winner_teacher }}</p>
+                <p class="mt-2 text-xs text-brand-text-soft">Drawn from {{ studentRealWinner.total_tickets }} tickets. This result is permanently recorded.</p>
               </div>
 
-              <div v-else class="rounded-lg border-2 border-brand-success bg-brand-success-soft p-4">
-                <div class="flex items-center gap-2 mb-1">
-                  <Sparkles class="h-5 w-5 text-brand-success" />
-                  <span class="font-bold text-brand-text">Winner!</span>
+              <!-- Not yet drawn -->
+              <div v-else class="space-y-3">
+                <!-- Practice draw result -->
+                <div v-if="studentTestWinner" class="rounded-lg border border-dashed border-brand-accent bg-brand-accent/5 p-3">
+                  <div class="flex items-center gap-2 mb-1">
+                    <Sparkles class="h-4 w-4 text-brand-accent" />
+                    <span class="text-sm font-semibold text-brand-accent">Practice Draw #{{ testDrawCount.student }}</span>
+                  </div>
+                  <p class="font-bold text-brand-text">{{ studentTestWinner.name }}</p>
+                  <p class="text-xs text-brand-text-soft">{{ studentTestWinner.instrument }} Grade {{ studentTestWinner.grade }} — Teacher: {{ studentTestWinner.teacher }}</p>
+                  <p class="mt-1 text-xs text-brand-text-soft italic">This is just a practice — not recorded.</p>
                 </div>
-                <p class="text-lg font-bold text-brand-text">{{ studentWinner.name }}</p>
-                <p class="text-sm text-brand-text-soft">{{ studentWinner.instrument }} Grade {{ studentWinner.grade }} — Teacher: {{ studentWinner.teacher }}</p>
-                <button class="mt-2 text-xs text-brand-accent hover:underline" @click="studentWinner = null">Re-draw</button>
+
+                <div class="flex flex-wrap gap-2">
+                  <MyButtonConstructor
+                    size="small"
+                    variant="outline"
+                    :icon="drawingStudent ? Loader2 : Sparkles"
+                    :disabled="drawingStudent"
+                    @click="runDraw('student', 'test')"
+                  >
+                    {{ drawingStudent ? 'Drawing...' : 'Practice Draw' }}
+                  </MyButtonConstructor>
+
+                  <MyButtonConstructor
+                    size="medium"
+                    variant="primary"
+                    :icon="drawingStudent ? Loader2 : Trophy"
+                    :disabled="drawingStudent"
+                    @click="runDraw('student', 'real')"
+                  >
+                    {{ drawingStudent ? 'Drawing...' : 'Run REAL Student Draw' }}
+                  </MyButtonConstructor>
+                </div>
               </div>
             </div>
 
@@ -587,29 +665,51 @@ async function runTeacherDraw() {
                 </table>
               </div>
 
-              <div v-if="!teacherWinner">
-                <MyButtonConstructor
-                  size="medium"
-                  variant="primary"
-                  :icon="drawingTeacher ? Loader2 : Sparkles"
-                  :disabled="drawingTeacher"
-                  @click="runTeacherDraw"
-                >
-                  {{ drawingTeacher ? 'Drawing...' : 'Run Teacher Prize Draw' }}
-                </MyButtonConstructor>
+              <!-- Already drawn (real) -->
+              <div v-if="teacherRealDone && teacherRealWinner" class="rounded-lg border-2 border-brand-success bg-brand-success-soft p-4">
+                <div class="flex items-center gap-2 mb-1">
+                  <Trophy class="h-5 w-5 text-brand-success" />
+                  <span class="font-bold text-brand-text">Official Winner (recorded)</span>
+                </div>
+                <p class="text-lg font-bold text-brand-text">{{ teacherRealWinner.winner_name }}</p>
+                <p class="text-sm text-brand-text-soft">{{ teacherRealWinner.winner_entries }} entries this quarter — from {{ teacherRealWinner.total_tickets }} tickets</p>
+                <p class="mt-2 text-xs text-brand-text-soft">This result is permanently recorded.</p>
               </div>
 
-              <div v-else class="rounded-lg border-2 border-brand-success bg-brand-success-soft p-4">
-                <div class="flex items-center gap-2 mb-1">
-                  <Sparkles class="h-5 w-5 text-brand-success" />
-                  <span class="font-bold text-brand-text">Winner!</span>
+              <!-- Not yet drawn -->
+              <div v-else class="space-y-3">
+                <!-- Practice draw result -->
+                <div v-if="teacherTestWinner" class="rounded-lg border border-dashed border-brand-accent bg-brand-accent/5 p-3">
+                  <div class="flex items-center gap-2 mb-1">
+                    <Sparkles class="h-4 w-4 text-brand-accent" />
+                    <span class="text-sm font-semibold text-brand-accent">Practice Draw #{{ testDrawCount.teacher }}</span>
+                  </div>
+                  <p class="font-bold text-brand-text">{{ teacherTestWinner.name }}</p>
+                  <p class="text-xs text-brand-text-soft">{{ teacherTestWinner.entries }} entries this quarter</p>
+                  <p class="mt-1 text-xs text-brand-text-soft italic">This is just a practice — not recorded.</p>
                 </div>
-                <p class="text-lg font-bold text-brand-text">{{ teacherWinner.name }}</p>
-                <p class="text-sm text-brand-text-soft">
-                  {{ teacherWinner.entries }} entries this quarter
-                  <span v-if="teacherWinner.is_registered"> — Registered teacher</span>
-                </p>
-                <button class="mt-2 text-xs text-brand-accent hover:underline" @click="teacherWinner = null">Re-draw</button>
+
+                <div class="flex flex-wrap gap-2">
+                  <MyButtonConstructor
+                    size="small"
+                    variant="outline"
+                    :icon="drawingTeacher ? Loader2 : Sparkles"
+                    :disabled="drawingTeacher"
+                    @click="runDraw('teacher', 'test')"
+                  >
+                    {{ drawingTeacher ? 'Drawing...' : 'Practice Draw' }}
+                  </MyButtonConstructor>
+
+                  <MyButtonConstructor
+                    size="medium"
+                    variant="primary"
+                    :icon="drawingTeacher ? Loader2 : Trophy"
+                    :disabled="drawingTeacher"
+                    @click="runDraw('teacher', 'real')"
+                  >
+                    {{ drawingTeacher ? 'Drawing...' : 'Run REAL Teacher Draw' }}
+                  </MyButtonConstructor>
+                </div>
               </div>
             </div>
 
