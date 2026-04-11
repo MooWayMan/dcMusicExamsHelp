@@ -5,6 +5,7 @@ import { Link, usePage, router } from '@inertiajs/vue3'
 import { Bars3Icon, XMarkIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
+import MySocials from '@/components/layouts/MySocials.vue'
 import BookingModal from '@/components/BookingModal.vue'
 
 interface Props {
@@ -248,6 +249,14 @@ const navClasses = computed(() =>
               <template #myTitle>Sign In</template>
             </MyTextConstructor>
           </Link>
+
+          <!-- Social icons (desktop only) -->
+          <MySocials
+            size="small"
+            spacing="tight"
+            iconColor="text-slate-400"
+            hoverColor="hover:text-brand-accent"
+          />
 
           <MyButtonConstructor variant="primary" size="medium" @click="showBookingModal = true">
             Book Your Exam
