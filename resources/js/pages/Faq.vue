@@ -38,7 +38,7 @@ const faqs = [
   {
     question: 'What is centre 120?',
     answer:
-      'Centre 120 is our registered Trinity College London exam centre code — it covers both our digital centre and our face-to-face centres in Liverpool and Wirral. When you use it at booking, your entry is connected to musicExams.help — which means your student receives at least a <strong>Bravo Certificate</strong>, gets listed on our <a href="/recognition" class="font-semibold text-brand-accent underline hover:opacity-70">Recognition page</a>, qualifies for the <a href="/recognition" class="font-semibold text-brand-accent underline hover:opacity-70">Hall of Fame</a>, and you get access to teacher recognition badges, prize draws and ongoing support.',
+      'Centre 120 is our registered Trinity College London exam centre code — it covers both our digital centre and our face-to-face centres in Liverpool and Wirral. When you use it at booking, your entry is connected to musicExams.help — which means your student receives at least a <strong>Bravo Certificate</strong>, gets listed on our <a href="/recognition?from=faq" class="font-semibold text-brand-accent underline hover:opacity-70">Recognition page</a>, qualifies for the <a href="/recognition?from=faq" class="font-semibold text-brand-accent underline hover:opacity-70">Hall of Fame</a>, and you get access to teacher recognition badges, prize draws and ongoing support.',
   },
   {
     question: 'Does it cost anything extra?',
@@ -68,7 +68,7 @@ const faqs = [
   {
     question: 'What results can I achieve?',
     answer:
-      'Trinity graded exams are marked out of 100. A Pass is 60–74, Merit is 75–86, and Distinction is 87–100. Every student entered through centre 120 — whether face-to-face, digital or theory — receives at least a <strong>Bravo Certificate</strong> and is listed on our <a href="/recognition" class="font-semibold text-brand-accent underline hover:opacity-70">Recognition page</a>. Merit earns a Take a Bow Certificate and Distinction earns a Standing Ovation Certificate — plus a place in the <a href="/recognition" class="font-semibold text-brand-accent underline hover:opacity-70">Hall of Fame</a>. The highest scorers each quarter earn a Showstopper or Centre Stage Certificate and a gift token.',
+      'Trinity graded exams are marked out of 100. A Pass is 60–74, Merit is 75–86, and Distinction is 87–100. Every student entered through centre 120 — whether face-to-face, digital or theory — receives at least a <strong>Bravo Certificate</strong> and is listed on our <a href="/recognition?from=faq" class="font-semibold text-brand-accent underline hover:opacity-70">Recognition page</a>. Merit earns a Take a Bow Certificate and Distinction earns a Standing Ovation Certificate — plus a place in the <a href="/recognition?from=faq" class="font-semibold text-brand-accent underline hover:opacity-70">Hall of Fame</a>. The highest scorers each quarter earn a Showstopper or Centre Stage Certificate and a gift token.',
   },
   {
     question: 'Do I need to provide sheet music for the examiner?',
@@ -78,12 +78,12 @@ const faqs = [
   {
     question: 'How do teachers benefit from using centre 120?',
     answer:
-      'Teachers who enter candidates through centre 120 earn recognition through our tiered badge system (10+, 20+, 30+ candidates), receive Certificates of Appreciation, and are entered into quarterly prize draws. They also get the added benefit of having all the guidance and exam information in one place on musicExams.help — saving time explaining procedures to parents and students.',
+      'Teachers who enter candidates through centre 120 earn recognition through our tiered badge system (10+, 20+, 30+ candidates), receive Certificates of Appreciation, and get an entry into the quarterly teacher prize draw (£50 gift token) for every exam booked — the more students entered, the more chances to win. They also get the added benefit of having all the guidance and exam information in one place on musicExams.help — saving time explaining procedures to parents and students.',
   },
   {
     question: 'What is the Hall of Fame?',
     answer:
-      'Every student entered through centre 120 receives at least a <strong>Bravo Certificate</strong> and is listed on our <a href="/recognition" class="font-semibold text-brand-accent underline hover:opacity-70">Recognition page</a> — everyone is recognised, not just the highest scorers. Merit earns a Take a Bow Certificate and Distinction earns a Standing Ovation Certificate — plus a place in the Hall of Fame. The students with the highest Distinction and highest Merit scores each quarter earn the top awards — a Showstopper Certificate and a Centre Stage Certificate — plus a gift token (£20, or divided equally if there is a tie — minimum £5 each).',
+      'Every student entered through centre 120 receives at least a <strong>Bravo Certificate</strong> and is listed on our <a href="/recognition?from=faq" class="font-semibold text-brand-accent underline hover:opacity-70">Recognition page</a> — everyone is recognised, not just the highest scorers. Merit earns a Take a Bow Certificate and Distinction earns a Standing Ovation Certificate — plus a place in the Hall of Fame. The students with the highest Distinction and highest Merit scores each quarter earn the top awards — a Showstopper Certificate and a Centre Stage Certificate — plus a gift token (£20, or divided equally if there is a tie — minimum £5 each). Every entry also goes into a quarterly student prize draw, and teachers have their own separate prize draw too.',
   },
   {
     question: 'Can I book face-to-face exams through centre 120?',

@@ -66,7 +66,7 @@ const tiers = [
     icon: Gift,
     title: 'Prize draws',
     subtitle: 'Automatic entry',
-    detail: 'Every exam entry through centre 120 — face-to-face, digital or theory — earns an automatic entry into our quarterly prize draw. Just by sitting your exam, you\'re in with a chance to win a gift token!',
+    detail: 'Every exam entry through centre 120 — face-to-face, digital or theory — earns an automatic entry into our quarterly student prize draw. Just by sitting your exam, you\'re in with a chance to win a £50 gift token! Your teacher gets entered into a separate teacher prize draw too — so everyone benefits.',
     link: '/incentives?from=for-students',
     linkText: 'See all incentives',
   },

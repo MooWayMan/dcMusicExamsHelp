@@ -97,7 +97,7 @@ const incentives = [
   },
   {
     title: 'Quarterly prize draws',
-    detail: 'Teachers earn one prize draw entry for every exam booked through centre 120 — face-to-face, digital or theory. The more students entered, the more chances to win — with gift tokens to help invest back into their teaching. Parents and students — let your teacher know about centre 120 and help them win too.',
+    detail: 'Teachers earn one prize draw entry for every exam booked through centre 120 — face-to-face, digital or theory. The more students entered, the more chances to win — with a £50 gift token to help invest back into their teaching. Students get their own separate prize draw too — £50 gift token, automatic entry just by sitting the exam.',
     icon: Gift,
     iconBg: 'bg-brand-teal/10',
     iconColor: 'text-brand-teal',

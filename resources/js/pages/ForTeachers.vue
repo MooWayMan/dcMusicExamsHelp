@@ -76,7 +76,7 @@ const benefits = [
   {
     icon: Gift,
     title: 'Quarterly prize draws',
-    detail: 'Every exam entry through centre 120 — face-to-face, digital or theory — earns an automatic entry into our quarterly teacher prize draw. The more students you enter, the more chances to win. If a parent books the exam themselves, just ask them to <a href="/contact" class="font-semibold text-white underline hover:text-white/70">let us know</a> which teacher the student is linked to — that way you still get the credit.',
+    detail: 'Every exam entry through centre 120 — face-to-face, digital or theory — earns an automatic entry into our quarterly teacher prize draw — a £50 gift token to invest back into your teaching. The more students you enter, the more chances to win. If a parent books the exam themselves, just ask them to <a href="/contact" class="font-semibold text-white underline hover:text-white/70">let us know</a> which teacher the student is linked to — that way you still get the credit.',
     link: '/incentives?from=for-teachers',
     linkText: 'See all incentives',
   },
@@ -84,7 +84,7 @@ const benefits = [
     icon: BookOpen,
     title: 'Exam book discounts',
     detail: 'Get in touch and we\'ll help you access exclusive discounts on physical exam books published by Faber Music and Trinity College London Press. Plus 10% off digital editions for your students.',
-    link: '/for-teachers/faber-discounts',
+    link: '/for-teachers/faber-discounts?from=for-teachers',
     linkText: 'Find out more',
   },
   {
@@ -169,7 +169,7 @@ const faqs = [
         <!-- Quick links — same style as Exam Guide banner on homepage -->
         <div :class="animClass('fade-up', 3)" class="mx-auto mt-8 max-w-4xl space-y-3">
           <a
-            href="/for-teachers/awards"
+            href="/for-teachers/awards?from=for-teachers"
             class="flex items-center justify-between rounded-xl border border-brand-accent/30 bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary px-5 py-3 text-white shadow-lg transition hover:scale-[1.01] hover:shadow-xl sm:px-6 sm:py-4"
           >
             <div class="flex items-center gap-3">
@@ -183,7 +183,7 @@ const faqs = [
           </a>
 
           <a
-            href="/for-teachers/faber-discounts"
+            href="/for-teachers/faber-discounts?from=for-teachers"
             class="flex items-center justify-between rounded-xl border border-brand-accent/30 bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary px-5 py-3 text-white shadow-lg transition hover:scale-[1.01] hover:shadow-xl sm:px-6 sm:py-4"
           >
             <div class="flex items-center gap-3">

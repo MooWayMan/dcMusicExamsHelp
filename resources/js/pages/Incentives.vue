@@ -55,8 +55,8 @@ const studentTiers = [
   {
     icon: Gift,
     title: 'Prize draws',
-    subtitle: 'Automatic entry',
-    detail: 'Every exam entry through centre 120 — face-to-face, digital or theory — earns an automatic entry into our quarterly prize draw. Just by sitting your exam, you\'re in with a chance to win.',
+    subtitle: 'Students and teachers',
+    detail: 'We run two separate quarterly prize draws. <strong>Students</strong> — every exam entry through centre 120 earns an automatic entry. Just by sitting your exam, you\'re in with a chance to win a £50 gift token. <strong>Teachers</strong> — every exam booked through centre 120 earns you an entry too. The more students you enter, the more chances to win — with a £50 gift token to help invest back into your teaching.',
   },
 ]
 
@@ -74,7 +74,7 @@ const teacherTiers = [
     icon: Users,
     title: 'Your students get celebrated',
     subtitle: 'Through centre 120',
-    detail: 'When your students enter through centre 120, every one of them receives at least a Bravo Certificate and gets listed on the Recognition page. Merit earns a Take a Bow Certificate and Distinction earns a Standing Ovation Certificate instead, and every entry goes into prize draws — all at no cost to you or them.',
+    detail: 'When your students enter through centre 120, every one of them receives at least a Bravo Certificate and gets listed on the Recognition page. Merit earns a Take a Bow Certificate and Distinction earns a Standing Ovation Certificate instead, and every entry goes into both the student and teacher prize draws — all at no cost to you or them.',
     link: '/for-teachers?from=incentives',
     linkText: 'Find out more for teachers',
   },
@@ -87,7 +87,7 @@ const howItWorks = [
   'Every entry earns at least a <strong>Bravo Certificate</strong> and gets listed on the Recognition page',
   'Merit and Distinction students are added to the <strong>Hall of Fame</strong> with a Take a Bow or Standing Ovation Certificate',
   'The highest scorers each quarter earn a <strong>Showstopper</strong> or <strong>Centre Stage Certificate</strong> and a gift token',
-  'Every entry goes into a quarterly prize draw',
+  'Every entry goes into a quarterly prize draw — one for students and one for teachers',
 ]
 
 /* ── FAQs ── */
@@ -105,7 +105,7 @@ const faqs = [
   {
     id: 3,
     question: 'How does the prize draw work?',
-    answer: 'Every exam entry through centre 120 — face-to-face, digital or theory — goes into a quarterly prize draw. Winners are drawn at the end of each quarter and receive a gift token. You don\'t need to do anything extra — you\'re entered automatically.',
+    answer: 'We run two separate quarterly prize draws — one for students and one for teachers. Every exam entry through centre 120 — face-to-face, digital or theory — earns the student an automatic entry. Teachers also get one entry for every exam booked through centre 120 — the more students entered, the more chances to win. Winners are drawn at the end of each quarter and receive a £50 gift token. You don\'t need to do anything extra — entries are automatic.',
   },
   {
     id: 4,

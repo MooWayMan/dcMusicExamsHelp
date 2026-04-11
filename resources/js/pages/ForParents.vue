@@ -57,6 +57,7 @@ const whatYourChildGets = [
   'At least a <strong>Bravo Certificate</strong> for every entry — Merit earns a Take a Bow Certificate and Distinction earns a Standing Ovation Certificate instead — plus listed on our Recognition page (first name and initial, instrument and grade; full name shown only with your permission)',
   'A place in the <strong>Hall of Fame</strong> for every Merit and Distinction',
   'The highest scorers each quarter earn a <strong>Showstopper</strong> or <strong>Centre Stage Certificate</strong> and a gift token (£20, or divided equally if there is a tie — minimum £5 each)',
+  'An automatic entry into our quarterly <strong>student prize draw</strong> (£50 gift token) — plus your child\'s teacher gets entered into a separate <strong>teacher prize draw</strong> too',
   'The same official Trinity certificate and result as any other centre — plus a personalised certificate from us (Bravo, Take a Bow or Standing Ovation depending on their result)',
 ]
 
