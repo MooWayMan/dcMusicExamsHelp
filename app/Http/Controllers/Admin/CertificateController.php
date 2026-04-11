@@ -200,8 +200,8 @@ class CertificateController extends Controller
         $detailSize = (int) ($width * 0.020);
         $quarterSize = (int) ($width * 0.025);
 
-        // Name — positioned at ~30% from top (in the "Proudly Presented To" space)
-        $nameY = (int) ($height * 0.30);
+        // Name — positioned at ~43% from top (below "Proudly Presented To", above badge)
+        $nameY = (int) ($height * 0.43);
         $image->text($name, $textX, $nameY, function (FontFactory $font) use ($fontPath, $nameSize) {
             if ($fontPath) {
                 $font->filename($fontPath);
@@ -211,9 +211,9 @@ class CertificateController extends Controller
             $font->align('center');
         });
 
-        // Instrument & Grade — positioned at ~34% from top (below name)
+        // Instrument & Grade — positioned at ~48% from top (below name, above badge)
         $detail = trim("$instrument Grade $grade");
-        $detailY = (int) ($height * 0.34);
+        $detailY = (int) ($height * 0.48);
         $image->text($detail, $textX, $detailY, function (FontFactory $font) use ($fontPath, $detailSize) {
             if ($fontPath) {
                 $font->filename($fontPath);
@@ -223,9 +223,9 @@ class CertificateController extends Controller
             $font->align('center');
         });
 
-        // Quarter — at the bottom (~82% from top, above the logos)
+        // Quarter — at the bottom (~89% from top, above the logos)
         $quarterX = (int) ($width * 0.50);
-        $quarterY = (int) ($height * 0.82);
+        $quarterY = (int) ($height * 0.89);
         $image->text($quarter, $quarterX, $quarterY, function (FontFactory $font) use ($fontPath, $quarterSize) {
             if ($fontPath) {
                 $font->filename($fontPath);
