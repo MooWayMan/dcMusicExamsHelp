@@ -39,10 +39,9 @@ class ImportQ1Digital extends Command
             $deletedOrders = Order::where('requested_start_date', '>=', '2026-01-01')
                 ->where('requested_start_date', '<=', '2026-03-31')
                 ->where('delivery_method', 'Digital')
-                ->whereDoesntHave('examEntries')
                 ->delete();
 
-            $this->info("Deleted {$deleted} existing Q1 2026 digital entries and {$deletedOrders} empty orders.");
+            $this->info("Deleted {$deleted} existing Q1 2026 digital entries and {$deletedOrders} digital orders.");
         }
 
         $orders = $this->getOrders();
