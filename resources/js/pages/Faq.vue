@@ -91,10 +91,24 @@ const faqs = [
       'Yes. We offer face-to-face exam sessions in Liverpool and Wirral, as well as digital practical exams and digital theory exams that can be taken anywhere and submitted online. Centre 120 covers all three — for digital exams you enter the code when booking, and for face-to-face exams your entry is connected automatically.',
   },
 ]
+
+const faqJsonLd = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  'mainEntity': faqs.map((f) => ({
+    '@type': 'Question',
+    'name': f.question,
+    'acceptedAnswer': {
+      '@type': 'Answer',
+      'text': f.answer.replace(/<[^>]*>/g, ''),
+    },
+  })),
+})
 </script>
 
 <template>
   <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <component is="script" type="application/ld+json" v-text="faqJsonLd" />
 
   <div class="min-h-screen bg-black text-brand-text">
     <Navbar />

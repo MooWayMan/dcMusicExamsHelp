@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ContactAutoReply;
 use App\Mail\ContactFormSubmission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -18,7 +19,7 @@ class ContactController extends Controller
             'message' => 'required|string|max:5000',
         ]);
 
-        // Send HTML email notification
+        // Send HTML email notification to Paul
         try {
             Mail::to('musicexams@musicexams.help')
                 ->send(new ContactFormSubmission(
@@ -29,6 +30,17 @@ class ContactController extends Controller
                 ));
         } catch (\Exception $e) {
             Log::error('Contact form email failed: ' . $e->getMessage());
+        }
+
+        // Send auto-reply to the person who contacted us
+        try {
+            Mail::to($validated['email'])
+                ->send(new ContactAutoReply(
+                    senderName: $validated['name'],
+                    senderSubject: $validated['subject'] ?? null,
+                ));
+        } catch (\Exception $e) {
+            Log::error('Contact auto-reply failed: ' . $e->getMessage());
         }
 
         return back()->with('success', 'Message sent successfully.');

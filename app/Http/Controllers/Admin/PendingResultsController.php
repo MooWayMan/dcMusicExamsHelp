@@ -53,10 +53,14 @@ class PendingResultsController extends Controller
             'order_date' => $e->order->requested_start_date?->format('d M Y') ?? '—',
         ]);
 
-        // Summary
+        // Summary — exclude cancellations from all counts
+        $excludeCancelled = function ($query) {
+            $query->whereNull('notes')->orWhere('notes', 'not ilike', '%cancelled%');
+        };
+
         $totalPending = $data->count();
-        $totalWithResults = ExamEntry::whereNotNull('score')->count();
-        $totalEntries = ExamEntry::count();
+        $totalWithResults = ExamEntry::whereNotNull('score')->where($excludeCancelled)->count();
+        $totalEntries = ExamEntry::where($excludeCancelled)->count();
 
         return Inertia::render('admin/PendingResults/Index', [
             'entries' => $data,

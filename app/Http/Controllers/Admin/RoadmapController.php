@@ -100,8 +100,8 @@ class RoadmapController extends Controller
                     ['title' => 'QR code redirect system (musicexams.help/go/...)', 'done' => false, 'description' => 'Short redirect routes for QR codes on flyers, certificates, business cards — plus own /links page instead of Linktree'],
                     ['title' => 'Booking system step-by-step guides', 'done' => false, 'description' => 'Help page showing how to use all 3 Trinity booking systems'],
                     ['title' => 'Update YouTube channel branding', 'done' => true],
-                    ['title' => 'Domain name & business name', 'done' => false, 'description' => 'Confirm sole trader name with accountant, connect musicexams.help domain'],
-                    ['title' => 'SEO audit implementation', 'done' => false, 'description' => 'Full audit already done — apply fixes once domain is live'],
+                    ['title' => 'Domain name & business name', 'done' => true, 'description' => 'Confirm sole trader name with accountant, connect musicexams.help domain'],
+                    ['title' => 'SEO audit implementation', 'done' => true, 'description' => 'Sitemap, robots.txt, JSON-LD, OG tags, Twitter cards all in place'],
                 ],
             ],
             [

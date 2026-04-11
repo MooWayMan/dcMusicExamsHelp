@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ContactLogController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PendingResultsController;
+use App\Http\Controllers\Admin\QuarterEndController;
 use App\Http\Controllers\Admin\RoadmapController;
 use App\Http\Controllers\Admin\SchoolController;
 use App\Http\Controllers\Admin\SessionLogController;
@@ -55,10 +56,15 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])->pref
     // AJAX: sync calendar + return fresh active task count (for sidebar polling)
     Route::post('tasks/sync', [TaskController::class, 'sync'])->name('tasks.sync');
 
+    // Quarter End — step-by-step workflow for sending certs, badges and emails
+    Route::get('quarter-end', [QuarterEndController::class, 'index'])->name('quarter-end.index');
+
     // Certificates — generate personalised certificates
     Route::get('certificates', [CertificateController::class, 'index'])->name('certificates.index');
     Route::post('certificates/student', [CertificateController::class, 'generateStudent'])->name('certificates.generate-student');
     Route::post('certificates/teacher', [CertificateController::class, 'generateTeacher'])->name('certificates.generate-teacher');
+    Route::post('certificates/batch', [CertificateController::class, 'batchGenerate'])->name('certificates.batch');
+    Route::get('certificates/download/{filename}', [CertificateController::class, 'downloadZip'])->name('certificates.download')->where('filename', '.*');
 
     // Roadmap — visual project roadmap
     Route::get('roadmap', [RoadmapController::class, 'index'])->name('roadmap');

@@ -25,6 +25,29 @@ const pageMeta = {
     'Free guidance for teachers, parents and students booking Trinity music exams through Centre 120. Incentives, recognition and support.',
 }
 
+const jsonLd = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'EducationalOrganization',
+  'name': 'musicExams.help',
+  'url': 'https://musicexams.help',
+  'logo': 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/musicexamshelp_logo2.png',
+  'description': 'Free guidance for teachers, parents and students booking Trinity College London music exams through centre 120.',
+  'areaServed': 'United Kingdom',
+  'sameAs': [
+    'https://www.facebook.com/musicexams.help',
+    'https://www.instagram.com/musicexams.help',
+    'https://www.tiktok.com/@musicexamshelp',
+    'https://www.linkedin.com/company/musicexams-help',
+    'https://x.com/musicExamsHelp',
+    'https://www.youtube.com/@TrinityExamsLiverpool_UK',
+  ],
+  'contactPoint': {
+    '@type': 'ContactPoint',
+    'contactType': 'customer service',
+    'url': 'https://musicexams.help/contact',
+  },
+})
+
 const referralCode = '120'
 
 const heroLogo =
@@ -190,6 +213,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
 
 <template>
   <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <component is="script" type="application/ld+json" v-text="jsonLd" />
 
   <div class="min-h-screen bg-black text-brand-text">
     <Navbar />

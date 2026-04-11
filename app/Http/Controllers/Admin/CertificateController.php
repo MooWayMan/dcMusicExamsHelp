@@ -9,12 +9,14 @@ use App\Models\ExamEntry;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\Encoders\PngEncoder;
 use Intervention\Image\Typography\FontFactory;
+use ZipArchive;
 
 class CertificateController extends Controller
 {
@@ -309,6 +311,209 @@ class CertificateController extends Controller
         });
 
         return $image;
+    }
+
+    /**
+     * Batch generate all certificates for a quarter, grouped by teacher in ZIPs.
+     */
+    public function batchGenerate(Request $request)
+    {
+        $validated = $request->validate([
+            'quarter' => 'required|integer|min:1|max:4',
+            'year' => 'required|integer|min:2025|max:2030',
+        ]);
+
+        $quarter = $validated['quarter'];
+        $year = $validated['year'];
+
+        $suffix = match ($quarter) {
+            1 => '1st', 2 => '2nd', 3 => '3rd', 4 => '4th',
+        };
+        $quarterLabel = "{$suffix} Quarter {$year}";
+
+        // Date range for the quarter
+        $startMonth = (($quarter - 1) * 3) + 1;
+        $startDate = "{$year}-" . str_pad($startMonth, 2, '0', STR_PAD_LEFT) . '-01';
+        $endDate = \Carbon\Carbon::parse($startDate)->addMonths(3)->subDay()->toDateString();
+
+        // Get all entries with scores in this quarter
+        $entries = ExamEntry::whereNotNull('score')
+            ->where('score', '>=', 60)
+            ->where(function ($q) {
+                $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
+            })
+            ->with(['instrument:id,name', 'order:id,requested_start_date'])
+            ->get()
+            ->filter(function ($entry) use ($startDate, $endDate) {
+                $date = $entry->exam_date ?? $entry->order?->requested_start_date;
+                return $date && $date->between($startDate, $endDate);
+            });
+
+        if ($entries->isEmpty()) {
+            return back()->with('error', "No entries with results found for {$quarterLabel}.");
+        }
+
+        // Group by teacher
+        $grouped = $entries->groupBy(fn ($e) => $e->teacher_name ?? 'Unassigned');
+
+        // Template image cache
+        $templateImageCache = [];
+
+        // Create output directory
+        $outputDir = "certificates/{$year}-Q{$quarter}";
+        Storage::disk('local')->deleteDirectory($outputDir); // Clean previous run
+        Storage::disk('local')->makeDirectory($outputDir);
+
+        $totalGenerated = 0;
+        $teacherSummary = [];
+
+        foreach ($grouped as $teacher => $teacherEntries) {
+            $safeTeacher = preg_replace('/[^a-zA-Z0-9_-]/', '_', $teacher);
+            $teacherDir = "{$outputDir}/{$safeTeacher}";
+            Storage::disk('local')->makeDirectory($teacherDir);
+
+            $certCount = 0;
+
+            foreach ($teacherEntries as $entry) {
+                $certName = $entry->certificate_name;
+                if (! $certName || ! isset(self::STUDENT_TEMPLATES[$certName])) {
+                    continue;
+                }
+
+                try {
+                    $templateUrl = self::S3_BASE . self::STUDENT_TEMPLATES[$certName];
+
+                    // Cache template downloads
+                    if (! isset($templateImageCache[$templateUrl])) {
+                        $response = Http::get($templateUrl);
+                        if (! $response->successful()) {
+                            continue;
+                        }
+                        $templateImageCache[$templateUrl] = $response->body();
+                    }
+
+                    $manager = new ImageManager(new Driver());
+                    $image = $manager->decode($templateImageCache[$templateUrl]);
+
+                    $width = $image->width();
+                    $height = $image->height();
+
+                    $fontPath = resource_path('fonts/Georgia.ttf');
+                    if (! file_exists($fontPath)) {
+                        $fontPath = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf';
+                    }
+                    $boldFontPath = resource_path('fonts/Georgia-Bold.ttf');
+                    if (! file_exists($boldFontPath)) {
+                        $boldFontPath = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf';
+                    }
+
+                    $nameSize = (int) ($width * 0.038);
+                    $detailSize = (int) ($width * 0.028);
+                    $quarterSize = (int) ($width * 0.042);
+                    $rightTextX = (int) ($width * 0.92);
+
+                    // Name at 47%
+                    $image->text($entry->candidate_name, $rightTextX, (int) ($height * 0.47), function (FontFactory $font) use ($fontPath, $nameSize) {
+                        if ($fontPath) $font->filename($fontPath);
+                        $font->size($nameSize);
+                        $font->color('#1e3a5f');
+                        $font->align('right');
+                    });
+
+                    // Instrument & Grade at 52%
+                    $detail = trim(($entry->instrument?->name ?? '') . ' Grade ' . ($entry->grade ?? ''));
+                    $image->text($detail, $rightTextX, (int) ($height * 0.52), function (FontFactory $font) use ($fontPath, $detailSize) {
+                        if ($fontPath) $font->filename($fontPath);
+                        $font->size($detailSize);
+                        $font->color('#1e3a5f');
+                        $font->align('right');
+                    });
+
+                    // Quarter at 96%, bold, centre
+                    $image->text($quarterLabel, (int) ($width * 0.50), (int) ($height * 0.96), function (FontFactory $font) use ($boldFontPath, $quarterSize) {
+                        if ($boldFontPath) $font->filename($boldFontPath);
+                        $font->size($quarterSize);
+                        $font->color('#1e3a5f');
+                        $font->align('center');
+                    });
+
+                    $encoded = $image->encode(new PngEncoder());
+                    $safeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $entry->candidate_name);
+                    $shortCert = str_replace([' Certificate', ' '], ['', '_'], $certName);
+                    $filename = "{$teacherDir}/{$safeName}_{$shortCert}.png";
+
+                    Storage::disk('local')->put($filename, (string) $encoded);
+                    $certCount++;
+                    $totalGenerated++;
+                } catch (\Throwable $e) {
+                    \Log::error("Batch cert failed for {$entry->candidate_name}: {$e->getMessage()}");
+                }
+            }
+
+            $teacherSummary[$teacher] = $certCount;
+        }
+
+        // Create ZIPs per teacher + master ZIP
+        $zipDir = "{$outputDir}/zips";
+        Storage::disk('local')->makeDirectory($zipDir);
+        $downloadLinks = [];
+
+        foreach ($grouped as $teacher => $teacherEntries) {
+            $safeTeacher = preg_replace('/[^a-zA-Z0-9_-]/', '_', $teacher);
+            $teacherDir = "{$outputDir}/{$safeTeacher}";
+            $zipFilename = "{$zipDir}/{$safeTeacher}_Q{$quarter}_{$year}.zip";
+            $zipFullPath = Storage::disk('local')->path($zipFilename);
+
+            $zip = new ZipArchive();
+            if ($zip->open($zipFullPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+                continue;
+            }
+
+            foreach (Storage::disk('local')->files($teacherDir) as $file) {
+                $zip->addFile(Storage::disk('local')->path($file), basename($file));
+            }
+            $zip->close();
+
+            $downloadLinks[$teacher] = $zipFilename;
+        }
+
+        // Master ZIP
+        $masterZipName = "{$outputDir}/ALL_Q{$quarter}_{$year}_Certificates.zip";
+        $masterZipPath = Storage::disk('local')->path($masterZipName);
+        $zip = new ZipArchive();
+
+        if ($zip->open($masterZipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+            foreach ($grouped as $teacher => $entries) {
+                $safeTeacher = preg_replace('/[^a-zA-Z0-9_-]/', '_', $teacher);
+                $teacherDir = "{$outputDir}/{$safeTeacher}";
+                foreach (Storage::disk('local')->files($teacherDir) as $file) {
+                    $zip->addFile(Storage::disk('local')->path($file), "{$safeTeacher}/" . basename($file));
+                }
+            }
+            $zip->close();
+        }
+
+        return back()->with('batch_result', [
+            'total' => $totalGenerated,
+            'quarter_label' => $quarterLabel,
+            'teachers' => $teacherSummary,
+            'download_links' => $downloadLinks,
+            'master_zip' => $masterZipName,
+        ]);
+    }
+
+    /**
+     * Download a generated ZIP file.
+     */
+    public function downloadZip(string $filename)
+    {
+        $path = Storage::disk('local')->path($filename);
+
+        if (! file_exists($path)) {
+            return back()->withErrors(['download' => 'File not found. Please generate certificates first.']);
+        }
+
+        return response()->download($path);
     }
 
     /**

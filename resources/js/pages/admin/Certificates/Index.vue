@@ -1,8 +1,8 @@
 <!-- resources/js/pages/admin/Certificates/Index.vue -->
 <script setup lang="ts">
-import { ref } from 'vue'
-import { router } from '@inertiajs/vue3'
-import { Award, Download, User, Music, Search, Eye, X } from 'lucide-vue-next'
+import { ref, computed } from 'vue'
+import { router, usePage } from '@inertiajs/vue3'
+import { Award, Download, User, Music, Search, Eye, X, Package, Loader2 } from 'lucide-vue-next'
 import PageHeader from '@/components/reusables/PageHeader.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 
@@ -31,8 +31,28 @@ const props = defineProps<{
   teacherTemplates: string[]
 }>()
 
+// Flash data
+const page = usePage()
+const batchResult = computed(() => (page.props as any).flash?.batch_result ?? null)
+
 // Tab state
 const activeTab = ref<'student' | 'teacher'>('student')
+
+// Batch generate
+const batchQuarter = ref(1)
+const batchYear = ref(2026)
+const batchGenerating = ref(false)
+
+async function batchGenerate() {
+  batchGenerating.value = true
+  router.post('/admin/certificates/batch', {
+    quarter: batchQuarter.value,
+    year: batchYear.value,
+  }, {
+    preserveScroll: true,
+    onFinish: () => { batchGenerating.value = false },
+  })
+}
 
 // Student form
 const selectedEntry = ref<number | null>(null)
@@ -230,6 +250,79 @@ async function generateTeacherCert(mode: 'preview' | 'download' = 'preview') {
     </PageHeader>
 
     <div class="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
+      <!-- BATCH GENERATE SECTION -->
+      <div class="mb-8 rounded-xl border-2 border-brand-accent bg-brand-surface p-6 shadow-sm">
+        <div class="flex items-center gap-3 mb-4">
+          <Package class="h-6 w-6 text-brand-accent" />
+          <h2 class="text-lg font-bold text-brand-text">Batch Generate All Certificates</h2>
+        </div>
+        <p class="text-sm text-brand-text-soft mb-4">
+          Generate all student certificates for a quarter in one go. Creates a ZIP per teacher plus a master ZIP with everything.
+        </p>
+        <div class="flex flex-wrap items-end gap-4">
+          <div>
+            <label class="mb-1 block text-xs font-semibold text-brand-text-soft">Quarter</label>
+            <select
+              v-model="batchQuarter"
+              class="rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-sm text-brand-text focus:border-brand-accent focus:outline-none"
+            >
+              <option :value="1">Q1 (Jan–Mar)</option>
+              <option :value="2">Q2 (Apr–Jun)</option>
+              <option :value="3">Q3 (Jul–Sep)</option>
+              <option :value="4">Q4 (Oct–Dec)</option>
+            </select>
+          </div>
+          <div>
+            <label class="mb-1 block text-xs font-semibold text-brand-text-soft">Year</label>
+            <select
+              v-model="batchYear"
+              class="rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-sm text-brand-text focus:border-brand-accent focus:outline-none"
+            >
+              <option :value="2026">2026</option>
+              <option :value="2027">2027</option>
+            </select>
+          </div>
+          <MyButtonConstructor
+            size="medium"
+            variant="primary"
+            :icon="batchGenerating ? Loader2 : Package"
+            :disabled="batchGenerating"
+            @click="batchGenerate"
+          >
+            {{ batchGenerating ? 'Generating...' : 'Generate All Certificates' }}
+          </MyButtonConstructor>
+        </div>
+
+        <!-- Batch results -->
+        <div v-if="batchResult" class="mt-6 rounded-lg border border-brand-success bg-brand-success-soft p-4">
+          <h3 class="text-sm font-bold text-brand-text mb-2">
+            ✅ {{ batchResult.total }} certificates generated for {{ batchResult.quarter_label }}
+          </h3>
+          <div class="space-y-2 mb-4">
+            <div v-for="(count, teacher) in batchResult.teachers" :key="teacher" class="flex items-center justify-between text-sm">
+              <span class="font-medium text-brand-text">{{ teacher }}</span>
+              <div class="flex items-center gap-3">
+                <span class="text-brand-text-soft">{{ count }} cert{{ count > 1 ? 's' : '' }}</span>
+                <a
+                  v-if="batchResult.download_links[teacher]"
+                  :href="`/admin/certificates/download/${batchResult.download_links[teacher]}`"
+                  class="inline-flex items-center gap-1 rounded bg-brand-accent px-2 py-1 text-xs font-semibold text-white hover:opacity-90 transition"
+                >
+                  <Download class="h-3 w-3" /> ZIP
+                </a>
+              </div>
+            </div>
+          </div>
+          <a
+            v-if="batchResult.master_zip"
+            :href="`/admin/certificates/download/${batchResult.master_zip}`"
+            class="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-bold text-white hover:opacity-90 transition"
+          >
+            <Download class="h-4 w-4" /> Download All (Master ZIP)
+          </a>
+        </div>
+      </div>
+
       <!-- Tabs -->
       <div class="mb-6 flex gap-2">
         <button

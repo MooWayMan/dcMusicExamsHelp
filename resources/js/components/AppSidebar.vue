@@ -14,6 +14,7 @@ import {
     Map,
     Clock,
     Award,
+    Gift,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
@@ -95,6 +96,11 @@ const adminNavItems: NavItem[] = [
         title: 'Certificates',
         href: '/admin/certificates',
         icon: Award,
+    },
+    {
+        title: 'Quarter End',
+        href: '/admin/quarter-end',
+        icon: Gift,
     },
     {
         title: 'Roadmap',
