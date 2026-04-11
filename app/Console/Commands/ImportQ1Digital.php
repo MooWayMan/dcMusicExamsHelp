@@ -60,7 +60,7 @@ class ImportQ1Digital extends Command
                     continue;
                 }
 
-                $orderCache[$orderKey] = Order::firstOrCreate(
+                $orderCache[$orderKey] = Order::updateOrCreate(
                     ['trinity_order_number' => $orderKey],
                     [
                         'delivery_method' => 'Digital',
@@ -92,31 +92,23 @@ class ImportQ1Digital extends Command
 
             $instrument = $instrumentCache[$trinityInstrument];
 
-            // Check for duplicate by candidate_number
-            if ($entry['candidate_number']) {
-                $exists = ExamEntry::where('candidate_number', $entry['candidate_number'])->exists();
-                if ($exists) {
-                    $this->line("  Skipped duplicate: {$entry['candidate_name']} ({$entry['candidate_number']})");
-                    $skipped++;
-                    continue;
-                }
-            }
-
-            ExamEntry::create([
-                'order_id' => $order->id,
-                'candidate_number' => $entry['candidate_number'],
-                'instrument_id' => $instrument?->id,
-                'candidate_name' => $entry['candidate_name'],
-                'teacher_name' => $entry['teacher_name'],
-                'school_name' => $entry['school_name'],
-                'grade' => $entry['grade'],
-                'subject_area' => $entry['subject_area'],
-                'delivery_method' => 'Digital',
-                'fee' => $entry['fee'],
-                'score' => $entry['score'] ?? null,
-                'result' => $entry['result'] ?? null,
-                'notes' => $entry['notes'] ?? null,
-            ]);
+            ExamEntry::updateOrCreate(
+                ['candidate_number' => $entry['candidate_number']],
+                [
+                    'order_id' => $order->id,
+                    'instrument_id' => $instrument?->id,
+                    'candidate_name' => $entry['candidate_name'],
+                    'teacher_name' => $entry['teacher_name'],
+                    'school_name' => $entry['school_name'],
+                    'grade' => $entry['grade'],
+                    'subject_area' => $entry['subject_area'],
+                    'delivery_method' => 'Digital',
+                    'fee' => $entry['fee'],
+                    'score' => $entry['score'] ?? null,
+                    'result' => $entry['result'] ?? null,
+                    'notes' => $entry['notes'] ?? null,
+                ]
+            );
 
             $created++;
         }
