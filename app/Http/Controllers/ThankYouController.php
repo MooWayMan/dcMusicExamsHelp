@@ -43,6 +43,7 @@ class ThankYouController extends Controller
 
         $entries = ExamEntry::with('instrument')
             ->whereNotNull('score')
+            ->whereNotNull('exam_date')
             ->where('show_on_thank_you', true)
             ->where('exam_date', '>=', $start)
             ->where('exam_date', '<=', $end)
@@ -118,6 +119,7 @@ class ThankYouController extends Controller
 
         // Build list of quarters that have data
         $quartersWithData = ExamEntry::whereNotNull('score')
+            ->whereNotNull('exam_date')
             ->selectRaw("EXTRACT(YEAR FROM exam_date)::int as y, CEIL(EXTRACT(MONTH FROM exam_date)::int / 3.0)::int as q")
             ->groupByRaw("EXTRACT(YEAR FROM exam_date), CEIL(EXTRACT(MONTH FROM exam_date)::int / 3.0)")
             ->orderByRaw("EXTRACT(YEAR FROM exam_date) ASC, CEIL(EXTRACT(MONTH FROM exam_date)::int / 3.0) ASC")
