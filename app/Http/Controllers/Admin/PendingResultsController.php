@@ -14,7 +14,7 @@ class PendingResultsController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = ExamEntry::with(['order:id,trinity_order_number,delivery_method,requested_start_date', 'instrument:id,name'])
+        $query = ExamEntry::with(['order:id,trinity_order_number,delivery_method,requested_start_date', 'instrument:id,name', 'student:id,first_name,last_name'])
             ->whereNull('score')
             ->where(function ($q) {
                 $q->whereNull('notes')
@@ -39,8 +39,9 @@ class PendingResultsController extends Controller
 
         $data = $entries->map(fn ($e) => [
             'id' => $e->id,
-            'candidate_number' => $e->candidate_number,
-            'candidate_name' => $e->candidate_name,
+            'candidate_number' => $e->candidate_number ?? '—',
+            'candidate_name' => $e->candidate_name
+                ?? ($e->student ? "{$e->student->first_name} {$e->student->last_name}" : '—'),
             'instrument' => $e->instrument->name ?? '—',
             'grade' => $e->grade,
             'delivery_method' => $e->delivery_method,
