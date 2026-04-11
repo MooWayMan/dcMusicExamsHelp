@@ -115,6 +115,19 @@ class ImportQ1Digital extends Command
 
         $this->info("Import complete: {$created} entries created, {$skipped} skipped.");
 
+        // Backfill commission amounts on orders from entry fees
+        foreach ($orderCache as $order) {
+            $orderFees = ExamEntry::where('order_id', $order->id)
+                ->where(function ($q) {
+                    $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
+                })
+                ->sum('fee');
+            $order->update([
+                'commission_amount' => round($orderFees * ($order->commission_rate / 100), 2),
+            ]);
+        }
+        $this->info('Commission amounts updated on all orders.');
+
         // Summary by teacher
         $this->newLine();
         $this->info('=== Q1 2026 Digital Summary ===');

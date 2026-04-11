@@ -127,6 +127,21 @@ class ImportQ1Results extends Command
 
         $this->info("Import complete: {$created} entries created, {$skipped} skipped.");
 
+        // Backfill commission amounts on orders from entry fees
+        foreach ($orderCache as $order) {
+            $orderFees = ExamEntry::where('order_id', $order->id)
+                ->where(function ($q) {
+                    $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
+                })
+                ->sum('fee');
+            if ($orderFees > 0) {
+                $order->update([
+                    'commission_amount' => round($orderFees * ($order->commission_rate / 100), 2),
+                ]);
+            }
+        }
+        $this->info('Commission amounts updated on all orders.');
+
         // Summary
         $distinctions = ExamEntry::where('score', '>=', 87)->count();
         $merits = ExamEntry::where('score', '>=', 75)->where('score', '<', 87)->count();
