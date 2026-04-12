@@ -64,16 +64,20 @@ const searchQuery = ref('')
 // Scroll-to-top handled by global ScrollToTop component
 
 /* ── Client-side quarter switching ── */
-const activeQuarter = ref(props.defaultQuarter)
-const activeYear = ref(props.defaultYear)
+// Start with nothing selected — user must choose a date
+const activeQuarter = ref<number | null>(null)
+const activeYear = ref<number | null>(null)
 
-const activeData = computed<QuarterData | null>(() =>
-  props.allQuartersData.find(
+const hasSelected = computed(() => activeQuarter.value !== null && activeYear.value !== null)
+
+const activeData = computed<QuarterData | null>(() => {
+  if (!hasSelected.value) return null
+  return props.allQuartersData.find(
     (q) => q.quarter === activeQuarter.value && q.year === activeYear.value
   ) ?? null
-)
+})
 
-const currentQuarterLabel = computed(() => `Q${activeQuarter.value} ${activeYear.value}`)
+const currentQuarterLabel = computed(() => activeData.value?.label ?? `Q${activeQuarter.value} ${activeYear.value}`)
 const hallOfFameEntries = computed(() => activeData.value?.hallOfFameEntries ?? [])
 const thankYouEntries = computed(() => activeData.value?.thankYouEntries ?? [])
 const summary = computed(() => activeData.value?.summary ?? { distinctions: 0, merits: 0, total: 0 })
@@ -84,11 +88,12 @@ const contentVisible = ref(true)
 const switchQuarter = async (q: QuarterOption) => {
   if (q.quarter === activeQuarter.value && q.year === activeYear.value) return
 
-  // Fade out
-  contentVisible.value = false
+  // Fade out (skip if first selection)
+  if (hasSelected.value) {
+    contentVisible.value = false
+    await new Promise((resolve) => setTimeout(resolve, 200))
+  }
 
-  // Wait for fade-out to finish, then swap data and fade in
-  await new Promise((resolve) => setTimeout(resolve, 200))
   searchQuery.value = ''
   activeQuarter.value = q.quarter
   activeYear.value = q.year
@@ -106,7 +111,8 @@ const nudge = computed(() => {
   )
   if (!prev) return null
 
-  return { quarter: prev.quarter, year: prev.year, label: `Q${prev.quarter} ${prev.year}` }
+  const prevData = props.allQuartersData.find((d) => d.quarter === prev.quarter && d.year === prev.year)
+  return { quarter: prev.quarter, year: prev.year, label: prevData?.label ?? `Q${prev.quarter} ${prev.year}` }
 })
 
 const goToNudgeQuarter = () => {
@@ -131,10 +137,23 @@ const everyoneElseEntries = computed(() =>
   filteredEntries.value.filter((e) => e.result !== 'Distinction' && e.result !== 'Merit')
 )
 
-/* ── Quarter tabs ── */
-const quarterLabel = (q: QuarterOption) => `Q${q.quarter} ${q.year}`
-const isActiveQuarter = (q: QuarterOption) =>
-  q.quarter === activeQuarter.value && q.year === activeYear.value
+/* ── Quarter dropdown ── */
+const quarterLabel = (q: QuarterOption) => {
+  const data = props.allQuartersData.find((d) => d.quarter === q.quarter && d.year === q.year)
+  return data?.label ?? `Q${q.quarter} ${q.year}`
+}
+
+// Reverse so latest dates appear first in the dropdown
+const sortedQuarters = computed(() => [...props.availableQuarters].reverse())
+
+const selectedQuarterKey = computed({
+  get: () => hasSelected.value ? `${activeQuarter.value}-${activeYear.value}` : '',
+  set: (val: string) => {
+    if (!val) return
+    const [q, y] = val.split('-').map(Number)
+    switchQuarter({ quarter: q, year: y })
+  }
+})
 
 /* ── Result badge colours ── */
 const resultBadgeClass = (result: string) => {
@@ -188,7 +207,7 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
           />
         </div>
 
-        <div :class="animClass('fade-up', 2)" class="mt-4 text-center">
+        <div v-if="hasSelected" :class="animClass('fade-up', 2)" class="mt-4 text-center">
           <span class="inline-flex items-center gap-2 rounded-full bg-brand-accent/10 px-4 py-2 ring-1 ring-brand-accent/20">
             <Heart class="h-4 w-4 text-brand-accent" />
             <span class="text-sm font-semibold text-brand-accent">{{ currentQuarterLabel }}</span>
@@ -224,15 +243,69 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
           />
         </div>
 
-        <!-- Quarter label — animates on page load only -->
-        <div :class="animClass('fade-up', 2)" class="mt-8 text-center">
+      </div>
+    </section>
+
+    <!-- ═══ DATE CHOOSER — own light section, stands out from starry background ═══ -->
+    <section class="bg-brand-bg">
+      <div class="mx-auto max-w-4xl px-4 py-10 sm:px-6">
+        <div :class="animClass('fade-up', 2)" class="mx-auto max-w-md">
+          <div class="overflow-hidden rounded-2xl border-4 border-brand-accent bg-brand-surface shadow-xl">
+            <div class="bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary px-6 py-3">
+              <p class="text-center text-lg font-bold text-white sm:text-xl">View Results</p>
+            </div>
+            <div class="px-6 py-6">
+              <p class="mb-4 text-center text-base text-brand-text-soft sm:text-lg">Choose a date to view results</p>
+              <select
+                id="quarter-select"
+                v-model="selectedQuarterKey"
+                class="w-full appearance-none rounded-xl border-2 border-brand-accent bg-brand-bg px-5 py-3 pr-10 text-center text-base font-bold text-brand-text shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/50 sm:text-lg"
+                style="background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E&quot;); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1.25rem;"
+              >
+                <option value="" disabled>Select dates...</option>
+                <option
+                  v-for="q in sortedQuarters"
+                  :key="`${q.quarter}-${q.year}`"
+                  :value="`${q.quarter}-${q.year}`"
+                >
+                  {{ quarterLabel(q) }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HALL OF FAME — starry background (only after date selection) -->
+    <section
+      v-if="hasSelected"
+      class="relative border-t border-white/10"
+      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_stars_bg.jpg'); background-size: cover; background-position: center;"
+    >
+      <div class="absolute inset-0 bg-black/50"></div>
+
+      <!-- Shooting stars -->
+      <div class="pointer-events-none absolute inset-0 overflow-hidden">
+        <div class="shooting-star shooting-star-1"></div>
+        <div class="shooting-star shooting-star-2"></div>
+        <div class="shooting-star shooting-star-5"></div>
+        <div class="shooting-star shooting-star-9"></div>
+        <div class="shooting-star shooting-star-3"></div>
+        <div class="shooting-star shooting-star-7"></div>
+      </div>
+
+      <div class="relative mx-auto max-w-4xl px-4 py-14 sm:px-6 lg:py-20">
+
+        <!-- Quarter label -->
+        <div class="text-center">
           <span class="inline-flex items-center gap-2 rounded-full bg-white/10 px-5 py-2 backdrop-blur-sm ring-1 ring-white/20">
             <Trophy class="h-4 w-4 text-brand-accent" />
             <span class="text-sm font-semibold text-white">{{ currentQuarterLabel }} — Top Scorers</span>
           </span>
         </div>
 
-        <!-- ═══ DYNAMIC CONTENT — fades on tab switch, no full-page animation ═══ -->
+        <!-- ═══ DYNAMIC CONTENT ═══ -->
         <div
           class="transition-all duration-200 ease-in-out"
           :class="contentVisible ? 'opacity-100' : 'opacity-0 translate-y-2'"
@@ -350,24 +423,6 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
             <!-- Table with integrated quarter tabs -->
             <div class="mt-6">
               <div class="overflow-hidden rounded-2xl shadow-2xl ring-1 ring-white/20 backdrop-blur-md">
-
-                <!-- Quarter tabs — built into the top of the table -->
-                <div v-if="availableQuarters.length > 1" class="flex border-b border-white/20">
-                  <button
-                    v-for="(q, i) in availableQuarters"
-                    :key="`${q.quarter}-${q.year}`"
-                    @click="switchQuarter(q)"
-                    class="flex-1 py-3 text-sm font-bold transition-all duration-200"
-                    :class="[
-                      isActiveQuarter(q)
-                        ? 'bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary text-white'
-                        : 'bg-white/5 text-white/50 hover:bg-white/15 hover:text-white',
-                      i > 0 ? 'border-l border-white/20' : ''
-                    ]"
-                  >
-                    {{ quarterLabel(q) }}
-                  </button>
-                </div>
 
                 <!-- Table column headers -->
                 <div class="bg-white/25 px-4 py-3 backdrop-blur-md sm:px-6">
