@@ -65,24 +65,32 @@ class CertificateController extends Controller
                 'exam_date'       => ($entry->exam_date ?? $entry->order?->requested_start_date)?->format('j F Y'),
             ]);
 
-        // Get teachers with entry counts for teacher certificates
+        // Get teachers with candidate counts for teacher certificates
+        // Count by teacher_name on exam_entries (not orders) to get actual candidates entered
         $teachers = User::where('role', 'teacher')
-            ->has('orders')
-            ->withCount('orders')
             ->orderBy('name')
             ->get()
-            ->map(fn ($teacher) => [
-                'id'           => $teacher->id,
-                'name'         => $teacher->name,
-                'orders_count' => $teacher->orders_count,
-                'tier'         => match (true) {
-                    $teacher->orders_count >= 40 => 'Top Award',
-                    $teacher->orders_count >= 30 => 'Gold',
-                    $teacher->orders_count >= 20 => 'Silver',
-                    $teacher->orders_count >= 10 => 'Bronze',
-                    default => null,
-                },
-            ]);
+            ->map(function ($teacher) {
+                $candidateCount = ExamEntry::where('teacher_name', $teacher->name)
+                    ->where(function ($q) {
+                        $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
+                    })
+                    ->count();
+
+                return [
+                    'id'              => $teacher->id,
+                    'name'            => $teacher->name,
+                    'candidates_count' => $candidateCount,
+                    'tier'            => match (true) {
+                        $candidateCount >= 40 => 'Top Award',
+                        $candidateCount >= 30 => 'Gold',
+                        $candidateCount >= 20 => 'Silver',
+                        $candidateCount >= 10 => 'Bronze',
+                        default => null,
+                    },
+                ];
+            })
+            ->filter(fn ($t) => $t['candidates_count'] > 0);
 
         return Inertia::render('admin/Certificates/Index', [
             'students'          => $students,
@@ -126,7 +134,7 @@ class CertificateController extends Controller
             $encoded = $image->encode(new PngEncoder());
             $base64 = base64_encode((string) $encoded);
             $html = '<html><head><style>@page { margin: 0; } body { margin: 0; }</style></head><body>'
-                . '<img src="data:image/png;base64,' . $base64 . '" style="width:100%;height:100%;">'
+                . '<img src="data:image/png;base64,' . $base64 . '" style="width:100%;height:auto;display:block;">'
                 . '</body></html>';
 
             $pdf = Pdf::loadHTML($html)->setPaper('a4', 'landscape');
@@ -169,7 +177,7 @@ class CertificateController extends Controller
         $encoded = $image->encode(new PngEncoder());
         $base64 = base64_encode((string) $encoded);
         $html = '<html><head><style>@page { margin: 0; } body { margin: 0; }</style></head><body>'
-            . '<img src="data:image/png;base64,' . $base64 . '" style="width:100%;height:100%;">'
+            . '<img src="data:image/png;base64,' . $base64 . '" style="width:100%;height:auto;display:block;">'
             . '</body></html>';
 
         $pdf = Pdf::loadHTML($html)->setPaper('a4', 'landscape');
@@ -457,7 +465,7 @@ class CertificateController extends Controller
                     // Convert PNG to PDF using DomPDF
                     $base64 = base64_encode((string) $encoded);
                     $html = '<html><head><style>@page { margin: 0; } body { margin: 0; }</style></head><body>'
-                        . '<img src="data:image/png;base64,' . $base64 . '" style="width:100%;height:100%;">'
+                        . '<img src="data:image/png;base64,' . $base64 . '" style="width:100%;height:auto;display:block;">'
                         . '</body></html>';
 
                     $pdf = Pdf::loadHTML($html)->setPaper('a4', 'landscape');
