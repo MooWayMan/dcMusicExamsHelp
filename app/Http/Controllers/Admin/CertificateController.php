@@ -134,7 +134,7 @@ class CertificateController extends Controller
             $encoded = $image->encode(new PngEncoder());
             $base64 = base64_encode((string) $encoded);
             $html = '<html><head><style>@page { margin: 0; } body { margin: 0; }</style></head><body>'
-                . '<img src="data:image/png;base64,' . $base64 . '" style="width:100%;height:auto;display:block;">'
+                . '<img src="data:image/png;base64,' . $base64 . '" style="width:297mm;height:210mm;display:block;">'
                 . '</body></html>';
 
             $pdf = Pdf::loadHTML($html)->setPaper('a4', 'landscape');
@@ -177,7 +177,7 @@ class CertificateController extends Controller
         $encoded = $image->encode(new PngEncoder());
         $base64 = base64_encode((string) $encoded);
         $html = '<html><head><style>@page { margin: 0; } body { margin: 0; }</style></head><body>'
-            . '<img src="data:image/png;base64,' . $base64 . '" style="width:100%;height:auto;display:block;">'
+            . '<img src="data:image/png;base64,' . $base64 . '" style="width:297mm;height:210mm;display:block;">'
             . '</body></html>';
 
         $pdf = Pdf::loadHTML($html)->setPaper('a4', 'landscape');
@@ -465,7 +465,7 @@ class CertificateController extends Controller
                     // Convert PNG to PDF using DomPDF
                     $base64 = base64_encode((string) $encoded);
                     $html = '<html><head><style>@page { margin: 0; } body { margin: 0; }</style></head><body>'
-                        . '<img src="data:image/png;base64,' . $base64 . '" style="width:100%;height:auto;display:block;">'
+                        . '<img src="data:image/png;base64,' . $base64 . '" style="width:297mm;height:210mm;display:block;">'
                         . '</body></html>';
 
                     $pdf = Pdf::loadHTML($html)->setPaper('a4', 'landscape');
@@ -583,7 +583,80 @@ class CertificateController extends Controller
             Storage::disk('local')->put("{$teacherDir}/{$safeTeacher}_Report.pdf", $reportPdf->output());
         }
 
-        // Create ZIPs per teacher + master ZIP
+        // Generate teacher badge certificates for qualifying teachers
+        foreach ($grouped as $teacher => $teacherEntries) {
+            if ($teacher === 'Unassigned') continue;
+
+            $safeTeacher = preg_replace('/[^a-zA-Z0-9_-]/', '_', $teacher);
+            $teacherDir = "{$outputDir}/{$safeTeacher}";
+
+            // Count ALL entries for this teacher (not just this quarter) for badge tier
+            $totalCandidates = ExamEntry::where('teacher_name', $teacher)
+                ->where(function ($q) {
+                    $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
+                })
+                ->count();
+
+            $badgeTier = match (true) {
+                $totalCandidates >= 40 => 'Top Award Appreciation Certificate',
+                $totalCandidates >= 30 => 'Gold Appreciation Certificate',
+                $totalCandidates >= 20 => 'Silver Appreciation Certificate',
+                $totalCandidates >= 10 => 'Bronze Appreciation Certificate',
+                default => null,
+            };
+
+            if ($badgeTier && isset(self::TEACHER_TEMPLATES[$badgeTier])) {
+                try {
+                    $templateUrl = self::S3_BASE . self::TEACHER_TEMPLATES[$badgeTier];
+
+                    if (! isset($templateImageCache[$templateUrl])) {
+                        $response = Http::get($templateUrl);
+                        if ($response->successful()) {
+                            $templateImageCache[$templateUrl] = $response->body();
+                        }
+                    }
+
+                    if (isset($templateImageCache[$templateUrl])) {
+                        $image = (new ImageManager(new Driver()))->decode($templateImageCache[$templateUrl]);
+                        $w = $image->width();
+                        $h = $image->height();
+
+                        $fontPath = resource_path('fonts/Georgia.ttf');
+                        if (! file_exists($fontPath)) $fontPath = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf';
+                        $boldFontPath = resource_path('fonts/Georgia-Bold.ttf');
+                        if (! file_exists($boldFontPath)) $boldFontPath = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf';
+
+                        $image->text($teacher, (int) ($w * 0.55), (int) ($h * 0.50), function (FontFactory $font) use ($fontPath, $w) {
+                            if ($fontPath) $font->filename($fontPath);
+                            $font->size((int) ($w * 0.035));
+                            $font->color('#1e3a5f');
+                            $font->align('center');
+                        });
+
+                        $image->text($quarterLabel, (int) ($w * 0.50), (int) ($h * 0.94), function (FontFactory $font) use ($boldFontPath, $w) {
+                            if ($boldFontPath) $font->filename($boldFontPath);
+                            $font->size((int) ($w * 0.04));
+                            $font->color('#1e3a5f');
+                            $font->align('center');
+                        });
+
+                        $encoded = $image->encode(new PngEncoder());
+                        $base64 = base64_encode((string) $encoded);
+                        $html = '<html><head><style>@page { margin: 0; } body { margin: 0; }</style></head><body>'
+                            . '<img src="data:image/png;base64,' . $base64 . '" style="width:297mm;height:210mm;display:block;">'
+                            . '</body></html>';
+
+                        $badgePdf = Pdf::loadHTML($html)->setPaper('a4', 'landscape');
+                        $shortBadge = str_replace([' Certificate', ' '], ['', '_'], $badgeTier);
+                        Storage::disk('local')->put("{$teacherDir}/{$safeTeacher}_{$shortBadge}.pdf", $badgePdf->output());
+                    }
+                } catch (\Throwable $e) {
+                    \Log::error("Badge cert failed for {$teacher}: {$e->getMessage()}");
+                }
+            }
+        }
+
+        // Create ZIPs per teacher
         $zipDir = "{$outputDir}/zips";
         Storage::disk('local')->makeDirectory($zipDir);
         $downloadLinks = [];
@@ -607,18 +680,15 @@ class CertificateController extends Controller
             $downloadLinks[$teacher] = $zipFilename;
         }
 
-        // Master ZIP
+        // Master ZIP — contains the individual teacher ZIPs (not loose folders)
         $masterZipName = "{$outputDir}/ALL_Q{$quarter}_{$year}_Certificates.zip";
         $masterZipPath = Storage::disk('local')->path($masterZipName);
         $zip = new ZipArchive();
 
         if ($zip->open($masterZipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
-            foreach ($grouped as $teacher => $entries) {
-                $safeTeacher = preg_replace('/[^a-zA-Z0-9_-]/', '_', $teacher);
-                $teacherDir = "{$outputDir}/{$safeTeacher}";
-                foreach (Storage::disk('local')->files($teacherDir) as $file) {
-                    $zip->addFile(Storage::disk('local')->path($file), "{$safeTeacher}/" . basename($file));
-                }
+            foreach ($downloadLinks as $teacher => $teacherZipPath) {
+                $fullPath = Storage::disk('local')->path($teacherZipPath);
+                $zip->addFile($fullPath, basename($teacherZipPath));
             }
             $zip->close();
         }
