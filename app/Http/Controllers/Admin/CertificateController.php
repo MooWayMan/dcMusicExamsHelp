@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ExamEntry;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -123,10 +124,17 @@ class CertificateController extends Controller
             $image = $this->overlayStudentText($templateUrl, $name, $instrument, $grade, $quarter);
 
             $encoded = $image->encode(new PngEncoder());
+            $base64 = base64_encode((string) $encoded);
+            $html = '<html><head><style>@page { margin: 0; } body { margin: 0; }</style></head><body>'
+                . '<img src="data:image/png;base64,' . $base64 . '" style="width:100%;height:100%;">'
+                . '</body></html>';
 
-            return response((string) $encoded, 200, [
-                'Content-Type'        => 'image/png',
-                'Content-Disposition' => 'attachment; filename="' . str_replace(' ', '_', $templateKey) . '_' . str_replace(' ', '_', $name) . '.png"',
+            $pdf = Pdf::loadHTML($html)->setPaper('a4', 'landscape');
+            $pdfFilename = str_replace(' ', '_', $templateKey) . '_' . str_replace(' ', '_', $name) . '.pdf';
+
+            return response($pdf->output(), 200, [
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="' . $pdfFilename . '"',
             ]);
         } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -159,10 +167,17 @@ class CertificateController extends Controller
         $image = $this->overlayTeacherText($templateUrl, $name, $quarter);
 
         $encoded = $image->encode(new PngEncoder());
+        $base64 = base64_encode((string) $encoded);
+        $html = '<html><head><style>@page { margin: 0; } body { margin: 0; }</style></head><body>'
+            . '<img src="data:image/png;base64,' . $base64 . '" style="width:100%;height:100%;">'
+            . '</body></html>';
 
-        return response((string) $encoded, 200, [
-            'Content-Type'        => 'image/png',
-            'Content-Disposition' => 'attachment; filename="' . str_replace(' ', '_', $templateKey) . '_' . str_replace(' ', '_', $name) . '.png"',
+        $pdf = Pdf::loadHTML($html)->setPaper('a4', 'landscape');
+        $pdfFilename = str_replace(' ', '_', $templateKey) . '_' . str_replace(' ', '_', $name) . '.pdf';
+
+        return response($pdf->output(), 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $pdfFilename . '"',
         ]);
     }
 
@@ -438,11 +453,20 @@ class CertificateController extends Controller
                     });
 
                     $encoded = $image->encode(new PngEncoder());
+
+                    // Convert PNG to PDF using DomPDF
+                    $base64 = base64_encode((string) $encoded);
+                    $html = '<html><head><style>@page { margin: 0; } body { margin: 0; }</style></head><body>'
+                        . '<img src="data:image/png;base64,' . $base64 . '" style="width:100%;height:100%;">'
+                        . '</body></html>';
+
+                    $pdf = Pdf::loadHTML($html)->setPaper('a4', 'landscape');
+
                     $safeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $entry->candidate_name);
                     $shortCert = str_replace([' Certificate', ' '], ['', '_'], $certName);
-                    $filename = "{$teacherDir}/{$safeName}_{$shortCert}.png";
+                    $filename = "{$teacherDir}/{$safeName}_{$shortCert}.pdf";
 
-                    Storage::disk('local')->put($filename, (string) $encoded);
+                    Storage::disk('local')->put($filename, $pdf->output());
                     $certCount++;
                     $totalGenerated++;
                 } catch (\Throwable $e) {
@@ -451,6 +475,104 @@ class CertificateController extends Controller
             }
 
             $teacherSummary[$teacher] = $certCount;
+        }
+
+        // Generate teacher report PDFs and CSV spreadsheets
+        foreach ($grouped as $teacher => $teacherEntries) {
+            $safeTeacher = preg_replace('/[^a-zA-Z0-9_-]/', '_', $teacher);
+            $teacherDir = "{$outputDir}/{$safeTeacher}";
+
+            // --- CSV Spreadsheet ---
+            $csvRows = [];
+            $csvRows[] = ['Student', 'Instrument', 'Grade', 'Score', 'Result', 'Certificate', 'Exam Date'];
+            foreach ($teacherEntries->sortByDesc('score') as $entry) {
+                $csvRows[] = [
+                    $entry->candidate_name,
+                    $entry->instrument?->name ?? '',
+                    $entry->grade ?? '',
+                    $entry->score,
+                    $entry->result_band ?? $entry->result ?? '',
+                    $entry->certificate_name ?? '',
+                    ($entry->exam_date ?? $entry->order?->requested_start_date)?->format('j M Y') ?? '',
+                ];
+            }
+
+            $csvContent = '';
+            foreach ($csvRows as $row) {
+                $csvContent .= implode(',', array_map(fn ($v) => '"' . str_replace('"', '""', $v) . '"', $row)) . "\n";
+            }
+            Storage::disk('local')->put("{$teacherDir}/{$safeTeacher}_Results.csv", $csvContent);
+
+            // --- Teacher Report PDF ---
+            $sorted = $teacherEntries->sortByDesc('score');
+            $totalEntries = $sorted->count();
+            $distinctions = $sorted->filter(fn ($e) => $e->score >= 87)->count();
+            $merits = $sorted->filter(fn ($e) => $e->score >= 75 && $e->score < 87)->count();
+            $passes = $sorted->filter(fn ($e) => $e->score >= 60 && $e->score < 75)->count();
+
+            $tableRows = '';
+            foreach ($sorted as $entry) {
+                $band = match (true) {
+                    $entry->score >= 87 => 'Distinction',
+                    $entry->score >= 75 => 'Merit',
+                    default => 'Pass',
+                };
+                $bandColour = match ($band) {
+                    'Distinction' => '#7a1f3d',
+                    'Merit' => '#2a6e7a',
+                    default => '#1e3a5f',
+                };
+                $tableRows .= '<tr>'
+                    . '<td style="padding:8px 12px;border-bottom:1px solid #ddd;">' . e($entry->candidate_name) . '</td>'
+                    . '<td style="padding:8px 12px;border-bottom:1px solid #ddd;">' . e($entry->instrument?->name ?? '') . '</td>'
+                    . '<td style="padding:8px 12px;border-bottom:1px solid #ddd;text-align:center;">' . e($entry->grade ?? '') . '</td>'
+                    . '<td style="padding:8px 12px;border-bottom:1px solid #ddd;text-align:center;">' . $entry->score . '</td>'
+                    . '<td style="padding:8px 12px;border-bottom:1px solid #ddd;text-align:center;color:' . $bandColour . ';font-weight:bold;">' . $band . '</td>'
+                    . '</tr>';
+            }
+
+            $reportHtml = '
+            <html><head><style>
+                @page { margin: 30px 40px; }
+                body { font-family: Georgia, serif; color: #1e3a5f; font-size: 12px; }
+                .header { background: linear-gradient(to right, #0f1b2d, #1a4a7a, #0f1b2d); padding: 20px 30px; text-align: center; margin: -30px -40px 20px -40px; }
+                .header h1 { color: white; font-size: 22px; margin: 0; }
+                .header p { color: rgba(255,255,255,0.8); font-size: 13px; margin: 5px 0 0; }
+                .summary { display: flex; margin-bottom: 20px; }
+                .summary-box { display: inline-block; padding: 8px 16px; margin-right: 10px; border-radius: 6px; font-weight: bold; font-size: 13px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                th { background: #0f1b2d; color: white; padding: 10px 12px; text-align: left; font-size: 12px; }
+                th:nth-child(3), th:nth-child(4), th:nth-child(5) { text-align: center; }
+                tr:nth-child(even) { background: #f5f7fa; }
+                .footer { margin-top: 20px; padding-top: 10px; border-top: 2px solid #1a4a7a; font-size: 10px; color: #666; text-align: center; }
+            </style></head><body>
+                <div class="header">
+                    <h1>musicExams.help</h1>
+                    <p>' . e($quarterLabel) . ' — Results Report for ' . e($teacher) . '</p>
+                </div>
+
+                <div style="margin-bottom:15px;">
+                    <span class="summary-box" style="background:#f0e6ea;color:#7a1f3d;">' . $distinctions . ' Distinction' . ($distinctions !== 1 ? 's' : '') . '</span>
+                    <span class="summary-box" style="background:#e6f0f2;color:#2a6e7a;">' . $merits . ' Merit' . ($merits !== 1 ? 's' : '') . '</span>
+                    <span class="summary-box" style="background:#e8edf2;color:#1e3a5f;">' . $passes . ' Pass' . ($passes !== 1 ? 'es' : '') . '</span>
+                    <span class="summary-box" style="background:#f5f5f5;color:#333;">' . $totalEntries . ' Total</span>
+                </div>
+
+                <table>
+                    <thead><tr>
+                        <th>Student</th><th>Instrument</th><th>Grade</th><th>Score</th><th>Result</th>
+                    </tr></thead>
+                    <tbody>' . $tableRows . '</tbody>
+                </table>
+
+                <div class="footer">
+                    musicExams.help — Trinity College London Exam Centre 120<br>
+                    This report was generated automatically. If you have any queries, please get in touch.
+                </div>
+            </body></html>';
+
+            $reportPdf = Pdf::loadHTML($reportHtml)->setPaper('a4', 'portrait');
+            Storage::disk('local')->put("{$teacherDir}/{$safeTeacher}_Report.pdf", $reportPdf->output());
         }
 
         // Create ZIPs per teacher + master ZIP
