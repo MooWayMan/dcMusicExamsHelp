@@ -1,6 +1,6 @@
 <!-- resources/js/pages/ThankYou.vue -->
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
 import { useBookingModal } from '@/composables/useBookingModal'
 import Head from '@/components/layouts/Head.vue'
@@ -10,7 +10,7 @@ import BookingModal from '@/components/BookingModal.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
-import { Heart, Trophy, Music, Star, Award, Search, ArrowUp, ChevronRight } from 'lucide-vue-next'
+import { Heart, Trophy, Music, Star, Award, Search, ChevronRight } from 'lucide-vue-next'
 
 interface HallOfFameEntry {
   name: string
@@ -61,7 +61,7 @@ const props = defineProps<{
 
 const { animClass } = usePageAnimation()
 const searchQuery = ref('')
-const showBackToTop = ref(false)
+// Scroll-to-top handled by global ScrollToTop component
 
 /* ── Client-side quarter switching ── */
 const activeQuarter = ref(props.defaultQuarter)
@@ -141,15 +141,13 @@ const resultBadgeClass = (result: string) => {
   switch (result) {
     case 'Distinction': return 'bg-brand-accent text-white'
     case 'Merit': return 'bg-brand-success text-white'
+    case 'Waiting': return 'bg-brand-teal/20 text-brand-teal'
     default: return 'bg-brand-surface-soft text-brand-text'
   }
 }
 
 /* ── Back to top ── */
-const handleScroll = () => { showBackToTop.value = window.scrollY > 400 }
-const scrollToTop = () => { window.scrollTo({ top: 0, behavior: 'smooth' }) }
-onMounted(() => window.addEventListener('scroll', handleScroll))
-onUnmounted(() => window.removeEventListener('scroll', handleScroll))
+// Scroll listeners removed — global ScrollToTop component handles this
 
 const pageMeta = {
   title: 'Recognition — musicExams.help',
@@ -429,7 +427,7 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
                   </div>
                 </div>
 
-                <!-- Everyone else — just name, instrument, grade -->
+                <!-- Everyone else — name, instrument, grade + Waiting badge only -->
                 <div v-if="everyoneElseEntries.length > 0" class="divide-y divide-white/10">
                   <div
                     v-for="(entry, index) in everyoneElseEntries"
@@ -437,17 +435,22 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
                     class="grid grid-cols-12 items-center gap-2 px-4 py-3 sm:px-6"
                     :class="index % 2 === 1 ? 'bg-white/15' : 'bg-white/10'"
                   >
-                    <div class="col-span-5 sm:col-span-4">
+                    <div class="col-span-4 sm:col-span-3">
                       <div class="flex items-center gap-2">
                         <Music class="hidden h-4 w-4 shrink-0 text-brand-accent sm:block" />
                         <p class="text-sm font-semibold text-white sm:text-base">{{ entry.name }}</p>
                       </div>
                     </div>
-                    <div class="col-span-4 sm:col-span-4">
+                    <div class="col-span-3 sm:col-span-3">
                       <p class="text-sm text-white/70 sm:text-base">{{ entry.instrument }}</p>
                     </div>
-                    <div class="col-span-3 sm:col-span-4">
+                    <div class="col-span-2 sm:col-span-3">
                       <p class="text-sm text-white/70 sm:text-base">{{ entry.grade }}</p>
+                    </div>
+                    <div class="col-span-3 sm:col-span-3">
+                      <span v-if="entry.result === 'Waiting'" :class="[resultBadgeClass('Waiting'), 'inline-block rounded-full px-2.5 py-0.5 text-xs font-bold sm:text-sm']">
+                        Waiting
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -592,22 +595,6 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
     <BookingModal :show="showBookingModal" @close="showBookingModal = false" />
 
     <!-- Back to top button -->
-    <Transition
-      enter-active-class="transition-all duration-300 ease-out"
-      enter-from-class="opacity-0 translate-y-4"
-      enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition-all duration-200 ease-in"
-      leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 translate-y-4"
-    >
-      <button
-        v-if="showBackToTop"
-        @click="scrollToTop"
-        class="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-brand-accent text-white shadow-lg transition-transform duration-200 hover:scale-110 hover:bg-brand-accent-dark"
-        aria-label="Back to top"
-      >
-        <ArrowUp class="h-5 w-5" />
-      </button>
-    </Transition>
+    <!-- Global ScrollToTop component handles this -->
   </div>
 </template>

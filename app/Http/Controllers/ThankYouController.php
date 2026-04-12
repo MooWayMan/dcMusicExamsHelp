@@ -5,6 +5,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ExamEntry;
+use App\Models\PrizeDraw;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,6 +17,10 @@ class ThankYouController extends Controller
      */
     private function displayName(ExamEntry $entry): string
     {
+        if (! $entry->candidate_name) {
+            return 'Unknown';
+        }
+
         if ($entry->show_full_name) {
             return $entry->candidate_name;
         }
@@ -41,62 +46,82 @@ class ThankYouController extends Controller
         $start = Carbon::create($year, $startMonth, 1)->startOfDay();
         $end = $start->copy()->addMonths(2)->endOfMonth()->endOfDay();
 
-        $entries = ExamEntry::with('instrument')
-            ->whereNotNull('score')
-            ->whereNotNull('exam_date')
+        // Get ALL entries for this quarter (with and without scores)
+        $entries = ExamEntry::with(['instrument', 'order:id,requested_start_date'])
             ->where('show_on_thank_you', true)
-            ->where('exam_date', '>=', $start)
-            ->where('exam_date', '<=', $end)
-            ->orderByDesc('score')
-            ->get();
+            ->where(function ($q) {
+                $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
+            })
+            ->get()
+            ->filter(function ($entry) use ($start, $end) {
+                $date = $entry->exam_date ?? $entry->order?->requested_start_date;
+                return $date && Carbon::parse($date)->between($start, $end);
+            })
+            ->sortByDesc('score');
 
-        // Top scorers — highest distinction and highest merit
-        $topDistinction = $entries->where('score', '>=', 87)->first();
-        $topMerit = $entries->filter(fn ($e) => $e->score >= 75 && $e->score < 87)->first();
+        // Scored entries only (for top scorers + summary counts)
+        $scoredEntries = $entries->filter(fn ($e) => $e->score !== null);
+
+        // Top scorers — only shown once the quarter has been finalised (real draw exists)
+        $quarterFinalised = PrizeDraw::where('quarter', $quarter)
+            ->where('year', $year)
+            ->exists();
 
         $hallOfFameEntries = collect();
-        if ($topDistinction) {
-            $hallOfFameEntries->push([
-                'name' => $this->displayName($topDistinction),
-                'instrument' => $topDistinction->instrument?->name ?? '—',
-                'grade' => $topDistinction->grade,
-                'score' => $topDistinction->score,
-                'result' => 'Distinction',
-                'award' => 'Showstopper',
-                'certificate' => 'Showstopper Certificate + Gift Token',
-            ]);
-        }
-        if ($topMerit) {
-            $hallOfFameEntries->push([
-                'name' => $this->displayName($topMerit),
-                'instrument' => $topMerit->instrument?->name ?? '—',
-                'grade' => $topMerit->grade,
-                'score' => $topMerit->score,
-                'result' => 'Merit',
-                'award' => 'Centre Stage',
-                'certificate' => 'Centre Stage Certificate + Gift Token',
-            ]);
+
+        if ($quarterFinalised) {
+            $topDistinction = $scoredEntries->where('score', '>=', 87)->first();
+            $topMerit = $scoredEntries->filter(fn ($e) => $e->score >= 75 && $e->score < 87)->first();
+
+            if ($topDistinction) {
+                $hallOfFameEntries->push([
+                    'name' => $this->displayName($topDistinction),
+                    'instrument' => $topDistinction->instrument?->name ?? '—',
+                    'grade' => $topDistinction->grade,
+                    'score' => $topDistinction->score,
+                    'result' => 'Distinction',
+                    'award' => 'Showstopper',
+                    'certificate' => 'Showstopper Certificate + Gift Token',
+                ]);
+            }
+            if ($topMerit) {
+                $hallOfFameEntries->push([
+                    'name' => $this->displayName($topMerit),
+                    'instrument' => $topMerit->instrument?->name ?? '—',
+                    'grade' => $topMerit->grade,
+                    'score' => $topMerit->score,
+                    'result' => 'Merit',
+                    'award' => 'Centre Stage',
+                    'certificate' => 'Centre Stage Certificate + Gift Token',
+                ]);
+            }
         }
 
         // All entries — grouped by band then alphabetical
-        $bandOrder = ['Distinction' => 1, 'Merit' => 2, 'Pass' => 3, 'Below Pass' => 4];
+        // Waiting sorts after Pass but before Below Pass
+        $bandOrder = ['Distinction' => 1, 'Merit' => 2, 'Pass' => 3, 'Waiting' => 4, 'Below Pass' => 5];
 
-        $thankYouEntries = $entries->map(fn (ExamEntry $e) => [
-            'name' => $this->displayName($e),
-            'instrument' => $e->instrument?->name ?? '—',
-            'grade' => $e->grade,
-            'result' => $e->result_band,
-            'certificate' => $e->certificate_name,
-            '_sortBand' => $bandOrder[$e->result_band] ?? 5,
-        ])->sortBy([
+        $thankYouEntries = $entries->map(function (ExamEntry $e) use ($bandOrder) {
+            $result = $e->score !== null ? $e->result_band : 'Waiting';
+            $certificate = $e->score !== null ? $e->certificate_name : 'Bravo Certificate';
+
+            return [
+                'name' => $this->displayName($e),
+                'instrument' => $e->instrument?->name ?? '—',
+                'grade' => $e->grade,
+                'result' => $result,
+                'certificate' => $certificate,
+                '_sortBand' => $bandOrder[$result] ?? 6,
+            ];
+        })->sortBy([
             ['_sortBand', 'asc'],
             ['name', 'asc'],
         ])->map(fn ($e) => collect($e)->except('_sortBand')->toArray())
         ->values()->toArray();
 
-        // Summary counts
-        $distinctions = $entries->where('score', '>=', 87)->count();
-        $merits = $entries->filter(fn ($e) => $e->score >= 75 && $e->score < 87)->count();
+        // Summary counts (scored entries only)
+        $distinctions = $scoredEntries->where('score', '>=', 87)->count();
+        $merits = $scoredEntries->filter(fn ($e) => $e->score >= 75 && $e->score < 87)->count();
 
         return [
             'quarter' => $quarter,
@@ -117,14 +142,22 @@ class ThankYouController extends Controller
         $currentYear = (int) now()->year;
         $currentQuarter = (int) ceil(now()->month / 3);
 
-        // Build list of quarters that have data
-        $quartersWithData = ExamEntry::whereNotNull('score')
-            ->whereNotNull('exam_date')
-            ->selectRaw("EXTRACT(YEAR FROM exam_date)::int as y, CEIL(EXTRACT(MONTH FROM exam_date)::int / 3.0)::int as q")
-            ->groupByRaw("EXTRACT(YEAR FROM exam_date), CEIL(EXTRACT(MONTH FROM exam_date)::int / 3.0)")
-            ->orderByRaw("EXTRACT(YEAR FROM exam_date) ASC, CEIL(EXTRACT(MONTH FROM exam_date)::int / 3.0) ASC")
+        // Build list of quarters that have data (using exam_date OR order's requested_start_date)
+        $quartersWithData = ExamEntry::with('order:id,requested_start_date')
+            ->where('show_on_thank_you', true)
+            ->where(function ($q) {
+                $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
+            })
             ->get()
-            ->map(fn ($row) => ['quarter' => (int) $row->q, 'year' => (int) $row->y])
+            ->map(function ($entry) {
+                $date = $entry->exam_date ?? $entry->order?->requested_start_date;
+                if (! $date) return null;
+                $d = Carbon::parse($date);
+                return ['quarter' => (int) ceil($d->month / 3), 'year' => (int) $d->year];
+            })
+            ->filter()
+            ->unique(fn ($q) => "{$q['quarter']}-{$q['year']}")
+            ->sortBy([['year', 'asc'], ['quarter', 'asc']])
             ->values()
             ->toArray();
 
