@@ -33,7 +33,7 @@ const classicalHighlights = [
   'Three pieces from the repertoire list — one can be your own composition',
   'Huge repertoire list with no end date — pieces stay valid and new ones are added regularly',
   'Technical work — scales, arpeggios and exercises',
-  'Supporting tests — sight-reading, aural, improvisation or musical knowledge',
+  'Supporting tests — choose two from sight-reading, aural, improvisation or musical knowledge',
   'Digital option replaces supporting tests with Overall Performance Criteria',
   'Repertoire-only digital pathway available — four pieces, no technical work',
 ]
@@ -45,7 +45,7 @@ const rockPopHighlights = [
   'Option to replace your second song with an own choice or your own composition',
   'Session Skills — choose between Improvising or Playback',
   'Song choices cover rock, pop, indie, funk, soul, metal and more',
-  'Digital option available with the same flexibility as Classical & Jazz',
+  'Digital option replaces Session Skills with Overall Performance Criteria',
 ]
 
 /* ── Shared features ── */
@@ -72,7 +72,7 @@ const guidePages = [
   },
   {
     id: 2,
-    title: 'What to Expect',
+    title: 'What to Expect — Face-to-Face',
     subTitle: 'Exam day — step by step',
     descript: 'What to bring, what happens in the room, how long it takes, and tips for keeping nerves in check.',
     url: '/exam-guide/what-to-expect',

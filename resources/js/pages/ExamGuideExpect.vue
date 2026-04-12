@@ -65,10 +65,15 @@ const inTheRoom = [
   {
     step: '4',
     title: 'Technical work and supporting tests',
-    detail: 'Classical & Jazz exams include scales, arpeggios and exercises, plus supporting tests — sight-reading, aural, improvisation or musical knowledge (depending on your grade and choices). Rock & Pop has Session Skills instead — either Improvising or Playback.',
+    detail: 'Classical & Jazz exams include scales, arpeggios and exercises, plus two supporting tests chosen from sight-reading, aural, improvisation or musical knowledge — you only do two and you get to choose which ones (the options vary by grade, so check the syllabus for your instrument). Rock & Pop has Session Skills instead — choose either Improvising or Playback.',
   },
   {
     step: '5',
+    title: 'Made a mistake? Keep going!',
+    detail: 'If you hit a wrong note or lose your place, just carry on. Examiners mark your overall performance — your tone, expression, rhythm and musicianship across the whole exam. A small slip here and there won\'t ruin your mark. Stopping and starting again is far more noticeable than playing through a mistake confidently.',
+  },
+  {
+    step: '6',
     title: 'That\'s it!',
     detail: 'The examiner will thank you and you\'re done. The whole thing typically takes 12–30 minutes depending on the grade. There are no results on the day — see the results section below for what happens next.',
   },
@@ -79,20 +84,25 @@ const digitalSteps = [
   {
     step: '1',
     title: 'Record anywhere',
-    detail: 'Record your performance at home, at school, in a studio — wherever you feel most comfortable. You can re-record until you\'re happy.',
+    detail: 'Record your performance at home, at school, in a studio — wherever you feel most comfortable. You can re-record until you\'re happy. Top tip: get a recording you\'re confident with before you book.',
   },
   {
     step: '2',
-    title: 'Upload your video',
-    detail: 'Submit your recording through the Trinity upload portal. Anyone can submit — the candidate, a teacher, or a parent.',
+    title: 'Book and pay',
+    detail: 'Once you\'re happy with your recording, book your digital exam and pay the exam fee through the Trinity booking system. You\'ll then receive an email with login details for the upload portal.',
   },
   {
     step: '3',
+    title: 'Upload your video',
+    detail: 'Once you\'ve received your login details, submit your recording through the Trinity upload portal. Anyone can submit — the candidate, a teacher, or a parent.',
+  },
+  {
+    step: '4',
     title: 'An examiner watches',
     detail: 'A qualified Trinity examiner watches your video and marks it using the same criteria as a face-to-face exam.',
   },
   {
-    step: '4',
+    step: '5',
     title: 'Results arrive',
     detail: 'You\'ll receive your result and feedback online. The certificate is the same as face-to-face — no difference at all.',
   },
@@ -194,7 +204,7 @@ const faqs = [
             spacing="tight"
             class="mt-3 md:!text-3xl lg:!text-4xl"
           >
-            <template #myTitle>What to Expect</template>
+            <template #myTitle>What to Expect — Face-to-Face</template>
           </MyTextConstructor>
         </div>
 

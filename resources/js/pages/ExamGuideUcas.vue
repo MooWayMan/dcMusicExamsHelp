@@ -152,6 +152,19 @@ const faqs = [
           />
         </div>
 
+        <!-- Highlight box — performance exams -->
+        <div :class="animClass('fade-up', 3)" class="mt-6 overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
+          <div class="flex items-center gap-3 bg-black px-5 py-3 sm:px-6">
+            <GraduationCap class="h-5 w-5 shrink-0 text-brand-accent sm:h-6 sm:w-6" />
+            <p class="text-base font-semibold text-white sm:text-lg">Grade 8 Distinction = 30 UCAS points</p>
+          </div>
+          <div class="p-6">
+            <p class="text-base text-white/80 sm:text-base md:text-lg">
+              That's the same as an A-level grade between a D and a C. Combined with other qualifications, music exam points can make a real difference to your application.
+            </p>
+          </div>
+        </div>
+
         <!-- Theory UCAS table -->
         <div :class="animClass('fade-up', 3)" class="mt-8">
           <MyTextConstructor
@@ -181,18 +194,6 @@ const faqs = [
           />
         </div>
 
-        <!-- Highlight box -->
-        <div :class="animClass('fade-up', 5)" class="mt-6 overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
-          <div class="flex items-center gap-3 bg-black px-5 py-3 sm:px-6">
-            <GraduationCap class="h-5 w-5 shrink-0 text-brand-accent sm:h-6 sm:w-6" />
-            <p class="text-base font-semibold text-white sm:text-lg">Grade 8 Distinction = 30 UCAS points</p>
-          </div>
-          <div class="p-6">
-            <p class="text-base text-white/80 sm:text-base md:text-lg">
-              That's the same as an A-level grade between a D and a C. Combined with other qualifications, music exam points can make a real difference to your application.
-            </p>
-          </div>
-        </div>
       </div>
     </section>
 

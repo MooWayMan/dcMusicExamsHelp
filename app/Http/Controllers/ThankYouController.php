@@ -123,10 +123,14 @@ class ThankYouController extends Controller
         $distinctions = $scoredEntries->where('score', '>=', 87)->count();
         $merits = $scoredEntries->filter(fn ($e) => $e->score >= 75 && $e->score < 87)->count();
 
+        $monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        $labelStart = $monthNames[$startMonth - 1];
+        $labelEnd = $monthNames[$startMonth + 1];
+
         return [
             'quarter' => $quarter,
             'year' => $year,
-            'label' => "Q{$quarter} {$year}",
+            'label' => "{$labelStart} – {$labelEnd} {$year}",
             'hallOfFameEntries' => $hallOfFameEntries->toArray(),
             'thankYouEntries' => $thankYouEntries,
             'summary' => [
@@ -161,21 +165,16 @@ class ThankYouController extends Controller
             ->values()
             ->toArray();
 
-        // Always include the current quarter in the tabs even if empty
-        $currentExists = collect($quartersWithData)->contains(fn ($q) => $q['quarter'] === $currentQuarter && $q['year'] === $currentYear);
-        if (! $currentExists) {
-            array_unshift($quartersWithData, ['quarter' => $currentQuarter, 'year' => $currentYear]);
-        }
-
-        // Build data for ALL quarters so the frontend can switch without page reload
+        // Build data for ALL quarters that have entries
         $allQuartersData = collect($quartersWithData)
             ->map(fn ($q) => $this->buildQuarterData($q['quarter'], $q['year']))
             ->values()
             ->toArray();
 
-        // Default to current quarter
-        $defaultQuarter = $currentQuarter;
-        $defaultYear = $currentYear;
+        // Default to the latest quarter with data (or current quarter as fallback)
+        $latest = collect($quartersWithData)->last();
+        $defaultQuarter = $latest ? $latest['quarter'] : $currentQuarter;
+        $defaultYear = $latest ? $latest['year'] : $currentYear;
 
         return Inertia::render('ThankYou', [
             'defaultQuarter' => $defaultQuarter,

@@ -30,20 +30,20 @@ const breadcrumbPages = [
 const howItWorks = [
   {
     step: '1',
-    title: 'Book your digital exam',
-    detail: 'Use the <strong>Book Your Exam</strong> button on our site — it guides you to the right Trinity booking system with centre 120 built in. Choose the digital option when selecting your exam type. Digital exams are available for both Classical & Jazz and Rock & Pop.',
-    icon: Music,
+    title: 'Record your performance',
+    detail: 'Record anywhere — at home, at school, in a studio, wherever you\'re most comfortable. You can re-record as many times as you like. <strong>Top tip: get a recording you\'re confident with before you book and pay.</strong>',
+    icon: Video,
   },
   {
     step: '2',
-    title: 'Record your performance',
-    detail: 'Record anywhere — at home, at school, in a studio, wherever you\'re most comfortable. You can re-record as many times as you like before submitting. Only the final submission is marked.',
-    icon: Video,
+    title: 'Book and pay for your exam',
+    detail: 'Once you\'re happy with your recording, use the <strong>Book Your Exam</strong> button on our site — it guides you to the right Trinity booking system with centre 120 built in. Choose the digital option when selecting your exam type. <strong>The exam fee is paid at the time of booking.</strong> Digital exams are available for both Classical & Jazz and Rock & Pop.',
+    icon: Music,
   },
   {
     step: '3',
     title: 'Upload your video',
-    detail: 'Submit your recording through the Trinity upload portal before the deadline. Anyone can submit the recording — the candidate, a teacher, or a parent. The process is straightforward.',
+    detail: 'After paying, you\'ll receive an email with login details for the upload portal. Submit your recording through the portal before the deadline. Anyone can submit the recording — the candidate, a teacher, or a parent.',
     icon: Upload,
   },
   {
@@ -78,7 +78,7 @@ const classicalJazzPathways = [
 
 const rockPopPathway = {
   title: 'Rock & Pop digital format',
-  description: 'You perform three songs — two from the Rock & Pop songbook and one Technical Focus song — all played to the official Trinity backing tracks. There are no Session Skills tests in the digital format. Instead, the examiner awards a separate Overall Performance mark (20 out of 100) based on your musicianship across all three songs.',
+  description: 'You perform three songs — one must be a Technical Focus song, and you can replace the second song with an own choice or your own composition — all played to the official Trinity backing tracks. There are no Session Skills tests in the digital format. Instead, the examiner awards a separate Overall Performance mark (20 out of 100) based on your musicianship across all three songs.',
 }
 
 /* ── Digital vs F2F comparison ── */
@@ -122,8 +122,8 @@ const afterBookingDigital = [
   },
   {
     step: '3',
-    title: 'Record and submit within four weeks',
-    detail: 'Once you have your login details, you have four weeks to record your performance and upload it through the exam portal. You can re-record as many times as you like — only the final submission is marked.',
+    title: 'Record and submit within 28 days',
+    detail: 'Once you have your login details, you have 28 days to record your performance and upload it through the exam portal. You can re-record as many times as you like — only the final submission is marked.',
   },
   {
     step: '4',
@@ -137,7 +137,7 @@ const faqs = [
   {
     question: 'Can I re-record my performance?',
     answer:
-      'Yes — as many times as you like before the submission deadline. Only the final uploaded recording is marked. This is one of the biggest advantages of digital exams.',
+      'Yes — as many times as you like before you upload. Once you\'ve submitted your recording through the portal, that\'s your final submission and it cannot be changed. So make sure you\'re happy with it before you hit upload. This is one of the biggest advantages of digital exams — take your time and get it right.',
   },
   {
     question: 'Who can submit the recording?',

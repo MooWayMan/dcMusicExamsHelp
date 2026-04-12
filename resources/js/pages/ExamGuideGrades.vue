@@ -31,13 +31,13 @@ const breadcrumbPages = [
 const gradeLevels = [
   {
     grade: 'Initial',
-    description: 'The very first step. Perfect for beginners who\'ve been learning for a few months. A confidence-building introduction to exams with simple, short pieces.',
-    typical: 'A few months of lessons',
+    description: 'The very first step. Perfect for beginners who\'ve been learning for a few months. A confidence-building introduction to exams with simple, short pieces. Especially popular with younger students taking their first exam.',
+    typical: 'A few months of lessons (age and regular practice are big factors)',
   },
   {
     grade: 'Grade 1',
     description: 'The traditional starting point. You\'ll play simple pieces and demonstrate basic technique. Scales are straightforward and supporting tests are gentle.',
-    typical: 'Around 6–12 months of lessons',
+    typical: 'Around 6–12 months of lessons (age and regular practice are big factors)',
   },
   {
     grade: 'Grade 2',
@@ -134,7 +134,7 @@ const faqs = [
   {
     question: 'How long should I prepare between grades?',
     answer:
-      'It varies hugely depending on the student, the instrument, and how much they practise. As a rough guide: Grades 1–3 might be one grade per year, Grades 4–5 might take 1–2 years each, and Grades 6–8 often take 2+ years each. But there\'s no rush — go at your own pace.',
+      'It varies hugely depending on the student\'s age, the instrument, and how much they practise. Younger students naturally take longer to develop the skills needed for higher grades. As a rough guide: Grades 1–3 might be one grade per year, Grades 4–5 might take 1–2 years each, and Grades 6–8 often take 2+ years each. Regular practice makes the biggest difference — but there\'s no rush, go at your own pace.',
   },
   {
     question: 'Do I need Grade 5 Theory to take higher grades?',
@@ -265,7 +265,7 @@ const faqs = [
         <div :class="animClass('fade-up', 2)" class="mt-6 overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
           <div class="p-6 space-y-4">
             <p class="text-base text-white/80 sm:text-base md:text-lg">
-              One of the biggest advantages of Trinity exams is that the repertoire lists have no end date — this applies to both Classical &amp; Jazz and Rock &amp; Pop. Pieces stay valid indefinitely, and Trinity adds new ones regularly — so the list keeps growing.
+              One of the biggest advantages of Trinity exams is that the repertoire lists have no end date — this applies to both Classical &amp; Jazz and Rock &amp; Pop. Pieces stay valid indefinitely, and Trinity adds new ones regularly — so the list keeps growing. Occasionally a piece may be removed due to permissions or rights, so always check the <a href="/exam-guide/syllabuses" class="font-semibold text-brand-accent underline hover:text-white">official syllabus</a> before choosing your pieces.
             </p>
             <p class="text-base text-white/80 sm:text-base md:text-lg">
               For example, a Grade 3 Piano exam currently has around 56 pieces to choose from. Compare that to some other boards where you might only have 10 or 12 options, and those change every two to three years — meaning teachers have to buy new books and learn new pieces all over again.

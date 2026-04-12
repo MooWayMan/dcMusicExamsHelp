@@ -4,6 +4,10 @@
  * Call installScrollMemory() once in app.ts.
  * Works with back button, breadcrumbs, nav links — any navigation method.
  * Uses Inertia's own `navigate` event to read the destination URL reliably.
+ *
+ * iOS Safari fix: disables browser's own scroll restoration and uses a
+ * polling loop that keeps setting scrollTo until it sticks, because iOS
+ * resets scroll position AFTER JavaScript's initial scrollTo fires.
  */
 import { router } from '@inertiajs/vue3'
 
@@ -20,7 +24,38 @@ function toPathname(url: string): string {
     }
 }
 
+/**
+ * Aggressively restore scroll position — keeps trying for up to 1 second.
+ * iOS Safari resets scroll AFTER our initial scrollTo, so we poll until
+ * the position sticks or we give up.
+ */
+function forceScrollTo(target: number): void {
+    let attempts = 0
+    const maxAttempts = 20
+    const interval = 50 // try every 50ms for up to 1 second
+
+    const tryScroll = () => {
+        attempts++
+        window.scrollTo(0, target)
+
+        // Stop once the scroll is close enough (within 5px) or we've tried enough
+        if (attempts >= maxAttempts || Math.abs(window.scrollY - target) < 5) {
+            return
+        }
+        requestAnimationFrame(() => setTimeout(tryScroll, interval))
+    }
+
+    // First attempt after a frame + short delay to let DOM render
+    requestAnimationFrame(() => setTimeout(tryScroll, 30))
+}
+
 export function installScrollMemory(): void {
+    // Disable browser's built-in scroll restoration — we handle it ourselves.
+    // This is the key fix for iOS Safari which otherwise fights our scrollTo.
+    if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual'
+    }
+
     // Save current scroll position before leaving the page
     router.on('before', () => {
         scrollPositions.set(toPathname(window.location.href), window.scrollY)
@@ -33,16 +68,7 @@ export function installScrollMemory(): void {
 
         if (saved !== undefined && saved > 0) {
             scrollPositions.delete(pathname)
-
-            // Use rAF + setTimeout combo for reliable restore on iOS Safari.
-            // iOS often ignores scrollTo if the DOM hasn't fully laid out,
-            // so we fire twice: once early and once as a safety net.
-            const doScroll = () => window.scrollTo({ top: saved, behavior: 'instant' })
-
-            requestAnimationFrame(() => {
-                setTimeout(doScroll, 50)   // first attempt — works on desktop
-                setTimeout(doScroll, 300)  // safety net — catches iOS Safari
-            })
+            forceScrollTo(saved)
         }
     })
 }
