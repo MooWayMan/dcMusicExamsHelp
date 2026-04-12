@@ -31,7 +31,7 @@ const breadcrumbPages = [
 const classicalHighlights = [
   'Huge range of instruments — piano, strings, woodwind, brass, singing, guitar, drums, percussion and more',
   'Three pieces from the repertoire list — one can be your own composition',
-  'Huge repertoire list with no end date — pieces stay valid and new ones are added regularly',
+  'Huge repertoire list with no end date — new pieces are added regularly and the list keeps growing',
   'Technical work — scales, arpeggios and exercises',
   'Supporting tests — choose two from sight-reading, aural, improvisation or musical knowledge',
   'Digital option replaces supporting tests with Overall Performance Criteria',
@@ -111,14 +111,14 @@ const guidePages = [
 /* ── FAQ ── */
 const faqs = [
   {
-    question: 'Can my child do both Classical & Jazz and Rock & Pop?',
+    question: 'Can I do both Classical & Jazz and Rock & Pop?',
     answer:
       'Yes — they are separate qualifications so a student can take exams in both. For example, a guitarist could do Classical Guitar Grade 3 and Rock & Pop Guitar Grade 2 at the same time. They count as different subjects.',
   },
   {
-    question: 'Which one should we choose?',
+    question: 'Which one should I choose?',
     answer:
-      'It depends on what your child enjoys playing. If they love learning from sheet music and playing classical or jazz repertoire, Classical & Jazz is the natural fit. If they prefer playing songs by bands and artists they listen to, Rock & Pop is probably more motivating. Their teacher will know which suits them best.',
+      'It depends on what you enjoy playing. If you love learning from sheet music and playing classical or jazz repertoire, Classical & Jazz is the natural fit. If you prefer playing songs by bands and artists you listen to, Rock & Pop is probably more motivating. Your teacher will know which suits you best.',
   },
   {
     question: 'Are Rock & Pop exams easier than Classical & Jazz?',
@@ -126,14 +126,19 @@ const faqs = [
       'No. They are different, not easier. Rock & Pop exams assess different skills — groove, feel, musicality within a band context. Classical & Jazz exams focus more on technique, sight-reading and aural skills. Both are rigorous and both are regulated by Ofqual.',
   },
   {
-    question: 'Do both types earn UCAS points?',
+    question: 'Should I do a theory exam as well?',
     answer:
-      'Yes. Grades 6, 7 and 8 in both Classical & Jazz and Rock & Pop earn UCAS points on exactly the same scale. A Grade 8 Distinction is worth 30 UCAS points regardless of which exam type.',
+      'You don\'t have to — there\'s no requirement to pass a theory exam before taking any Trinity grade. But understanding music theory can genuinely help your playing. Knowing how harmony, structure and rhythm work gives you a deeper understanding of the pieces you\'re performing. Theory exams can be taken online from home and are a great way to build musical knowledge alongside your practical grades.',
   },
   {
-    question: 'What if my child plays an instrument not covered by Rock & Pop?',
+    question: 'Do all three exam types earn UCAS points?',
     answer:
-      'Rock & Pop only covers guitar, bass, drums, keyboards and vocals. If your child plays a different instrument — such as flute, trumpet, violin or saxophone — they would take the Classical & Jazz exam for that instrument.',
+      'Yes. Grades 6, 7 and 8 in Classical & Jazz, Rock & Pop and Music Theory all earn UCAS points. A Grade 8 Distinction is worth 30 UCAS points regardless of which exam type.',
+  },
+  {
+    question: 'What if I play an instrument not covered by Rock & Pop?',
+    answer:
+      'Rock & Pop only covers guitar, bass, drums, keyboards and vocals. If you play a different instrument — such as flute, trumpet, violin or saxophone — you would take the Classical & Jazz exam for that instrument.',
   },
 ]
 

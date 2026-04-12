@@ -82,7 +82,7 @@ const teacherTiers = [
 
 /* ── How it works steps ── */
 const howItWorks = [
-  'Book any Trinity exam — face-to-face, digital or theory — through centre 120. For digital exams, our link pre-fills the code automatically — but if you refresh or go back it can disappear, so always check the referral code box says 120 before you submit. For face-to-face exams in Liverpool or Wirral, your entry is connected automatically',
+  'Book any Trinity exam — face-to-face, digital or theory — through centre 120. For digital exams, our link pre-fills the code automatically — but if you refresh or go back it can disappear, so always check the referral code box says 120 before you book. For face-to-face exams in Liverpool or Wirral, your entry is connected automatically',
   'The candidate sits the exam and the result comes through as normal',
   'Every entry earns at least a <strong>Bravo Certificate</strong> and gets listed on the Recognition page',
   'Merit and Distinction students are added to the <strong>Hall of Fame</strong> with a Take a Bow or Standing Ovation Certificate',
@@ -192,6 +192,20 @@ const faqs = [
           </div>
         </div>
       </div>
+    </section>
+
+    <!-- LIVING ROOM MOCKUP -->
+    <section class="bg-black">
+      <div :class="animClass('zoom-in', 2)">
+        <img
+          src="https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/mockLivingRommCerts.png"
+          alt="musicExams.help certificates framed on a living room wall"
+          class="h-auto w-full object-cover"
+        />
+      </div>
+      <p class="px-4 py-4 text-center text-base text-white/80 sm:text-lg">
+        Your certificates deserve a spot on the wall — frame them, share them, celebrate them.
+      </p>
     </section>
 
     <!-- STUDENT INCENTIVES -->

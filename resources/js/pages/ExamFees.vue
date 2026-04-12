@@ -74,9 +74,9 @@ const pageMeta = {
     'Trinity College London exam fees for 2026. Face-to-face, digital and theory prices for all grades from Initial to Grade 8, plus diploma fees.',
 }
 
-const breadcrumbPages = [
-  { name: 'Exam Fees', href: '/exam-fees', current: true },
-]
+const breadcrumbPages = computed(() => [
+  { name: activeTab.value === 'dates' ? 'Exam Dates' : 'Exam Fees', href: '/exam-fees', current: true },
+])
 
 /* ── Face-to-face fees ── */
 const f2fColumns = [
@@ -208,15 +208,10 @@ const faqs = [
   {
     id: 4,
     question: 'Are there late entry surcharges?',
-    answer: 'Yes — Trinity applies surcharges for late entries. Check Trinity\'s terms and conditions for current late entry fees. Booking well ahead of the closing date avoids this.',
+    answer: 'Yes — Trinity applies surcharges for late entries. Full details are in <a href="https://www.trinitycollege.com/qualifications/music/resources/general-resources/our-music-exams/information-regulations-from-2017" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand-accent underline hover:opacity-70">Trinity\'s policies and regulations</a>. Booking well ahead of the closing date avoids this.',
   },
   {
     id: 5,
-    question: 'Are there group or centre fees?',
-    answer: 'Registered Exam Centres have a minimum session fee of £867 for face-to-face exam sessions. There are also discounted paper certificate fees for centres purchasing in bulk. These are handled automatically — you don\'t need to worry about them when booking.',
-  },
-  {
-    id: 6,
     question: 'Do Trinity require a theory exam before higher grades?',
     answer: 'No. Unlike some other exam boards, Trinity has no theory requirement at any grade. You can go straight to Grade 8 without ever sitting a theory exam. Theory exams are available separately if you want them.',
   },
@@ -491,6 +486,16 @@ const faqs = [
       </div>
     </section>
 
+    <!-- FEES NOTE -->
+    <section class="bg-black">
+      <div class="mx-auto max-w-4xl px-4 py-6 sm:px-6">
+        <p class="text-center text-sm text-white/60">
+          All fees are set by Trinity College London and are subject to change. Late entry surcharges may apply.
+          See <a href="https://www.trinitycollege.com/qualifications/music/resources/general-resources/our-music-exams/information-regulations-from-2017" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand-accent underline hover:opacity-70">Trinity's policies and regulations</a> for full terms and conditions.
+        </p>
+      </div>
+    </section>
+
     <!-- QUICK DATES REFERENCE (bottom of fees tab) -->
     <section class="bg-brand-surface-soft">
       <div class="mx-auto max-w-4xl px-4 py-10 sm:px-6">
@@ -578,7 +583,7 @@ const faqs = [
             size="medium"
           />
           <p class="mt-3 text-sm text-white/60">
-            Booking windows are for face-to-face Classical &amp; Jazz exams via the MOB system. Rock &amp; Pop face-to-face dates are booked through MyTrinity.
+            These booking windows are for face-to-face Classical &amp; Jazz exams. Rock &amp; Pop face-to-face exams are booked through a different system (MyTrinity) — sessions are published when available, so check our site or get in touch for the latest dates.
           </p>
         </div>
       </div>

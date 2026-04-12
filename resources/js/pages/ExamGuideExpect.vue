@@ -157,7 +157,7 @@ const faqs = [
   {
     question: 'Can a parent or teacher come into the room?',
     answer:
-      'Parents are not allowed in the exam room during a face-to-face exam. The only exception is if a very young child needs help setting up equipment (e.g. an electric keyboard) — a parent can come in to help with setup but must then leave and go to the designated waiting area. A teacher or accompanist may be present if they are performing with the candidate. For digital exams, you may need to help with the recording setup, but the performance itself is the candidate\'s.',
+      'Parents are not allowed in the exam room during a face-to-face exam. The only exception is if a candidate needs help setting up equipment (e.g. an electric keyboard) — a parent can come in to help with setup but must then leave and go to the designated waiting area. A teacher or accompanist may be present if they are performing with the candidate. For digital exams, you may need to help with the recording setup, but the performance itself is the candidate\'s.',
   },
   {
     question: 'What happens if I make a mistake?',

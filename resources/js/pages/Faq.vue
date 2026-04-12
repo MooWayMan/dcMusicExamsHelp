@@ -28,7 +28,7 @@ const faqs = [
   {
     question: 'Do I book through this website?',
     answer:
-      'No — when you click Book Your Exam, you will see a short menu asking which type of exam you want. Each option takes you to the correct Trinity booking system. For digital exams and theory exams, our link pre-fills centre 120 automatically, but if you refresh or go back it can disappear — always check the referral code box says 120 before you submit. For face-to-face exams, your entry is automatically connected to centre 120.',
+      'No — when you click Book Your Exam, you will see a short menu asking which type of exam you want. Each option takes you to the correct Trinity booking system. For digital exams and theory exams, our link pre-fills centre 120 automatically, but if you refresh or go back it can disappear — always check the referral code box says 120 before you book. For face-to-face exams, your entry is automatically connected to centre 120.',
   },
   {
     question: 'Who is this for?',
@@ -38,7 +38,7 @@ const faqs = [
   {
     question: 'What is centre 120?',
     answer:
-      'Centre 120 is our registered Trinity College London exam centre code — it covers both our digital centre and our face-to-face centres in Liverpool and Wirral. When you use it at booking, your entry is connected to musicExams.help — which means your student receives at least a <strong>Bravo Certificate</strong>, gets listed on our <a href="/recognition?from=faq" class="font-semibold text-brand-accent underline hover:opacity-70">Recognition page</a>, qualifies for the <a href="/recognition?from=faq" class="font-semibold text-brand-accent underline hover:opacity-70">Hall of Fame</a>, and you get access to teacher recognition badges, prize draws and ongoing support.',
+      'Centre 120 is our registered Trinity College London exam centre code — it covers both our digital centre and our face-to-face centres in Liverpool and Wirral. When you use it at booking, your entry is connected to musicExams.help — which means every candidate receives at least a <strong>Bravo Certificate</strong>, a place on our <a href="/recognition?from=faq" class="font-semibold text-brand-accent underline hover:opacity-70">Recognition page</a> (with the Hall of Fame for Merit and Distinction results), and entry into our quarterly student prize draw. Teachers also get their own prize draw, recognition badges and ongoing support.',
   },
   {
     question: 'Does it cost anything extra?',
@@ -58,12 +58,12 @@ const faqs = [
   {
     question: 'What instruments can I take exams on?',
     answer:
-      'Trinity offers graded exams across a wide range of instruments including piano, guitar, drums, bass, vocals, brass, woodwind, strings and more — in both classical/jazz and rock/pop styles.',
+      'Trinity offers graded exams across a wide range of instruments. <strong>Classical &amp; Jazz</strong> covers piano, brass, woodwind, strings, singing, guitar, percussion and more. <strong>Rock &amp; Pop</strong> covers guitar, bass, drums, keyboards and vocals. See our <a href="/exam-guide/syllabuses?from=faq" class="font-semibold text-brand-accent underline hover:opacity-70">syllabuses page</a> for the full list.',
   },
   {
     question: 'How do I prepare for my exam?',
     answer:
-      'Work with your teacher on the pieces, technical exercises and supporting tests for your grade. Trinity publishes syllabuses and books for each instrument and grade — we can point you in the right direction.',
+      'Start by checking the <a href="/exam-guide/syllabuses?from=faq" class="font-semibold text-brand-accent underline hover:opacity-70">syllabus</a> for your instrument and grade — it sets out exactly what you need to prepare, including pieces, technical work and supporting tests. If you have a teacher, they will guide you through what to work on and help you choose your pieces. If you are preparing on your own, the syllabus and Trinity\'s published books and resources have everything you need.',
   },
   {
     question: 'What results can I achieve?',

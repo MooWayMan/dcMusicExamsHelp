@@ -100,7 +100,7 @@ const mockUpCards = [
   {
     icon: Star,
     title: 'On social media',
-    detail: 'Share your achievement on Facebook, Instagram or LinkedIn using #MusicExamsHelp so we can share it too. Let parents see that your students are entering — and achieving. "Gold Award — 30+ Exam Entries #MusicExamsHelp" says it all.',
+    detail: 'Share your achievement on social media using #MusicExamsHelp so we can share it too. Let parents see that your students are entering — and achieving. "Gold Award — 30+ Exam Entries #MusicExamsHelp" says it all.',
   },
 ]
 
@@ -128,7 +128,7 @@ const faqs = [
   {
     id: 'how-tracked',
     question: 'How are my entries tracked?',
-    answer: 'We track entries through Trinity\'s centre 120 booking records. For digital exams, our link pre-fills centre 120 automatically when you use the Book Your Exam button — but if you refresh the page or use the back button the code can disappear. Always check the referral code box says 120 before you submit. For face-to-face exams in Liverpool or Wirral, your entry is automatically connected to centre 120 — no code needed.',
+    answer: 'We track entries through Trinity\'s centre 120 booking records. For digital exams, our link pre-fills centre 120 automatically when you use the Book Your Exam button — but if you refresh the page or use the back button the code can disappear. Always check the referral code box says 120 before you book. For face-to-face exams in Liverpool or Wirral, your entry is automatically connected to centre 120 — no code needed.',
   },
   {
     id: 'cumulative',

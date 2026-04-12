@@ -176,11 +176,22 @@ class ThankYouController extends Controller
         $defaultQuarter = $latest ? $latest['quarter'] : $currentQuarter;
         $defaultYear = $latest ? $latest['year'] : $currentYear;
 
+        // Prize draw winners for all quarters
+        $prizeDrawWinners = PrizeDraw::where('type', 'student')
+            ->get()
+            ->mapWithKeys(fn ($d) => ["{$d->quarter}-{$d->year}" => [
+                'name' => $d->winner_name,
+                'instrument' => $d->winner_instrument,
+                'grade' => $d->winner_grade,
+            ]])
+            ->toArray();
+
         return Inertia::render('ThankYou', [
             'defaultQuarter' => $defaultQuarter,
             'defaultYear' => $defaultYear,
             'availableQuarters' => $quartersWithData,
             'allQuartersData' => $allQuartersData,
+            'prizeDrawWinners' => $prizeDrawWinners,
         ]);
     }
 }

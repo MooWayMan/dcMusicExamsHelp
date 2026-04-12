@@ -128,7 +128,7 @@ const incentives = [
   },
   {
     title: 'Exam book discounts',
-    detail: 'Teachers — get in touch to learn about exclusive discounts on exam books from Faber Music and Trinity College London Press. Parents and students save too — use our links to get 10% off ebooks for any grade or instrument.',
+    detail: 'Teachers — get in touch to learn about exclusive discounts on exam books from Faber Music and Trinity College London Press. Teachers, parents and students can all use our links to get 10% off ebooks for any grade or instrument.',
     icon: BookOpen,
     iconBg: 'bg-brand-primary/10',
     iconColor: 'text-brand-primary',
@@ -140,7 +140,7 @@ const faqs = [
   {
     question: 'Do I book through this website?',
     answer:
-      'No — when you click Book Your Exam, you will see a short menu asking which type of exam you want. Each option takes you to the correct Trinity booking system. For digital exams, our link pre-fills centre 120 automatically, but if you refresh or go back it can disappear — always check the referral code box says 120 before you submit. For face-to-face exams, your entry is automatically connected to centre 120.',
+      'No — when you click Book Your Exam, you will see a short menu asking which type of exam you want. Each option takes you to the correct Trinity booking system. For digital exams, our link pre-fills centre 120 automatically, but if you refresh or go back it can disappear — always check the referral code box says 120 before you book. For face-to-face exams, your entry is automatically connected to centre 120.',
   },
   {
     question: 'Who is this for?',

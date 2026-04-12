@@ -57,6 +57,7 @@ const props = defineProps<{
   defaultYear: number
   availableQuarters: QuarterOption[]
   allQuartersData: QuarterData[]
+  prizeDrawWinners: Record<string, { name: string; instrument: string; grade: string }>
 }>()
 
 const { animClass } = usePageAnimation()
@@ -81,6 +82,12 @@ const currentQuarterLabel = computed(() => activeData.value?.label ?? `Q${active
 const hallOfFameEntries = computed(() => activeData.value?.hallOfFameEntries ?? [])
 const thankYouEntries = computed(() => activeData.value?.thankYouEntries ?? [])
 const summary = computed(() => activeData.value?.summary ?? { distinctions: 0, merits: 0, total: 0 })
+
+const prizeDrawWinner = computed(() => {
+  if (!hasSelected.value) return null
+  const key = `${activeQuarter.value}-${activeYear.value}`
+  return props.prizeDrawWinners?.[key] ?? null
+})
 
 /* ── Fade transition for dynamic content ── */
 const contentVisible = ref(true)
@@ -273,6 +280,23 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
                 </option>
               </select>
             </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRIZE DRAW WINNER (only shows if a draw has been run for this quarter) -->
+    <section v-if="hasSelected && prizeDrawWinner" class="bg-black border-t border-white/10">
+      <div class="mx-auto max-w-4xl px-4 py-10 sm:px-6">
+        <div :class="animClass('zoom-in', 1)" class="mx-auto max-w-lg overflow-hidden rounded-2xl border-4 border-yellow-400 bg-gradient-to-b from-yellow-400/10 to-black shadow-2xl">
+          <div class="flex items-center justify-center gap-3 bg-black px-5 py-3">
+            <Star class="h-5 w-5 text-yellow-400" />
+            <span class="text-lg font-bold text-white sm:text-xl">{{ currentQuarterLabel }} — Student Prize Draw Winner</span>
+            <Star class="h-5 w-5 text-yellow-400" />
+          </div>
+          <div class="p-6 text-center">
+            <p class="text-2xl font-bold text-white sm:text-3xl">{{ prizeDrawWinner.name }}</p>
+            <p class="mt-2 text-base text-white/70 sm:text-lg">{{ prizeDrawWinner.instrument }} — {{ prizeDrawWinner.grade }}</p>
           </div>
         </div>
       </div>

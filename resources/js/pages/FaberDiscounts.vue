@@ -49,8 +49,8 @@ const pathwaySteps = [
   {
     id: 2,
     icon: Percent,
-    label: '10% off ebooks for your students',
-    tagline: 'Parents and students save 10% on digital exam books',
+    label: '10% off ebooks for everyone',
+    tagline: 'Teachers, parents and students save 10% on digital exam books',
     colour: 'brand-accent',
     bgRing: 'bg-brand-accent/10',
     iconColour: 'text-brand-accent',
@@ -84,9 +84,9 @@ const pathwaySteps = [
 const discountCards = [
   {
     icon: Percent,
-    title: '10% off ebooks for your students',
+    title: '10% off ebooks for everyone',
     detail:
-      'Trinity College London Press sells digital editions of exam books through their online store. When students or parents buy an ebook through the link on our site, they get 10% off automatically. Just point your parents to musicExams.help and tell them to use our ebook link when ordering — no setup needed, the discount is built in.',
+      'Trinity College London Press sells digital editions of exam books through their online store. When anyone buys an ebook through the link on our site — whether you\'re a teacher, parent or student — you get 10% off automatically. No setup needed, the discount is built in.',
     link: 'https://store.trinitycollege.com/?aff=99',
     linkText: 'Browse the ebook store',
   },
@@ -342,7 +342,7 @@ const faqs = [
               <li class="flex items-start gap-3">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
                 <span class="text-base text-white sm:text-base md:text-lg">
-                  We'll explain which discounts apply to your situation
+                  We'll explain how the discounts work and help you get set up
                 </span>
               </li>
               <li class="flex items-start gap-3">

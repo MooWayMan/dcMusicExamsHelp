@@ -17,8 +17,34 @@ class QuarterEndController extends Controller
 {
     public function index(Request $request): Response
     {
-        $quarter = (int) ($request->query('quarter', ceil(now()->month / 3)));
-        $year = (int) ($request->query('year', now()->year));
+        // Default to the latest quarter with data, not the current quarter
+        $defaultQuarter = (int) ceil(now()->month / 3);
+        $defaultYear = (int) now()->year;
+
+        if (! $request->has('quarter')) {
+            // Find the latest entry by exam_date or order's requested_start_date
+            $latestEntry = ExamEntry::with('order:id,requested_start_date')
+                ->where(function ($q) {
+                    $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
+                })
+                ->get()
+                ->map(function ($e) {
+                    $e->effective_date = $e->exam_date ?? $e->order?->requested_start_date;
+                    return $e;
+                })
+                ->filter(fn ($e) => $e->effective_date !== null)
+                ->sortByDesc('effective_date')
+                ->first();
+
+            if ($latestEntry) {
+                $date = $latestEntry->effective_date;
+                $defaultQuarter = (int) ceil($date->month / 3);
+                $defaultYear = (int) $date->year;
+            }
+        }
+
+        $quarter = (int) ($request->query('quarter', $defaultQuarter));
+        $year = (int) ($request->query('year', $defaultYear));
 
         $suffix = match ($quarter) {
             1 => '1st', 2 => '2nd', 3 => '3rd', 4 => '4th',

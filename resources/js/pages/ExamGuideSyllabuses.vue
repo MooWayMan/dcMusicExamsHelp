@@ -141,7 +141,7 @@ const faqs = [
   {
     question: 'How often does the syllabus change?',
     answer:
-      'Both Classical & Jazz and Rock & Pop syllabuses have no fixed end date — pieces stay valid and new ones are added regularly. Trinity always gives plenty of notice before any changes.',
+      'Both Classical & Jazz and Rock & Pop syllabuses have no fixed end date — new pieces are added regularly and the list keeps growing. Occasionally a piece may be removed due to licensing or permissions, so always check the current syllabus before choosing your pieces.',
   },
   {
     question: 'Can I play pieces from an older syllabus?',

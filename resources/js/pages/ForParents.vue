@@ -35,7 +35,7 @@ const journeySteps = [
   {
     step: 2,
     title: 'Book your exam through centre 120',
-    detail: 'Either you, the teacher or the school can book — whoever is the applicant. Use the <strong>Book Your Exam</strong> button on our site and it will guide you to the right Trinity booking system. For digital exams, our link pre-fills centre 120 automatically — but if you refresh the page or use the back button the code can disappear, so always check the referral code box says 120 before you submit. For face-to-face exams, your entry is connected to centre 120 automatically. This connects your entry to musicExams.help so your child can be recognised on our Recognition page and <strong>Hall of Fame</strong>. If your child has a teacher, please let us know so we can link the entry to them. The fees are the standard Trinity prices — there is no extra cost.',
+    detail: 'Either you, the teacher or the school can book — whoever is the applicant. Use the <strong>Book Your Exam</strong> button on our site and it will guide you to the right Trinity booking system. For digital exams, our link pre-fills centre 120 automatically — but if you refresh the page or use the back button the code can disappear, so always check the referral code box says 120 before you book. For face-to-face exams, your entry is connected to centre 120 automatically. This connects your entry to musicExams.help so your child can be recognised on our Recognition page and <strong>Hall of Fame</strong>. If your child has a teacher, please let us know so we can link the entry to them. The fees are the standard Trinity prices — there is no extra cost.',
   },
   {
     step: 3,
@@ -85,7 +85,7 @@ const faqs = [
   },
   {
     question: 'Do I need to be present for the exam?',
-    answer: 'For face-to-face exams, parents are not allowed in the exam room. The only exception is if a very young child needs help setting up equipment (e.g. an electric keyboard) — a parent can come in to help with setup but must then leave and go to the designated waiting area. A teacher or accompanist may be present in the room if they are performing with the candidate. For digital exams, you may need to help with the recording setup, but the performance itself is your child\'s. Anyone can submit the recording — it doesn\'t have to be the teacher.',
+    answer: 'For face-to-face exams, parents are not allowed in the exam room. The only exception is if a candidate needs help setting up equipment (e.g. an electric keyboard) — a parent can come in to help with setup but must then leave and go to the designated waiting area. A teacher or accompanist may be present in the room if they are performing with the candidate. For digital exams, you may need to help with the recording setup, but the performance itself is your child\'s. Anyone can submit the recording — it doesn\'t have to be the teacher.',
   },
   {
     question: 'What happens after we book?',

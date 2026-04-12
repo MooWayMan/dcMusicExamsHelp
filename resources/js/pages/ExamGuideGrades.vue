@@ -265,7 +265,7 @@ const faqs = [
         <div :class="animClass('fade-up', 2)" class="mt-6 overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
           <div class="p-6 space-y-4">
             <p class="text-base text-white/80 sm:text-base md:text-lg">
-              One of the biggest advantages of Trinity exams is that the repertoire lists have no end date — this applies to both Classical &amp; Jazz and Rock &amp; Pop. Pieces stay valid indefinitely, and Trinity adds new ones regularly — so the list keeps growing. Occasionally a piece may be removed due to permissions or rights, so always check the <a href="/exam-guide/syllabuses" class="font-semibold text-brand-accent underline hover:text-white">official syllabus</a> before choosing your pieces.
+              One of the biggest advantages of Trinity exams is that the repertoire lists have no end date — this applies to both Classical &amp; Jazz and Rock &amp; Pop. Pieces stay on the list until Trinity decides to remove them, and new ones are added regularly — so the list keeps growing. Occasionally a piece may be removed due to licensing or permissions, so always check the <a href="/exam-guide/syllabuses" class="font-semibold text-brand-accent underline hover:text-white">current syllabus</a> before choosing your pieces.
             </p>
             <p class="text-base text-white/80 sm:text-base md:text-lg">
               For example, a Grade 3 Piano exam currently has around 56 pieces to choose from. Compare that to some other boards where you might only have 10 or 12 options, and those change every two to three years — meaning teachers have to buy new books and learn new pieces all over again.
@@ -283,7 +283,7 @@ const faqs = [
           </div>
           <div class="p-6">
             <p class="text-base text-white/80 sm:text-base md:text-lg">
-              In Classical &amp; Jazz exams, one of your pieces can be your own composition. It's assessed the same way as listed repertoire — marks are based on your performance, not the quality of the composition itself. It must be comparable in technical and musical demand to the pieces listed for your grade, and it should be your own unaided work.
+              In Classical &amp; Jazz exams, one of your pieces can be your own composition. It's assessed the same way as listed repertoire — marks are based on your performance, not the quality of the composition itself. It must be comparable in technical and musical demand to the pieces listed for your grade. Trinity says it should be the candidate's own work, although teachers may offer guidance as necessary.
             </p>
           </div>
         </div>

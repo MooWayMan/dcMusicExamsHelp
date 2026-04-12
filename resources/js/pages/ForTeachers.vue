@@ -52,7 +52,7 @@ const bookingSteps = [
   {
     step: 2,
     title: 'Choose your pathway',
-    detail: 'When you click Book Your Exam, our link takes you straight to the right Trinity booking system — you don\'t need to copy any web addresses.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Digital exams</span> Our link pre-fills centre code 120 automatically, but if you refresh the page or use the back button the code can disappear. Look for a box that says "referral code" and make sure 120 is in it before you submit.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Classical &amp; Jazz face-to-face</span> Our link takes you straight to the booking page — no code needed. Your entry is automatically connected to centre 120 because the exam is held at our Liverpool or Wirral venue.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Rock &amp; Pop face-to-face</span> Our link takes you straight to the booking page — no code needed. Your entry is automatically connected to centre 120.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Digital theory</span> Our link takes you to the MusicGurus platform with centre 120 applied automatically. Theory exams are Grades 1–8, taken online from home or school — all you need is an internet connection and Google Chrome.',
+    detail: 'When you click Book Your Exam, our link takes you straight to the right Trinity booking system — you don\'t need to copy any web addresses.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Digital exams</span> Our link pre-fills centre code 120 automatically, but if you refresh the page or use the back button the code can disappear. Look for a box that says "referral code" and make sure 120 is in it before you book.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Classical &amp; Jazz face-to-face</span> Our link takes you straight to the booking page — no code needed. Your entry is automatically connected to centre 120 because the exam is held at our Liverpool or Wirral venue.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Rock &amp; Pop face-to-face</span> Our link takes you straight to the booking page — no code needed. Your entry is automatically connected to centre 120.<br /><br /><span class="inline-block rounded-full bg-brand-accent/20 px-3 py-0.5 -ml-3 text-sm font-bold text-white">Digital theory</span> Our link takes you to the MusicGurus platform with centre 120 applied automatically. Theory exams are Grades 1–8, taken online from home or school — all you need is an internet connection and Google Chrome.',
   },
   {
     step: 3,
@@ -425,11 +425,11 @@ const faqs = [
               </li>
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                <span class="text-base text-white/90 sm:text-base md:text-lg">No sight reading, aural or improvisation tests — digital replaces these with Overall Performance Criteria</span>
+                <span class="text-base text-white/90 sm:text-base md:text-lg">No sight reading, aural, improvisation or musical knowledge tests — digital replaces these with Overall Performance Criteria</span>
               </li>
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
-                <span class="text-base text-white/90 sm:text-base md:text-lg">Repertoire-only pathway available — four pieces, no technical work at all</span>
+                <span class="text-base text-white/90 sm:text-base md:text-lg">Classical &amp; Jazz has a repertoire-only pathway — four pieces, no technical work at all</span>
               </li>
               <li class="flex items-start gap-2">
                 <CheckCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-accent" />
@@ -481,7 +481,7 @@ const faqs = [
         <div :class="animClass('fade-up', 4)" class="mt-6 rounded-2xl border-4 border-brand-accent bg-white/10 p-5 backdrop-blur-sm sm:p-6">
           <p class="text-lg font-semibold text-white sm:text-lg">Why face-to-face still matters</p>
           <p class="mt-2 text-base leading-snug text-white/80 sm:text-base md:text-lg">
-            Face-to-face exams develop skills that digital simply cannot replicate. Students learn to perform in front of someone they have never met, in an unfamiliar room, under real pressure — and that experience is invaluable preparation for concerts, auditions and live performance. The supporting tests (sight reading, aural, improvisation) also build well-rounded musicianship that a repertoire-only digital exam does not assess.
+            Face-to-face exams develop skills that digital simply cannot replicate. Students learn to perform in front of someone they have never met, in an unfamiliar room, under real pressure — and that experience is invaluable preparation for concerts, auditions and live performance. The supporting tests (sight reading, aural, improvisation and musical knowledge) also build well-rounded musicianship that a repertoire-only digital exam does not assess.
           </p>
           <p class="mt-3 text-base leading-snug text-white/80 sm:text-base md:text-lg">
             There is also a real benefit to having a fixed exam date. With digital exams, students can spend months re-recording, chasing perfection — and the process can drift indefinitely. A face-to-face date creates focus: the student knows they have to be ready, and the teacher can plan a preparation schedule around it. Many teachers find their students actually perform better with that deadline in place.
