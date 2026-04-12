@@ -263,7 +263,7 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
             </div>
             <div class="px-6 py-6">
               <p class="mb-2 text-center text-base text-brand-text-soft sm:text-lg">Choose a date to view results</p>
-              <p class="mb-4 text-center text-sm text-brand-text-soft/70">Top scorers and awards are announced within three weeks of the quarter ending</p>
+              <p class="mb-4 text-center text-sm text-brand-text-soft/70">Top scorers and awards are announced once all results for the quarter are in</p>
               <select
                 id="quarter-select"
                 v-model="selectedQuarterKey"
