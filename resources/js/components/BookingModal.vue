@@ -81,11 +81,26 @@ const handleEscape = (event: KeyboardEvent) => {
   }
 }
 
+// Lock scroll when modal opens — position:fixed needed for iOS/iPad
+let scrollY = 0
+
 watch(() => props.show, (newVal) => {
   if (newVal) {
+    scrollY = window.scrollY
     document.body.style.overflow = 'hidden'
+    document.body.style.position = 'fixed'
+    document.body.style.top = `-${scrollY}px`
+    document.body.style.left = '0'
+    document.body.style.right = '0'
+    document.documentElement.style.overflow = 'hidden'
   } else {
     document.body.style.overflow = ''
+    document.body.style.position = ''
+    document.body.style.top = ''
+    document.body.style.left = ''
+    document.body.style.right = ''
+    document.documentElement.style.overflow = ''
+    window.scrollTo(0, scrollY)
   }
 })
 
@@ -96,6 +111,11 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('keydown', handleEscape)
   document.body.style.overflow = ''
+  document.body.style.position = ''
+  document.body.style.top = ''
+  document.body.style.left = ''
+  document.body.style.right = ''
+  document.documentElement.style.overflow = ''
 })
 </script>
 

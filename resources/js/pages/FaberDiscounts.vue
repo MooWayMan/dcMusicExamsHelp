@@ -110,7 +110,7 @@ const discountCards = [
     icon: Gift,
     title: 'Free Books for Teachers',
     detail:
-      'Every year from mid-June, Faber opens a programme where teachers can claim one free book, posted free of charge. It is first come, first served and goes quickly — <a href="https://calendar.google.com/calendar/u/0?cid=Y19lMjgzOGE4YmE2OTMyNWFhNWRlYzdhNGVlYzcwNTFmMjNiZjhmMmUzMDdhOWM3ZTQ4NDM1MzgyYTA1YzRhN2VlQGdyb3VwLmNhbGVuZGFyLmdvb2dsZS5jb20" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand-accent underline hover:opacity-70">subscribe to our Google Calendar</a> and we\'ll remind you when it opens. You need to be a member of the Teachers\' Community to take part, so make sure you join before June.',
+      'Every year from mid-June, Faber opens a programme where teachers can claim one free book, posted free of charge. It is first come, first served and goes quickly — <a href="https://calendar.google.com/calendar/embed?src=c_e2838a8ba69325aa5dec7a4eec7051f23bf8f2e307a9c7e48435382a05c4a7ee%40group.calendar.google.com&ctz=Europe%2FLondon" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand-accent underline hover:opacity-70">subscribe to our Google Calendar</a> and we\'ll remind you when it opens. You need to be a member of the Teachers\' Community to take part, so make sure you join before June.',
     link: 'https://www.fabermusic.com/freebooksforteachers',
     linkText: 'Visit the Free Books page (opens mid-June)',
   },
