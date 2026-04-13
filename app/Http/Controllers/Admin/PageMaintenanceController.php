@@ -16,7 +16,7 @@ class PageMaintenanceController extends Controller
 
         $pages = PageMaintenance::orderBy('page_name')->get();
 
-        return Inertia::render('Admin/PageMaintenance', [
+        return Inertia::render('admin/PageMaintenance/Index', [
             'pages' => $pages,
         ]);
     }
