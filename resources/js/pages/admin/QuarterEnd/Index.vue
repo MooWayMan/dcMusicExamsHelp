@@ -151,46 +151,70 @@ function copyEmailTemplate(teacher: Teacher) {
       : studentWinner.value.name
     : ''
   const studentDrawText = studentWinner.value
-    ? `\n\nStudent Prize Draw: ${winnerShortName} (${studentWinner.value.instrument} Grade ${studentWinner.value.grade}) has won the ${props.quarterLabel} student prize draw and will receive a gift token. Every student entered through centre 120 was in the draw.${studentWinner.value.teacher === teacher.teacher_name ? ' As their teacher, I\'ll be in touch with you separately about getting the prize to them.' : ''}\n`
+    ? `\n\nStudent Prize Draw\nThe winner of the £50 gift token this quarter is ${winnerShortName} (${studentWinner.value.instrument} Grade ${studentWinner.value.grade}) — congratulations! Every student entered through centre 120 was in the draw.${studentWinner.value.teacher === teacher.teacher_name ? ' As their teacher, I\'ll be in touch with you separately about getting the prize to them.' : ''}\n`
     : ''
 
   const firstName = teacher.teacher_name.split(' ')[0]
 
   const template = `Hi ${firstName},
 
-You may notice a new email address — I've moved to musicexams@musicexams.help, so please save this for future correspondence.
+Quick heads-up — I've moved to a new email address: musicexams@musicexams.help. Please save this for future correspondence.
 
-Quick question before I get to the good stuff — do you have any students who booked their exam through centre 120 in 2026 but booked directly or through a parent rather than through you? If so, just reply and let me know their names so I can link them to you. It all helps towards your Teacher Appreciation badge and extra tickets in the quarterly teacher prize draw!
+Before I get to the good stuff: do you have any students who booked their exam through centre 120 in 2026 but booked directly or through a parent? If so, reply with their names so I can link them to you — it counts towards your Teacher Appreciation badge and extra tickets in the teacher prize draw!
 
-Now the good news — the ${props.quarterLabel} exam results are in and your students have done brilliantly!
+---
 
-Here are the results:
+Your Students' Results
+
+Your students have done brilliantly! Here are the results:
+
 ${studentList}${teacher.pending > 0 ? `\n\nNote: ${teacher.pending} of your students are still awaiting results — I'll be in touch as soon as they come through.\n` : ''}
 
-I've attached their personalised certificates for you to pass on, along with a results report (PDF) and a spreadsheet (CSV). Everything is in the attached ZIP file — just double-click to open it. Every student receives at least a Bravo Certificate, with Merit earning a Take a Bow Certificate and Distinction earning a Standing Ovation Certificate.${badgeText}${topScorerText}${studentDrawText}
-Every quarter we run two prize draws — one for students and one for teachers. Every student entry through centre 120 earns one ticket in the student draw. Teachers also get one ticket per student entry linked to them.
+Everything is in the attached ZIP file — just double-click to open it. Inside you'll find:
+  • Personalised certificates for each student
+  • A results report (PDF)
+  • A spreadsheet (CSV)
 
-The teacher draw will take place in the coming weeks — the prize is a £50 gift token for you to buy musical equipment for your school. I'm giving everyone a chance to claim any students who booked directly or through a parent first, as this increases your tickets in the draw. That's why the question at the top of this email matters!
+Every student receives at least a Bravo Certificate, with Merit earning a Take a Bow Certificate and Distinction earning a Standing Ovation Certificate.${badgeText}${topScorerText}
 
-Unlike the student draw, the teacher prize draw result won't be published on the website — I don't want to create competition between teachers or schools. Once the draw has been made, all registered teachers will be able to log in to musicexams.help and see privately who won. Of course, if you do win, you're more than welcome to promote it on your own website and social media!
+---
 
-The Top Scorer award and gift tokens are announced around 6 weeks after the quarter ends, once all results (including digital) are in. Keep an eye on musicexams.help for the announcement!
+Prize Draws
 
-I've recently launched musicExams.help, a free resource for teachers, parents and students booking Trinity exams through centre 120. If parents ever ask you questions like "what's the difference between digital and face-to-face?" or "can my son play his own choice of song in the exam?" — you can point them straight to the site. It covers everything in one place so you don't have to explain it all yourself!
+Every quarter we run two prize draws — one for students, one for teachers. Every student entry through centre 120 earns one ticket.
+${studentDrawText}
+Teacher draw: taking place in the coming weeks. The prize is a £50 gift token to help buy musical instruments for your school. The more students linked to you, the more tickets you have — that's why the question at the top matters!
 
-It also includes:
+The teacher draw result won't be published on the website — no competition between teachers. Winners can see their result privately by logging in, and you're welcome to promote it on your own channels if you win!
+
+Top Scorer awards and gift tokens are announced around 6 weeks after the quarter ends, once all results (including digital) are in. Keep an eye on musicExams.help!
+
+---
+
+Introducing musicExams.help
+
+I've recently launched musicExams.help — a free resource for teachers, parents and students booking Trinity exams through centre 120. If parents ever ask things like "what's the difference between digital and face-to-face?" — point them straight to the site.
+
+Highlights:
   • Student recognition — Hall of Fame, certificates and quarterly prize draws
   • Teacher awards — Bronze, Silver, Gold and Top Award badges
   • Faber music book discounts for teachers
   • Booking made easy across all 3 Trinity systems
 
-Have a look when you get a chance: https://musicexams.help
+Have a look: https://musicexams.help
 
-We'd really appreciate any feedback — even a quick "looks good" or "I couldn't find X" helps us improve the site for everyone.
+We'd love any feedback — even a quick "looks good" helps!
 
-P.S. Here's a suggested message you can send to parents along with their child's certificate:
+---
 
-"Hi [Parent Name], I've recently partnered with musicExams.help, a new platform that supports teachers, parents and students taking Trinity exams. As part of this, your child now receives a personalised certificate to celebrate their achievement — please find it attached. They also appear on the musicExams.help Recognition page at https://musicexams.help/recognition — for privacy, only their first name and surname initial are shown. If you'd like their full name displayed instead, just drop an email to musicexams@musicexams.help and they'll update it."`
+Thank you for everything you do for your students — and for choosing to enter them through centre 120. It really is appreciated.
+
+Best wishes,
+Paul
+
+P.S. Here's a message you can send to parents with their child's certificate:
+
+"Hi [Parent Name], I've recently partnered with musicExams.help, a platform that supports teachers, parents and students taking Trinity exams. Your child now receives a personalised certificate — please find it attached. They also appear on the Recognition page at https://musicexams.help/recognition (first name and surname initial only). If you'd like their full name displayed, just email musicexams@musicexams.help."`
 
   navigator.clipboard.writeText(template)
   alert('Email template copied to clipboard! Now click "Open in Gmail" to compose.')
@@ -215,7 +239,7 @@ function copyWinnerEmail(teacher: Teacher) {
 
   const template = `Hi ${firstName},
 
-Great news — one of your students, ${winnerInitial}, has won the ${props.quarterLabel} student prize draw! They'll be receiving a £20 Amazon gift token.
+Great news — one of your students, ${winnerInitial}, has won the ${props.quarterLabel} student prize draw! They'll be receiving a £50 Amazon gift token.
 
 Here's the gift card code for you to pass on to their parent/guardian:
 
