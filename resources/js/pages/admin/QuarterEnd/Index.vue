@@ -3,7 +3,7 @@
 import { ref, computed } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import {
-  Award, CheckCircle2, Circle, Download, Mail, Package,
+  Award, CheckCircle2, Circle, Download, Package,
   Trophy, Users, Clock, Star, ChevronDown, ChevronUp, Copy,
   Gift, Sparkles, Loader2
 } from 'lucide-vue-next'
@@ -41,7 +41,9 @@ interface Summary {
   pending: number
   total_fees: string
   teacher_count: number
-  top_scorer: { name: string; score: number; instrument: string } | null
+  has_pending: boolean
+  showstopper: { name: string; full_name: string; score: number; instrument: string } | null
+  centre_stage: { name: string; full_name: string; score: number; instrument: string } | null
 }
 
 interface EligibleTeacher {
@@ -129,30 +131,54 @@ function copyEmailTemplate(teacher: Teacher) {
     ? `\n\nI'm also pleased to award you a ${teacher.badge_tier} Certificate of Appreciation for entering ${teacher.total_all_time}+ candidates through centre 120. Thank you for your continued support!\n`
     : ''
 
-  // Top scorer mention
-  const topScorerText = props.summary.top_scorer
-    ? `\n\nTop Scorer this quarter: ${props.summary.top_scorer.name} with ${props.summary.top_scorer.score} marks on ${props.summary.top_scorer.instrument} — they'll receive a gift token as our highest achiever.\n`
+  // Top scorer mentions (Showstopper + Centre Stage)
+  const showstopperText = props.summary.showstopper
+    ? `Showstopper (highest Distinction): ${props.summary.showstopper.name} with ${props.summary.showstopper.score} marks on ${props.summary.showstopper.instrument}`
+    : ''
+  const centreStageText = props.summary.centre_stage
+    ? `Centre Stage (highest Merit): ${props.summary.centre_stage.name} with ${props.summary.centre_stage.score} marks on ${props.summary.centre_stage.instrument}`
+    : ''
+  const topScorerParts = [showstopperText, centreStageText].filter(Boolean)
+  const topScorerText = topScorerParts.length
+    ? `\n\nQuarterly award winners:\n  • ${topScorerParts.join('\n  • ')}\nBoth receive a gift token and a personalised certificate.\n`
     : ''
 
   // Student prize draw winner — teacher needs to pass the gift token on
+  // Use first name + initial only (GDPR — no full names without consent)
+  const winnerShortName = studentWinner.value
+    ? studentWinner.value.name.split(' ').length > 1
+      ? `${studentWinner.value.name.split(' ')[0]} ${studentWinner.value.name.split(' ').slice(-1)[0][0].toUpperCase()}`
+      : studentWinner.value.name
+    : ''
   const studentDrawText = studentWinner.value
-    ? `\n\nStudent Prize Draw: ${studentWinner.value.name} (${studentWinner.value.instrument} Grade ${studentWinner.value.grade}) has won the ${props.quarterLabel} student prize draw and will receive a gift token. Every student entered through centre 120 was in the draw.${studentWinner.value.teacher === teacher.teacher_name ? ' As their teacher, I\'ll be in touch with you separately about getting the prize to them.' : ''}\n`
+    ? `\n\nStudent Prize Draw: ${winnerShortName} (${studentWinner.value.instrument} Grade ${studentWinner.value.grade}) has won the ${props.quarterLabel} student prize draw and will receive a gift token. Every student entered through centre 120 was in the draw.${studentWinner.value.teacher === teacher.teacher_name ? ' As their teacher, I\'ll be in touch with you separately about getting the prize to them.' : ''}\n`
     : ''
 
-  const template = `Hi ${teacher.applicant_name || teacher.teacher_name},
+  const firstName = teacher.teacher_name.split(' ')[0]
 
-Quick question before I get to the good stuff — do you have any students who entered through centre 120 in 2026 but booked themselves or through a parent? If so, just reply to this email and let me know their names so I can link them to you. This affects your Teacher Appreciation badge and your eligibility for the quarterly teacher prize draw.
+  const template = `Hi ${firstName},
+
+You may notice a new email address — I've moved to musicexams@musicexams.help, so please save this for future correspondence.
+
+Quick question before I get to the good stuff — do you have any students who booked their exam through centre 120 in 2026 but booked directly or through a parent rather than through you? If so, just reply and let me know their names so I can link them to you. It all helps towards your Teacher Appreciation badge and extra tickets in the quarterly teacher prize draw!
 
 Now the good news — the ${props.quarterLabel} exam results are in and your students have done brilliantly!
 
 Here are the results:
-${studentList}
+${studentList}${teacher.pending > 0 ? `\n\nNote: ${teacher.pending} of your students are still awaiting results — I'll be in touch as soon as they come through.\n` : ''}
 
-I've attached their personalised certificates for you to pass on. Every student receives at least a Bravo Certificate, with Merit earning a Take a Bow Certificate and Distinction earning a Standing Ovation Certificate.${badgeText}${topScorerText}${studentDrawText}
-Every quarter we run two prize draws — one for students and one for teachers. Every student entry through centre 120 earns one ticket in the student draw. The teacher draw will take place next week once everyone has had a chance to claim any students — I'll be in touch with the result.
+I've attached their personalised certificates for you to pass on, along with a results report (PDF) and a spreadsheet (CSV). Every student receives at least a Bravo Certificate, with Merit earning a Take a Bow Certificate and Distinction earning a Standing Ovation Certificate.${badgeText}${topScorerText}${studentDrawText}
+Every quarter we run two prize draws — one for students and one for teachers. Every student entry through centre 120 earns one ticket in the student draw. Teachers also get one ticket per student entry linked to them.
 
-I've recently launched musicExams.help, a free resource for teachers, parents and students booking Trinity exams through centre 120. It includes:
-  • Exam guides, fees and session dates all in one place
+The teacher draw will take place in the coming weeks — the prize is a £50 gift token for you to buy musical equipment for your school. I'm giving everyone a chance to claim any students who booked directly or through a parent first, as this increases your tickets in the draw. That's why the question at the top of this email matters!
+
+Unlike the student draw, the teacher prize draw result won't be published on the website — I don't want to create competition between teachers or schools. Once the draw has been made, all registered teachers will be able to log in to musicexams.help and see privately who won. Of course, if you do win, you're more than welcome to promote it on your own website and social media!
+
+The Top Scorer award and gift tokens are announced around 6 weeks after the quarter ends, once all results (including digital) are in. Keep an eye on musicexams.help for the announcement!
+
+I've recently launched musicExams.help, a free resource for teachers, parents and students booking Trinity exams through centre 120. If parents ever ask you questions like "what's the difference between digital and face-to-face?" or "can my son play his own choice of song in the exam?" — you can point them straight to the site. It covers everything in one place so you don't have to explain it all yourself!
+
+It also includes:
   • Student recognition — Hall of Fame, certificates and quarterly prize draws
   • Teacher awards — Bronze, Silver, Gold and Top Award badges
   • Faber music book discounts for teachers
@@ -160,14 +186,56 @@ I've recently launched musicExams.help, a free resource for teachers, parents an
 
 Have a look when you get a chance: https://musicexams.help
 
-We'd really appreciate any feedback — even a quick "looks good" or "I couldn't find X" helps us improve the site for everyone.
-
-Best wishes,
-Paul Sheridan
-musicExams.help — Centre 120`
+We'd really appreciate any feedback — even a quick "looks good" or "I couldn't find X" helps us improve the site for everyone.`
 
   navigator.clipboard.writeText(template)
   alert('Email template copied to clipboard!')
+}
+
+// Copy prize winner email (to send to the winning student's teacher)
+function copyWinnerEmail(teacher: Teacher) {
+  const firstName = teacher.teacher_name.split(' ')[0]
+  const winner = studentWinner.value
+  if (!winner) return
+
+  const winnerFirst = winner.name.split(' ')[0]
+  const winnerInitial = winner.name.split(' ').length > 1
+    ? `${winnerFirst} ${winner.name.split(' ').slice(-1)[0][0].toUpperCase()}`
+    : winnerFirst
+
+  const template = `Hi ${firstName},
+
+Great news — one of your students, ${winnerInitial}, has won the ${props.quarterLabel} student prize draw! They'll be receiving a £20 Amazon gift token.
+
+Here's the gift card code for you to pass on to their parent/guardian:
+
+[PASTE GIFT CARD CODE HERE]
+
+They can add this to any Amazon account — it's not tied to a name or email.
+
+Their name will appear on the musicExams.help Recognition page as "${winnerInitial}". If they or their parent would like us to display their full name instead, just let me know and I'll update it.
+
+Congratulations to them — and well done to you for entering them through centre 120!`
+
+  navigator.clipboard.writeText(template)
+  alert('Winner email copied to clipboard!')
+}
+
+// Copy heads-up email (to send from OLD email address)
+function copyHeadsUpEmail(teacher: Teacher) {
+  const firstName = teacher.teacher_name.split(' ')[0]
+
+  const template = `Hi ${firstName},
+
+Just a quick note — I've sent you your ${props.quarterLabel} exam results and certificates from my new email address: musicexams@musicexams.help
+
+If you can't see it, please check your junk/spam folder and mark it as safe. This is the address I'll be using going forward for everything related to Trinity exams through centre 120.
+
+Thanks,
+Paul`
+
+  navigator.clipboard.writeText(template)
+  alert('Heads-up email copied to clipboard!')
 }
 
 // Quarter selector
@@ -229,7 +297,7 @@ async function runDraw(type: 'student' | 'teacher', mode: 'test' | 'real') {
         studentTestWinner.value = data.winner
         testDrawCount.value.student++
       } else {
-        studentRealWinner.value = { ...data.winner, total_tickets: data.total_tickets, created_at: new Date().toISOString() }
+        studentRealWinner.value = { winner_name: data.winner.name, winner_instrument: data.winner.instrument, winner_grade: data.winner.grade, winner_teacher: data.winner.teacher, total_tickets: data.total_tickets, created_at: new Date().toISOString() }
         studentRealDone.value = true
       }
     } else {
@@ -322,10 +390,12 @@ const teacherWinner = computed(() => {
         </div>
         <div class="rounded-xl border border-brand-border bg-brand-surface p-4 text-center">
           <Trophy class="mx-auto mb-2 h-6 w-6 text-yellow-500" />
-          <p class="text-2xl font-bold text-brand-text" v-if="summary.top_scorer">{{ summary.top_scorer.score }}</p>
+          <p class="text-2xl font-bold text-brand-text" v-if="summary.has_pending">—</p>
+          <p class="text-2xl font-bold text-brand-text" v-else-if="summary.showstopper">{{ summary.showstopper.score }}</p>
           <p class="text-2xl font-bold text-brand-text" v-else>—</p>
-          <p class="text-xs text-brand-text-soft" v-if="summary.top_scorer">Top: {{ summary.top_scorer.name }}</p>
-          <p class="text-xs text-brand-text-soft" v-else>Top Scorer</p>
+          <p class="text-xs text-brand-text-soft" v-if="summary.has_pending">Results pending</p>
+          <p class="text-xs text-brand-text-soft" v-else-if="summary.showstopper">Showstopper: {{ summary.showstopper.name }}</p>
+          <p class="text-xs text-brand-text-soft" v-else>Top Scorers</p>
         </div>
       </div>
 
@@ -512,13 +582,19 @@ const teacherWinner = computed(() => {
                   >
                     <Copy class="h-4 w-4" /> Copy Email Template
                   </button>
-                  <a
-                    v-if="teacher.applicant_email"
-                    :href="`mailto:${teacher.applicant_email}?subject=${encodeURIComponent(quarterLabel + ' Exam Results & Certificates — musicExams.help')}`"
-                    class="inline-flex items-center gap-1.5 rounded-lg bg-brand-surface border border-brand-border px-3 py-2 text-sm font-semibold text-brand-text hover:bg-brand-surface-soft transition"
+                  <button
+                    v-if="studentWinner && studentWinner.teacher === teacher.teacher_name"
+                    class="inline-flex items-center gap-1.5 rounded-lg bg-yellow-500 px-3 py-2 text-sm font-semibold text-white hover:opacity-90 transition"
+                    @click="copyWinnerEmail(teacher)"
                   >
-                    <Mail class="h-4 w-4" /> Open in Gmail
-                  </a>
+                    <Gift class="h-4 w-4" /> Copy Winner Email
+                  </button>
+                  <button
+                    class="inline-flex items-center gap-1.5 rounded-lg bg-brand-surface border border-brand-border px-3 py-2 text-sm font-semibold text-brand-text hover:bg-brand-surface-soft transition"
+                    @click="copyHeadsUpEmail(teacher)"
+                  >
+                    <Copy class="h-4 w-4" /> Copy Heads-Up (Old Email)
+                  </button>
                   <button
                     class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition"
                     :class="completedTeachers[teacher.teacher_name]
@@ -551,15 +627,35 @@ const teacherWinner = computed(() => {
 
           <div class="space-y-6">
 
-            <!-- Top Scorer -->
-            <div v-if="summary.top_scorer" class="rounded-lg border border-yellow-300 bg-yellow-50 p-4">
-              <div class="flex items-center gap-2 mb-1">
-                <Trophy class="h-5 w-5 text-yellow-600" />
-                <span class="font-bold text-yellow-800">Top Scorer — {{ quarterLabel }}</span>
+            <!-- Top Scorers — only shown when all results are in -->
+            <div v-if="summary.has_pending" class="rounded-lg border border-brand-border bg-brand-surface-soft p-4">
+              <div class="flex items-center gap-2">
+                <Clock class="h-5 w-5 text-brand-text-soft" />
+                <span class="font-semibold text-brand-text-soft">Top scorer awards will appear once all results are in ({{ summary.pending }} still pending)</span>
               </div>
-              <p class="text-sm text-yellow-700">
-                {{ summary.top_scorer.name }} — {{ summary.top_scorer.instrument }} — {{ summary.top_scorer.score }} marks
-              </p>
+            </div>
+
+            <div v-else-if="summary.showstopper || summary.centre_stage" class="space-y-3">
+              <div v-if="summary.showstopper" class="rounded-lg border border-yellow-300 bg-yellow-50 p-4">
+                <div class="flex items-center gap-2 mb-1">
+                  <Star class="h-5 w-5 text-yellow-600" />
+                  <span class="font-bold text-yellow-800">Showstopper — Highest Distinction — {{ quarterLabel }}</span>
+                </div>
+                <p class="text-sm text-yellow-700">
+                  {{ summary.showstopper.name }} — {{ summary.showstopper.instrument }} — {{ summary.showstopper.score }} marks
+                </p>
+                <p class="mt-1 text-xs text-yellow-600">Full name (admin only): {{ summary.showstopper.full_name }}</p>
+              </div>
+              <div v-if="summary.centre_stage" class="rounded-lg border border-brand-accent/30 bg-brand-accent/5 p-4">
+                <div class="flex items-center gap-2 mb-1">
+                  <Trophy class="h-5 w-5 text-brand-accent" />
+                  <span class="font-bold text-brand-text">Centre Stage — Highest Merit — {{ quarterLabel }}</span>
+                </div>
+                <p class="text-sm text-brand-text-soft">
+                  {{ summary.centre_stage.name }} — {{ summary.centre_stage.instrument }} — {{ summary.centre_stage.score }} marks
+                </p>
+                <p class="mt-1 text-xs text-brand-text-soft">Full name (admin only): {{ summary.centre_stage.full_name }}</p>
+              </div>
             </div>
 
             <!-- Student Prize Draw -->

@@ -127,8 +127,20 @@ class QuarterEndController extends Controller
         $totalPending = $allEntries->filter(fn ($e) => $e->score === null)->count();
         $totalFees = $allEntries->sum('fee');
 
-        // Top scorer
-        $topScorer = $allEntries->filter(fn ($e) => $e->score !== null)->sortByDesc('score')->first();
+        // Top scorers — only calculated when NO results are pending
+        $hasPending = $allEntries->contains(fn ($e) => $e->score === null);
+        $topDistinction = null;
+        $topMerit = null;
+
+        if (! $hasPending) {
+            $withScores = $allEntries->filter(fn ($e) => $e->score !== null);
+
+            // Showstopper — highest Distinction (87+)
+            $topDistinction = $withScores->filter(fn ($e) => $e->score >= 87)->sortByDesc('score')->first();
+
+            // Centre Stage — highest Merit (75–86)
+            $topMerit = $withScores->filter(fn ($e) => $e->score >= 75 && $e->score < 87)->sortByDesc('score')->first();
+        }
 
         // --- PRIZE DRAW DATA ---
         // Student draw: every entry = one ticket (all students eligible)
@@ -206,10 +218,18 @@ class QuarterEndController extends Controller
                 'pending' => $totalPending,
                 'total_fees' => number_format($totalFees, 2),
                 'teacher_count' => $teacherGroups->count(),
-                'top_scorer' => $topScorer ? [
-                    'name' => $topScorer->candidate_name,
-                    'score' => $topScorer->score,
-                    'instrument' => $topScorer->instrument?->name,
+                'has_pending' => $hasPending,
+                'showstopper' => $topDistinction ? [
+                    'name' => $this->shortName($topDistinction->candidate_name),
+                    'full_name' => $topDistinction->candidate_name,
+                    'score' => $topDistinction->score,
+                    'instrument' => $topDistinction->instrument?->name,
+                ] : null,
+                'centre_stage' => $topMerit ? [
+                    'name' => $this->shortName($topMerit->candidate_name),
+                    'full_name' => $topMerit->candidate_name,
+                    'score' => $topMerit->score,
+                    'instrument' => $topMerit->instrument?->name,
                 ] : null,
             ],
             'prizeDraw' => [
@@ -372,5 +392,25 @@ class QuarterEndController extends Controller
             ],
             'total_tickets' => count($tickets),
         ]);
+    }
+
+    /**
+     * Convert full name to "First L" format (e.g. "Seth James Barraclough" → "James B").
+     * Uses the second name if available (first name is often a formal/unused name),
+     * otherwise falls back to the first name.
+     */
+    private function shortName(string $fullName): string
+    {
+        $parts = preg_split('/\s+/', trim($fullName));
+
+        if (count($parts) < 2) {
+            return $fullName;
+        }
+
+        $surname = array_pop($parts);
+        // Use the last "first name" — often the name they actually go by
+        $firstName = end($parts);
+
+        return $firstName.' '.strtoupper($surname[0]);
     }
 }

@@ -15,6 +15,20 @@ class ThankYouController extends Controller
     /**
      * GDPR-safe display name: "Seth B" unless parent has opted in.
      */
+    private function shortDisplayName(string $fullName): string
+    {
+        $parts = preg_split('/\s+/', trim($fullName));
+
+        if (count($parts) <= 1) {
+            return $fullName;
+        }
+
+        $firstName = $parts[0];
+        $lastInitial = mb_strtoupper(mb_substr(end($parts), 0, 1));
+
+        return "{$firstName} {$lastInitial}";
+    }
+
     private function displayName(ExamEntry $entry): string
     {
         if (! $entry->candidate_name) {
@@ -62,14 +76,15 @@ class ThankYouController extends Controller
         // Scored entries only (for top scorers + summary counts)
         $scoredEntries = $entries->filter(fn ($e) => $e->score !== null);
 
-        // Top scorers — only shown once the quarter has been finalised (real draw exists)
+        // Top scorers — only shown once ALL results are in AND the quarter has been finalised (real draw exists)
+        $hasPending = $entries->contains(fn ($e) => $e->score === null);
         $quarterFinalised = PrizeDraw::where('quarter', $quarter)
             ->where('year', $year)
             ->exists();
 
         $hallOfFameEntries = collect();
 
-        if ($quarterFinalised) {
+        if ($quarterFinalised && ! $hasPending) {
             $topDistinction = $scoredEntries->where('score', '>=', 87)->first();
             $topMerit = $scoredEntries->filter(fn ($e) => $e->score >= 75 && $e->score < 87)->first();
 
@@ -180,7 +195,7 @@ class ThankYouController extends Controller
         $prizeDrawWinners = PrizeDraw::where('type', 'student')
             ->get()
             ->mapWithKeys(fn ($d) => ["{$d->quarter}-{$d->year}" => [
-                'name' => $d->winner_name,
+                'name' => $this->shortDisplayName($d->winner_name),
                 'instrument' => $d->winner_instrument,
                 'grade' => $d->winner_grade,
             ]])
