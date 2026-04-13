@@ -77,6 +77,7 @@ const props = defineProps<{
   year: number
   quarterLabel: string
   teachers: Teacher[]
+  emailsSent: string[]
   summary: Summary
   prizeDraw: PrizeDrawData
   existingDraws: {
@@ -88,16 +89,45 @@ const props = defineProps<{
 const page = usePage()
 const batchResult = computed(() => (page.props as any).flash?.batch_result ?? null)
 
-// Track which teachers have been "done"
-const completedTeachers = ref<Record<string, boolean>>({})
+// Track which teachers have been "done" — initialise from database
+const completedTeachers = ref<Record<string, boolean>>(
+  Object.fromEntries((props.emailsSent || []).map(name => [name, true]))
+)
 const expandedTeacher = ref<string | null>(null)
 
 function toggleTeacher(name: string) {
   expandedTeacher.value = expandedTeacher.value === name ? null : name
 }
 
-function markDone(name: string) {
-  completedTeachers.value[name] = !completedTeachers.value[name]
+function getXsrfToken(): string {
+  const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/)
+  return match ? decodeURIComponent(match[1]) : ''
+}
+
+async function markDone(name: string) {
+  const newState = !completedTeachers.value[name]
+  completedTeachers.value[name] = newState
+
+  // Persist to database
+  try {
+    await fetch('/admin/quarter-end/mark-sent', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-XSRF-TOKEN': getXsrfToken(),
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        teacher_name: name,
+        quarter: props.quarter,
+        year: props.year,
+        sent: newState,
+      }),
+    })
+  } catch (e) {
+    // Revert on failure
+    completedTeachers.value[name] = !newState
+  }
 }
 
 const completedCount = computed(() => Object.values(completedTeachers.value).filter(Boolean).length)
@@ -312,11 +342,6 @@ const teacherRealDone = ref(!!props.existingDraws.teacher)
 const studentRealWinner = ref(props.existingDraws.student)
 const teacherRealWinner = ref(props.existingDraws.teacher)
 const testDrawCount = ref({ student: 0, teacher: 0 })
-
-function getXsrfToken(): string {
-  const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/)
-  return match ? decodeURIComponent(match[1]) : ''
-}
 
 async function runDraw(type: 'student' | 'teacher', mode: 'test' | 'real') {
   if (type === 'student') drawingStudent.value = true

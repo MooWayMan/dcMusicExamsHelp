@@ -7,6 +7,7 @@ use App\Models\ExamEntry;
 use App\Models\Order;
 use App\Models\PrizeDraw;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -209,11 +210,20 @@ class QuarterEndController extends Controller
             ->get()
             ->keyBy('type');
 
+        // Email tracking — which teachers have been marked as sent
+        $emailTracking = DB::table('quarter_end_email_tracking')
+            ->where('quarter', $quarter)
+            ->where('year', $year)
+            ->where('email_sent', true)
+            ->pluck('teacher_name')
+            ->toArray();
+
         return Inertia::render('admin/QuarterEnd/Index', [
             'quarter' => $quarter,
             'year' => $year,
             'quarterLabel' => $quarterLabel,
             'teachers' => $teachers,
+            'emailsSent' => $emailTracking,
             'existingDraws' => [
                 'student' => $existingDraws->get('student')?->only(['winner_name', 'winner_instrument', 'winner_grade', 'winner_teacher', 'total_tickets', 'created_at']),
                 'teacher' => $existingDraws->get('teacher')?->only(['winner_name', 'winner_entries', 'total_tickets', 'created_at']),
@@ -398,6 +408,35 @@ class QuarterEndController extends Controller
             ],
             'total_tickets' => count($tickets),
         ]);
+    }
+
+    /**
+     * Toggle email sent status for a teacher (AJAX).
+     */
+    public function markSent(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'teacher_name' => 'required|string',
+            'quarter' => 'required|integer|min:1|max:4',
+            'year' => 'required|integer',
+            'sent' => 'required|boolean',
+        ]);
+
+        DB::table('quarter_end_email_tracking')->updateOrInsert(
+            [
+                'teacher_name' => $validated['teacher_name'],
+                'quarter' => $validated['quarter'],
+                'year' => $validated['year'],
+            ],
+            [
+                'email_sent' => $validated['sent'],
+                'sent_at' => $validated['sent'] ? now() : null,
+                'updated_at' => now(),
+                'created_at' => now(),
+            ]
+        );
+
+        return response()->json(['success' => true]);
     }
 
     /**
