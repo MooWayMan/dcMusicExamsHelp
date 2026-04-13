@@ -74,8 +74,14 @@ class QuarterEndController extends Controller
             $withScores = $entries->filter(fn ($e) => $e->score !== null && $e->score >= 60);
             $pending = $entries->filter(fn ($e) => $e->score === null);
 
-            // Get applicant email from the first order (for contact)
+            // Get teacher email: prefer order where applicant IS the teacher (their own booking),
+            // then try registered user (skip placeholders), finally fall back to first order
             $firstOrder = $entries->first()?->order;
+            $ownOrder = $entries->first(fn ($e) => $e->order && strtolower(trim($e->order->applicant_name)) === strtolower(trim($teacherName)))?->order;
+            $teacherUser = \App\Models\User::where('name', $teacherName)->where('role', 'teacher')->first();
+            $teacherEmail = $ownOrder?->applicant_email
+                ?? (($teacherUser?->email && !str_contains($teacherUser->email, 'placeholder')) ? $teacherUser->email : null)
+                ?? $firstOrder?->applicant_email;
 
             // Certificate breakdown
             $distinctions = $withScores->filter(fn ($e) => $e->score >= 87)->count();
@@ -99,7 +105,7 @@ class QuarterEndController extends Controller
 
             return [
                 'teacher_name' => $teacherName,
-                'applicant_email' => $firstOrder?->applicant_email,
+                'applicant_email' => $teacherEmail,
                 'applicant_name' => $firstOrder?->applicant_name,
                 'total_entries' => $entries->count(),
                 'with_results' => $withScores->count(),
@@ -157,10 +163,10 @@ class QuarterEndController extends Controller
             ->map(fn ($u) => strtolower(trim($u->name)))
             ->toArray();
 
-        // Build teacher/applicant eligibility from orders in this quarter
-        $applicantEntries = $allEntries->groupBy(function ($e) {
-            return $e->order?->applicant_name ?? $e->teacher_name ?? 'Unknown';
-        });
+        // Build teacher eligibility from teacher_name (curated field, not order applicant)
+        $applicantEntries = $allEntries
+            ->filter(fn ($e) => $e->teacher_name !== null)
+            ->groupBy(fn ($e) => $e->teacher_name);
 
         $teacherTickets = [];
         foreach ($applicantEntries as $applicantName => $entries) {
@@ -335,9 +341,9 @@ class QuarterEndController extends Controller
             ->map(fn ($u) => strtolower(trim($u->name)))
             ->toArray();
 
-        $applicantEntries = $allEntries->groupBy(function ($e) {
-            return $e->order?->applicant_name ?? $e->teacher_name ?? 'Unknown';
-        });
+        $applicantEntries = $allEntries
+            ->filter(fn ($e) => $e->teacher_name !== null)
+            ->groupBy(fn ($e) => $e->teacher_name);
 
         $tickets = [];
         foreach ($applicantEntries as $applicantName => $entries) {

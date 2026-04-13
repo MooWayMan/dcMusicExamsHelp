@@ -134,10 +134,10 @@ class CertificateController extends Controller
             $encoded = $image->encode(new PngEncoder());
             $base64 = base64_encode((string) $encoded);
             $html = '<html><head><style>@page { margin: 0; } body { margin: 0; }</style></head><body>'
-                . '<img src="data:image/png;base64,' . $base64 . '" style="width:297mm;height:210mm;display:block;">'
+                . '<img src="data:image/png;base64,' . $base64 . '" style="width:210mm;height:297mm;display:block;">'
                 . '</body></html>';
 
-            $pdf = Pdf::loadHTML($html)->setPaper('a4', 'landscape');
+            $pdf = Pdf::loadHTML($html)->setPaper('a4', 'portrait');
             $pdfFilename = str_replace(' ', '_', $templateKey) . '_' . str_replace(' ', '_', $name) . '.pdf';
 
             return response($pdf->output(), 200, [
@@ -161,14 +161,16 @@ class CertificateController extends Controller
             'quarter'      => 'nullable|string|max:30',
         ]);
 
-        $teacher = User::findOrFail($validated['teacher_id']);
+        $teacher = User::with('schools')->findOrFail($validated['teacher_id']);
         $templateKey = $validated['template'];
 
         if (! isset(self::TEACHER_TEMPLATES[$templateKey])) {
             return back()->withErrors(['template' => 'Invalid template selected.']);
         }
 
-        $name = $validated['custom_name'] ?? $teacher->name;
+        // Use custom name if provided, otherwise school name, falling back to teacher name
+        $schoolName = $teacher->schools->first()?->name;
+        $name = $validated['custom_name'] ?? $schoolName ?? $teacher->name;
         $quarter = $validated['quarter'] ?? $this->getQuarterLabel(now());
 
         $templateUrl = self::S3_BASE . self::TEACHER_TEMPLATES[$templateKey];
@@ -177,10 +179,10 @@ class CertificateController extends Controller
         $encoded = $image->encode(new PngEncoder());
         $base64 = base64_encode((string) $encoded);
         $html = '<html><head><style>@page { margin: 0; } body { margin: 0; }</style></head><body>'
-            . '<img src="data:image/png;base64,' . $base64 . '" style="width:297mm;height:210mm;display:block;">'
+            . '<img src="data:image/png;base64,' . $base64 . '" style="width:210mm;height:297mm;display:block;">'
             . '</body></html>';
 
-        $pdf = Pdf::loadHTML($html)->setPaper('a4', 'landscape');
+        $pdf = Pdf::loadHTML($html)->setPaper('a4', 'portrait');
         $pdfFilename = str_replace(' ', '_', $templateKey) . '_' . str_replace(' ', '_', $name) . '.pdf';
 
         return response($pdf->output(), 200, [
@@ -294,8 +296,8 @@ class CertificateController extends Controller
         $width = $image->width();
         $height = $image->height();
 
-        // Text sits centre-right (badge is on the left)
-        $textX = (int) ($width * 0.55);
+        // Right-side text X — right edge anchor, matching student certificate layout
+        $rightTextX = (int) ($width * 0.92);
 
         // Font — Georgia preferred, DejaVu as fallback
         $fontPath = resource_path('fonts/Georgia.ttf');
@@ -307,18 +309,18 @@ class CertificateController extends Controller
         }
 
         // Scale font sizes relative to image width
-        $nameSize = (int) ($width * 0.035);
-        $quarterSize = (int) ($width * 0.04);
+        $nameSize = (int) ($width * 0.038);
+        $quarterSize = (int) ($width * 0.042);
 
-        // Name — positioned at ~50% from top (centred in the empty space)
-        $nameY = (int) ($height * 0.50);
-        $image->text($name, $textX, $nameY, function (FontFactory $font) use ($fontPath, $nameSize) {
+        // Name — positioned at ~47% from top, right-aligned (matching student layout)
+        $nameY = (int) ($height * 0.47);
+        $image->text($name, $rightTextX, $nameY, function (FontFactory $font) use ($fontPath, $nameSize) {
             if ($fontPath) {
                 $font->filename($fontPath);
             }
             $font->size($nameSize);
             $font->color('#1e3a5f');
-            $font->align('center');
+            $font->align('right');
         });
 
         // Quarter — bold, at the very bottom (~94% from top)
@@ -341,6 +343,8 @@ class CertificateController extends Controller
      */
     public function batchGenerate(Request $request)
     {
+        set_time_limit(120); // Certificate generation can take a while with many entries
+
         $validated = $request->validate([
             'quarter' => 'required|integer|min:1|max:4',
             'year' => 'required|integer|min:2025|max:2030',
@@ -465,10 +469,10 @@ class CertificateController extends Controller
                     // Convert PNG to PDF using DomPDF
                     $base64 = base64_encode((string) $encoded);
                     $html = '<html><head><style>@page { margin: 0; } body { margin: 0; }</style></head><body>'
-                        . '<img src="data:image/png;base64,' . $base64 . '" style="width:297mm;height:210mm;display:block;">'
+                        . '<img src="data:image/png;base64,' . $base64 . '" style="width:210mm;height:297mm;display:block;">'
                         . '</body></html>';
 
-                    $pdf = Pdf::loadHTML($html)->setPaper('a4', 'landscape');
+                    $pdf = Pdf::loadHTML($html)->setPaper('a4', 'portrait');
 
                     $safeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $entry->candidate_name);
                     $shortCert = str_replace([' Certificate', ' '], ['', '_'], $certName);
@@ -485,10 +489,27 @@ class CertificateController extends Controller
             $teacherSummary[$teacher] = $certCount;
         }
 
+        // Fetch ALL entries for the quarter (including those without scores) for pending counts
+        $allQuarterEntries = ExamEntry::where(function ($q) {
+                $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
+            })
+            ->with(['instrument:id,name', 'order:id,requested_start_date'])
+            ->get()
+            ->filter(function ($entry) use ($startDate, $endDate) {
+                $date = $entry->exam_date ?? $entry->order?->requested_start_date;
+                return $date && $date->between($startDate, $endDate);
+            });
+        $allGrouped = $allQuarterEntries->groupBy(fn ($e) => $e->teacher_name ?? 'Unassigned');
+
         // Generate teacher report PDFs and CSV spreadsheets
         foreach ($grouped as $teacher => $teacherEntries) {
             $safeTeacher = preg_replace('/[^a-zA-Z0-9_-]/', '_', $teacher);
             $teacherDir = "{$outputDir}/{$safeTeacher}";
+
+            // Count pending entries for this teacher (entries without scores)
+            $allTeacherEntries = $allGrouped->get($teacher, collect());
+            $pendingEntries = $allTeacherEntries->filter(fn ($e) => $e->score === null);
+            $pendingCount = $pendingEntries->count();
 
             // --- CSV Spreadsheet ---
             $csvRows = [];
@@ -505,8 +526,29 @@ class CertificateController extends Controller
                 ];
             }
 
+            // Add pending entries to CSV (no score yet)
+            if ($pendingCount > 0) {
+                $csvRows[] = []; // blank row separator
+                $csvRows[] = ['AWAITING RESULTS', '', '', '', '', '', ''];
+                foreach ($pendingEntries->sortBy('candidate_name') as $entry) {
+                    $csvRows[] = [
+                        $entry->candidate_name,
+                        $entry->instrument?->name ?? '',
+                        $entry->grade ?? '',
+                        '',
+                        'Awaiting',
+                        '',
+                        ($entry->exam_date ?? $entry->order?->requested_start_date)?->format('j M Y') ?? '',
+                    ];
+                }
+            }
+
             $csvContent = '';
             foreach ($csvRows as $row) {
+                if (empty($row)) {
+                    $csvContent .= "\n";
+                    continue;
+                }
                 $csvContent .= implode(',', array_map(fn ($v) => '"' . str_replace('"', '""', $v) . '"', $row)) . "\n";
             }
             Storage::disk('local')->put("{$teacherDir}/{$safeTeacher}_Results.csv", $csvContent);
@@ -539,6 +581,20 @@ class CertificateController extends Controller
                     . '</tr>';
             }
 
+            // Add pending entries to table
+            if ($pendingCount > 0) {
+                $tableRows .= '<tr><td colspan="5" style="padding:12px;background:#fff8e1;font-weight:bold;color:#856404;border-bottom:1px solid #ddd;">Awaiting Results</td></tr>';
+                foreach ($pendingEntries->sortBy('candidate_name') as $entry) {
+                    $tableRows .= '<tr style="background:#fffdf5;">'
+                        . '<td style="padding:8px 12px;border-bottom:1px solid #ddd;">' . e($entry->candidate_name) . '</td>'
+                        . '<td style="padding:8px 12px;border-bottom:1px solid #ddd;">' . e($entry->instrument?->name ?? '') . '</td>'
+                        . '<td style="padding:8px 12px;border-bottom:1px solid #ddd;text-align:center;">' . e($entry->grade ?? '') . '</td>'
+                        . '<td style="padding:8px 12px;border-bottom:1px solid #ddd;text-align:center;">—</td>'
+                        . '<td style="padding:8px 12px;border-bottom:1px solid #ddd;text-align:center;color:#856404;font-style:italic;">Awaiting</td>'
+                        . '</tr>';
+                }
+            }
+
             $reportHtml = '
             <html><head><style>
                 @page { margin: 30px 40px; }
@@ -564,6 +620,7 @@ class CertificateController extends Controller
                     <span class="summary-box" style="background:#e6f0f2;color:#2a6e7a;">' . $merits . ' Merit' . ($merits !== 1 ? 's' : '') . '</span>
                     <span class="summary-box" style="background:#e8edf2;color:#1e3a5f;">' . $passes . ' Pass' . ($passes !== 1 ? 'es' : '') . '</span>
                     <span class="summary-box" style="background:#f5f5f5;color:#333;">' . $totalEntries . ' Total</span>
+                    ' . ($pendingCount > 0 ? '<span class="summary-box" style="background:#fff8e1;color:#856404;">' . $pendingCount . ' Awaiting Results</span>' : '') . '
                 </div>
 
                 <table>
@@ -589,6 +646,10 @@ class CertificateController extends Controller
 
             $safeTeacher = preg_replace('/[^a-zA-Z0-9_-]/', '_', $teacher);
             $teacherDir = "{$outputDir}/{$safeTeacher}";
+
+            // Look up school name for this teacher — certificates show school, not personal name
+            $teacherUser = User::with('schools')->where('name', $teacher)->where('role', 'teacher')->first();
+            $certDisplayName = $teacherUser?->schools->first()?->name ?? $teacher;
 
             // Count ALL entries for this teacher (not just this quarter) for badge tier
             $totalCandidates = ExamEntry::where('teacher_name', $teacher)
@@ -626,11 +687,11 @@ class CertificateController extends Controller
                         $boldFontPath = resource_path('fonts/Georgia-Bold.ttf');
                         if (! file_exists($boldFontPath)) $boldFontPath = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf';
 
-                        $image->text($teacher, (int) ($w * 0.55), (int) ($h * 0.50), function (FontFactory $font) use ($fontPath, $w) {
+                        $image->text($certDisplayName, (int) ($w * 0.92), (int) ($h * 0.47), function (FontFactory $font) use ($fontPath, $w) {
                             if ($fontPath) $font->filename($fontPath);
-                            $font->size((int) ($w * 0.035));
+                            $font->size((int) ($w * 0.038));
                             $font->color('#1e3a5f');
-                            $font->align('center');
+                            $font->align('right');
                         });
 
                         $image->text($quarterLabel, (int) ($w * 0.50), (int) ($h * 0.94), function (FontFactory $font) use ($boldFontPath, $w) {
@@ -643,15 +704,40 @@ class CertificateController extends Controller
                         $encoded = $image->encode(new PngEncoder());
                         $base64 = base64_encode((string) $encoded);
                         $html = '<html><head><style>@page { margin: 0; } body { margin: 0; }</style></head><body>'
-                            . '<img src="data:image/png;base64,' . $base64 . '" style="width:297mm;height:210mm;display:block;">'
+                            . '<img src="data:image/png;base64,' . $base64 . '" style="width:210mm;height:297mm;display:block;">'
                             . '</body></html>';
 
-                        $badgePdf = Pdf::loadHTML($html)->setPaper('a4', 'landscape');
+                        $badgePdf = Pdf::loadHTML($html)->setPaper('a4', 'portrait');
                         $shortBadge = str_replace([' Certificate', ' '], ['', '_'], $badgeTier);
                         Storage::disk('local')->put("{$teacherDir}/{$safeTeacher}_{$shortBadge}.pdf", $badgePdf->output());
                     }
                 } catch (\Throwable $e) {
                     \Log::error("Badge cert failed for {$teacher}: {$e->getMessage()}");
+                }
+
+                // Download the badge PNG from S3 for social media / website use
+                try {
+                    $badgePngMap = [
+                        'Bronze Appreciation Certificate' => 'awardTA10.png',
+                        'Silver Appreciation Certificate' => 'awardTA20.png',
+                        'Gold Appreciation Certificate'   => 'awardTA30.png',
+                        'Top Award Appreciation Certificate' => 'awardTA40.png',
+                    ];
+
+                    if (isset($badgePngMap[$badgeTier])) {
+                        $badgePngUrl = self::S3_BASE . $badgePngMap[$badgeTier];
+                        $badgePngResponse = Http::get($badgePngUrl);
+
+                        if ($badgePngResponse->successful()) {
+                            $shortTier = str_replace([' Appreciation Certificate', ' '], ['', '_'], $badgeTier);
+                            Storage::disk('local')->put(
+                                "{$teacherDir}/{$safeTeacher}_{$shortTier}_Badge.png",
+                                $badgePngResponse->body()
+                            );
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    \Log::error("Badge PNG download failed for {$teacher}: {$e->getMessage()}");
                 }
             }
         }

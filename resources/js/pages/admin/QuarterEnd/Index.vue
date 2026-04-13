@@ -5,7 +5,7 @@ import { router, usePage } from '@inertiajs/vue3'
 import {
   Award, CheckCircle2, Circle, Download, Package,
   Trophy, Users, Clock, Star, ChevronDown, ChevronUp, Copy,
-  Gift, Sparkles, Loader2
+  Gift, Sparkles, Loader2, ExternalLink
 } from 'lucide-vue-next'
 import PageHeader from '@/components/reusables/PageHeader.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
@@ -167,7 +167,7 @@ Now the good news — the ${props.quarterLabel} exam results are in and your stu
 Here are the results:
 ${studentList}${teacher.pending > 0 ? `\n\nNote: ${teacher.pending} of your students are still awaiting results — I'll be in touch as soon as they come through.\n` : ''}
 
-I've attached their personalised certificates for you to pass on, along with a results report (PDF) and a spreadsheet (CSV). Every student receives at least a Bravo Certificate, with Merit earning a Take a Bow Certificate and Distinction earning a Standing Ovation Certificate.${badgeText}${topScorerText}${studentDrawText}
+I've attached their personalised certificates for you to pass on, along with a results report (PDF) and a spreadsheet (CSV). Everything is in the attached ZIP file — just double-click to open it. Every student receives at least a Bravo Certificate, with Merit earning a Take a Bow Certificate and Distinction earning a Standing Ovation Certificate.${badgeText}${topScorerText}${studentDrawText}
 Every quarter we run two prize draws — one for students and one for teachers. Every student entry through centre 120 earns one ticket in the student draw. Teachers also get one ticket per student entry linked to them.
 
 The teacher draw will take place in the coming weeks — the prize is a £50 gift token for you to buy musical equipment for your school. I'm giving everyone a chance to claim any students who booked directly or through a parent first, as this increases your tickets in the draw. That's why the question at the top of this email matters!
@@ -186,10 +186,20 @@ It also includes:
 
 Have a look when you get a chance: https://musicexams.help
 
-We'd really appreciate any feedback — even a quick "looks good" or "I couldn't find X" helps us improve the site for everyone.`
+We'd really appreciate any feedback — even a quick "looks good" or "I couldn't find X" helps us improve the site for everyone.
+
+P.S. Here's a suggested message you can send to parents along with their child's certificate:
+
+"Hi [Parent Name], I've recently partnered with musicExams.help, a new platform that supports teachers, parents and students taking Trinity exams. As part of this, your child now receives a personalised certificate to celebrate their achievement — please find it attached. They also appear on the musicExams.help Recognition page at https://musicexams.help/recognition — for privacy, only their first name and surname initial are shown. If you'd like their full name displayed instead, just drop an email to musicexams@musicexams.help and they'll update it."`
 
   navigator.clipboard.writeText(template)
-  alert('Email template copied to clipboard!')
+  alert('Email template copied to clipboard! Now click "Open in Gmail" to compose.')
+}
+
+function openGmailCompose(teacher: Teacher) {
+  const subject = encodeURIComponent(`${props.quarterLabel} Exam Results — Your Students Did Brilliantly!`)
+  const to = encodeURIComponent(teacher.applicant_email || '')
+  window.open(`https://mail.google.com/mail/?view=cm&to=${to}&su=${subject}`, '_blank')
 }
 
 // Copy prize winner email (to send to the winning student's teacher)
@@ -236,6 +246,31 @@ Paul`
 
   navigator.clipboard.writeText(template)
   alert('Heads-up email copied to clipboard!')
+}
+
+// Sample email for teachers to forward certificates to parents
+function copyParentEmailSample() {
+  const template = `Here's a suggested email you can send to parents along with their child's certificate:
+
+---
+
+Dear [Parent Name],
+
+I'm pleased to let you know that [Student Name] has received their ${props.quarterLabel} Trinity College London exam result!
+
+They achieved a score of [Score] — [Result (Pass/Merit/Distinction)] — in [Instrument] Grade [Grade]. Well done to them!
+
+I've attached their personalised certificate from musicExams.help, which recognises their achievement through centre 120.
+
+Their result will also appear on the musicExams.help Recognition page at https://musicexams.help/recognition — have a look when you get a chance!
+
+If you have any questions about future exams or would like to book their next grade, just let me know.
+
+Best wishes,
+[Your Name]`
+
+  navigator.clipboard.writeText(template)
+  alert('Sample parent email copied to clipboard!')
 }
 
 // Quarter selector
@@ -581,6 +616,12 @@ const teacherWinner = computed(() => {
                     @click="copyEmailTemplate(teacher)"
                   >
                     <Copy class="h-4 w-4" /> Copy Email Template
+                  </button>
+                  <button
+                    class="inline-flex items-center gap-1.5 rounded-lg bg-red-500 px-3 py-2 text-sm font-semibold text-white hover:opacity-90 transition"
+                    @click="openGmailCompose(teacher)"
+                  >
+                    <ExternalLink class="h-4 w-4" /> Open in Gmail
                   </button>
                   <button
                     v-if="studentWinner && studentWinner.teacher === teacher.teacher_name"
