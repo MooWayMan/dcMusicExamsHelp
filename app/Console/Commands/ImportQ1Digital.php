@@ -29,6 +29,13 @@ class ImportQ1Digital extends Command
 
     public function handle(): int
     {
+        // Remove PENDING_PLACEHOLDER if it exists
+        $placeholder = ExamEntry::where('candidate_name', 'PENDING_PLACEHOLDER')->first();
+        if ($placeholder) {
+            $placeholder->forceDelete();
+            $this->info('Removed PENDING_PLACEHOLDER entry.');
+        }
+
         if ($this->option('fresh')) {
             $orderNumbers = array_keys($this->getOrders());
 
@@ -107,6 +114,8 @@ class ImportQ1Digital extends Command
                     'score' => $entry['score'] ?? null,
                     'result' => $entry['result'] ?? null,
                     'notes' => $entry['notes'] ?? null,
+                    'show_on_thank_you' => true,
+                    'show_full_name' => false,
                 ]
             );
 
