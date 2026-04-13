@@ -10,6 +10,7 @@ import BookingModal from '@/components/BookingModal.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
+import PageMaintenance from '@/components/reusables/PageMaintenance.vue'
 import { Heart, Trophy, Music, Star, Award, Search, ChevronRight } from 'lucide-vue-next'
 
 interface HallOfFameEntry {
@@ -195,6 +196,7 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
 </script>
 
 <template>
+  <PageMaintenance pageSlug="recognition" pageTitle="Recognition">
   <Head :title="pageMeta.title" :description="pageMeta.description" />
 
   <div class="min-h-screen bg-brand-bg text-brand-text">
@@ -677,4 +679,5 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
     <!-- Back to top button -->
     <!-- Global ScrollToTop component handles this -->
   </div>
+  </PageMaintenance>
 </template>

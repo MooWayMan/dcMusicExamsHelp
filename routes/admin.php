@@ -5,6 +5,7 @@
 use App\Http\Controllers\Admin\CertificateController;
 use App\Http\Controllers\Admin\ContactLogController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\PageMaintenanceController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PendingResultsController;
 use App\Http\Controllers\Admin\QuarterEndController;
@@ -76,6 +77,11 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])->pref
     Route::post('session-logs', [SessionLogController::class, 'store'])->name('session-logs.store');
     Route::put('session-logs/{sessionLog}', [SessionLogController::class, 'update'])->name('session-logs.update');
     Route::delete('session-logs/{sessionLog}', [SessionLogController::class, 'destroy'])->name('session-logs.destroy');
+
+    // Page Maintenance — per-page toggle for data-heavy pages
+    Route::get('page-maintenance', [PageMaintenanceController::class, 'index'])->name('page-maintenance.index');
+    Route::patch('page-maintenance/{page}/toggle', [PageMaintenanceController::class, 'toggle'])->name('page-maintenance.toggle');
+    Route::patch('page-maintenance/{page}/message', [PageMaintenanceController::class, 'updateMessage'])->name('page-maintenance.message');
 });
 
 // Explicit model binding: 'teacher' param resolves to User model (teachers are users with role=teacher)

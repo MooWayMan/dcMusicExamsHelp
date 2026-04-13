@@ -11,6 +11,7 @@ import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyGlassCardConstructor from '@/components/reusables/MyGlassCardConstructor.vue'
 import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
+import PageMaintenance from '@/components/reusables/PageMaintenance.vue'
 import { Trophy, Award, Star, Gift, Users, CheckCircle } from 'lucide-vue-next'
 
 const { animClass } = usePageAnimation()
@@ -126,6 +127,7 @@ const faqs = [
 </script>
 
 <template>
+  <PageMaintenance pageSlug="incentives" pageTitle="Incentives & Awards">
   <Head :title="pageMeta.title" :description="pageMeta.description" />
 
   <div class="min-h-screen bg-black text-brand-text">
@@ -360,4 +362,5 @@ const faqs = [
 
     <BookingModal :show="showBookingModal" @close="showBookingModal = false" />
   </div>
+  </PageMaintenance>
 </template>

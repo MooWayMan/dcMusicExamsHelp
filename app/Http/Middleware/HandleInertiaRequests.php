@@ -2,7 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\PageMaintenance;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -47,6 +49,9 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
                 'batch_result' => fn () => $request->session()->get('batch_result'),
             ],
+            'maintenancePages' => fn () => Schema::hasTable('page_maintenance')
+                ? PageMaintenance::where('is_active', true)->pluck('message', 'page_slug')->toArray()
+                : [],
         ];
     }
 }

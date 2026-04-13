@@ -12,6 +12,7 @@ import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyTableConstructor from '@/components/reusables/MyTableConstructor.vue'
 import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
+import PageMaintenance from '@/components/reusables/PageMaintenance.vue'
 import { PoundSterling, Calendar, FileText } from 'lucide-vue-next'
 
 const { animClass } = usePageAnimation()
@@ -224,6 +225,7 @@ const faqs = [
 </script>
 
 <template>
+  <PageMaintenance pageSlug="exam-fees" pageTitle="Exam Fees & Dates">
   <Head :title="pageMeta.title" :description="pageMeta.description" />
 
   <div class="min-h-screen bg-black text-brand-text">
@@ -681,4 +683,5 @@ const faqs = [
   </div>
 
   <BookingModal :show="showBookingModal" @close="showBookingModal = false" />
+  </PageMaintenance>
 </template>

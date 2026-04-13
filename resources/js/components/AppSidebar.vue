@@ -14,6 +14,7 @@ import {
     Map,
     Clock,
     Award,
+    Construction,
     Gift,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
@@ -106,6 +107,11 @@ const adminNavItems: NavItem[] = [
         title: 'Roadmap',
         href: '/admin/roadmap',
         icon: Map,
+    },
+    {
+        title: 'Page Maintenance',
+        href: '/admin/page-maintenance',
+        icon: Construction,
     },
     {
         title: 'Session Hours',
