@@ -102,8 +102,8 @@ function markDone(name: string) {
 
 const completedCount = computed(() => Object.values(completedTeachers.value).filter(Boolean).length)
 
-// Step tracking
-const currentStep = ref(1)
+// Step tracking — default to step 2 if certificates have already been generated (ZIP exists in flash or previous visit)
+const currentStep = ref(batchResult.value ? 2 : 1)
 
 // Batch generate
 const batchGenerating = ref(false)
@@ -472,15 +472,29 @@ const teacherWinner = computed(() => {
         </div>
       </div>
 
+      <!-- STEP TABS -->
+      <div class="mb-6 flex gap-2">
+        <button
+          v-for="(stepLabel, idx) in ['1. Generate Certificates', '2. Email Teachers', '3. Prize Draws']"
+          :key="idx"
+          class="rounded-lg px-4 py-2 text-sm font-semibold transition"
+          :class="currentStep === idx + 1
+            ? 'bg-brand-accent text-white'
+            : 'bg-brand-surface-soft text-brand-text-soft hover:bg-brand-surface hover:text-brand-text'"
+          @click="currentStep = idx + 1"
+        >
+          {{ stepLabel }}
+        </button>
+      </div>
+
       <!-- STEPS -->
       <div class="mb-8 space-y-4">
 
         <!-- STEP 1: Generate certificates -->
-        <div class="rounded-xl border-2 p-5" :class="currentStep >= 1 ? 'border-brand-accent bg-brand-surface' : 'border-brand-border bg-brand-surface-soft'">
+        <div v-show="currentStep === 1" class="rounded-xl border-2 border-brand-accent bg-brand-surface p-5">
           <div class="flex items-center gap-3 mb-3">
-            <div class="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold"
-              :class="batchResult || currentStep > 1 ? 'bg-brand-success text-white' : 'bg-brand-accent text-white'">
-              <CheckCircle2 v-if="batchResult || currentStep > 1" class="h-5 w-5" />
+            <div class="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold bg-brand-accent text-white">
+              <CheckCircle2 v-if="batchResult" class="h-5 w-5" />
               <span v-else>1</span>
             </div>
             <h3 class="text-lg font-bold text-brand-text">Generate All Certificates</h3>
@@ -518,7 +532,7 @@ const teacherWinner = computed(() => {
         </div>
 
         <!-- STEP 2: Email each teacher -->
-        <div class="rounded-xl border-2 p-5" :class="currentStep >= 2 ? 'border-brand-accent bg-brand-surface' : 'border-brand-border bg-brand-surface-soft opacity-60'">
+        <div v-show="currentStep === 2" class="rounded-xl border-2 border-brand-accent bg-brand-surface p-5">
           <div class="flex items-center gap-3 mb-3">
             <div class="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold"
               :class="completedCount === teachers.length ? 'bg-brand-success text-white' : currentStep >= 2 ? 'bg-brand-accent text-white' : 'bg-brand-border text-brand-text-soft'">
@@ -677,7 +691,7 @@ const teacherWinner = computed(() => {
         </div>
 
         <!-- STEP 3: Prize Draws -->
-        <div class="rounded-xl border-2 p-5" :class="currentStep >= 3 ? 'border-brand-accent bg-brand-surface' : 'border-brand-border bg-brand-surface-soft'">
+        <div v-show="currentStep === 3" class="rounded-xl border-2 border-brand-accent bg-brand-surface p-5">
           <div class="flex items-center gap-3 mb-3">
             <div class="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold"
               :class="(studentWinner && teacherWinner) ? 'bg-brand-success text-white' : currentStep >= 3 ? 'bg-brand-accent text-white' : 'bg-brand-border text-brand-text-soft'">
