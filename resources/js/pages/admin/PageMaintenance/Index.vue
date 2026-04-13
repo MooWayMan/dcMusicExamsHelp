@@ -26,7 +26,7 @@ const editingId = ref<number | null>(null)
 const editMessage = ref('')
 
 function togglePage(page: MaintenancePage) {
-  router.patch(route('admin.page-maintenance.toggle', page.id), {}, {
+  router.patch(`/admin/page-maintenance/${page.id}/toggle`, {}, {
     preserveScroll: true,
   })
 }
@@ -42,7 +42,7 @@ function cancelEditing() {
 }
 
 function saveMessage(page: MaintenancePage) {
-  router.patch(route('admin.page-maintenance.message', page.id), {
+  router.patch(`/admin/page-maintenance/${page.id}/message`, {
     message: editMessage.value,
   }, {
     preserveScroll: true,

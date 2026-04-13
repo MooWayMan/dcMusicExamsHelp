@@ -23,9 +23,17 @@ class SeedProductionData extends Command
         $this->info('═══════════════════════════════════════════');
         $this->newLine();
 
-        // Step 1: Admin user + Instruments + Subject Areas (via DatabaseSeeder)
+        // Step 1: Admin user + Instruments + Subject Areas (skip FakeDataSeeder)
         $this->info('Step 1/7: Seeding admin user, instruments & subject areas...');
-        $this->call('db:seed');
+        User::create([
+            'name' => 'Paul Sheridan',
+            'email' => 'musicexams@musicexams.help',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now(),
+            'role' => 'admin',
+        ]);
+        $this->call('db:seed', ['--class' => 'Database\\Seeders\\LookupSeeder']);
+        $this->info('Admin user + lookups created.');
         $this->newLine();
 
         // Step 2: Teachers
