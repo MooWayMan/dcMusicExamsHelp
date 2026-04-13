@@ -9,7 +9,7 @@ use Illuminate\Console\Command;
 
 class PopulateTeachers extends Command
 {
-    protected $signature = 'teachers:populate {--fresh : Delete all existing teachers first} {--dry-run : Show what would happen without making changes}';
+    protected $signature = 'teachers:populate {--fresh : Delete all existing teachers first} {--force : Skip confirmation prompts} {--dry-run : Show what would happen without making changes}';
 
     protected $description = 'Populate the teachers table from known teacher data and link to exam entries';
 
@@ -18,7 +18,7 @@ class PopulateTeachers extends Command
         $dryRun = $this->option('dry-run');
 
         if ($this->option('fresh') && ! $dryRun) {
-            if (! $this->confirm('This will delete ALL existing teacher records. Continue?')) {
+            if (! $this->option('force') && ! $this->confirm('This will delete ALL existing teacher records. Continue?')) {
                 return self::FAILURE;
             }
             TeacherEmail::truncate();
