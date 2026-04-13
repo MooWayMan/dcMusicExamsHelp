@@ -97,4 +97,9 @@ class ExamEntry extends Model
     {
         return $this->belongsTo(Instrument::class);
     }
+
+    public function teacher(): BelongsTo
+    {
+        return $this->belongsTo(Teacher::class);
+    }
 }

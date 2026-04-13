@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ExamEntry;
 use App\Models\Order;
 use App\Models\PrizeDraw;
+use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -75,13 +76,13 @@ class QuarterEndController extends Controller
             $withScores = $entries->filter(fn ($e) => $e->score !== null && $e->score >= 60);
             $pending = $entries->filter(fn ($e) => $e->score === null);
 
-            // Get teacher email: prefer order where applicant IS the teacher (their own booking),
-            // then try registered user (skip placeholders), finally fall back to first order
+            // Get teacher email: prefer teachers table (primary email),
+            // then fall back to order where applicant IS the teacher, then first order
+            $teacherRecord = Teacher::with('emails')->where('name', $teacherName)->first();
             $firstOrder = $entries->first()?->order;
             $ownOrder = $entries->first(fn ($e) => $e->order && strtolower(trim($e->order->applicant_name)) === strtolower(trim($teacherName)))?->order;
-            $teacherUser = \App\Models\User::where('name', $teacherName)->where('role', 'teacher')->first();
-            $teacherEmail = $ownOrder?->applicant_email
-                ?? (($teacherUser?->email && !str_contains($teacherUser->email, 'placeholder')) ? $teacherUser->email : null)
+            $teacherEmail = $teacherRecord?->primary_email
+                ?? $ownOrder?->applicant_email
                 ?? $firstOrder?->applicant_email;
 
             // Certificate breakdown
