@@ -28,3 +28,9 @@ yarn-error.log
 /.zed
 CLAUDE.md
 .claude/
+# Database dumps
+*.sql
+*.sql.gz
+
+# SQLite databases
+*.sqlite*
