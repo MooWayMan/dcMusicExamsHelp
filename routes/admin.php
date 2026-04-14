@@ -18,8 +18,13 @@ use App\Http\Controllers\Admin\TeacherController;
 use App\Http\Middleware\SyncCalendarTasks;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
+    // NewStuffApril14th2026
+
+use App\Http\Controllers\Admin\ContactController;
 
 Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])->prefix('admin')->name('admin.')->group(function () {
+    // NewStuffApril14th2026
+    Route::get('contacts', [ContactController::class, 'index'])->name('contacts.index');
     // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
