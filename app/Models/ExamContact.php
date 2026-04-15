@@ -18,6 +18,8 @@ class ExamContact extends Model
         'email',
         'phone',
         'role',
+        'source',
+        'notes',
         'user_id',
     ];
 
@@ -39,7 +41,7 @@ class ExamContact extends Model
     public function orders(): BelongsToMany
     {
         return $this->belongsToMany(Order::class, 'order_contacts')
-            ->withPivot('role_in_order')
+            ->withPivot(['role_in_order', 'is_primary', 'notes'])
             ->withTimestamps();
     }
 
@@ -61,5 +63,15 @@ class ExamContact extends Model
     public function isSelfApplicant(): bool
     {
         return $this->role === 'self';
+    }
+
+    public function isApplicant(): bool
+    {
+        return $this->role === 'applicant';
+    }
+
+    public function isUnknown(): bool
+    {
+        return $this->role === 'unknown' || $this->role === null;
     }
 }

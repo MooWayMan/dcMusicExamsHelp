@@ -34,3 +34,5 @@ CLAUDE.md
 
 # SQLite databases
 *.sqlite*
+# CSV imports (temporary data files)
+*.csv
