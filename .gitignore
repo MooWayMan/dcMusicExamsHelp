@@ -36,3 +36,5 @@ CLAUDE.md
 *.sqlite*
 # CSV imports (temporary data files)
 *.csv
+# Import files (temporary Trinity exports)
+imports/

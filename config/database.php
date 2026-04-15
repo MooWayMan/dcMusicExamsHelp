@@ -129,6 +129,19 @@ return [
             'sslmode' => 'prefer',
         ],
 
+        'production_import' => [
+            'driver' => 'pgsql',
+            'host' => env('PROD_DB_HOST'),
+            'port' => env('PROD_DB_PORT', '5432'),
+            'database' => env('PROD_DB_DATABASE'),
+            'username' => env('PROD_DB_USERNAME'),
+            'password' => env('PROD_DB_PASSWORD'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'schema' => 'public',
+            'sslmode' => 'require',
+        ],
+
     ],
 
     /*
