@@ -82,8 +82,16 @@ class StudentController extends Controller
             ];
         });
 
+        // Summary stats (unfiltered)
+        $summary = [
+            'total' => Student::count(),
+            'with_exams' => Student::has('examEntries')->count(),
+            'families' => Instrument::whereIn('id', Student::select('instrument_id'))->distinct('family')->count('family'),
+        ];
+
         return Inertia::render('admin/Students/Index', [
             'students' => $students,
+            'summary' => $summary,
             'filters' => [
                 'search' => $search,
                 'family' => $family,

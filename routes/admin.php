@@ -27,6 +27,7 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
     ->group(function () {
         // Contacts
         Route::get('contacts', [ContactController::class, 'index'])->name('contacts.index');
+        Route::get('contacts/{contact}', [ContactController::class, 'show'])->name('contacts.show');
 
         // Dashboard
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');

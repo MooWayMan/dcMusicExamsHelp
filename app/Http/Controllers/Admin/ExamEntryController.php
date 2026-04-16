@@ -108,14 +108,24 @@ class ExamEntryController extends Controller
                 'fee' => $entry->fee !== null ? number_format((float) $entry->fee, 2) : null,
             ]);
 
+        // Summary stats (unfiltered)
+        $summary = [
+            'total' => ExamEntry::count(),
+            'with_results' => ExamEntry::whereNotNull('result')->count(),
+            'distinctions' => ExamEntry::where('result', 'Distinction')->count(),
+            'merits' => ExamEntry::where('result', 'Merit')->count(),
+        ];
+
         return Inertia::render('admin/ExamEntries/Index', [
             'entries' => $entries,
+            'summary' => $summary,
             'filters' => [
                 'sort' => $sort,
                 'direction' => $direction,
                 'search' => $search,
                 'quarter' => $quarter,
                 'student_id' => $studentId,
+                'from' => $request->input('from'),
             ],
         ]);
     }

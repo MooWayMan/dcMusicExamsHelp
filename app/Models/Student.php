@@ -1,7 +1,5 @@
 <?php
 
-// app/Models/Student.php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,10 +19,24 @@ class Student extends Model
         'email',
         'instrument_id',
         'notes',
+        'teacher_contact_id',
+        'teacher_credit_status',
     ];
 
+    // ──────────────────────────────────────────
+    // Relationships
+    // ──────────────────────────────────────────
+
     /**
-     * The teacher this student belongs to.
+     * The confirmed teacher contact for this student.
+     */
+    public function teacherContact(): BelongsTo
+    {
+        return $this->belongsTo(ExamContact::class, 'teacher_contact_id');
+    }
+
+    /**
+     * @deprecated Use teacherContact() instead. Kept for backward compatibility.
      */
     public function teacher(): BelongsTo
     {
@@ -40,6 +52,10 @@ class Student extends Model
     {
         return $this->hasMany(ExamEntry::class);
     }
+
+    // ──────────────────────────────────────────
+    // Computed Attributes
+    // ──────────────────────────────────────────
 
     /**
      * Get student's full name.
