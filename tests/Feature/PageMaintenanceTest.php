@@ -2,6 +2,9 @@
 
 use App\Models\PageMaintenance;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
 
 // ──────────────────────────────────────────
 // Admin Routes
