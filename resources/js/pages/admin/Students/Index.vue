@@ -153,10 +153,16 @@ const { animClass } = usePageAnimation()
                                 <p class="font-medium text-brand-text">{{ student.full_name }}</p>
                                 <p v-if="student.email" class="text-sm text-brand-text-soft">{{ student.email }}</p>
                             </td>
-                            <td class="px-4 py-3">
-                                <Link :href="`/admin/teachers/${student.teacher_id}`" class="text-base text-brand-accent hover:underline">
-                                    {{ student.teacher_name }}
-                                </Link>
+                            <td class="px-4 py-3 text-base text-brand-text">
+                            <Link
+                                v-if="student.teacher_name !== '—'"
+                                :href="`/admin/exam-entries?search=${encodeURIComponent(student.teacher_name)}`"
+                                class="text-brand-accent hover:underline"
+                            >
+                                {{ student.teacher_name }}
+                            </Link>
+
+                            <span v-else>—</span>
                             </td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-1.5">
@@ -169,7 +175,14 @@ const { animClass } = usePageAnimation()
                                     {{ student.instrument_family }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-center text-base text-brand-text">{{ student.exam_entries_count }}</td>
+                            <td class="px-4 py-3 text-center text-base text-brand-text">
+                                <Link
+                                    :href="`/admin/exam-entries?student_id=${student.id}`"
+                                    class="text-brand-accent hover:underline"
+                                >
+                                    {{ student.exam_entries_count }}
+                                </Link>
+                            </td>
                         </tr>
                         <tr v-if="!students.data.length">
                             <td colspan="5" class="px-4 py-8 text-center text-base text-brand-text-soft">

@@ -73,6 +73,14 @@ class Order extends Model
             ->withTimestamps();
     }
 
+    /**
+     * Raw order contact rows.
+     */
+    public function orderContacts(): HasMany
+    {
+        return $this->hasMany(OrderContact::class);
+    }
+
     public function school(): BelongsTo
     {
         return $this->belongsTo(School::class);

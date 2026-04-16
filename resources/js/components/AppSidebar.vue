@@ -16,6 +16,7 @@ import {
     Award,
     Construction,
     Gift,
+    FileSpreadsheet,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
@@ -78,6 +79,11 @@ const adminNavItems: NavItem[] = [
         title: 'Pending Results',
         href: '/admin/pending-results',
         icon: AlertCircle,
+    },
+    {
+        title: 'Exam Entries',
+        href: '/admin/exam-entries',
+        icon: FileSpreadsheet,
     },
     {
         title: 'Students',
