@@ -5,6 +5,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ExamEntry;
+use App\Models\PageMaintenance;
 use App\Models\PrizeDraw;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -158,6 +159,17 @@ class ThankYouController extends Controller
 
     public function __invoke(Request $request)
     {
+        // If page is in maintenance, skip all heavy queries and return empty data
+        if (PageMaintenance::isDown('recognition')) {
+            return Inertia::render('ThankYou', [
+                'defaultQuarter' => (int) ceil(now()->month / 3),
+                'defaultYear' => (int) now()->year,
+                'availableQuarters' => [],
+                'allQuartersData' => [],
+                'prizeDrawWinners' => [],
+            ]);
+        }
+
         $currentYear = (int) now()->year;
         $currentQuarter = (int) ceil(now()->month / 3);
 
