@@ -5,11 +5,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ExamEntry;
+use App\Models\Instrument;
 use App\Models\Order;
 use App\Models\School;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -141,6 +145,80 @@ class OrderController extends Controller
         ]);
     }
 
+    public function create(): Response
+    {
+        return Inertia::render('admin/Orders/Create', [
+            'teachers' => User::where('role', 'teacher')
+                ->orderBy('name')
+                ->get(['id', 'name', 'email']),
+            'schools' => School::orderBy('name')->get(['id', 'name']),
+            'instruments' => Instrument::orderBy('name')->get(['id', 'name']),
+            'options' => [
+                'delivery_methods' => [
+                    ['value' => 'Digital', 'label' => 'Digital (DG)', 'default_rate' => 20],
+                    ['value' => 'Default', 'label' => 'Face-to-Face (F2F)', 'default_rate' => 28],
+                    ['value' => 'DigitalTheory', 'label' => 'Digital Theory', 'default_rate' => 12.5],
+                ],
+                'subject_areas' => ['Music', 'Drama', 'Rockschool', 'Dance', 'Art'],
+                'order_statuses' => ['Submitted', 'In Progress', 'Delivered', 'Cancelled'],
+                'grades' => ['Initial', '1', '2', '3', '4', '5', '6', '7', '8', 'ATCL', 'LTCL', 'FTCL'],
+                'results' => ['Distinction', 'Merit', 'Pass', 'Below Pass'],
+            ],
+        ]);
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'trinity_order_number' => 'required|string|max:255|unique:orders,trinity_order_number',
+            'delivery_method' => 'required|string|max:50',
+            'subject_area' => 'nullable|string|max:100',
+            'order_status' => 'required|string|max:50',
+            'requested_start_date' => 'required|date',
+            'user_id' => 'required|exists:users,id',
+            'school_id' => 'nullable|exists:schools,id',
+            'venue' => 'nullable|string|max:255',
+            'commission_rate' => 'required|numeric|min:0|max:100',
+            'commission_amount' => 'nullable|numeric|min:0',
+            'applicant_name' => 'nullable|string|max:255',
+            'applicant_email' => 'nullable|email|max:255',
+            'notes' => 'nullable|string',
+
+            'entries' => 'required|array|min:1',
+            'entries.*.candidate_name' => 'required|string|max:255',
+            'entries.*.candidate_number' => 'nullable|string|max:100',
+            'entries.*.instrument_id' => 'nullable|exists:instruments,id',
+            'entries.*.grade' => 'nullable|string|max:50',
+            'entries.*.exam_date' => 'nullable|date',
+            'entries.*.score' => 'nullable|integer|min:0|max:100',
+            'entries.*.result' => 'nullable|string|max:50',
+            'entries.*.fee' => 'nullable|numeric|min:0',
+            'entries.*.notes' => 'nullable|string',
+        ]);
+
+        $order = DB::transaction(function () use ($validated) {
+            $entries = $validated['entries'];
+            unset($validated['entries']);
+
+            $validated['candidates'] = count($entries);
+
+            $order = Order::create($validated);
+
+            foreach ($entries as $entry) {
+                $order->examEntries()->create(array_merge($entry, [
+                    'subject_area' => $validated['subject_area'] ?? null,
+                    'delivery_method' => $validated['delivery_method'],
+                    'source' => 'manual',
+                ]));
+            }
+
+            return $order;
+        });
+
+        return redirect()->route('admin.orders.show', $order)
+            ->with('success', "Order {$order->trinity_order_number} added with {$order->candidates} candidate(s).");
+    }
+
     public function show(Order $order): Response
     {
         $order->load([
@@ -187,5 +265,116 @@ class OrderController extends Controller
         return Inertia::render('admin/Orders/Show', [
             'order' => $orderData,
         ]);
+    }
+
+    public function edit(Order $order): Response
+    {
+        $order->load(['examEntries']);
+
+        return Inertia::render('admin/Orders/Edit', [
+            'order' => [
+                'id' => $order->id,
+                'trinity_order_number' => $order->trinity_order_number,
+                'delivery_method' => $order->delivery_method,
+                'subject_area' => $order->subject_area,
+                'order_status' => $order->order_status,
+                'requested_start_date' => $order->requested_start_date?->format('Y-m-d'),
+                'user_id' => $order->user_id,
+                'school_id' => $order->school_id,
+                'venue' => $order->venue,
+                'commission_rate' => $order->commission_rate,
+                'commission_amount' => $order->commission_amount,
+                'applicant_name' => $order->applicant_name,
+                'applicant_email' => $order->applicant_email,
+                'notes' => $order->notes,
+                'entries' => $order->examEntries->map(fn ($e) => [
+                    'id' => $e->id,
+                    'candidate_name' => $e->candidate_name,
+                    'candidate_number' => $e->candidate_number,
+                    'instrument_id' => $e->instrument_id,
+                    'grade' => $e->grade,
+                    'exam_date' => $e->exam_date?->format('Y-m-d'),
+                    'score' => $e->score,
+                    'result' => $e->result,
+                    'fee' => $e->fee,
+                    'notes' => $e->notes,
+                ])->values(),
+            ],
+            'teachers' => User::where('role', 'teacher')
+                ->orderBy('name')
+                ->get(['id', 'name', 'email']),
+            'schools' => School::orderBy('name')->get(['id', 'name']),
+            'instruments' => Instrument::orderBy('name')->get(['id', 'name']),
+            'options' => [
+                'delivery_methods' => [
+                    ['value' => 'Digital', 'label' => 'Digital (DG)', 'default_rate' => 20],
+                    ['value' => 'Default', 'label' => 'Face-to-Face (F2F)', 'default_rate' => 28],
+                    ['value' => 'DigitalTheory', 'label' => 'Digital Theory', 'default_rate' => 12.5],
+                ],
+                'subject_areas' => ['Music', 'Drama', 'Rockschool', 'Dance', 'Art'],
+                'order_statuses' => ['Submitted', 'In Progress', 'Delivered', 'Cancelled'],
+                'grades' => ['Initial', '1', '2', '3', '4', '5', '6', '7', '8', 'ATCL', 'LTCL', 'FTCL'],
+                'results' => ['Distinction', 'Merit', 'Pass', 'Below Pass'],
+            ],
+        ]);
+    }
+
+    public function update(Request $request, Order $order): RedirectResponse
+    {
+        $validated = $request->validate([
+            'trinity_order_number' => 'required|string|max:255|unique:orders,trinity_order_number,' . $order->id,
+            'delivery_method' => 'required|string|max:50',
+            'subject_area' => 'nullable|string|max:100',
+            'order_status' => 'required|string|max:50',
+            'requested_start_date' => 'required|date',
+            'user_id' => 'required|exists:users,id',
+            'school_id' => 'nullable|exists:schools,id',
+            'venue' => 'nullable|string|max:255',
+            'commission_rate' => 'required|numeric|min:0|max:100',
+            'commission_amount' => 'nullable|numeric|min:0',
+            'applicant_name' => 'nullable|string|max:255',
+            'applicant_email' => 'nullable|email|max:255',
+            'notes' => 'nullable|string',
+
+            'entries' => 'required|array|min:1',
+            'entries.*.id' => 'nullable|integer|exists:exam_entries,id',
+            'entries.*.candidate_name' => 'required|string|max:255',
+            'entries.*.candidate_number' => 'nullable|string|max:100',
+            'entries.*.instrument_id' => 'nullable|exists:instruments,id',
+            'entries.*.grade' => 'nullable|string|max:50',
+            'entries.*.exam_date' => 'nullable|date',
+            'entries.*.score' => 'nullable|integer|min:0|max:100',
+            'entries.*.result' => 'nullable|string|max:50',
+            'entries.*.fee' => 'nullable|numeric|min:0',
+            'entries.*.notes' => 'nullable|string',
+        ]);
+
+        DB::transaction(function () use ($validated, $order) {
+            $entries = $validated['entries'];
+            unset($validated['entries']);
+
+            $validated['candidates'] = count($entries);
+            $order->update($validated);
+
+            foreach ($entries as $entry) {
+                $entryData = array_merge($entry, [
+                    'subject_area' => $validated['subject_area'] ?? null,
+                    'delivery_method' => $validated['delivery_method'],
+                ]);
+
+                if (! empty($entry['id'])) {
+                    // Update existing entry — only if it belongs to this order
+                    $order->examEntries()
+                        ->where('id', $entry['id'])
+                        ->update(collect($entryData)->except('id')->toArray());
+                } else {
+                    // New entry
+                    $order->examEntries()->create(array_merge($entryData, ['source' => 'manual']));
+                }
+            }
+        });
+
+        return redirect()->route('admin.orders.show', $order)
+            ->with('success', "Order {$order->trinity_order_number} updated.");
     }
 }

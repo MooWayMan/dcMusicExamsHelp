@@ -2,8 +2,9 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3'
 import { ref, watch } from 'vue'
-import { Search, Eye, Monitor, MapPin, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { Search, Eye, Monitor, MapPin, TrendingUp, ChevronLeft, ChevronRight, Plus } from 'lucide-vue-next'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
+import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import PageHeader from '@/components/reusables/PageHeader.vue'
 
 interface Order {
@@ -86,7 +87,12 @@ const { animClass } = usePageAnimation()
 
 <template>
     <div class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <PageHeader title="Orders" subtitle="Trinity exam orders and commission tracking" eyebrow="Admin" size="compact" />
+        <div class="flex items-start justify-between gap-4">
+            <PageHeader title="Orders" subtitle="Trinity exam orders and commission tracking" eyebrow="Admin" size="compact" />
+            <Link href="/admin/orders/create">
+                <MyButtonConstructor variant="primary" size="large" :icon="Plus">Add Order</MyButtonConstructor>
+            </Link>
+        </div>
 
         <!-- Summary pills -->
         <div :class="['mt-6 flex flex-wrap gap-3', animClass('fade-up', 1)]">

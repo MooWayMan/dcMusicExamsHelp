@@ -48,9 +48,13 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
         // Schools CRUD
         Route::resource('schools', SchoolController::class);
 
-        // Orders (read-only for now — data comes from Trinity portal)
+        // Orders — manual entry form (Trinity has no bulk export)
         Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::get('orders/create', [OrderController::class, 'create'])->name('orders.create');
+        Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
         Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+        Route::get('orders/{order}/edit', [OrderController::class, 'edit'])->name('orders.edit');
+        Route::put('orders/{order}', [OrderController::class, 'update'])->name('orders.update');
 
         // Pending Results — candidates awaiting exam scores
         Route::get('pending-results', [PendingResultsController::class, 'index'])->name('pending-results.index');

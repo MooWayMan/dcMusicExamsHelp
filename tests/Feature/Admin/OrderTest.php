@@ -195,3 +195,284 @@ test('admin can view an order', function () {
             ->component('admin/Orders/Show')
         );
 });
+
+// ──────────────────────────────────────────
+// Create / Store — manual Trinity order entry
+// ──────────────────────────────────────────
+
+test('admin can view create order form', function () {
+    $this->actingAs(orderAdmin())
+        ->get(route('admin.orders.create'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('admin/Orders/Create')
+            ->has('teachers')
+            ->has('options.delivery_methods')
+        );
+});
+
+test('non-admin cannot view create order form', function () {
+    $this->actingAs(orderTeacher())
+        ->get(route('admin.orders.create'))
+        ->assertForbidden();
+});
+
+test('admin can create order with one candidate', function () {
+    $admin = orderAdmin();
+    $teacher = orderTeacher();
+
+    $this->actingAs($admin)
+        ->post(route('admin.orders.store'), [
+            'trinity_order_number' => '1-15899713974',
+            'delivery_method' => 'Digital',
+            'subject_area' => 'Music',
+            'order_status' => 'Delivered',
+            'requested_start_date' => '2026-03-30',
+            'user_id' => $teacher->id,
+            'commission_rate' => 20,
+            'applicant_name' => 'Maria Nielsen',
+            'applicant_email' => 'mkn21@me.com',
+            'entries' => [
+                [
+                    'candidate_name' => 'Delfina Yelich Battistessa',
+                    'candidate_number' => '1-15899370904',
+                    'grade' => '1',
+                ],
+            ],
+        ])
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('orders', [
+        'trinity_order_number' => '1-15899713974',
+        'user_id' => $teacher->id,
+        'candidates' => 1,
+    ]);
+
+    $this->assertDatabaseHas('exam_entries', [
+        'candidate_name' => 'Delfina Yelich Battistessa',
+        'candidate_number' => '1-15899370904',
+        'grade' => '1',
+        'source' => 'manual',
+    ]);
+});
+
+test('admin can create order with multiple candidates', function () {
+    $admin = orderAdmin();
+    $teacher = orderTeacher();
+
+    $this->actingAs($admin)
+        ->post(route('admin.orders.store'), [
+            'trinity_order_number' => 'TRN-MULTI-001',
+            'delivery_method' => 'Default',
+            'subject_area' => 'Music',
+            'order_status' => 'Delivered',
+            'requested_start_date' => '2026-03-30',
+            'user_id' => $teacher->id,
+            'commission_rate' => 28,
+            'entries' => [
+                ['candidate_name' => 'Student A', 'grade' => '1'],
+                ['candidate_name' => 'Student B', 'grade' => '2'],
+                ['candidate_name' => 'Student C', 'grade' => '3'],
+            ],
+        ])
+        ->assertRedirect();
+
+    $order = Order::where('trinity_order_number', 'TRN-MULTI-001')->first();
+    expect($order)->not->toBeNull();
+    expect($order->candidates)->toBe(3);
+    expect($order->examEntries()->count())->toBe(3);
+});
+
+test('store requires trinity order number', function () {
+    $this->actingAs(orderAdmin())
+        ->post(route('admin.orders.store'), [
+            'delivery_method' => 'Digital',
+            'user_id' => orderTeacher()->id,
+            'order_status' => 'Delivered',
+            'commission_rate' => 20,
+            'entries' => [['candidate_name' => 'X']],
+        ])
+        ->assertSessionHasErrors('trinity_order_number');
+});
+
+test('store requires teacher', function () {
+    $this->actingAs(orderAdmin())
+        ->post(route('admin.orders.store'), [
+            'trinity_order_number' => 'TRN-NO-TEACHER',
+            'delivery_method' => 'Digital',
+            'order_status' => 'Delivered',
+            'commission_rate' => 20,
+            'entries' => [['candidate_name' => 'X']],
+        ])
+        ->assertSessionHasErrors('user_id');
+});
+
+test('store requires at least one candidate', function () {
+    $this->actingAs(orderAdmin())
+        ->post(route('admin.orders.store'), [
+            'trinity_order_number' => 'TRN-NO-ENTRIES',
+            'delivery_method' => 'Digital',
+            'order_status' => 'Delivered',
+            'user_id' => orderTeacher()->id,
+            'commission_rate' => 20,
+            'entries' => [],
+        ])
+        ->assertSessionHasErrors('entries');
+});
+
+test('trinity order number must be unique', function () {
+    Order::factory()->create(['trinity_order_number' => 'TRN-DUPLICATE']);
+
+    $this->actingAs(orderAdmin())
+        ->post(route('admin.orders.store'), [
+            'trinity_order_number' => 'TRN-DUPLICATE',
+            'delivery_method' => 'Digital',
+            'order_status' => 'Delivered',
+            'user_id' => orderTeacher()->id,
+            'commission_rate' => 20,
+            'entries' => [['candidate_name' => 'X']],
+        ])
+        ->assertSessionHasErrors('trinity_order_number');
+});
+
+test('non-admin cannot store orders', function () {
+    $this->actingAs(orderTeacher())
+        ->post(route('admin.orders.store'), [
+            'trinity_order_number' => 'TRN-FORBIDDEN',
+            'delivery_method' => 'Digital',
+            'order_status' => 'Delivered',
+            'user_id' => orderTeacher()->id,
+            'commission_rate' => 20,
+            'entries' => [['candidate_name' => 'X']],
+        ])
+        ->assertForbidden();
+});
+
+// ──────────────────────────────────────────
+// Edit / Update
+// ──────────────────────────────────────────
+
+test('admin can view edit order form', function () {
+    $order = Order::factory()->create([
+        'user_id' => orderTeacher()->id,
+        'requested_start_date' => '2026-03-30',
+    ]);
+
+    $this->actingAs(orderAdmin())
+        ->get(route('admin.orders.edit', $order))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('admin/Orders/Edit')
+            ->has('order')
+            ->has('teachers')
+        );
+});
+
+test('non-admin cannot view edit order form', function () {
+    $order = Order::factory()->create(['user_id' => orderTeacher()->id]);
+
+    $this->actingAs(orderTeacher())
+        ->get(route('admin.orders.edit', $order))
+        ->assertForbidden();
+});
+
+test('admin can update an existing order', function () {
+    $teacher = orderTeacher();
+    $order = Order::factory()->create([
+        'user_id' => $teacher->id,
+        'trinity_order_number' => 'TRN-UPDATE-001',
+        'order_status' => 'Submitted',
+        'requested_start_date' => '2026-03-30',
+    ]);
+
+    // Seed an existing exam entry to update
+    $entry = $order->examEntries()->create([
+        'candidate_name' => 'Old Name',
+        'grade' => '1',
+        'delivery_method' => 'Digital',
+        'source' => 'manual',
+    ]);
+
+    $this->actingAs(orderAdmin())
+        ->put(route('admin.orders.update', $order), [
+            'trinity_order_number' => 'TRN-UPDATE-001',
+            'delivery_method' => 'Digital',
+            'subject_area' => 'Music',
+            'order_status' => 'Delivered',
+            'requested_start_date' => '2026-03-30',
+            'user_id' => $teacher->id,
+            'commission_rate' => 20,
+            'entries' => [
+                [
+                    'id' => $entry->id,
+                    'candidate_name' => 'Updated Name',
+                    'grade' => '2',
+                    'score' => 85,
+                    'result' => 'Merit',
+                ],
+            ],
+        ])
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('orders', [
+        'id' => $order->id,
+        'order_status' => 'Delivered',
+    ]);
+
+    $this->assertDatabaseHas('exam_entries', [
+        'id' => $entry->id,
+        'candidate_name' => 'Updated Name',
+        'grade' => '2',
+        'score' => 85,
+        'result' => 'Merit',
+    ]);
+});
+
+test('admin can add a new candidate to existing order', function () {
+    $teacher = orderTeacher();
+    $order = Order::factory()->create([
+        'user_id' => $teacher->id,
+        'requested_start_date' => '2026-03-30',
+    ]);
+
+    $existing = $order->examEntries()->create([
+        'candidate_name' => 'First Candidate',
+        'delivery_method' => 'Digital',
+        'source' => 'manual',
+    ]);
+
+    $this->actingAs(orderAdmin())
+        ->put(route('admin.orders.update', $order), [
+            'trinity_order_number' => $order->trinity_order_number,
+            'delivery_method' => 'Digital',
+            'subject_area' => 'Music',
+            'order_status' => 'Delivered',
+            'requested_start_date' => '2026-03-30',
+            'user_id' => $teacher->id,
+            'commission_rate' => 20,
+            'entries' => [
+                ['id' => $existing->id, 'candidate_name' => 'First Candidate'],
+                ['candidate_name' => 'Second Candidate'],
+            ],
+        ])
+        ->assertRedirect();
+
+    expect($order->fresh()->examEntries()->count())->toBe(2);
+    expect($order->fresh()->candidates)->toBe(2);
+});
+
+test('non-admin cannot update orders', function () {
+    $order = Order::factory()->create(['user_id' => orderTeacher()->id]);
+
+    $this->actingAs(orderTeacher())
+        ->put(route('admin.orders.update', $order), [
+            'trinity_order_number' => $order->trinity_order_number,
+            'delivery_method' => 'Digital',
+            'order_status' => 'Delivered',
+            'requested_start_date' => '2026-03-30',
+            'user_id' => orderTeacher()->id,
+            'commission_rate' => 20,
+            'entries' => [['candidate_name' => 'X']],
+        ])
+        ->assertForbidden();
+});
