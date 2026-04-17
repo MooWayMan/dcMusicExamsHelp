@@ -1,5 +1,4 @@
 <?php
-
 // app/Models/Order.php
 
 namespace App\Models;
@@ -7,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -29,6 +29,7 @@ class Order extends Model
         'applicant_name',
         'applicant_email',
         'notes',
+        'created_by_contact_id',
     ];
 
     protected function casts(): array
@@ -46,11 +47,38 @@ class Order extends Model
     // ──────────────────────────────────────────
 
     /**
-     * The teacher who submitted this order.
+     * Legacy teacher/user link.
+     * Keep for backward compatibility while refactoring.
      */
     public function teacher(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * The contact who created / submitted the order in the new system.
+     */
+    public function createdByContact(): BelongsTo
+    {
+        return $this->belongsTo(ExamContact::class, 'created_by_contact_id');
+    }
+
+    /**
+     * All contacts linked to this order with contextual roles.
+     */
+    public function contacts(): BelongsToMany
+    {
+        return $this->belongsToMany(ExamContact::class, 'order_contacts')
+            ->withPivot(['role_in_order', 'is_primary', 'notes'])
+            ->withTimestamps();
+    }
+
+    /**
+     * Raw order contact rows.
+     */
+    public function orderContacts(): HasMany
+    {
+        return $this->hasMany(OrderContact::class);
     }
 
     public function school(): BelongsTo

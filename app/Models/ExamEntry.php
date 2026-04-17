@@ -1,7 +1,5 @@
 <?php
 
-// app/Models/ExamEntry.php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -30,6 +28,9 @@ class ExamEntry extends Model
         'fee',
         'exam_date',
         'notes',
+        'teacher_contact_id',
+        'teacher_credit_status',
+        'source',
     ];
 
     protected function casts(): array
@@ -41,6 +42,10 @@ class ExamEntry extends Model
             'show_on_thank_you' => 'boolean',
         ];
     }
+
+    // ──────────────────────────────────────────
+    // Computed Attributes
+    // ──────────────────────────────────────────
 
     /**
      * Result band based on score.
@@ -83,6 +88,10 @@ class ExamEntry extends Model
         };
     }
 
+    // ──────────────────────────────────────────
+    // Relationships
+    // ──────────────────────────────────────────
+
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
@@ -98,6 +107,17 @@ class ExamEntry extends Model
         return $this->belongsTo(Instrument::class);
     }
 
+    /**
+     * The confirmed teacher contact for this exam entry.
+     */
+    public function teacherContact(): BelongsTo
+    {
+        return $this->belongsTo(ExamContact::class, 'teacher_contact_id');
+    }
+
+    /**
+     * @deprecated Use teacherContact() instead. Kept for backward compatibility.
+     */
     public function teacher(): BelongsTo
     {
         return $this->belongsTo(Teacher::class);

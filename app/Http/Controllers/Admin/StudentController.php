@@ -1,13 +1,12 @@
 <?php
-
 // app/Http/Controllers/Admin/StudentController.php
 
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ExamContact;
 use App\Models\Instrument;
 use App\Models\Student;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,23 +15,29 @@ class StudentController extends Controller
 {
     public function index(Request $request): Response
     {
+        $search = $request->input('search');
+        $family = $request->input('family');
+
         $query = Student::with([
-            'teacher:id,name',
             'instrument:id,name,family',
+            'examEntries.order.orderContacts.examContact',
         ])->withCount('examEntries');
 
-        if ($search = $request->input('search')) {
+        if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'ilike', "%{$search}%")
-                  ->orWhere('last_name', 'ilike', "%{$search}%")
-                  ->orWhere('email', 'ilike', "%{$search}%")
-                  ->orWhereHas('teacher', fn ($tq) => $tq->where('name', 'ilike', "%{$search}%"))
-                  ->orWhereHas('instrument', fn ($iq) => $iq->where('name', 'ilike', "%{$search}%"));
+                    ->orWhere('last_name', 'ilike', "%{$search}%")
+                    ->orWhere('email', 'ilike', "%{$search}%")
+                    ->orWhereHas('instrument', fn ($iq) => $iq->where('name', 'ilike', "%{$search}%"))
+                    ->orWhereHas('examEntries', function ($eq) use ($search) {
+                        $eq->where('candidate_name', 'ilike', "%{$search}%")
+                            ->orWhere('teacher_name', 'ilike', "%{$search}%")
+                            ->orWhere('school_name', 'ilike', "%{$search}%");
+                    });
             });
         }
 
-        // Filter by instrument family
-        if ($family = $request->input('family')) {
+        if ($family) {
             $query->whereHas('instrument', fn ($q) => $q->where('family', $family));
         }
 
@@ -40,14 +45,7 @@ class StudentController extends Controller
         $sortDir = $request->input('direction', 'asc');
         $allowedSorts = ['first_name', 'last_name', 'exam_entries_count', 'created_at'];
 
-        if ($sortBy === 'teacher') {
-            $query->orderBy(
-                User::select('name')
-                    ->whereColumn('users.id', 'students.user_id')
-                    ->limit(1),
-                $sortDir
-            );
-        } elseif ($sortBy === 'instrument') {
+        if ($sortBy === 'instrument') {
             $query->orderBy(
                 Instrument::select('name')
                     ->whereColumn('instruments.id', 'students.instrument_id')
@@ -61,27 +59,39 @@ class StudentController extends Controller
                     ->limit(1),
                 $sortDir
             );
-        } elseif (in_array($sortBy, $allowedSorts)) {
+        } elseif (in_array($sortBy, $allowedSorts, true)) {
             $query->orderBy($sortBy, $sortDir);
         }
 
         $students = $query->paginate(20)->withQueryString();
 
-        $students->through(fn ($student) => [
-            'id' => $student->id,
-            'first_name' => $student->first_name,
-            'last_name' => $student->last_name,
-            'full_name' => $student->full_name,
-            'email' => $student->email,
-            'teacher_name' => $student->teacher->name ?? '—',
-            'teacher_id' => $student->user_id,
-            'instrument' => $student->instrument->name ?? '—',
-            'instrument_family' => $student->instrument->family ?? '—',
-            'exam_entries_count' => $student->exam_entries_count,
-        ]);
+        $students->through(function ($student) {
+            $teacherContact = $this->resolveTeacherContact($student);
+
+            return [
+                'id' => $student->id,
+                'first_name' => $student->first_name,
+                'last_name' => $student->last_name,
+                'full_name' => $student->full_name,
+                'email' => $student->email,
+                'teacher_name' => $teacherContact?->name ?? '—',
+                'teacher_id' => $teacherContact?->id,
+                'instrument' => $student->instrument->name ?? '—',
+                'instrument_family' => $student->instrument->family ?? '—',
+                'exam_entries_count' => $student->exam_entries_count,
+            ];
+        });
+
+        // Summary stats (unfiltered)
+        $summary = [
+            'total' => Student::count(),
+            'with_exams' => Student::has('examEntries')->count(),
+            'families' => Instrument::whereIn('id', Student::select('instrument_id'))->distinct('family')->count('family'),
+        ];
 
         return Inertia::render('admin/Students/Index', [
             'students' => $students,
+            'summary' => $summary,
             'filters' => [
                 'search' => $search,
                 'family' => $family,
@@ -89,5 +99,45 @@ class StudentController extends Controller
                 'direction' => $sortDir,
             ],
         ]);
+    }
+
+    private function resolveTeacherContact(Student $student): ?ExamContact
+    {
+        $teacherCounts = [];
+
+        foreach ($student->examEntries as $entry) {
+            $order = $entry->order;
+
+            if (! $order || ! $order->relationLoaded('orderContacts')) {
+                continue;
+            }
+
+            foreach ($order->orderContacts as $orderContact) {
+                if ($orderContact->role_in_order !== 'teacher') {
+                    continue;
+                }
+
+                $contact = $orderContact->examContact;
+
+                if (! $contact) {
+                    continue;
+                }
+
+                $teacherCounts[$contact->id] = [
+                    'contact' => $contact,
+                    'count' => ($teacherCounts[$contact->id]['count'] ?? 0) + 1,
+                ];
+            }
+        }
+
+        if ($teacherCounts === []) {
+            return null;
+        }
+
+        uasort($teacherCounts, fn ($a, $b) => $b['count'] <=> $a['count']);
+
+        $top = reset($teacherCounts);
+
+        return $top['contact'] ?? null;
     }
 }

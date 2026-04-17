@@ -114,6 +114,34 @@ return [
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
+        'source_pgsql' => [
+            'driver' => env('SOURCE_DB_CONNECTION', 'pgsql'),
+            'url' => null,
+            'host' => env('SOURCE_DB_HOST', '127.0.0.1'),
+            'port' => env('SOURCE_DB_PORT', '5432'),
+            'database' => env('SOURCE_DB_DATABASE', 'forge'),
+            'username' => env('SOURCE_DB_USERNAME', 'forge'),
+            'password' => env('SOURCE_DB_PASSWORD', ''),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => 'prefer',
+        ],
+
+        'production_import' => [
+            'driver' => 'pgsql',
+            'host' => env('PROD_DB_HOST'),
+            'port' => env('PROD_DB_PORT', '5432'),
+            'database' => env('PROD_DB_DATABASE'),
+            'username' => env('PROD_DB_USERNAME'),
+            'password' => env('PROD_DB_PASSWORD'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'schema' => 'public',
+            'sslmode' => 'require',
+        ],
+
     ],
 
     /*

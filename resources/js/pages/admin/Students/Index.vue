@@ -2,8 +2,11 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3'
 import { ref, watch } from 'vue'
-import { Search, Music, ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { Search, Music, Users, BookOpen, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import PageHeader from '@/components/reusables/PageHeader.vue'
+import { usePageAnimation } from '@/composables/usePageAnimation'
+
+const { animClass } = usePageAnimation()
 
 interface Student {
     id: number
@@ -12,7 +15,7 @@ interface Student {
     full_name: string
     email: string | null
     teacher_name: string
-    teacher_id: number
+    teacher_id: number | null
     instrument: string
     instrument_family: string
     exam_entries_count: number
@@ -28,37 +31,37 @@ interface PaginatedData {
 
 const props = defineProps<{
     students: PaginatedData
+    summary: { total: number; with_exams: number; families: number }
     filters: { search: string | null; family: string | null; sort: string; direction: string }
 }>()
 
 const search = ref(props.filters.search ?? '')
 let searchTimeout: ReturnType<typeof setTimeout>
 
+function currentFilters(overrides: Record<string, string | undefined> = {}) {
+    return {
+        search: search.value || undefined,
+        family: props.filters.family || undefined,
+        sort: props.filters.sort,
+        direction: props.filters.direction,
+        ...overrides,
+    }
+}
+
 watch(search, (value) => {
     clearTimeout(searchTimeout)
     searchTimeout = setTimeout(() => {
-        router.get('/admin/students', {
-            search: value || undefined,
-            family: props.filters.family || undefined,
-        }, { preserveState: true, replace: true })
+        router.get('/admin/students', currentFilters({ search: value || undefined }), { preserveState: true, replace: true })
     }, 300)
 })
 
 function filterByFamily(family: string | null) {
-    router.get('/admin/students', {
-        search: search.value || undefined,
-        family: family || undefined,
-    }, { preserveState: true, replace: true })
+    router.get('/admin/students', currentFilters({ family: family || undefined }), { preserveState: true, replace: true })
 }
 
 function sortBy(column: string) {
     const direction = props.filters.sort === column && props.filters.direction === 'asc' ? 'desc' : 'asc'
-    router.get('/admin/students', {
-        search: search.value || undefined,
-        family: props.filters.family || undefined,
-        sort: column,
-        direction,
-    }, { preserveState: true, replace: true })
+    router.get('/admin/students', currentFilters({ sort: column, direction }), { preserveState: true, replace: true })
 }
 
 function sortIcon(column: string): string {
@@ -67,37 +70,52 @@ function sortIcon(column: string): string {
 }
 
 const families = ['Keyboard', 'Strings', 'Brass', 'Woodwind', 'Voice', 'Percussion']
-
-import { usePageAnimation } from '@/composables/usePageAnimation'
-const { animClass } = usePageAnimation()
 </script>
 
 <template>
     <div class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <PageHeader title="Students" subtitle="All students across your teaching network" eyebrow="Admin" size="compact" />
 
-        <!-- Filters -->
-        <div :class="['mt-6 flex flex-wrap items-center gap-4', animClass('fade-up', 1)]">
-            <div class="relative max-w-md flex-1">
+        <!-- Summary pills -->
+        <div :class="['mt-6 flex flex-wrap gap-3', animClass('fade-up', 1)]">
+            <div class="inline-flex items-center gap-2 rounded-xl border border-brand-border bg-brand-surface px-4 py-2">
+                <Users class="h-4 w-4 text-brand-text-soft" />
+                <span class="text-sm font-medium text-brand-text-soft">Total</span>
+                <span class="text-xl font-bold text-brand-text">{{ summary.total }}</span>
+            </div>
+            <div class="inline-flex items-center gap-2 rounded-xl border border-brand-border bg-brand-surface px-4 py-2">
+                <BookOpen class="h-4 w-4 text-brand-accent" />
+                <span class="text-sm font-medium text-brand-text-soft">With Exams</span>
+                <span class="text-xl font-bold text-brand-accent">{{ summary.with_exams }}</span>
+            </div>
+            <div class="inline-flex items-center gap-2 rounded-xl border border-brand-border bg-brand-surface px-4 py-2">
+                <Music class="h-4 w-4 text-brand-text-soft" />
+                <span class="text-sm font-medium text-brand-text-soft">Families</span>
+                <span class="text-xl font-bold text-brand-text">{{ summary.families }}</span>
+            </div>
+        </div>
+
+        <!-- Search -->
+        <div :class="['mt-4', animClass('fade-up', 2)]">
+            <div class="relative">
                 <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-text-soft" />
                 <input v-model="search" type="text" placeholder="Search by name, teacher, or instrument..."
                     class="w-full rounded-lg border border-brand-border bg-brand-surface py-3 pl-10 pr-4 text-lg text-brand-text placeholder:text-brand-text-soft focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent" />
             </div>
-            <p class="text-base text-brand-text-soft">{{ students.total }} student{{ students.total !== 1 ? 's' : '' }}</p>
         </div>
 
-        <!-- Instrument family filter -->
+        <!-- Instrument family filter pills -->
         <div :class="['mt-3 flex flex-wrap gap-1', animClass('fade-up', 2)]">
             <button @click="filterByFamily(null)"
-                class="rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
+                class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
                 :class="!filters.family ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
                 All Families
             </button>
-            <button v-for="family in families" :key="family"
-                @click="filterByFamily(family)"
-                class="rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
-                :class="filters.family === family ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
-                {{ family }}
+            <button v-for="fam in families" :key="fam"
+                @click="filterByFamily(fam)"
+                class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
+                :class="filters.family === fam ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
+                {{ fam }}
             </button>
         </div>
 
@@ -105,7 +123,7 @@ const { animClass } = usePageAnimation()
         <div :class="['mt-4 rounded-xl border border-brand-border bg-brand-surface', animClass('fade-up', 3)]">
             <!-- Top Pagination -->
             <div v-if="students.last_page > 1" class="flex items-center justify-between border-b border-brand-border px-4 py-3">
-                <p class="text-base text-brand-text-soft">Page {{ students.current_page }} of {{ students.last_page }}</p>
+                <p class="text-base text-brand-text-soft">Page {{ students.current_page }} of {{ students.last_page }} &middot; {{ students.total }} students</p>
                 <div class="flex items-center gap-2 sm:hidden">
                     <Link v-if="students.current_page > 1" :href="students.links[0].url!" class="rounded p-2 text-brand-text-soft hover:bg-brand-surface-soft" preserve-state>
                         <ChevronLeft class="h-5 w-5" />
@@ -126,6 +144,7 @@ const { animClass } = usePageAnimation()
                     </template>
                 </div>
             </div>
+
             <div class="overflow-x-auto">
                 <table class="min-w-[600px] w-full text-left text-base">
                     <thead class="border-b border-brand-border bg-brand-surface-soft">
@@ -133,9 +152,7 @@ const { animClass } = usePageAnimation()
                             <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('last_name')">
                                 Name{{ sortIcon('last_name') }}
                             </th>
-                            <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('teacher')">
-                                Teacher{{ sortIcon('teacher') }}
-                            </th>
+                            <th class="px-4 py-3 font-semibold text-brand-text">Teacher</th>
                             <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('instrument')">
                                 Instrument{{ sortIcon('instrument') }}
                             </th>
@@ -154,14 +171,17 @@ const { animClass } = usePageAnimation()
                                 <p v-if="student.email" class="text-sm text-brand-text-soft">{{ student.email }}</p>
                             </td>
                             <td class="px-4 py-3">
-                                <Link :href="`/admin/teachers/${student.teacher_id}`" class="text-base text-brand-accent hover:underline">
+                                <Link v-if="student.teacher_name !== '—'"
+                                    :href="`/admin/exam-entries?search=${encodeURIComponent(student.teacher_name)}`"
+                                    class="text-brand-accent hover:underline">
                                     {{ student.teacher_name }}
                                 </Link>
+                                <span v-else class="text-brand-text-soft">—</span>
                             </td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-1.5">
-                                    <Music class="h-5 w-5 text-brand-text-soft" />
-                                    <span class="text-base text-brand-text">{{ student.instrument }}</span>
+                                    <Music class="h-4 w-4 text-brand-text-soft" />
+                                    <span class="text-brand-text">{{ student.instrument }}</span>
                                 </div>
                             </td>
                             <td class="px-4 py-3">
@@ -169,7 +189,12 @@ const { animClass } = usePageAnimation()
                                     {{ student.instrument_family }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-center text-base text-brand-text">{{ student.exam_entries_count }}</td>
+                            <td class="px-4 py-3 text-center">
+                                <Link :href="`/admin/exam-entries?student_id=${student.id}&from=students`"
+                                    class="text-brand-accent hover:underline">
+                                    {{ student.exam_entries_count }}
+                                </Link>
+                            </td>
                         </tr>
                         <tr v-if="!students.data.length">
                             <td colspan="5" class="px-4 py-8 text-center text-base text-brand-text-soft">
@@ -180,6 +205,7 @@ const { animClass } = usePageAnimation()
                 </table>
             </div>
 
+            <!-- Bottom Pagination -->
             <div v-if="students.last_page > 1" class="flex items-center justify-between border-t border-brand-border px-4 py-3">
                 <p class="text-base text-brand-text-soft">Page {{ students.current_page }} of {{ students.last_page }}</p>
                 <div class="flex items-center gap-2 sm:hidden">

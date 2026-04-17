@@ -28,3 +28,13 @@ yarn-error.log
 /.zed
 CLAUDE.md
 .claude/
+# Database dumps
+*.sql
+*.sql.gz
+
+# SQLite databases
+*.sqlite*
+# CSV imports (temporary data files)
+*.csv
+# Import files (temporary Trinity exports)
+imports/
