@@ -295,16 +295,27 @@ test('store requires trinity order number', function () {
         ->assertSessionHasErrors('trinity_order_number');
 });
 
-test('store requires teacher', function () {
+test('store accepts order without teacher (applicant-only)', function () {
     $this->actingAs(orderAdmin())
         ->post(route('admin.orders.store'), [
             'trinity_order_number' => 'TRN-NO-TEACHER',
             'delivery_method' => 'Digital',
+            'subject_area' => 'Music',
             'order_status' => 'Delivered',
+            'requested_start_date' => '2026-03-30',
+            'user_id' => null,
             'commission_rate' => 20,
-            'entries' => [['candidate_name' => 'X']],
+            'applicant_name' => 'Daniel Rogers',
+            'applicant_email' => 'exams@pulsemusicliverpool.com',
+            'entries' => [['candidate_name' => 'Some Student']],
         ])
-        ->assertSessionHasErrors('user_id');
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('orders', [
+        'trinity_order_number' => 'TRN-NO-TEACHER',
+        'user_id' => null,
+        'applicant_name' => 'Daniel Rogers',
+    ]);
 });
 
 test('store requires at least one candidate', function () {

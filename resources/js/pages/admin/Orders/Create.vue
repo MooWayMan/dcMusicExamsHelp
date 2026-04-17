@@ -158,9 +158,9 @@ function inputClass() {
                 <h3 class="mb-4 text-xl font-semibold text-brand-text">Teacher &amp; Commission</h3>
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
-                        <label class="mb-1 block text-lg font-medium text-brand-text">Teacher *</label>
-                        <select v-model="form.user_id" required :class="inputClass()">
-                            <option :value="null" disabled>Select teacher</option>
+                        <label class="mb-1 block text-lg font-medium text-brand-text">Teacher</label>
+                        <select v-model="form.user_id" :class="inputClass()">
+                            <option :value="null">— No teacher (applicant-only) —</option>
                             <option v-for="t in teachers" :key="t.id" :value="t.id">{{ t.name }}</option>
                         </select>
                         <p v-if="form.errors.user_id" class="mt-1 text-sm text-brand-danger">{{ form.errors.user_id }}</p>
