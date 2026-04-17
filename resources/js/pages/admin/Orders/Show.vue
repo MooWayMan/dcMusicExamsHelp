@@ -1,7 +1,8 @@
 <!-- resources/js/pages/admin/Orders/Show.vue -->
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3'
-import { ArrowLeft, Monitor, MapPin, School, User, Music } from 'lucide-vue-next'
+import { ArrowLeft, Monitor, MapPin, School, User, Music, Pencil } from 'lucide-vue-next'
+import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyTableConstructor from '@/components/reusables/MyTableConstructor.vue'
 
@@ -73,6 +74,11 @@ const examColumns = [
                 }">
                 {{ order.order_status }}
             </span>
+            <div class="ml-auto">
+                <Link :href="`/admin/orders/${order.id}/edit`">
+                    <MyButtonConstructor variant="primary" size="small" :icon="Pencil">Edit</MyButtonConstructor>
+                </Link>
+            </div>
         </div>
 
         <div :class="['grid grid-cols-1 gap-6 lg:grid-cols-3', animClass('fade-up', 1)]">

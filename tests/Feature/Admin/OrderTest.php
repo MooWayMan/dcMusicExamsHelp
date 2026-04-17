@@ -347,3 +347,132 @@ test('non-admin cannot store orders', function () {
         ])
         ->assertForbidden();
 });
+
+// ──────────────────────────────────────────
+// Edit / Update
+// ──────────────────────────────────────────
+
+test('admin can view edit order form', function () {
+    $order = Order::factory()->create([
+        'user_id' => orderTeacher()->id,
+        'requested_start_date' => '2026-03-30',
+    ]);
+
+    $this->actingAs(orderAdmin())
+        ->get(route('admin.orders.edit', $order))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('admin/Orders/Edit')
+            ->has('order')
+            ->has('teachers')
+        );
+});
+
+test('non-admin cannot view edit order form', function () {
+    $order = Order::factory()->create(['user_id' => orderTeacher()->id]);
+
+    $this->actingAs(orderTeacher())
+        ->get(route('admin.orders.edit', $order))
+        ->assertForbidden();
+});
+
+test('admin can update an existing order', function () {
+    $teacher = orderTeacher();
+    $order = Order::factory()->create([
+        'user_id' => $teacher->id,
+        'trinity_order_number' => 'TRN-UPDATE-001',
+        'order_status' => 'Submitted',
+        'requested_start_date' => '2026-03-30',
+    ]);
+
+    // Seed an existing exam entry to update
+    $entry = $order->examEntries()->create([
+        'candidate_name' => 'Old Name',
+        'grade' => '1',
+        'delivery_method' => 'Digital',
+        'source' => 'manual',
+    ]);
+
+    $this->actingAs(orderAdmin())
+        ->put(route('admin.orders.update', $order), [
+            'trinity_order_number' => 'TRN-UPDATE-001',
+            'delivery_method' => 'Digital',
+            'subject_area' => 'Music',
+            'order_status' => 'Delivered',
+            'requested_start_date' => '2026-03-30',
+            'user_id' => $teacher->id,
+            'commission_rate' => 20,
+            'entries' => [
+                [
+                    'id' => $entry->id,
+                    'candidate_name' => 'Updated Name',
+                    'grade' => '2',
+                    'score' => 85,
+                    'result' => 'Merit',
+                ],
+            ],
+        ])
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('orders', [
+        'id' => $order->id,
+        'order_status' => 'Delivered',
+    ]);
+
+    $this->assertDatabaseHas('exam_entries', [
+        'id' => $entry->id,
+        'candidate_name' => 'Updated Name',
+        'grade' => '2',
+        'score' => 85,
+        'result' => 'Merit',
+    ]);
+});
+
+test('admin can add a new candidate to existing order', function () {
+    $teacher = orderTeacher();
+    $order = Order::factory()->create([
+        'user_id' => $teacher->id,
+        'requested_start_date' => '2026-03-30',
+    ]);
+
+    $existing = $order->examEntries()->create([
+        'candidate_name' => 'First Candidate',
+        'delivery_method' => 'Digital',
+        'source' => 'manual',
+    ]);
+
+    $this->actingAs(orderAdmin())
+        ->put(route('admin.orders.update', $order), [
+            'trinity_order_number' => $order->trinity_order_number,
+            'delivery_method' => 'Digital',
+            'subject_area' => 'Music',
+            'order_status' => 'Delivered',
+            'requested_start_date' => '2026-03-30',
+            'user_id' => $teacher->id,
+            'commission_rate' => 20,
+            'entries' => [
+                ['id' => $existing->id, 'candidate_name' => 'First Candidate'],
+                ['candidate_name' => 'Second Candidate'],
+            ],
+        ])
+        ->assertRedirect();
+
+    expect($order->fresh()->examEntries()->count())->toBe(2);
+    expect($order->fresh()->candidates)->toBe(2);
+});
+
+test('non-admin cannot update orders', function () {
+    $order = Order::factory()->create(['user_id' => orderTeacher()->id]);
+
+    $this->actingAs(orderTeacher())
+        ->put(route('admin.orders.update', $order), [
+            'trinity_order_number' => $order->trinity_order_number,
+            'delivery_method' => 'Digital',
+            'order_status' => 'Delivered',
+            'requested_start_date' => '2026-03-30',
+            'user_id' => orderTeacher()->id,
+            'commission_rate' => 20,
+            'entries' => [['candidate_name' => 'X']],
+        ])
+        ->assertForbidden();
+});
