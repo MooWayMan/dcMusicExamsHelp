@@ -5,11 +5,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ExamEntry;
+use App\Models\Instrument;
 use App\Models\Order;
 use App\Models\School;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -139,6 +143,80 @@ class OrderController extends Controller
                 'direction' => $sortDir,
             ],
         ]);
+    }
+
+    public function create(): Response
+    {
+        return Inertia::render('admin/Orders/Create', [
+            'teachers' => User::where('role', 'teacher')
+                ->orderBy('name')
+                ->get(['id', 'name', 'email']),
+            'schools' => School::orderBy('name')->get(['id', 'name']),
+            'instruments' => Instrument::orderBy('name')->get(['id', 'name']),
+            'options' => [
+                'delivery_methods' => [
+                    ['value' => 'Digital', 'label' => 'Digital (DG)', 'default_rate' => 20],
+                    ['value' => 'Default', 'label' => 'Face-to-Face (F2F)', 'default_rate' => 28],
+                    ['value' => 'DigitalTheory', 'label' => 'Digital Theory', 'default_rate' => 12.5],
+                ],
+                'subject_areas' => ['Music', 'Drama', 'Rockschool', 'Dance', 'Art'],
+                'order_statuses' => ['Submitted', 'In Progress', 'Delivered', 'Cancelled'],
+                'grades' => ['Initial', '1', '2', '3', '4', '5', '6', '7', '8', 'ATCL', 'LTCL', 'FTCL'],
+                'results' => ['Distinction', 'Merit', 'Pass', 'Below Pass'],
+            ],
+        ]);
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'trinity_order_number' => 'required|string|max:255|unique:orders,trinity_order_number',
+            'delivery_method' => 'required|string|max:50',
+            'subject_area' => 'nullable|string|max:100',
+            'order_status' => 'required|string|max:50',
+            'requested_start_date' => 'required|date',
+            'user_id' => 'required|exists:users,id',
+            'school_id' => 'nullable|exists:schools,id',
+            'venue' => 'nullable|string|max:255',
+            'commission_rate' => 'required|numeric|min:0|max:100',
+            'commission_amount' => 'nullable|numeric|min:0',
+            'applicant_name' => 'nullable|string|max:255',
+            'applicant_email' => 'nullable|email|max:255',
+            'notes' => 'nullable|string',
+
+            'entries' => 'required|array|min:1',
+            'entries.*.candidate_name' => 'required|string|max:255',
+            'entries.*.candidate_number' => 'nullable|string|max:100',
+            'entries.*.instrument_id' => 'nullable|exists:instruments,id',
+            'entries.*.grade' => 'nullable|string|max:50',
+            'entries.*.exam_date' => 'nullable|date',
+            'entries.*.score' => 'nullable|integer|min:0|max:100',
+            'entries.*.result' => 'nullable|string|max:50',
+            'entries.*.fee' => 'nullable|numeric|min:0',
+            'entries.*.notes' => 'nullable|string',
+        ]);
+
+        $order = DB::transaction(function () use ($validated) {
+            $entries = $validated['entries'];
+            unset($validated['entries']);
+
+            $validated['candidates'] = count($entries);
+
+            $order = Order::create($validated);
+
+            foreach ($entries as $entry) {
+                $order->examEntries()->create(array_merge($entry, [
+                    'subject_area' => $validated['subject_area'] ?? null,
+                    'delivery_method' => $validated['delivery_method'],
+                    'source' => 'manual',
+                ]));
+            }
+
+            return $order;
+        });
+
+        return redirect()->route('admin.orders.show', $order)
+            ->with('success', "Order {$order->trinity_order_number} added with {$order->candidates} candidate(s).");
     }
 
     public function show(Order $order): Response
