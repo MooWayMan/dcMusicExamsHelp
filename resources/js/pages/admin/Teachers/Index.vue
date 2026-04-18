@@ -222,7 +222,12 @@ const { animClass } = usePageAnimation()
                                 >
                                     {{ teacher.name }}
                                 </Link>
-                                <p class="text-sm text-brand-text-soft">{{ teacher.how_they_found_us ?? '—' }}</p>
+                                <p
+                                    class="max-w-[240px] truncate text-sm text-brand-text-soft"
+                                    :title="teacher.how_they_found_us ?? ''"
+                                >
+                                    {{ teacher.how_they_found_us ?? '—' }}
+                                </p>
                             </td>
                             <td class="px-4 py-3">
                                 <p class="text-base text-brand-text">{{ teacher.email }}</p>
