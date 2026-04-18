@@ -200,11 +200,14 @@ const { animClass } = usePageAnimation()
                 </div>
             </div>
             <div class="overflow-x-auto">
-                <table class="min-w-[800px] w-full text-left text-base">
+                <table class="min-w-[900px] w-full text-left text-base">
                     <thead class="border-b border-brand-border bg-brand-surface-soft">
                         <tr>
                             <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('trinity_order_number')">
                                 Order #{{ sortIcon('trinity_order_number') }}
+                            </th>
+                            <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('requested_start_date')">
+                                Date{{ sortIcon('requested_start_date') }}
                             </th>
                             <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('teacher')">
                                 Teacher{{ sortIcon('teacher') }}
@@ -236,6 +239,9 @@ const { animClass } = usePageAnimation()
                                 <Link :href="`/admin/orders/${order.id}`" class="font-medium text-brand-accent hover:underline">
                                     {{ order.trinity_order_number }}
                                 </Link>
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-base text-brand-text-soft">
+                                {{ order.requested_start_date || '—' }}
                             </td>
                             <td class="px-4 py-3">
                                 <Link v-if="order.teacher_id" :href="`/admin/teachers/${order.teacher_id}`" class="text-base text-brand-text hover:text-brand-accent hover:underline">
@@ -277,7 +283,7 @@ const { animClass } = usePageAnimation()
                             </td>
                         </tr>
                         <tr v-if="!orders.data.length">
-                            <td colspan="9" class="px-4 py-8 text-center text-base text-brand-text-soft">No orders found.</td>
+                            <td colspan="10" class="px-4 py-8 text-center text-base text-brand-text-soft">No orders found.</td>
                         </tr>
                     </tbody>
                 </table>
