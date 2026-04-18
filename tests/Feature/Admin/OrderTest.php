@@ -62,6 +62,57 @@ test('orders can be filtered by delivery method', function () {
         );
 });
 
+test('orders index payload includes formatted requested_start_date', function () {
+    $admin = orderAdmin();
+    $teacher = orderTeacher();
+
+    Order::factory()->create([
+        'user_id' => $teacher->id,
+        'requested_start_date' => '2026-03-07',
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.orders.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('orders.data.0.requested_start_date', '07 Mar 2026')
+        );
+});
+
+test('orders can be sorted by requested_start_date ascending and descending', function () {
+    $admin = orderAdmin();
+    $teacher = orderTeacher();
+
+    Order::factory()->create([
+        'user_id' => $teacher->id,
+        'trinity_order_number' => 'TRN-OLDEST',
+        'requested_start_date' => '2026-01-13',
+    ]);
+    Order::factory()->create([
+        'user_id' => $teacher->id,
+        'trinity_order_number' => 'TRN-NEWEST',
+        'requested_start_date' => '2026-03-07',
+    ]);
+
+    // Ascending: oldest first
+    $this->actingAs($admin)
+        ->get(route('admin.orders.index', ['sort' => 'requested_start_date', 'direction' => 'asc']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('orders.data.0.trinity_order_number', 'TRN-OLDEST')
+            ->where('orders.data.1.trinity_order_number', 'TRN-NEWEST')
+        );
+
+    // Descending: newest first
+    $this->actingAs($admin)
+        ->get(route('admin.orders.index', ['sort' => 'requested_start_date', 'direction' => 'desc']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('orders.data.0.trinity_order_number', 'TRN-NEWEST')
+            ->where('orders.data.1.trinity_order_number', 'TRN-OLDEST')
+        );
+});
+
 // ──────────────────────────────────────────
 // Time Period Filters
 // ──────────────────────────────────────────
