@@ -17,11 +17,14 @@ const brandIcon = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexa
             class="h-10 w-10 rounded-xl"
         />
         <!-- Full wordmark when sidebar expanded -->
+        <!-- Width-first sizing: image fills sidebar width, height follows aspect ratio. -->
+        <!-- Fixed-height sizing was forcing a wider aspect than the 256px sidebar can give, -->
+        <!-- causing the image to squish horizontally. -->
         <img
             v-else
             :src="brandWordmark"
             alt="musicExams.help"
-            class="h-14 w-auto xl:h-20"
+            class="h-auto w-full max-w-full object-contain"
         />
     </div>
 </template>

@@ -69,6 +69,12 @@ function canProceed(): boolean {
     return true
 }
 
+// Quick-save is available on any step as soon as name + email are valid.
+// This prevents users having to click through every step just to save a small edit.
+function canQuickSave(): boolean {
+    return Boolean(props.form.name.trim() && props.form.email.trim())
+}
+
 async function nextStep() {
     if (currentStep.value >= steps.length || !canProceed()) return
     slideDirection.value = 'left'
@@ -530,6 +536,18 @@ const selectedSubjectAreaNames = computed(() =>
                     {{ currentStep }} / {{ steps.length }}
                 </span>
 
+                <!-- Quick Save on non-final steps — so you never have to click through the whole wizard -->
+                <MyButtonConstructor
+                    v-if="currentStep < steps.length && canQuickSave()"
+                    variant="success"
+                    size="large"
+                    :icon="Save"
+                    type="submit"
+                    :disabled="form.processing"
+                >
+                    {{ form.processing ? 'Saving...' : submitLabel }}
+                </MyButtonConstructor>
+
                 <MyButtonConstructor
                     v-if="currentStep < steps.length"
                     variant="primary"
@@ -543,7 +561,7 @@ const selectedSubjectAreaNames = computed(() =>
                 </MyButtonConstructor>
 
                 <MyButtonConstructor
-                    v-else
+                    v-if="currentStep === steps.length"
                     variant="success"
                     size="large"
                     :icon="Save"

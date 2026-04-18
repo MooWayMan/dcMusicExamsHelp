@@ -315,7 +315,16 @@ const studentColumns = [
                     :bordered="false"
                     :full-width="true"
                     :bare="true"
-                />
+                >
+                    <template #cell-trinity_order_number="{ row }">
+                        <Link
+                            :href="`/admin/orders/${row.id}`"
+                            class="font-medium text-brand-accent hover:underline"
+                        >
+                            {{ row.trinity_order_number }}
+                        </Link>
+                    </template>
+                </MyTableConstructor>
                 <p v-else class="py-4 text-center text-base text-brand-text-soft">No orders yet</p>
             </div>
         </div>
