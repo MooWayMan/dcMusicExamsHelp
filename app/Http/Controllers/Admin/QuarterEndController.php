@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ExamContact;
 use App\Models\ExamEntry;
 use App\Models\Order;
 use App\Models\PrizeDraw;
@@ -352,8 +353,23 @@ class QuarterEndController extends Controller
             ->map(fn ($u) => strtolower(trim($u->name)))
             ->toArray();
 
+        // Exclude contacts explicitly flagged as parent/self from the teacher draw.
+        // Match by teacher_contact_id if linked; fall back to case-insensitive name match.
+        $excludedContactIds = ExamContact::whereIn('role', ['parent', 'self'])
+            ->pluck('id')
+            ->all();
+
+        $excludedNamesLower = ExamContact::whereIn('role', ['parent', 'self'])
+            ->pluck('name')
+            ->map(fn ($n) => strtolower(trim($n)))
+            ->filter()
+            ->unique()
+            ->all();
+
         $applicantEntries = $allEntries
             ->filter(fn ($e) => $e->teacher_name !== null)
+            ->filter(fn ($e) => ! in_array($e->teacher_contact_id, $excludedContactIds, true))
+            ->filter(fn ($e) => ! in_array(strtolower(trim($e->teacher_name)), $excludedNamesLower, true))
             ->groupBy(fn ($e) => $e->teacher_name);
 
         $tickets = [];

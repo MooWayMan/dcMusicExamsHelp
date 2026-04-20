@@ -1,12 +1,15 @@
 <!-- resources/js/pages/admin/Contacts/Show.vue -->
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3'
-import { ArrowLeft, Mail, Phone, User, Music, ShoppingCart, Tag } from 'lucide-vue-next'
+import { ref, computed } from 'vue'
+import { ArrowLeft, Mail, Phone, User, Music, ShoppingCart, Tag, Pencil, ChevronDown, ChevronUp } from 'lucide-vue-next'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyTableConstructor from '@/components/reusables/MyTableConstructor.vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
 
 const { animClass } = usePageAnimation()
+
+const INITIAL_ROWS = 10
 
 interface ContactEmail {
     id: number
@@ -98,6 +101,22 @@ const orderColumns = [
     { key: 'candidates', title: 'Cands', sortable: true, align: 'center' as const },
     { key: 'order_status', title: 'Status', sortable: true },
 ]
+
+// Show-more toggles for long lists
+const showAllEntries = ref(false)
+const showAllOrders = ref(false)
+
+const visibleEntries = computed(() =>
+    showAllEntries.value
+        ? props.contact.exam_entries
+        : props.contact.exam_entries.slice(0, INITIAL_ROWS)
+)
+
+const visibleOrders = computed(() =>
+    showAllOrders.value
+        ? props.contact.orders
+        : props.contact.orders.slice(0, INITIAL_ROWS)
+)
 </script>
 
 <template>
@@ -115,10 +134,15 @@ const orderColumns = [
                 :class="roleBadgeClass(contact.role)">
                 {{ contact.role }}
             </span>
+            <Link :href="`/admin/contacts/${contact.id}/edit`"
+                class="ml-auto inline-flex items-center gap-2 rounded-lg bg-brand-accent px-3 py-2 text-sm font-semibold text-brand-text-inverse transition-colors hover:opacity-90">
+                <Pencil class="h-4 w-4" />
+                Edit
+            </Link>
         </div>
 
         <!-- Info cards -->
-        <div :class="['grid grid-cols-1 gap-6 lg:grid-cols-3', animClass('fade-up', 1)]">
+        <div :class="['grid grid-cols-1 gap-6 lg:grid-cols-2', animClass('fade-up', 1)]">
             <!-- Contact Details -->
             <div class="rounded-xl border border-brand-border bg-brand-surface p-5">
                 <div class="flex items-center gap-2">
@@ -178,21 +202,6 @@ const orderColumns = [
                 </div>
             </div>
 
-            <!-- Students list -->
-            <div class="rounded-xl border border-brand-border bg-brand-surface p-5">
-                <div class="flex items-center gap-2">
-                    <Music class="h-5 w-5 text-brand-text-soft" />
-                    <MyTextConstructor variant="button-lg">
-                        <template #myTitle>Students ({{ contact.students.length }})</template>
-                    </MyTextConstructor>
-                </div>
-                <div v-if="contact.students.length" class="mt-4 space-y-2">
-                    <p v-for="student in contact.students" :key="student.id" class="text-base text-brand-text">
-                        {{ student.name }}
-                    </p>
-                </div>
-                <p v-else class="mt-4 text-base text-brand-text-soft">No students linked</p>
-            </div>
         </div>
 
         <!-- Exam Entries table -->
@@ -206,7 +215,7 @@ const orderColumns = [
             <div class="p-4">
                 <MyTableConstructor
                     v-if="contact.exam_entries.length"
-                    :data="contact.exam_entries"
+                    :data="visibleEntries"
                     :columns="entryColumns"
                     row-key="id"
                     size="medium"
@@ -235,6 +244,22 @@ const orderColumns = [
                     </template>
                 </MyTableConstructor>
                 <p v-else class="py-4 text-center text-base text-brand-text-soft">No exam entries recorded</p>
+
+                <div v-if="contact.exam_entries.length > INITIAL_ROWS" class="mt-4 flex justify-center">
+                    <button
+                        @click="showAllEntries = !showAllEntries"
+                        class="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-brand-surface-soft px-4 py-2 text-sm font-medium text-brand-text-soft transition-colors hover:bg-brand-accent/10 hover:text-brand-accent"
+                    >
+                        <template v-if="showAllEntries">
+                            Show less
+                            <ChevronUp class="h-4 w-4" />
+                        </template>
+                        <template v-else>
+                            Show all {{ contact.exam_entries.length }}
+                            <ChevronDown class="h-4 w-4" />
+                        </template>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -249,7 +274,7 @@ const orderColumns = [
             <div class="p-4">
                 <MyTableConstructor
                     v-if="contact.orders.length"
-                    :data="contact.orders"
+                    :data="visibleOrders"
                     :columns="orderColumns"
                     row-key="id"
                     size="medium"
@@ -277,6 +302,22 @@ const orderColumns = [
                     </template>
                 </MyTableConstructor>
                 <p v-else class="py-4 text-center text-base text-brand-text-soft">No orders linked</p>
+
+                <div v-if="contact.orders.length > INITIAL_ROWS" class="mt-4 flex justify-center">
+                    <button
+                        @click="showAllOrders = !showAllOrders"
+                        class="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-brand-surface-soft px-4 py-2 text-sm font-medium text-brand-text-soft transition-colors hover:bg-brand-accent/10 hover:text-brand-accent"
+                    >
+                        <template v-if="showAllOrders">
+                            Show less
+                            <ChevronUp class="h-4 w-4" />
+                        </template>
+                        <template v-else>
+                            Show all {{ contact.orders.length }}
+                            <ChevronDown class="h-4 w-4" />
+                        </template>
+                    </button>
+                </div>
             </div>
         </div>
     </div>

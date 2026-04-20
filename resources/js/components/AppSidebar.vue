@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 import {
-    BookOpen,
-    FolderGit2,
     LayoutGrid,
     Users,
     School,
@@ -17,6 +15,7 @@ import {
     Construction,
     Gift,
     FileSpreadsheet,
+    Contact as ContactIcon,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
@@ -91,6 +90,11 @@ const adminNavItems: NavItem[] = [
         icon: GraduationCap,
     },
     {
+        title: 'Contacts',
+        href: '/admin/contacts',
+        icon: ContactIcon,
+    },
+    {
         title: 'Tasks',
         href: '/admin/tasks',
         icon: CheckSquare,
@@ -126,18 +130,10 @@ const adminNavItems: NavItem[] = [
     },
 ];
 
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/vue-starter-kit',
-        icon: FolderGit2,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
-    },
-];
+// TODO: consider adding a direct "Profile" link here so settings/profile
+// isn't hidden inside the user avatar dropdown at the very bottom.
+// Low priority — single-admin app, Paul is the only user.
+const footerNavItems: NavItem[] = [];
 </script>
 
 <template>
@@ -156,7 +152,7 @@ const footerNavItems: NavItem[] = [
         </SidebarContent>
 
         <SidebarFooter>
-            <NavFooter :items="footerNavItems" />
+            <NavFooter v-if="footerNavItems.length" :items="footerNavItems" />
             <NavUser />
         </SidebarFooter>
     </Sidebar>

@@ -5,11 +5,15 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ExamContact;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class ContactController extends Controller
 {
+    public const ROLES = ['teacher', 'parent', 'self', 'applicant', 'admin', 'unknown'];
+
+
     public function index(Request $request)
     {
         $search = $request->input('search');
@@ -23,13 +27,17 @@ class ContactController extends Controller
         }
 
         $query = ExamContact::query()
+            ->with('emails')
             ->withCount(['examEntries', 'students', 'orders']);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'ilike', "%{$search}%")
                     ->orWhere('email', 'ilike', "%{$search}%")
-                    ->orWhere('phone', 'ilike', "%{$search}%");
+                    ->orWhere('phone', 'ilike', "%{$search}%")
+                    ->orWhereHas('emails', function ($eq) use ($search) {
+                        $eq->where('email', 'ilike', "%{$search}%");
+                    });
             });
         }
 
@@ -41,6 +49,19 @@ class ContactController extends Controller
             ->orderBy($sort, $direction)
             ->paginate(20)
             ->withQueryString();
+
+        // Fall back to related contact_emails table when the direct email column is empty,
+        // so legacy-imported rows (e.g. Roxanne) show their email in the list view.
+        $contacts->through(fn ($contact) => [
+            'id' => $contact->id,
+            'name' => $contact->name,
+            'email' => $contact->primary_email,
+            'phone' => $contact->phone,
+            'role' => $contact->role,
+            'exam_entries_count' => $contact->exam_entries_count,
+            'students_count' => $contact->students_count,
+            'orders_count' => $contact->orders_count,
+        ]);
 
         // Summary stats (unfiltered totals)
         $summary = [
@@ -130,5 +151,38 @@ class ContactController extends Controller
                 ]),
             ],
         ]);
+    }
+
+    public function edit(ExamContact $contact)
+    {
+        return Inertia::render('admin/Contacts/Edit', [
+            'contact' => [
+                'id' => $contact->id,
+                'name' => $contact->name,
+                'email' => $contact->email,
+                'phone' => $contact->phone,
+                'role' => $contact->role,
+                'source' => $contact->source,
+                'notes' => $contact->notes,
+            ],
+            'roles' => self::ROLES,
+        ]);
+    }
+
+    public function update(Request $request, ExamContact $contact): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:50'],
+            'role' => ['required', 'string', 'in:' . implode(',', self::ROLES)],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        $contact->update($validated);
+
+        return redirect()
+            ->route('admin.contacts.show', $contact)
+            ->with('success', 'Contact updated.');
     }
 }
