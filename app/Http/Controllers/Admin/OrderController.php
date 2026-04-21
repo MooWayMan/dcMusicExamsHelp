@@ -44,6 +44,14 @@ class OrderController extends Controller
             $query->where('order_status', $status);
         }
 
+        // Paid filter — has Trinity remitted commission on this order yet?
+        $paid = $request->input('paid');
+        if ($paid === 'paid') {
+            $query->paid();
+        } elseif ($paid === 'unpaid') {
+            $query->unpaid();
+        }
+
         // Time period filter
         $period = $request->input('period');
         if ($period) {
@@ -98,6 +106,11 @@ class OrderController extends Controller
             'order_status' => $order->order_status,
             'commission_rate' => $order->commission_rate . '%',
             'commission_amount' => number_format($order->commission_amount, 2),
+            'commission_paid_at' => $order->commission_paid_at?->format('d M Y'),
+            'commission_paid_amount' => $order->commission_paid_amount
+                ? number_format($order->commission_paid_amount, 2)
+                : null,
+            'is_paid' => $order->isPaid(),
             'requested_start_date' => $order->requested_start_date?->format('d M Y'),
             'exam_entries_count' => $order->exam_entries_count,
         ]);
@@ -113,6 +126,8 @@ class OrderController extends Controller
         }
         if ($method) $summaryQuery->where('delivery_method', $method);
         if ($status) $summaryQuery->where('order_status', $status);
+        if ($paid === 'paid') $summaryQuery->paid();
+        if ($paid === 'unpaid') $summaryQuery->unpaid();
         if ($period) {
             $now = Carbon::now();
             match ($period) {
@@ -127,10 +142,16 @@ class OrderController extends Controller
             };
         }
 
+        // Clone so we don't mutate the main summary with extra wheres
+        $paidSummaryQuery = (clone $summaryQuery)->paid();
+        $unpaidSummaryQuery = (clone $summaryQuery)->unpaid();
+
         $summary = [
             'total_orders' => $summaryQuery->count(),
             'total_commission' => number_format($summaryQuery->sum('commission_amount'), 2),
             'total_candidates' => $summaryQuery->sum('candidates'),
+            'total_paid' => number_format($paidSummaryQuery->sum('commission_paid_amount'), 2),
+            'total_unpaid' => number_format($unpaidSummaryQuery->sum('commission_amount'), 2),
         ];
 
         return Inertia::render('admin/Orders/Index', [
@@ -140,6 +161,7 @@ class OrderController extends Controller
                 'search' => $search,
                 'method' => $method,
                 'status' => $status,
+                'paid' => $paid,
                 'period' => $period,
                 'sort' => $sortBy,
                 'direction' => $sortDir,

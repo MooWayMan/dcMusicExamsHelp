@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3'
 import { ref, watch } from 'vue'
-import { Search, Eye, Monitor, MapPin, TrendingUp, ChevronLeft, ChevronRight, Plus } from 'lucide-vue-next'
+import { Search, Eye, Monitor, MapPin, TrendingUp, ChevronLeft, ChevronRight, Plus, CheckCircle2, Clock } from 'lucide-vue-next'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import PageHeader from '@/components/reusables/PageHeader.vue'
@@ -21,6 +21,9 @@ interface Order {
     order_status: string
     commission_rate: string
     commission_amount: string
+    commission_paid_at: string | null
+    commission_paid_amount: string | null
+    is_paid: boolean
     requested_start_date: string
     exam_entries_count: number
 }
@@ -35,8 +38,8 @@ interface PaginatedData {
 
 const props = defineProps<{
     orders: PaginatedData
-    summary: { total_orders: number; total_commission: string; total_candidates: number }
-    filters: { search: string | null; method: string | null; status: string | null; period: string | null; sort: string; direction: string }
+    summary: { total_orders: number; total_commission: string; total_candidates: number; total_paid: string; total_unpaid: string }
+    filters: { search: string | null; method: string | null; status: string | null; paid: string | null; period: string | null; sort: string; direction: string }
 }>()
 
 const search = ref(props.filters.search ?? '')
@@ -47,6 +50,7 @@ function currentFilters(overrides: Record<string, string | undefined> = {}) {
         search: search.value || undefined,
         method: props.filters.method || undefined,
         status: props.filters.status || undefined,
+        paid: props.filters.paid || undefined,
         period: props.filters.period || undefined,
         ...overrides,
     }
@@ -65,6 +69,10 @@ function filterByMethod(method: string | null) {
 
 function filterByStatus(status: string | null) {
     router.get('/admin/orders', currentFilters({ status: status || undefined }), { preserveState: true, replace: true })
+}
+
+function filterByPaid(paid: string | null) {
+    router.get('/admin/orders', currentFilters({ paid: paid || undefined }), { preserveState: true, replace: true })
 }
 
 function filterByPeriod(period: string | null) {
@@ -107,6 +115,16 @@ const { animClass } = usePageAnimation()
             <div class="inline-flex items-center gap-2 rounded-xl border border-brand-border bg-brand-surface px-4 py-2">
                 <span class="text-sm font-medium text-brand-text-soft">Candidates</span>
                 <span class="text-xl font-bold text-brand-text">{{ summary.total_candidates }}</span>
+            </div>
+            <div class="inline-flex items-center gap-2 rounded-xl border border-brand-border bg-brand-surface px-4 py-2">
+                <CheckCircle2 class="h-4 w-4 text-brand-success" />
+                <span class="text-sm font-medium text-brand-text-soft">Paid</span>
+                <span class="text-xl font-bold text-brand-success">&pound;{{ summary.total_paid }}</span>
+            </div>
+            <div class="inline-flex items-center gap-2 rounded-xl border border-brand-border bg-brand-surface px-4 py-2">
+                <Clock class="h-4 w-4 text-brand-text-soft" />
+                <span class="text-sm font-medium text-brand-text-soft">Awaiting</span>
+                <span class="text-xl font-bold text-brand-text">&pound;{{ summary.total_unpaid }}</span>
             </div>
         </div>
 
@@ -152,6 +170,25 @@ const { animClass } = usePageAnimation()
                     class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
                     :class="filters.status === s ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
                     {{ s }}
+                </button>
+            </div>
+
+            <!-- Paid filter -->
+            <div class="flex gap-1">
+                <button @click="filterByPaid(null)"
+                    class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
+                    :class="!filters.paid ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
+                    All Payments
+                </button>
+                <button @click="filterByPaid('paid')"
+                    class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
+                    :class="filters.paid === 'paid' ? 'bg-brand-success text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
+                    Paid
+                </button>
+                <button @click="filterByPaid('unpaid')"
+                    class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
+                    :class="filters.paid === 'unpaid' ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
+                    Unpaid
                 </button>
             </div>
 
@@ -265,7 +302,17 @@ const { animClass } = usePageAnimation()
                             </td>
                             <td class="px-4 py-3 text-base text-brand-text-soft">{{ order.subject_area }}</td>
                             <td class="px-4 py-3 text-center text-base text-brand-text">{{ order.candidates }}</td>
-                            <td class="px-4 py-3 text-right text-base font-medium text-brand-success">&pound;{{ order.commission_amount }}</td>
+                            <td class="px-4 py-3 text-right text-base">
+                                <div class="font-medium text-brand-success">&pound;{{ order.commission_amount }}</div>
+                                <div v-if="order.is_paid" class="mt-0.5 inline-flex items-center gap-1 text-xs text-brand-success">
+                                    <CheckCircle2 class="h-3 w-3" />
+                                    Paid {{ order.commission_paid_at }}
+                                </div>
+                                <div v-else class="mt-0.5 inline-flex items-center gap-1 text-xs text-brand-text-soft">
+                                    <Clock class="h-3 w-3" />
+                                    Awaiting
+                                </div>
+                            </td>
                             <td class="px-4 py-3 text-center">
                                 <span class="rounded-full px-2 py-0.5 text-sm font-medium"
                                     :class="{

@@ -26,6 +26,8 @@ class Order extends Model
         'requested_start_date',
         'commission_rate',
         'commission_amount',
+        'commission_paid_at',
+        'commission_paid_amount',
         'applicant_name',
         'applicant_email',
         'notes',
@@ -38,6 +40,8 @@ class Order extends Model
             'requested_start_date' => 'date',
             'commission_rate' => 'decimal:2',
             'commission_amount' => 'decimal:2',
+            'commission_paid_at' => 'date',
+            'commission_paid_amount' => 'decimal:2',
             'candidates' => 'integer',
         ];
     }
@@ -117,5 +121,35 @@ class Order extends Model
     public function getDeliveryMethodLabelAttribute(): string
     {
         return $this->isDigital() ? 'DG' : 'F2F';
+    }
+
+    /**
+     * Has Trinity paid the commission on this order?
+     * Presence of `commission_paid_at` is the source of truth — it's set
+     * from the remittance date on a Trinity Finance statement.
+     */
+    public function isPaid(): bool
+    {
+        return ! is_null($this->commission_paid_at);
+    }
+
+    // ──────────────────────────────────────────
+    // Query scopes
+    // ──────────────────────────────────────────
+
+    /**
+     * Commission has been paid by Trinity (remittance received).
+     */
+    public function scopePaid($query)
+    {
+        return $query->whereNotNull('commission_paid_at');
+    }
+
+    /**
+     * Commission has NOT yet been paid by Trinity.
+     */
+    public function scopeUnpaid($query)
+    {
+        return $query->whereNull('commission_paid_at');
     }
 }
