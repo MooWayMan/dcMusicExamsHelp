@@ -67,7 +67,7 @@ const prefersDark = (): boolean => {
 const handleSystemThemeChange = () => {
     const currentAppearance = getStoredAppearance();
 
-    updateTheme(currentAppearance || 'system');
+    updateTheme(currentAppearance || 'light');
 };
 
 export function initializeTheme(): void {
@@ -75,15 +75,17 @@ export function initializeTheme(): void {
         return;
     }
 
-    // Initialize theme from saved preference or default to system...
+    // Initialize theme from saved preference or default to light...
+    // (Public site is light-only — the dark-mode CSS variables are incomplete
+    //  for custom pages, so 'system' on a dark-preferring OS gives invisible hero text.)
     const savedAppearance = getStoredAppearance();
-    updateTheme(savedAppearance || 'system');
+    updateTheme(savedAppearance || 'light');
 
     // Set up system theme change listener...
     mediaQuery()?.addEventListener('change', handleSystemThemeChange);
 }
 
-const appearance = ref<Appearance>('system');
+const appearance = ref<Appearance>('light');
 
 export function useAppearance(): UseAppearanceReturn {
     onMounted(() => {
