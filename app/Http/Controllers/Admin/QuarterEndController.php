@@ -91,18 +91,16 @@ class QuarterEndController extends Controller
             $merits = $withScores->filter(fn ($e) => $e->score >= 75 && $e->score < 87)->count();
             $passes = $withScores->filter(fn ($e) => $e->score >= 60 && $e->score < 75)->count();
 
-            // Total entries for badge eligibility (across ALL time, not just this quarter)
-            $totalAllTime = ExamEntry::where('teacher_name', $teacherName)
-                ->where(function ($q) {
-                    $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
-                })
-                ->count();
+            // Badges reset per-quarter — count only non-cancelled entries in the
+            // selected quarter. A teacher who earned Gold in Q1 but has 3 in Q2
+            // doesn't get a Q2 badge.
+            $quarterCount = $entries->count();
 
             $badgeTier = match (true) {
-                $totalAllTime >= 40 => 'Top Award',
-                $totalAllTime >= 30 => 'Gold',
-                $totalAllTime >= 20 => 'Silver',
-                $totalAllTime >= 10 => 'Bronze',
+                $quarterCount >= 40 => 'Top Award',
+                $quarterCount >= 30 => 'Gold',
+                $quarterCount >= 20 => 'Silver',
+                $quarterCount >= 10 => 'Bronze',
                 default => null,
             };
 
@@ -117,7 +115,7 @@ class QuarterEndController extends Controller
                 'merits' => $merits,
                 'passes' => $passes,
                 'badge_tier' => $badgeTier,
-                'total_all_time' => $totalAllTime,
+                'total_all_time' => $quarterCount, // kept for prop-compat; now means quarter count
                 'students' => $withScores->map(fn ($e) => [
                     'name' => $e->candidate_name,
                     'instrument' => $e->instrument?->name ?? 'Unknown',

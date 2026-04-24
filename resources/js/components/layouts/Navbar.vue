@@ -55,10 +55,10 @@ const navigation = computed<NavItem[]>(() => {
       show: true,
       children: [
         { name: 'For Teachers', href: '/for-teachers' },
-        { name: 'Faber Discounts', href: '/for-teachers/faber-discounts' },
         { name: 'Teacher Awards', href: '/for-teachers/awards' },
         { name: 'For Parents', href: '/for-parents' },
         { name: 'For Students', href: '/for-students' },
+        { name: 'Books', href: '/books' },
         { name: '---', href: '#divider-thankyou' },
         { name: '★ Recognition (click here)', href: '/recognition', highlight: true },
         { name: 'Incentives', href: '/incentives' },

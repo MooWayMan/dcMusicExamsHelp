@@ -46,14 +46,36 @@ class CertificateController extends Controller
 
     /**
      * Show the certificate generator page.
+     *
+     * Both the student list and the teacher list are scoped to the
+     * selected quarter. Teacher badge tier (Bronze/Silver/Gold/Top Award)
+     * is calculated PER QUARTER — counts reset every quarter, so a
+     * teacher who hit Gold in Q1 but only has 3 entries in Q2 won't
+     * earn a Q2 badge.
      */
     public function index(Request $request): Response
     {
-        // Get exam entries with scores for student certificates
+        $quarter = (int) $request->query('quarter', (int) ceil(now()->month / 3));
+        $year = (int) $request->query('year', (int) now()->year);
+
+        $startMonth = (($quarter - 1) * 3) + 1;
+        $startDate = \Carbon\Carbon::create($year, $startMonth, 1)->startOfDay();
+        $endDate = $startDate->copy()->addMonths(3)->subDay()->endOfDay();
+
+        $inQuarter = function ($entry) use ($startDate, $endDate) {
+            $date = $entry->exam_date ?? $entry->order?->requested_start_date;
+            return $date && $date->between($startDate, $endDate);
+        };
+
+        // ────────────── Students (scored, in selected quarter) ──────────────
         $students = ExamEntry::whereNotNull('score')
+            ->where(function ($q) {
+                $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
+            })
             ->with(['student:id,first_name,last_name', 'instrument:id,name', 'order:id,requested_start_date'])
             ->orderBy('exam_date', 'desc')
             ->get()
+            ->filter($inQuarter)
             ->map(fn ($entry) => [
                 'id'              => $entry->id,
                 'candidate_name'  => $entry->candidate_name,
@@ -63,40 +85,46 @@ class CertificateController extends Controller
                 'result_band'     => $entry->result_band,
                 'certificate'     => $entry->certificate_name,
                 'exam_date'       => ($entry->exam_date ?? $entry->order?->requested_start_date)?->format('j F Y'),
-            ]);
+            ])
+            ->values();
 
-        // Get teachers with candidate counts for teacher certificates
-        // Count by teacher_name on exam_entries (not orders) to get actual candidates entered
-        $teachers = User::where('role', 'teacher')
-            ->orderBy('name')
-            ->get()
-            ->map(function ($teacher) {
-                $candidateCount = ExamEntry::where('teacher_name', $teacher->name)
-                    ->where(function ($q) {
-                        $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
-                    })
-                    ->count();
-
-                return [
-                    'id'              => $teacher->id,
-                    'name'            => $teacher->name,
-                    'candidates_count' => $candidateCount,
-                    'tier'            => match (true) {
-                        $candidateCount >= 40 => 'Top Award',
-                        $candidateCount >= 30 => 'Gold',
-                        $candidateCount >= 20 => 'Silver',
-                        $candidateCount >= 10 => 'Bronze',
-                        default => null,
-                    },
-                ];
+        // ────────────── Teachers (per-quarter counts + tier) ──────────────
+        // Group ALL entries in the quarter by teacher_name string,
+        // then count per teacher (non-cancelled only).
+        $quarterEntriesByTeacher = ExamEntry::with('order:id,requested_start_date')
+            ->whereNotNull('teacher_name')
+            ->where(function ($q) {
+                $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
             })
-            ->filter(fn ($t) => $t['candidates_count'] > 0);
+            ->get()
+            ->filter($inQuarter)
+            ->groupBy('teacher_name');
+
+        $teachers = $quarterEntriesByTeacher->map(function ($entries, $teacherName) {
+            $user = User::where('role', 'teacher')->where('name', $teacherName)->first();
+            $count = $entries->count();
+
+            return [
+                'id'               => $user?->id,
+                'name'             => $teacherName,
+                'candidates_count' => $count,
+                'tier'             => match (true) {
+                    $count >= 40 => 'Top Award',
+                    $count >= 30 => 'Gold',
+                    $count >= 20 => 'Silver',
+                    $count >= 10 => 'Bronze',
+                    default      => null,
+                },
+            ];
+        })->sortByDesc('candidates_count')->values();
 
         return Inertia::render('admin/Certificates/Index', [
             'students'          => $students,
             'teachers'          => $teachers,
             'studentTemplates'  => array_keys(self::STUDENT_TEMPLATES),
             'teacherTemplates'  => array_keys(self::TEACHER_TEMPLATES),
+            'selectedQuarter'   => $quarter,
+            'selectedYear'      => $year,
         ]);
     }
 
@@ -110,10 +138,12 @@ class CertificateController extends Controller
             'template'     => 'required|string',
             'custom_name'  => 'nullable|string|max:100',
             'quarter'      => 'nullable|string|max:30',
+            'format'       => 'nullable|in:png,pdf',
         ]);
 
         $entry = ExamEntry::with(['instrument', 'order:id,requested_start_date'])->findOrFail($validated['entry_id']);
         $templateKey = $validated['template'];
+        $format = $validated['format'] ?? 'pdf';
 
         if (! isset(self::STUDENT_TEMPLATES[$templateKey])) {
             return back()->withErrors(['template' => 'Invalid template selected.']);
@@ -132,17 +162,27 @@ class CertificateController extends Controller
             $image = $this->overlayStudentText($templateUrl, $name, $instrument, $grade, $quarter);
 
             $encoded = $image->encode(new PngEncoder());
+            $safeBase = str_replace(' ', '_', $templateKey) . '_' . str_replace(' ', '_', $name);
+
+            // PNG mode — return the raw image so the browser can render an inline preview
+            if ($format === 'png') {
+                return response((string) $encoded, 200, [
+                    'Content-Type'        => 'image/png',
+                    'Content-Disposition' => 'inline; filename="' . $safeBase . '.png"',
+                ]);
+            }
+
+            // PDF mode — wrap the PNG in an A4 page for download
             $base64 = base64_encode((string) $encoded);
             $html = '<html><head><style>@page { margin: 0; } body { margin: 0; }</style></head><body>'
                 . '<img src="data:image/png;base64,' . $base64 . '" style="width:210mm;height:297mm;display:block;">'
                 . '</body></html>';
 
             $pdf = Pdf::loadHTML($html)->setPaper('a4', 'portrait');
-            $pdfFilename = str_replace(' ', '_', $templateKey) . '_' . str_replace(' ', '_', $name) . '.pdf';
 
             return response($pdf->output(), 200, [
                 'Content-Type'        => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="' . $pdfFilename . '"',
+                'Content-Disposition' => 'attachment; filename="' . $safeBase . '.pdf"',
             ]);
         } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -159,10 +199,12 @@ class CertificateController extends Controller
             'template'     => 'required|string',
             'custom_name'  => 'nullable|string|max:100',
             'quarter'      => 'nullable|string|max:30',
+            'format'       => 'nullable|in:png,pdf',
         ]);
 
         $teacher = User::with('schools')->findOrFail($validated['teacher_id']);
         $templateKey = $validated['template'];
+        $format = $validated['format'] ?? 'pdf';
 
         if (! isset(self::TEACHER_TEMPLATES[$templateKey])) {
             return back()->withErrors(['template' => 'Invalid template selected.']);
@@ -177,17 +219,25 @@ class CertificateController extends Controller
         $image = $this->overlayTeacherText($templateUrl, $name, $quarter);
 
         $encoded = $image->encode(new PngEncoder());
+        $safeBase = str_replace(' ', '_', $templateKey) . '_' . str_replace(' ', '_', $name);
+
+        if ($format === 'png') {
+            return response((string) $encoded, 200, [
+                'Content-Type'        => 'image/png',
+                'Content-Disposition' => 'inline; filename="' . $safeBase . '.png"',
+            ]);
+        }
+
         $base64 = base64_encode((string) $encoded);
         $html = '<html><head><style>@page { margin: 0; } body { margin: 0; }</style></head><body>'
             . '<img src="data:image/png;base64,' . $base64 . '" style="width:210mm;height:297mm;display:block;">'
             . '</body></html>';
 
         $pdf = Pdf::loadHTML($html)->setPaper('a4', 'portrait');
-        $pdfFilename = str_replace(' ', '_', $templateKey) . '_' . str_replace(' ', '_', $name) . '.pdf';
 
         return response($pdf->output(), 200, [
             'Content-Type'        => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="' . $pdfFilename . '"',
+            'Content-Disposition' => 'attachment; filename="' . $safeBase . '.pdf"',
         ]);
     }
 
@@ -651,18 +701,14 @@ class CertificateController extends Controller
             $teacherUser = User::with('schools')->where('name', $teacher)->where('role', 'teacher')->first();
             $certDisplayName = $teacherUser?->schools->first()?->name ?? $teacher;
 
-            // Count ALL entries for this teacher (not just this quarter) for badge tier
-            $totalCandidates = ExamEntry::where('teacher_name', $teacher)
-                ->where(function ($q) {
-                    $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
-                })
-                ->count();
+            // Badges reset per-quarter — count only this quarter's non-cancelled entries.
+            $quarterCandidates = $teacherEntries->count();
 
             $badgeTier = match (true) {
-                $totalCandidates >= 40 => 'Top Award Appreciation Certificate',
-                $totalCandidates >= 30 => 'Gold Appreciation Certificate',
-                $totalCandidates >= 20 => 'Silver Appreciation Certificate',
-                $totalCandidates >= 10 => 'Bronze Appreciation Certificate',
+                $quarterCandidates >= 40 => 'Top Award Appreciation Certificate',
+                $quarterCandidates >= 30 => 'Gold Appreciation Certificate',
+                $quarterCandidates >= 20 => 'Silver Appreciation Certificate',
+                $quarterCandidates >= 10 => 'Bronze Appreciation Certificate',
                 default => null,
             };
 

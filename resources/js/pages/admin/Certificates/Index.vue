@@ -1,6 +1,6 @@
 <!-- resources/js/pages/admin/Certificates/Index.vue -->
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import { Award, Download, User, Music, Search, Eye, X, Package, Loader2 } from 'lucide-vue-next'
 import PageHeader from '@/components/reusables/PageHeader.vue'
@@ -18,9 +18,9 @@ interface StudentEntry {
 }
 
 interface TeacherEntry {
-  id: number
+  id: number | null
   name: string
-  orders_count: number
+  candidates_count: number
   tier: string | null
 }
 
@@ -29,6 +29,8 @@ const props = defineProps<{
   teachers: TeacherEntry[]
   studentTemplates: string[]
   teacherTemplates: string[]
+  selectedQuarter: number
+  selectedYear: number
 }>()
 
 // Flash data
@@ -38,10 +40,23 @@ const batchResult = computed(() => (page.props as any).flash?.batch_result ?? nu
 // Tab state
 const activeTab = ref<'student' | 'teacher'>('student')
 
-// Batch generate
-const batchQuarter = ref(1)
-const batchYear = ref(2026)
+// Batch generate — initialise from the URL (or today) so the page stays in sync
+const batchQuarter = ref(props.selectedQuarter)
+const batchYear = ref(props.selectedYear)
 const batchGenerating = ref(false)
+
+// Friendly quarter label for the page header, e.g. "Q1 2026"
+const quarterLabel = computed(() => `Q${batchQuarter.value} ${batchYear.value}`)
+
+// When the quarter/year changes, reload the page with the new filter so
+// the student + teacher lists update. Inertia keeps scroll + state.
+watch([batchQuarter, batchYear], ([q, y]) => {
+  router.get(
+    '/admin/certificates',
+    { quarter: q, year: y },
+    { preserveScroll: true, preserveState: true, only: ['students', 'teachers', 'selectedQuarter', 'selectedYear'] }
+  )
+})
 
 async function batchGenerate() {
   batchGenerating.value = true
@@ -94,9 +109,11 @@ const filteredStudents = () => {
 }
 
 const filteredTeachers = () => {
-  if (!teacherSearch.value) return props.teachers.filter(t => t.tier)
+  // Only teachers with a tier (≥10 this quarter) and a linked User record are selectable.
+  const base = props.teachers.filter(t => t.tier && t.id !== null)
+  if (!teacherSearch.value) return base
   const q = teacherSearch.value.toLowerCase()
-  return props.teachers.filter(t => t.tier && t.name.toLowerCase().includes(q))
+  return base.filter(t => t.name.toLowerCase().includes(q))
 }
 
 // Auto-select template based on entry
@@ -118,11 +135,9 @@ function selectTeacherRow(teacher: TeacherEntry) {
   }
   teacherTemplate.value = tierMap[teacher.tier ?? ''] ?? ''
   teacherCustomName.value = ''
-  // Default to current quarter for teachers
-  const now = new Date()
-  const q = Math.ceil((now.getMonth() + 1) / 3)
-  const suffix = ['1st','2nd','3rd','4th'][q - 1]
-  teacherQuarter.value = `${suffix} Quarter ${now.getFullYear()}`
+  // Default to the quarter selected at the top of the page, not "now"
+  const suffix = ['1st','2nd','3rd','4th'][batchQuarter.value - 1]
+  teacherQuarter.value = `${suffix} Quarter ${batchYear.value}`
 }
 
 // Preview state
@@ -160,6 +175,7 @@ async function generateStudentCert(mode: 'preview' | 'download' = 'preview') {
         template: studentTemplate.value,
         custom_name: studentCustomName.value || null,
         quarter: studentQuarter.value || null,
+        format: mode === 'preview' ? 'png' : 'pdf',
       }),
     })
 
@@ -206,6 +222,7 @@ async function generateTeacherCert(mode: 'preview' | 'download' = 'preview') {
         template: teacherTemplate.value,
         custom_name: teacherCustomName.value || null,
         quarter: teacherQuarter.value || null,
+        format: mode === 'preview' ? 'png' : 'pdf',
       }),
     })
 
@@ -244,7 +261,7 @@ async function generateTeacherCert(mode: 'preview' | 'download' = 'preview') {
       <template #actions>
         <div class="flex items-center gap-2">
           <Award class="h-5 w-5 text-brand-accent" />
-          <span class="text-sm text-brand-text-soft">{{ students.length }} entries · {{ teachers.filter(t => t.tier).length }} eligible teachers</span>
+          <span class="text-sm text-white/80">{{ quarterLabel }} · {{ students.length }} entries · {{ teachers.filter(t => t.tier).length }} eligible teachers</span>
         </div>
       </template>
     </PageHeader>
@@ -584,13 +601,13 @@ async function generateTeacherCert(mode: 'preview' | 'download' = 'preview') {
             <tbody>
               <tr
                 v-for="teacher in filteredTeachers()"
-                :key="teacher.id"
+                :key="teacher.name"
                 class="cursor-pointer border-t border-brand-border transition hover:bg-brand-surface-soft"
                 :class="{ 'bg-brand-accent/10 ring-1 ring-brand-accent': selectedTeacher === teacher.id }"
                 @click="selectTeacherRow(teacher)"
               >
                 <td class="px-3 py-2 font-medium">{{ teacher.name }}</td>
-                <td class="px-3 py-2 text-center">{{ teacher.orders_count }}</td>
+                <td class="px-3 py-2 text-center">{{ teacher.candidates_count }}</td>
                 <td class="px-3 py-2">
                   <span
                     class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold"

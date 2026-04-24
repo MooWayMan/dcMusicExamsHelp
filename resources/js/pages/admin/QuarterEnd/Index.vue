@@ -158,7 +158,7 @@ function copyEmailTemplate(teacher: Teacher) {
     .join('\n')
 
   const badgeText = teacher.badge_tier
-    ? `\n\nI'm also pleased to award you a ${teacher.badge_tier} Certificate of Appreciation for entering ${teacher.total_all_time}+ candidates through centre 120. Thank you for your continued support!\n`
+    ? `\n\nI'm also pleased to award you a ${teacher.badge_tier} Certificate of Appreciation for entering ${teacher.total_entries}+ candidates through centre 120 this quarter. Thank you for your continued support!\n`
     : ''
 
   // Top scorer mentions (Showstopper + Centre Stage)
@@ -582,7 +582,7 @@ const teacherWinner = computed(() => {
               :key="teacher.teacher_name"
               class="rounded-lg border transition"
               :class="completedTeachers[teacher.teacher_name]
-                ? 'border-brand-success bg-brand-success-soft/30'
+                ? 'border-brand-accent bg-brand-accent/10'
                 : 'border-brand-border bg-white'"
             >
               <!-- Teacher header -->
@@ -594,7 +594,7 @@ const teacherWinner = computed(() => {
                   <button
                     class="flex h-6 w-6 items-center justify-center rounded-full border-2 transition"
                     :class="completedTeachers[teacher.teacher_name]
-                      ? 'border-brand-success bg-brand-success text-white'
+                      ? 'border-brand-accent bg-brand-accent text-white'
                       : 'border-brand-border hover:border-brand-accent'"
                     @click.stop="markDone(teacher.teacher_name)"
                   >
@@ -662,7 +662,7 @@ const teacherWinner = computed(() => {
                   <span v-if="teacher.distinctions" class="font-semibold text-yellow-600">{{ teacher.distinctions }} Distinction{{ teacher.distinctions > 1 ? 's' : '' }}</span>
                   <span v-if="teacher.merits" class="font-semibold text-brand-accent">{{ teacher.merits }} Merit{{ teacher.merits > 1 ? 's' : '' }}</span>
                   <span v-if="teacher.passes" class="font-semibold text-brand-text">{{ teacher.passes }} Pass{{ teacher.passes > 1 ? 'es' : '' }}</span>
-                  <span v-if="teacher.badge_tier" class="font-semibold text-brand-success">🏆 {{ teacher.badge_tier }} Badge ({{ teacher.total_all_time }} entries all-time)</span>
+                  <span v-if="teacher.badge_tier" class="font-semibold text-brand-success">🏆 {{ teacher.badge_tier }} Badge ({{ teacher.total_entries }} entries this quarter)</span>
                 </div>
 
                 <!-- Actions -->
@@ -702,8 +702,8 @@ const teacherWinner = computed(() => {
                   <button
                     class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition"
                     :class="completedTeachers[teacher.teacher_name]
-                      ? 'bg-brand-success text-white'
-                      : 'bg-brand-success-soft text-brand-success border border-brand-success hover:bg-brand-success hover:text-white'"
+                      ? 'bg-brand-accent text-white'
+                      : 'bg-brand-accent/10 text-brand-accent border border-brand-accent hover:bg-brand-accent hover:text-white'"
                     @click="markDone(teacher.teacher_name)"
                   >
                     <CheckCircle2 class="h-4 w-4" />
