@@ -142,3 +142,78 @@ test('index lists email from contact_emails relation when direct column is empty
             ->where('contacts.data.0.email', 'roxanne.legacy@example.com')
     );
 });
+
+// ──────────────────────────────────────────
+// Primary email sync between exam_contacts.email and contact_emails
+// ──────────────────────────────────────────
+
+test('updating a contact syncs the saved email as the primary in contact_emails', function () {
+    $contact = makeContact(['email' => 'old@example.com']);
+    ContactEmail::create([
+        'exam_contact_id' => $contact->id,
+        'email' => 'old@example.com',
+        'label' => 'legacy',
+        'is_primary' => true,
+    ]);
+    ContactEmail::create([
+        'exam_contact_id' => $contact->id,
+        'email' => 'stale@example.com',
+        'label' => 'legacy_alt',
+        'is_primary' => false,
+    ]);
+
+    $this->actingAs($this->admin)
+        ->put("/admin/contacts/{$contact->id}", [
+            'name' => $contact->name,
+            'email' => 'new@example.com',
+            'phone' => '',
+            'role' => 'teacher',
+            'notes' => '',
+        ])
+        ->assertRedirect("/admin/contacts/{$contact->id}");
+
+    // The new email must exist as primary
+    $this->assertDatabaseHas('contact_emails', [
+        'exam_contact_id' => $contact->id,
+        'email' => 'new@example.com',
+        'is_primary' => true,
+    ]);
+
+    // Older rows must be demoted
+    $this->assertDatabaseHas('contact_emails', [
+        'exam_contact_id' => $contact->id,
+        'email' => 'old@example.com',
+        'is_primary' => false,
+    ]);
+    $this->assertDatabaseHas('contact_emails', [
+        'exam_contact_id' => $contact->id,
+        'email' => 'stale@example.com',
+        'is_primary' => false,
+    ]);
+
+    // Show accessor should now match the canonical email
+    expect($contact->fresh()->primary_email)->toBe('new@example.com');
+});
+
+test('clearing the email demotes all primary flags without inserting a row', function () {
+    $contact = makeContact(['email' => 'current@example.com']);
+    ContactEmail::create([
+        'exam_contact_id' => $contact->id,
+        'email' => 'current@example.com',
+        'is_primary' => true,
+    ]);
+
+    $this->actingAs($this->admin)
+        ->put("/admin/contacts/{$contact->id}", [
+            'name' => $contact->name,
+            'email' => '',
+            'phone' => '',
+            'role' => 'teacher',
+            'notes' => '',
+        ]);
+
+    $this->assertDatabaseMissing('contact_emails', [
+        'exam_contact_id' => $contact->id,
+        'is_primary' => true,
+    ]);
+});

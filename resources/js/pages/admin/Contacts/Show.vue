@@ -169,10 +169,6 @@ const visibleOrders = computed(() =>
                         <Phone class="h-4 w-4 shrink-0 text-brand-text-soft" />
                         <span class="text-base text-brand-text">{{ contact.phone }}</span>
                     </div>
-                    <div v-if="contact.source" class="flex items-center gap-2">
-                        <Tag class="h-4 w-4 shrink-0 text-brand-text-soft" />
-                        <span class="text-base text-brand-text-soft">Source: {{ contact.source }}</span>
-                    </div>
                     <div v-if="contact.notes" class="border-t border-brand-border pt-3">
                         <p class="mb-1 text-sm font-semibold uppercase tracking-wider text-brand-text-soft">Notes</p>
                         <p class="text-base text-brand-text">{{ contact.notes }}</p>

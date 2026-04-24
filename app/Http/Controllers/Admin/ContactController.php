@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ExamContact;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class ContactController extends Controller
@@ -179,10 +180,38 @@ class ContactController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
-        $contact->update($validated);
+        DB::transaction(function () use ($contact, $validated): void {
+            $contact->update($validated);
+            $this->syncPrimaryEmail($contact, $validated['email'] ?? null);
+        });
 
         return redirect()
             ->route('admin.contacts.show', $contact)
             ->with('success', 'Contact updated.');
+    }
+
+    /**
+     * Keep contact_emails in sync with the canonical exam_contacts.email.
+     *
+     * Ensures the saved email exists in contact_emails and is the ONLY row
+     * flagged is_primary = true, so the show page's primary_email accessor
+     * always surfaces the same value shown in the edit form.
+     */
+    private function syncPrimaryEmail(ExamContact $contact, ?string $email): void
+    {
+        $email = $email !== null ? trim($email) : null;
+
+        // Demote every existing primary flag on this contact first.
+        $contact->emails()->where('is_primary', true)->update(['is_primary' => false]);
+
+        if ($email === null || $email === '') {
+            return;
+        }
+
+        // Upsert this email as the primary. Preserve existing label if any.
+        $contact->emails()->updateOrCreate(
+            ['email' => $email],
+            ['is_primary' => true],
+        );
     }
 }
