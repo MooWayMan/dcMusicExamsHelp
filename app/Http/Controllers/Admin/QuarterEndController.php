@@ -222,6 +222,37 @@ class QuarterEndController extends Controller
             ->pluck('teacher_name')
             ->toArray();
 
+        // Persistent batch result — scan the storage dir for existing ZIPs so
+        // download links survive navigation and Inertia flash consumption.
+        // Flash data is still used for the just-generated feedback, but this
+        // ensures users coming back to Step 1 always see the downloads.
+        $persistedBatchResult = null;
+        $zipDir = "certificates/{$year}-Q{$quarter}/zips";
+        if (\Illuminate\Support\Facades\Storage::disk('local')->exists($zipDir)) {
+            $files = \Illuminate\Support\Facades\Storage::disk('local')->files($zipDir);
+            if (! empty($files)) {
+                // Infer teacher name from the filename pattern `Teacher_Name_Q1_2026.zip`
+                $downloadLinks = [];
+                foreach ($files as $file) {
+                    $basename = basename($file);
+                    $teacherKey = preg_replace('/_Q\d_\d{4}\.zip$/', '', $basename);
+                    $teacherName = str_replace('_', ' ', $teacherKey);
+                    $downloadLinks[$teacherName] = $file;
+                }
+                $masterZip = "certificates/{$year}-Q{$quarter}/ALL_Q{$quarter}_{$year}_Certificates.zip";
+                $masterExists = \Illuminate\Support\Facades\Storage::disk('local')->exists($masterZip);
+
+                $persistedBatchResult = [
+                    'total' => null, // count unknown without running the batch
+                    'quarter_label' => $quarterLabel,
+                    'teachers' => [],
+                    'download_links' => $downloadLinks,
+                    'master_zip' => $masterExists ? $masterZip : null,
+                    'from_disk' => true, // flag so UI can show "previously generated" vs "just generated"
+                ];
+            }
+        }
+
         return Inertia::render('admin/QuarterEnd/Index', [
             'quarter' => $quarter,
             'year' => $year,
@@ -259,6 +290,7 @@ class QuarterEndController extends Controller
                 'student_ticket_count' => count($studentTickets),
                 'teacher_ticket_count' => count($teacherTickets),
             ],
+            'persistedBatchResult' => $persistedBatchResult,
         ]);
     }
 

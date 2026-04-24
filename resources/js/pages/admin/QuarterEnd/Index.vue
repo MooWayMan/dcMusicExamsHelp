@@ -89,7 +89,14 @@ const props = defineProps<{
 }>()
 
 const page = usePage()
-const batchResult = computed(() => (page.props as any).flash?.batch_result ?? null)
+// Prefer flash (just-generated) but fall back to persistedBatchResult (from
+// disk scan in controller) so download links stay visible across navigation
+// and after Inertia's flash is consumed.
+const batchResult = computed(() =>
+  (page.props as any).flash?.batch_result
+    ?? (page.props as any).persistedBatchResult
+    ?? null
+)
 
 // Track which teachers have been "done" — initialise from database
 const completedTeachers = ref<Record<string, boolean>>(
@@ -142,8 +149,10 @@ const remainingCertsToSend = computed(() =>
     .reduce((sum, t) => sum + (t.with_results ?? 0), 0)
 )
 
-// Step tracking — default to step 2 if certificates have already been generated (ZIP exists in flash or previous visit)
-const currentStep = ref(batchResult.value ? 2 : 1)
+// Step tracking — only auto-advance to step 2 when the batch has JUST run
+// (flash data exists). Loading the page on a later visit should start on
+// step 1 so download links are visible, even though files exist on disk.
+const currentStep = ref((page.props as any).flash?.batch_result ? 2 : 1)
 
 // Batch generate
 const batchGenerating = ref(false)
