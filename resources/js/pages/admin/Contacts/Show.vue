@@ -46,7 +46,7 @@ interface OrderLink {
     candidates: number
     order_status: string
     requested_start_date: string | null
-    role_in_order: string
+    roles_in_order: string[]
 }
 
 interface Contact {
@@ -95,7 +95,7 @@ const entryColumns = [
 
 const orderColumns = [
     { key: 'trinity_order_number', title: 'Order #', sortable: true },
-    { key: 'role_in_order', title: 'Role', sortable: true },
+    { key: 'roles_in_order', title: 'Role', sortable: false },
     { key: 'delivery_method', title: 'Type', sortable: true },
     { key: 'subject_area', title: 'Subject', sortable: true },
     { key: 'candidates', title: 'Cands', sortable: true, align: 'center' as const },
@@ -285,6 +285,15 @@ const visibleOrders = computed(() =>
                         <Link :href="`/admin/orders/${row.id}`" class="font-medium text-brand-accent hover:underline" @click.stop>
                             {{ row.trinity_order_number }}
                         </Link>
+                    </template>
+                    <template #cell-roles_in_order="{ row }">
+                        <span v-if="!row.roles_in_order?.length" class="text-brand-text-soft">—</span>
+                        <span v-else class="flex flex-wrap gap-1">
+                            <span v-for="role in row.roles_in_order" :key="role"
+                                class="rounded-full bg-brand-surface-soft px-2 py-0.5 text-sm font-medium text-brand-text-soft">
+                                {{ role }}
+                            </span>
+                        </span>
                     </template>
                     <template #cell-order_status="{ value }">
                         <span class="rounded-full px-2 py-0.5 text-sm font-medium"

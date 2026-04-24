@@ -100,7 +100,22 @@ class ContactController extends Controller
             ),
         ]);
 
-        $contact->loadCount(['examEntries', 'students', 'orders']);
+        $contact->loadCount(['examEntries', 'students']);
+
+        // Count UNIQUE orders, not pivot rows. A contact can appear on the
+        // same order in multiple roles (applicant + teacher); we want one row per order.
+        $uniqueOrders = $contact->orders
+            ->groupBy('id')
+            ->map(function ($rows) {
+                $first = $rows->first();
+                $first->setAttribute(
+                    'roles_in_order',
+                    $rows->pluck('pivot.role_in_order')->filter()->unique()->values()->all(),
+                );
+
+                return $first;
+            })
+            ->values();
 
         return Inertia::render('admin/Contacts/Show', [
             'contact' => [
@@ -121,7 +136,7 @@ class ContactController extends Controller
                 ]),
                 'students_count' => $contact->students_count,
                 'exam_entries_count' => $contact->exam_entries_count,
-                'orders_count' => $contact->orders_count,
+                'orders_count' => $uniqueOrders->count(),
                 'exam_entries' => $contact->examEntries->map(fn ($entry) => [
                     'id' => $entry->id,
                     'order_id' => $entry->order_id,
@@ -140,7 +155,7 @@ class ContactController extends Controller
                     'id' => $s->id,
                     'name' => $s->first_name . ' ' . substr($s->last_name ?? '', 0, 1) . '.',
                 ]),
-                'orders' => $contact->orders->map(fn ($o) => [
+                'orders' => $uniqueOrders->map(fn ($o) => [
                     'id' => $o->id,
                     'trinity_order_number' => $o->trinity_order_number,
                     'delivery_method' => $o->delivery_method === 'Digital' ? 'DG' : 'F2F',
@@ -148,7 +163,7 @@ class ContactController extends Controller
                     'candidates' => $o->candidates,
                     'order_status' => $o->order_status,
                     'requested_start_date' => $o->requested_start_date,
-                    'role_in_order' => $o->pivot->role_in_order ?? '—',
+                    'roles_in_order' => $o->getAttribute('roles_in_order') ?? [],
                 ]),
             ],
         ]);
