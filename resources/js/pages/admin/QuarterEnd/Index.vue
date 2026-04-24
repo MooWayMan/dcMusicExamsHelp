@@ -24,6 +24,7 @@ interface Teacher {
   teacher_name: string
   applicant_email: string | null
   applicant_name: string | null
+  is_parent_booking: boolean
   total_entries: number
   with_results: number
   pending: number
@@ -161,6 +162,13 @@ function batchGenerate() {
 
 // Copy email template to clipboard
 function copyEmailTemplate(teacher: Teacher) {
+  // Parent bookings get a direct-to-parent template (no "students" plural,
+  // no teacher prize draw talk, warm intro to the site).
+  if (teacher.is_parent_booking) {
+    copyParentDirectTemplate(teacher)
+    return
+  }
+
   const studentList = teacher.students
     .map(s => `  • ${s.name} — ${s.instrument} Grade ${s.grade} — ${s.score} (${s.result}) — ${s.certificate}`)
     .join('\n')
@@ -258,8 +266,63 @@ P.S. Here's a message you can send to parents with their child's certificate:
   alert('Email template copied to clipboard! Now click "Open in Gmail" to compose.')
 }
 
+/**
+ * Direct-to-parent email template — used when the row is a parent booking
+ * (Gillian Leslie, Adrian O'Malley, Claire Reed, etc.) rather than a teacher.
+ * No teacher-prize-draw talk, no Faber pitch, short and warm.
+ */
+function copyParentDirectTemplate(teacher: Teacher) {
+  const firstName = teacher.teacher_name.split(' ')[0]
+  const candidateList = teacher.students
+    .map(s => `  • ${s.name} — ${s.instrument} Grade ${s.grade} — ${s.score} (${s.result}) — ${s.certificate}`)
+    .join('\n')
+  const count = teacher.students.length
+
+  // Use candidates' first names in prose instead of assuming the applicant
+  // is a parent ("your child") — works for guardians, grandparents, aunts,
+  // or the candidate themselves.
+  const candidateFirstNames = teacher.students.map(s => s.name.split(' ')[0])
+  const namesSentence = count === 1
+    ? candidateFirstNames[0]
+    : count === 2
+      ? `${candidateFirstNames[0]} and ${candidateFirstNames[1]}`
+      : `${candidateFirstNames.slice(0, -1).join(', ')} and ${candidateFirstNames.slice(-1)[0]}`
+  const certWord = count === 1 ? 'certificate is attached below' : 'certificates are attached below'
+  const examWord = count === 1 ? 'Trinity exam' : 'Trinity exams'
+
+  const template = `Hi ${firstName},
+
+I'm Paul Sheridan, running Trinity exam centre 120. Here's how ${namesSentence} got on in their recent ${examWord}:
+
+${candidateList}
+
+Their personalised musicExams.help ${certWord}. This is our own centre 120 recognition — separate from any certificate Trinity themselves issue (Trinity send a digital certificate directly to candidates who pass).
+
+How our certificates work: every candidate entered through centre 120 earns at least a Bravo certificate as a thank-you for taking part. Candidates who achieve a Merit earn a Take a Bow certificate, and those who achieve a Distinction earn a Standing Ovation certificate.
+
+${namesSentence} will also appear on the Recognition page at https://musicexams.help/recognition — first name and surname initial only, for GDPR. If you'd like the full name shown, just reply and say the word.
+
+I've recently launched musicExams.help — a free resource for anyone booking Trinity exams. It covers the difference between digital and face-to-face, grades explained, UCAS points and more. Have a look when you get a minute: https://musicexams.help
+
+If ${namesSentence} ${count === 1 ? 'has' : 'have'} a music teacher, do pass the site on to them too — teachers earn their own appreciation badges for supporting candidates through centre 120.
+
+Every entry through centre 120 also gets one ticket in our quarterly prize draw — the £50 gift token winner is announced on the Recognition page. Good luck in future draws!
+
+Thanks for choosing centre 120.
+
+Best wishes,
+Paul Sheridan`
+
+  navigator.clipboard.writeText(template)
+  alert('Parent email template copied to clipboard! Now click "Open in Gmail" to compose.')
+}
+
 function openGmailCompose(teacher: Teacher) {
-  const subject = encodeURIComponent(`${props.quarterLabel} Exam Results — Your Students Did Brilliantly!`)
+  // Parents get a warmer, name-focused subject; teachers get the existing one.
+  // Not a Trinity certificate — it's our own musicExams.help recognition.
+  const subject = teacher.is_parent_booking
+    ? encodeURIComponent(`musicExams.help Certificate${teacher.students.length > 1 ? 's' : ''} — ${teacher.students.map(s => s.name.split(' ')[0]).join(' & ')}`)
+    : encodeURIComponent(`${props.quarterLabel} Exam Results — Your Students Did Brilliantly!`)
   const to = encodeURIComponent(teacher.applicant_email || '')
   window.open(`https://mail.google.com/mail/?view=cm&to=${to}&su=${subject}`, '_blank')
 }
@@ -610,6 +673,9 @@ const teacherWinner = computed(() => {
                   </button>
                   <div>
                     <span class="font-bold text-brand-text">{{ teacher.teacher_name }}</span>
+                    <span v-if="teacher.is_parent_booking" class="ml-2 inline-block rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-semibold text-amber-600">
+                      Parent booking
+                    </span>
                     <span v-if="teacher.badge_tier" class="ml-2 inline-block rounded-full bg-brand-accent/10 px-2 py-0.5 text-xs font-semibold text-brand-accent">
                       {{ teacher.badge_tier }} Badge
                     </span>

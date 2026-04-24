@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\ExamContact;
 use App\Models\ExamEntry;
 use App\Models\Instrument;
 use App\Models\Order;
@@ -174,6 +175,62 @@ class FakeQuarterEndSeeder extends Seeder
             }
         }
 
+        // ────────────── PARENT BOOKINGS ──────────────
+        // Mirrors the real Q1 shape: parent books directly for their one
+        // child, appears as teacher_name on the exam entry, and also as an
+        // ExamContact with role=parent so the admin recognises them. Each
+        // parent gets exactly 1 candidate (typical real-world pattern).
+        $parentBookings = [
+            ['name' => 'Gillian Leslie',    'email' => 'fakeqe.gillian@example.com',  'child' => 'Jacob Leslie',        'instrument' => 'Guitar (Rock/Pop)', 'grade' => 'Initial', 'score' => 76],
+            ['name' => 'Adrian O\'Malley',  'email' => 'fakeqe.adrian@example.com',   'child' => 'Jasper O\'Malley',    'instrument' => 'Guitar (Rock/Pop)', 'grade' => '8',       'score' => 75],
+            ['name' => 'Claire Reed',       'email' => 'fakeqe.claire@example.com',   'child' => 'Jemima Reed',          'instrument' => 'Singing (Rock/Pop)', 'grade' => '5',      'score' => 70],
+        ];
+
+        foreach ($parentBookings as $p) {
+            ExamContact::updateOrCreate(
+                ['name' => $p['name'], 'role' => 'parent'],
+                ['email' => $p['email']]
+            );
+
+            $instrument = Instrument::where('name', $p['instrument'])->first();
+            if (! $instrument) {
+                continue; // LookupSeeder hasn't been re-run
+            }
+
+            $examDate = Carbon::create(2026, 3, rand(1, 28));
+
+            $order = Order::create([
+                'user_id' => $teachers->first()['user']->id, // any user; real prod sets Paul
+                'trinity_order_number' => self::TAG . 'P' . str_pad($orderCounter++, 3, '0', STR_PAD_LEFT),
+                'delivery_method' => 'Default',
+                'subject_area' => 'Rock and Pop',
+                'candidates' => 1,
+                'venue' => 'Learn Music Ltd',
+                'order_status' => 'Completed',
+                'requested_start_date' => $examDate->toDateString(),
+                'commission_rate' => 28.00,
+                'commission_amount' => round(40 * 0.28, 2),
+                'applicant_name' => $p['name'],
+                'applicant_email' => $p['email'],
+            ]);
+
+            ExamEntry::create([
+                'order_id' => $order->id,
+                'instrument_id' => $instrument->id,
+                'candidate_name' => $p['child'],
+                'teacher_name' => $p['name'], // stamped as the applicant, just like Trinity does
+                'grade' => $p['grade'],
+                'subject_area' => 'Rock and Pop',
+                'delivery_method' => 'Default',
+                'score' => $p['score'],
+                'fee' => 40,
+                'exam_date' => $examDate->toDateString(),
+                'show_on_thank_you' => true,
+            ]);
+
+            $totalEntries++;
+        }
+
         // ────────────── EMAIL TRACKING (mark a few as sent) ──────────────
         // 2 teachers in Q1, 1 teacher in Q2 — so both states visible on both quarters.
         $emailSent = [
@@ -213,6 +270,11 @@ class FakeQuarterEndSeeder extends Seeder
         // rows from prior runs) or the unique email constraint will collide
         // on the next updateOrCreate.
         User::withTrashed()
+            ->where('email', 'like', 'fakeqe.%@example.com')
+            ->forceDelete();
+
+        // Fake parent ExamContacts (same suffix convention on email)
+        ExamContact::withTrashed()
             ->where('email', 'like', 'fakeqe.%@example.com')
             ->forceDelete();
 

@@ -20,31 +20,11 @@ class QuarterEndController extends Controller
 {
     public function index(Request $request): Response
     {
-        // Default to the latest quarter with data, not the current quarter
+        // Default to the CURRENT quarter — same as /admin/certificates, so
+        // both pages land on the same place when opened. If Paul wants a past
+        // quarter's end-of-quarter tidy-up, he clicks the selector.
         $defaultQuarter = (int) ceil(now()->month / 3);
         $defaultYear = (int) now()->year;
-
-        if (! $request->has('quarter')) {
-            // Find the latest entry by exam_date or order's requested_start_date
-            $latestEntry = ExamEntry::with('order:id,requested_start_date')
-                ->where(function ($q) {
-                    $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
-                })
-                ->get()
-                ->map(function ($e) {
-                    $e->effective_date = $e->exam_date ?? $e->order?->requested_start_date;
-                    return $e;
-                })
-                ->filter(fn ($e) => $e->effective_date !== null)
-                ->sortByDesc('effective_date')
-                ->first();
-
-            if ($latestEntry) {
-                $date = $latestEntry->effective_date;
-                $defaultQuarter = (int) ceil($date->month / 3);
-                $defaultYear = (int) $date->year;
-            }
-        }
 
         $quarter = (int) ($request->query('quarter', $defaultQuarter));
         $year = (int) ($request->query('year', $defaultYear));
@@ -70,21 +50,42 @@ class QuarterEndController extends Controller
                 return $date && $date->between($startDate, $endDate);
             });
 
-        // Group by teacher
+        // Parents and self-bookers stamped as teacher_name during import need
+        // the same Copy Email + Open Gmail workflow as teachers — they just
+        // get a parent-variant template. Build a lookup so we can tag each row
+        // with is_parent_booking and fetch the correct email from ExamContact.
+        $parentOrSelfLookup = ExamContact::with('emails')
+            ->whereIn('role', ['parent', 'self'])
+            ->get()
+            ->keyBy(fn ($c) => strtolower(trim($c->name)));
+
+        // Group by teacher/parent name — each individual parent becomes their
+        // own row (not lumped), so Paul can email each directly. Rows with no
+        // teacher_name at all stay in the catch-all bucket.
         $teacherGroups = $allEntries->groupBy(fn ($e) => $e->teacher_name ?? 'Parent Bookings (no teacher assigned)');
 
-        $teachers = $teacherGroups->map(function ($entries, $teacherName) use ($quarterLabel) {
+        $teachers = $teacherGroups->map(function ($entries, $teacherName) use ($parentOrSelfLookup) {
             $withScores = $entries->filter(fn ($e) => $e->score !== null && $e->score >= 60);
             $pending = $entries->filter(fn ($e) => $e->score === null);
 
-            // Get teacher email: prefer teachers table (primary email),
-            // then fall back to order where applicant IS the teacher, then first order
-            $teacherRecord = Teacher::with('emails')->where('name', $teacherName)->first();
+            // Is this row a parent/self booking?
+            $parentContact = $parentOrSelfLookup->get(strtolower(trim($teacherName)));
+            $isParentBooking = $parentContact !== null;
+
+            // Get email — different strategy for parents vs teachers.
             $firstOrder = $entries->first()?->order;
-            $ownOrder = $entries->first(fn ($e) => $e->order && strtolower(trim($e->order->applicant_name)) === strtolower(trim($teacherName)))?->order;
-            $teacherEmail = $teacherRecord?->primary_email
-                ?? $ownOrder?->applicant_email
-                ?? $firstOrder?->applicant_email;
+            $ownOrder = $entries->first(fn ($e) => $e->order && strtolower(trim($e->order->applicant_name ?? '')) === strtolower(trim($teacherName)))?->order;
+
+            if ($isParentBooking) {
+                // Parents: use their ExamContact email; fall back to their
+                // own-order applicant_email if they actually applied themselves.
+                $teacherEmail = $parentContact->primary_email ?? $ownOrder?->applicant_email;
+            } else {
+                $teacherRecord = Teacher::with('emails')->where('name', $teacherName)->first();
+                $teacherEmail = $teacherRecord?->primary_email
+                    ?? $ownOrder?->applicant_email
+                    ?? $firstOrder?->applicant_email;
+            }
 
             // Certificate breakdown
             $distinctions = $withScores->filter(fn ($e) => $e->score >= 87)->count();
@@ -108,6 +109,7 @@ class QuarterEndController extends Controller
                 'teacher_name' => $teacherName,
                 'applicant_email' => $teacherEmail,
                 'applicant_name' => $firstOrder?->applicant_name,
+                'is_parent_booking' => $isParentBooking,
                 'total_entries' => $entries->count(),
                 'with_results' => $withScores->count(),
                 'pending' => $pending->count(),

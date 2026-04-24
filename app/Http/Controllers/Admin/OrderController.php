@@ -52,18 +52,20 @@ class OrderController extends Controller
             $query->unpaid();
         }
 
-        // Time period filter
+        // Time period filter — use the exam date (requested_start_date), not
+        // created_at. A March exam that was imported in April belongs to Q1
+        // because it happened in Q1, regardless of when the row was inserted.
         $period = $request->input('period');
         if ($period) {
             $now = Carbon::now();
             match ($period) {
-                'this_quarter' => $query->where('created_at', '>=', $now->copy()->startOfQuarter()),
-                'last_quarter' => $query->whereBetween('created_at', [
+                'this_quarter' => $query->where('requested_start_date', '>=', $now->copy()->startOfQuarter()),
+                'last_quarter' => $query->whereBetween('requested_start_date', [
                     $now->copy()->subQuarter()->startOfQuarter(),
                     $now->copy()->subQuarter()->endOfQuarter(),
                 ]),
-                'this_year' => $query->where('created_at', '>=', $now->copy()->startOfYear()),
-                'last_12' => $query->where('created_at', '>=', $now->copy()->subMonths(12)),
+                'this_year' => $query->where('requested_start_date', '>=', $now->copy()->startOfYear()),
+                'last_12' => $query->where('requested_start_date', '>=', $now->copy()->subMonths(12)),
                 default => null,
             };
         }
@@ -131,13 +133,13 @@ class OrderController extends Controller
         if ($period) {
             $now = Carbon::now();
             match ($period) {
-                'this_quarter' => $summaryQuery->where('created_at', '>=', $now->copy()->startOfQuarter()),
-                'last_quarter' => $summaryQuery->whereBetween('created_at', [
+                'this_quarter' => $summaryQuery->where('requested_start_date', '>=', $now->copy()->startOfQuarter()),
+                'last_quarter' => $summaryQuery->whereBetween('requested_start_date', [
                     $now->copy()->subQuarter()->startOfQuarter(),
                     $now->copy()->subQuarter()->endOfQuarter(),
                 ]),
-                'this_year' => $summaryQuery->where('created_at', '>=', $now->copy()->startOfYear()),
-                'last_12' => $summaryQuery->where('created_at', '>=', $now->copy()->subMonths(12)),
+                'this_year' => $summaryQuery->where('requested_start_date', '>=', $now->copy()->startOfYear()),
+                'last_12' => $summaryQuery->where('requested_start_date', '>=', $now->copy()->subMonths(12)),
                 default => null,
             };
         }

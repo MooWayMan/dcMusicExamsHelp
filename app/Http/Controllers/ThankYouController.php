@@ -146,7 +146,7 @@ class ThankYouController extends Controller
         return [
             'quarter' => $quarter,
             'year' => $year,
-            'label' => "{$labelStart} – {$labelEnd} {$year}",
+            'label' => "Q{$quarter} – {$labelStart} – {$labelEnd} {$year}",
             'hallOfFameEntries' => $hallOfFameEntries->toArray(),
             'thankYouEntries' => $thankYouEntries,
             'summary' => [
@@ -173,7 +173,11 @@ class ThankYouController extends Controller
         $currentYear = (int) now()->year;
         $currentQuarter = (int) ceil(now()->month / 3);
 
-        // Build list of quarters that have data (using exam_date OR order's requested_start_date)
+        // Build list of quarters that have data (using exam_date OR order's requested_start_date).
+        // Hide future quarters — future bookings exist in orders but shouldn't
+        // appear on the public Recognition page until the exams have taken place.
+        // Sort: current quarter first, then descending into the past — that way
+        // the dropdown reads newest-on-top and scales cleanly as years accumulate.
         $quartersWithData = ExamEntry::with('order:id,requested_start_date')
             ->where('show_on_thank_you', true)
             ->where(function ($q) {
@@ -187,8 +191,10 @@ class ThankYouController extends Controller
                 return ['quarter' => (int) ceil($d->month / 3), 'year' => (int) $d->year];
             })
             ->filter()
+            ->filter(fn ($q) => $q['year'] < $currentYear
+                || ($q['year'] === $currentYear && $q['quarter'] <= $currentQuarter))
             ->unique(fn ($q) => "{$q['quarter']}-{$q['year']}")
-            ->sortBy([['year', 'asc'], ['quarter', 'asc']])
+            ->sortByDesc(fn ($q) => $q['year'] * 10 + $q['quarter'])
             ->values()
             ->toArray();
 

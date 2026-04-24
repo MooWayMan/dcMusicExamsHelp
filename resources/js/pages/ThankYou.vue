@@ -151,8 +151,8 @@ const quarterLabel = (q: QuarterOption) => {
   return data?.label ?? `Q${q.quarter} ${q.year}`
 }
 
-// Reverse so latest dates appear first in the dropdown
-const sortedQuarters = computed(() => [...props.availableQuarters].reverse())
+// Controller already returns newest-first + hides future quarters, so use as-is.
+const sortedQuarters = computed(() => props.availableQuarters)
 
 const selectedQuarterKey = computed({
   get: () => hasSelected.value ? `${activeQuarter.value}-${activeYear.value}` : '',
