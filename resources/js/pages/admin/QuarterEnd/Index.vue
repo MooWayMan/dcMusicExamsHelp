@@ -794,8 +794,15 @@ const teacherWinner = computed(() => {
                   <span v-if="teacher.badge_tier" class="font-semibold text-brand-success">🏆 {{ teacher.badge_tier }} Badge ({{ teacher.total_entries }} entries this quarter)</span>
                 </div>
 
-                <!-- Actions -->
-                <div class="flex flex-wrap gap-2">
+                <!-- Orphaned bucket — no real recipient exists yet. Show
+                     actionable guidance instead of fake email buttons. -->
+                <div v-if="!teacher.applicant_email" class="rounded-lg border border-dashed border-amber-400 bg-amber-50 p-3 text-sm text-amber-900">
+                  <p class="font-semibold mb-1">No contact linked yet</p>
+                  <p>These candidates were booked without a named parent or teacher. For each, look up the correspondence email on Trinity's candidate page, then run <code class="rounded bg-amber-100 px-1 py-0.5 font-mono">contacts:add "Parent Name" parent email@example.com</code> on the server, and update the candidate's teacher_name on the Exam Entry to match.</p>
+                </div>
+
+                <!-- Actions — hidden when no email -->
+                <div v-if="teacher.applicant_email" class="flex flex-wrap gap-2">
                   <a
                     v-if="batchResult?.download_links?.[teacher.teacher_name]"
                     :href="`/admin/certificates/download/${batchResult.download_links[teacher.teacher_name]}`"

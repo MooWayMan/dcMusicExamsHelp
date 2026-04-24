@@ -88,6 +88,13 @@ class QuarterEndController extends Controller
                     ?? $firstOrder?->applicant_email;
             }
 
+            // Orphaned bucket has no real recipient — null the email so the UI
+            // can hide the Copy Email / Open Gmail buttons rather than prefill
+            // a junk draft addressed to Paul himself.
+            if ($teacherName === 'Parent Bookings (no teacher assigned)') {
+                $teacherEmail = null;
+            }
+
             // Certificate breakdown
             $distinctions = $withScores->filter(fn ($e) => $e->score >= 87)->count();
             $merits = $withScores->filter(fn ($e) => $e->score >= 75 && $e->score < 87)->count();
