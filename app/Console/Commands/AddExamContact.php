@@ -24,9 +24,10 @@ class AddExamContact extends Command
     protected $signature = 'contacts:add
                             {name : Full name (use quotes if it has spaces or apostrophes)}
                             {role : parent | self | teacher | applicant | admin}
-                            {email? : Email address (optional)}';
+                            {email? : Email address (optional)}
+                            {--candidate= : Candidate name to also re-assign on exam_entries (optional, one-step workflow for orphans)}';
 
-    protected $description = 'Add a new ExamContact row (for parents/self/teachers stamped on exam_entries but missing from contacts)';
+    protected $description = 'Add a new ExamContact row and optionally re-link a candidate\'s exam entry to it in one step';
 
     public function handle(): int
     {
@@ -43,24 +44,45 @@ class AddExamContact extends Command
             return Command::FAILURE;
         }
 
+        // Create or update the ExamContact (idempotent).
         $existing = ExamContact::where('name', $name)->where('role', $role)->first();
         if ($existing) {
-            $this->warn("{$name} already exists as {$role} (id={$existing->id}). Updating email only.");
-            if ($email !== null) {
+            $this->warn("{$name} already exists as {$role} (id={$existing->id}).");
+            if ($email !== null && $existing->email !== $email) {
                 $existing->update(['email' => $email]);
                 $this->info("Updated email to {$email}.");
             }
-            return Command::SUCCESS;
+        } else {
+            $contact = ExamContact::create([
+                'name' => $name,
+                'role' => $role,
+                'email' => $email,
+                'source' => 'manual',
+            ]);
+            $this->info("Created ExamContact id={$contact->id}: {$name} ({$role})" . ($email ? " — {$email}" : ' — no email'));
         }
 
-        $contact = ExamContact::create([
-            'name' => $name,
-            'role' => $role,
-            'email' => $email,
-            'source' => 'manual',
-        ]);
+        // Optional: also re-link a candidate's exam_entries.teacher_name to
+        // this contact. Runs whether the contact was newly created or already
+        // existed — useful if you're linking a second sibling to the same
+        // parent, for example.
+        $candidate = $this->option('candidate');
+        if ($candidate) {
+            $candidate = trim($candidate);
+            $entries = \App\Models\ExamEntry::where('candidate_name', $candidate)->get();
 
-        $this->info("Created ExamContact id={$contact->id}: {$name} ({$role})" . ($email ? " — {$email}" : ' — no email'));
+            if ($entries->isEmpty()) {
+                $this->warn("Candidate '{$candidate}' not found in exam_entries — no entries linked.");
+            } else {
+                foreach ($entries as $entry) {
+                    $old = $entry->teacher_name ?? 'NULL';
+                    $entry->update(['teacher_name' => $name]);
+                    $this->line("  ✓ {$candidate} (entry #{$entry->id}) — teacher_name '{$old}' → '{$name}'");
+                }
+                $this->info("Linked {$entries->count()} entry/entries to {$name}.");
+            }
+        }
+
         return Command::SUCCESS;
     }
 }
