@@ -32,9 +32,16 @@ class BackfillQ1Instruments extends Command
     /**
      * candidate_name => instruments.name
      *
-     * "Acoustic Guitar" from Trinity CSVs is Classical guitar in this context
-     * (Learn Music Classical order). "Singing" without qualifier = Classical.
-     * "R&P Vocals" => Singing (Rock/Pop).  "R&P Drums" => Drum Kit.
+     * Trinity terminology mapped to our instruments table:
+     *  - "Acoustic Guitar"   => Guitar (Acoustic)      [classical/jazz examiner, own syllabus]
+     *  - "Guitar" (classical/jazz order) => Guitar (Classical)
+     *  - "R&P Guitar"        => Guitar (Rock/Pop)
+     *  - "Singing" (no qualifier on classical order) => Singing (Classical)
+     *  - "R&P Vocals"        => Singing (Rock/Pop)
+     *  - "R&P Drums"         => Drum Kit
+     *
+     * "Acoustic Guitar" and "Tenor Horn" are added in LookupSeeder; run
+     * `sail artisan db:seed --class=LookupSeeder` first to ensure they exist.
      */
     private const MAPPING = [
         // Order 1-11508172910 — Learn Music Ltd, 5 Mar (Clare Keeling)
@@ -45,11 +52,11 @@ class BackfillQ1Instruments extends Command
         'Maya Ghali'                    => 'Piano',
         'Elise Florence Scott'          => 'Flute',
         'Dean Gwyther'                  => 'Clarinet',
-        'Imogen Mayes'                  => 'Guitar (Classical)',
+        'Imogen Mayes'                  => 'Guitar (Acoustic)',
         'Niamh Keyna Anakin'            => 'Clarinet',
         'Isaac Pover'                   => 'Piano',
         'Farrah Harper Fennell'         => 'Piano',
-        'Kate Leyland'                  => 'Guitar (Classical)',
+        'Kate Leyland'                  => 'Guitar (Acoustic)',
 
         // Order 1-11508308070 — Wirral School of Music, 6 Mar
         'Seth James Barraclough'        => 'Trombone',
@@ -97,13 +104,23 @@ class BackfillQ1Instruments extends Command
     {
         $dryRun = (bool) $this->option('dry-run');
 
-        // Ensure Tenor Horn exists — not in LookupSeeder but Solomon needs it.
-        if (! Instrument::where('name', 'Tenor Horn')->exists()) {
+        // Ensure any instruments we map to exist in the DB. These were added
+        // to LookupSeeder but prod was seeded before the addition.
+        $requiredInstruments = [
+            'Tenor Horn'         => 'Brass',
+            'Guitar (Acoustic)'  => 'Strings',
+        ];
+
+        foreach ($requiredInstruments as $instrumentName => $family) {
+            if (Instrument::where('name', $instrumentName)->exists()) {
+                continue;
+            }
+
             if ($dryRun) {
-                $this->line("  (would create) Instrument 'Tenor Horn' in Brass family");
+                $this->line("  (would create) Instrument '{$instrumentName}' in {$family} family");
             } else {
-                Instrument::create(['name' => 'Tenor Horn', 'family' => 'Brass']);
-                $this->info("Created Instrument 'Tenor Horn' (Brass).");
+                Instrument::create(['name' => $instrumentName, 'family' => $family]);
+                $this->info("Created Instrument '{$instrumentName}' ({$family}).");
             }
         }
 
