@@ -132,6 +132,14 @@ async function markDone(name: string) {
 
 const completedCount = computed(() => Object.values(completedTeachers.value).filter(Boolean).length)
 
+// Student certs still to send = scored entries belonging to teachers we
+// haven't yet ticked "Done!" for. Reduces as Paul works through the list.
+const remainingCertsToSend = computed(() =>
+  (props.teachers ?? [])
+    .filter(t => !completedTeachers.value[t.teacher_name])
+    .reduce((sum, t) => sum + (t.with_results ?? 0), 0)
+)
+
 // Step tracking — default to step 2 if certificates have already been generated (ZIP exists in flash or previous visit)
 const currentStep = ref(batchResult.value ? 2 : 1)
 
@@ -464,8 +472,8 @@ const teacherWinner = computed(() => {
         </div>
         <div class="rounded-xl border border-brand-border bg-brand-surface p-4 text-center">
           <Award class="mx-auto mb-2 h-6 w-6 text-brand-accent" />
-          <p class="text-2xl font-bold text-brand-text">{{ summary.with_results }}</p>
-          <p class="text-xs text-brand-text-soft">Certificates to send</p>
+          <p class="text-2xl font-bold text-brand-text">{{ remainingCertsToSend }}</p>
+          <p class="text-xs text-brand-text-soft">Certificates left to send</p>
         </div>
         <div class="rounded-xl border border-brand-border bg-brand-surface p-4 text-center">
           <Clock class="mx-auto mb-2 h-6 w-6 text-amber-500" />
