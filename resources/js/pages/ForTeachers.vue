@@ -20,7 +20,7 @@ const { showBookingModal } = useBookingModal()
 const pageMeta = {
   title: 'For Teachers — musicExams.help',
   description:
-    'How musicExams.help supports music teachers with a clear booking route, recognition, Faber book discounts and more through Trinity centre 120.',
+    'How musicExams.help supports music teachers with a clear booking route, recognition, certificates and more through Trinity centre 120.',
 }
 
 const breadcrumbPages = [
@@ -82,13 +82,6 @@ const benefits = [
     linkText: 'See all incentives',
   },
   {
-    icon: BookOpen,
-    title: 'Exam book discounts',
-    detail: 'Get in touch and we\'ll help you access exclusive discounts on physical exam books published by Faber Music and Trinity College London Press. Plus 10% off digital editions for your students.',
-    link: '/for-teachers/faber-discounts?from=for-teachers',
-    linkText: 'Find out more',
-  },
-  {
     icon: GraduationCap,
     title: 'Your students get celebrated',
     detail: 'Every student entered through centre 120 — face-to-face, digital or theory — receives at least a <strong>Bravo Certificate</strong> and gets listed on our Recognition page, even if they don\'t pass. It takes the sting out of a disappointing result — the student still gets recognised for entering. Merit earns a <strong>Take a Bow Certificate</strong> and Distinction earns a <strong>Standing Ovation Certificate</strong> instead — plus a place in the <strong>Hall of Fame</strong>. The highest scorers each quarter earn a <strong>Showstopper</strong> or <strong>Centre Stage Certificate</strong> and a gift token (£20, or divided equally if there is a tie — minimum £5 each). Parents love it.',
@@ -101,7 +94,7 @@ const benefits = [
 const everythingCard = {
   icon: BookOpen,
   title: 'Making your life easier',
-  detail: '<span class="inline-block rounded-full bg-brand-accent/20 px-4 py-1 -ml-3 mb-3 text-base font-bold text-white sm:text-lg">Save yourself time answering the same questions over and over</span><br />All the exam guidance, booking information, fees, dates and procedures your students and parents need — in one place on musicExams.help. Just point parents and students to the site. You can even subscribe to our <a href="https://calendar.google.com/calendar/embed?src=c_e2838a8ba69325aa5dec7a4eec7051f23bf8f2e307a9c7e48435382a05c4a7ee%40group.calendar.google.com&ctz=Europe%2FLondon" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand-accent underline hover:opacity-80">shared Google Calendar</a> with all the important Trinity dates, closing dates and Faber offers — so nothing gets missed.',
+  detail: '<span class="inline-block rounded-full bg-brand-accent/20 px-4 py-1 -ml-3 mb-3 text-base font-bold text-white sm:text-lg">Save yourself time answering the same questions over and over</span><br />All the exam guidance, booking information, fees, dates and procedures your students and parents need — in one place on musicExams.help. Just point parents and students to the site. You can even subscribe to our <a href="https://calendar.google.com/calendar/embed?src=c_e2838a8ba69325aa5dec7a4eec7051f23bf8f2e307a9c7e48435382a05c4a7ee%40group.calendar.google.com&ctz=Europe%2FLondon" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand-accent underline hover:opacity-80">shared Google Calendar</a> with all the important Trinity dates and closing dates — so nothing gets missed.',
 }
 
 const faqs = [
@@ -112,10 +105,6 @@ const faqs = [
   {
     question: 'Can I still use a different centre code?',
     answer: 'If you already have a different centre code, you can keep using it. But your students will miss out on our certificates (Bravo, Take a Bow, Standing Ovation), the Recognition page, the <strong>Hall of Fame</strong>, prize draws and other incentives that come with centre 120.',
-  },
-  {
-    question: 'How do the Faber book discounts work?',
-    answer: 'Faber Music offers an exclusive trade discount on physical books to registered music teachers. Get in touch and we\'ll walk you through the setup — we\'ll make sure you\'re on the right pricing tier from day one. The discount applies to all Faber and Trinity College London Press publications — not just exam books. Visit our <a href="/for-teachers/faber-discounts?from=for-teachers" class="font-semibold text-brand-accent underline hover:opacity-70">Exam Book Discounts page</a> for the full breakdown.',
   },
   {
     question: 'How does the teacher badge system work?',
@@ -183,19 +172,6 @@ const faqs = [
             <ChevronRight class="h-5 w-5 shrink-0 text-white/60" />
           </a>
 
-          <a
-            href="/for-teachers/faber-discounts?from=for-teachers"
-            class="flex items-center justify-between rounded-xl border border-brand-accent/30 bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary px-5 py-3 text-white shadow-lg transition hover:scale-[1.01] hover:shadow-xl sm:px-6 sm:py-4"
-          >
-            <div class="flex items-center gap-3">
-              <BookOpen class="h-5 w-5 shrink-0 text-white/80 sm:h-6 sm:w-6" />
-              <div>
-                <span class="text-sm font-semibold sm:text-base lg:text-lg">Exam Book Discounts</span>
-                <span class="ml-2 text-xs text-white/70 sm:text-sm">Faber Music and Trinity Press discounts for teachers</span>
-              </div>
-            </div>
-            <ChevronRight class="h-5 w-5 shrink-0 text-white/60" />
-          </a>
         </div>
       </div>
     </section>

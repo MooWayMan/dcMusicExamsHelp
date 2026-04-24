@@ -29,6 +29,11 @@ test('GET /for-students returns 200', function () {
         ->assertStatus(200);
 });
 
+test('GET /books returns 200', function () {
+    $this->get('/books')
+        ->assertStatus(200);
+});
+
 test('GET /privacy returns 200', function () {
     $this->get('/privacy')
         ->assertStatus(200);
@@ -84,9 +89,10 @@ test('GET /exam-fees returns 200', function () {
         ->assertStatus(200);
 });
 
-test('GET /for-teachers/faber-discounts returns 200', function () {
+test('GET /for-teachers/faber-discounts redirects to /books', function () {
     $this->get('/for-teachers/faber-discounts')
-        ->assertStatus(200);
+        ->assertStatus(301)
+        ->assertRedirect('/books');
 });
 
 test('GET /for-teachers/awards returns 200', function () {
@@ -153,9 +159,10 @@ test('GET /exam-fees?from=for-parents returns 200', function () {
         ->assertStatus(200);
 });
 
-test('GET /for-teachers/faber-discounts?from=for-teachers returns 200', function () {
+test('GET /for-teachers/faber-discounts?from=for-teachers redirects to /books', function () {
     $this->get('/for-teachers/faber-discounts?from=for-teachers')
-        ->assertStatus(200);
+        ->assertStatus(301)
+        ->assertRedirect('/books');
 });
 
 test('GET /exam-guide/syllabuses?from=for-parents returns 200', function () {

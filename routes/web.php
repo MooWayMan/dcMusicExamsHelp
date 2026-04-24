@@ -12,10 +12,11 @@ Route::inertia('/', 'Welcome', [
 
 Route::inertia('/faq', 'Faq')->name('faq');
 Route::inertia('/for-teachers', 'ForTeachers')->name('for-teachers');
-Route::inertia('/for-teachers/faber-discounts', 'FaberDiscounts')->name('faber-discounts');
+Route::redirect('/for-teachers/faber-discounts', '/books', 301);
 Route::inertia('/for-teachers/awards', 'TeacherAwards')->name('teacher-awards');
 Route::inertia('/for-parents', 'ForParents')->name('for-parents');
 Route::inertia('/for-students', 'ForStudents')->name('for-students');
+Route::inertia('/books', 'Books')->name('books');
 Route::get('/recognition', ThankYouController::class)->name('recognition');
 Route::inertia('/exam-guide', 'ExamGuide')->name('exam-guide');
 Route::inertia('/exam-guide/ucas-points', 'ExamGuideUcas')->name('exam-guide.ucas');
