@@ -127,12 +127,12 @@ const incentives = [
     borderColor: 'border-l-brand-teal',
   },
   {
-    title: 'Exam book discounts',
-    detail: 'Teachers — get in touch to learn about exclusive discounts on exam books from Faber Music and Trinity College London Press. Teachers, parents and students can all use our links to get 10% off ebooks for any grade or instrument.',
+    title: 'Buy your exam books',
+    detail: 'Every candidate needs their official exam book. <a href="/books" class="font-semibold text-white underline hover:text-brand-accent">Our Books page</a> links to ebooks (10% off, instant download) and paperbacks via Amazon — all in one place.',
     icon: BookOpen,
-    iconBg: 'bg-brand-primary/10',
-    iconColor: 'text-brand-primary',
-    borderColor: 'border-l-brand-primary',
+    iconBg: 'bg-brand-success-soft',
+    iconColor: 'text-brand-success',
+    borderColor: 'border-l-brand-success',
   },
 ]
 
