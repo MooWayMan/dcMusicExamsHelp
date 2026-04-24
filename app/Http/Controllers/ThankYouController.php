@@ -153,6 +153,7 @@ class ThankYouController extends Controller
                 'distinctions' => $distinctions,
                 'merits' => $merits,
                 'total' => $entries->count(),
+                'pending_count' => $entries->filter(fn ($e) => $e->score === null)->count(),
             ],
         ];
     }

@@ -11,7 +11,7 @@ import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
 import PageMaintenance from '@/components/reusables/PageMaintenance.vue'
-import { Heart, Trophy, Music, Star, Award, Search, ChevronRight } from 'lucide-vue-next'
+import { Heart, Trophy, Music, Star, Award, Search, ChevronRight, Clock } from 'lucide-vue-next'
 
 interface HallOfFameEntry {
   name: string
@@ -35,6 +35,7 @@ interface Summary {
   distinctions: number
   merits: number
   total: number
+  pending_count: number
 }
 
 interface QuarterOption {
@@ -366,8 +367,22 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
             </div>
           </div>
 
-          <!-- Hall of Fame empty state — two motivational cards -->
-          <div v-else class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <!-- Waiting-for-results banner — shown above the motivational cards
+               whenever this quarter still has pending entries. -->
+          <div v-else-if="summary.pending_count > 0" class="mt-8 rounded-2xl border-2 border-yellow-400/40 bg-yellow-400/10 p-5 text-center backdrop-blur-sm">
+            <div class="flex items-center justify-center gap-2">
+              <Clock class="h-5 w-5 text-yellow-300" />
+              <p class="text-sm font-bold uppercase tracking-widest text-yellow-300">Results still coming in</p>
+            </div>
+            <p class="mx-auto mt-2 max-w-xl text-sm text-white/80">
+              Top scorers will be announced once all results are in — typically around 6 weeks after the quarter ends.
+            </p>
+          </div>
+
+          <!-- Hall of Fame empty state — two motivational cards. Shown when
+               no top scorers yet, regardless of pending state (the banner above
+               explains the waiting when applicable). -->
+          <div v-if="hallOfFameEntries.length === 0" class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
             <!-- Distinction card -->
             <div class="relative overflow-hidden rounded-2xl border-2 border-dashed border-yellow-400/40 bg-white/5 p-6 text-center backdrop-blur-sm">
               <div class="absolute right-4 top-4">

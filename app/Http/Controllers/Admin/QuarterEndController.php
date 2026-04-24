@@ -71,6 +71,7 @@ class QuarterEndController extends Controller
             // Is this row a parent/self booking?
             $parentContact = $parentOrSelfLookup->get(strtolower(trim($teacherName)));
             $isParentBooking = $parentContact !== null;
+            $bookingRole = $parentContact?->role; // 'parent' | 'self' | null
 
             // Get email — different strategy for parents vs teachers.
             $firstOrder = $entries->first()?->order;
@@ -110,6 +111,7 @@ class QuarterEndController extends Controller
                 'applicant_email' => $teacherEmail,
                 'applicant_name' => $firstOrder?->applicant_name,
                 'is_parent_booking' => $isParentBooking,
+                'booking_role' => $bookingRole,
                 'total_entries' => $entries->count(),
                 'with_results' => $withScores->count(),
                 'pending' => $pending->count(),

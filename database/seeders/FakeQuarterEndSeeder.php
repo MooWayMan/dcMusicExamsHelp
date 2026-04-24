@@ -175,20 +175,23 @@ class FakeQuarterEndSeeder extends Seeder
             }
         }
 
-        // ────────────── PARENT BOOKINGS ──────────────
-        // Mirrors the real Q1 shape: parent books directly for their one
-        // child, appears as teacher_name on the exam entry, and also as an
-        // ExamContact with role=parent so the admin recognises them. Each
-        // parent gets exactly 1 candidate (typical real-world pattern).
+        // ────────────── PARENT + SELF BOOKINGS ──────────────
+        // Mirrors the real Q1 shape. Parents book directly for their one
+        // child; self-applicants (like adult learners or mature teenagers)
+        // book their own exam. Each gets an ExamContact with the right role
+        // so the admin distinguishes them.
         $parentBookings = [
-            ['name' => 'Gillian Leslie',    'email' => 'fakeqe.gillian@example.com',  'child' => 'Jacob Leslie',        'instrument' => 'Guitar (Rock/Pop)', 'grade' => 'Initial', 'score' => 76],
-            ['name' => 'Adrian O\'Malley',  'email' => 'fakeqe.adrian@example.com',   'child' => 'Jasper O\'Malley',    'instrument' => 'Guitar (Rock/Pop)', 'grade' => '8',       'score' => 75],
-            ['name' => 'Claire Reed',       'email' => 'fakeqe.claire@example.com',   'child' => 'Jemima Reed',          'instrument' => 'Singing (Rock/Pop)', 'grade' => '5',      'score' => 70],
+            ['name' => 'Gillian Leslie',    'role' => 'parent', 'email' => 'fakeqe.gillian@example.com',  'child' => 'Jacob Leslie',        'instrument' => 'Guitar (Rock/Pop)',  'grade' => 'Initial', 'score' => 76],
+            ['name' => 'Adrian O\'Malley',  'role' => 'parent', 'email' => 'fakeqe.adrian@example.com',   'child' => 'Jasper O\'Malley',    'instrument' => 'Guitar (Rock/Pop)',  'grade' => '8',       'score' => 75],
+            ['name' => 'Claire Reed',       'role' => 'parent', 'email' => 'fakeqe.claire@example.com',   'child' => 'Jemima Reed',         'instrument' => 'Singing (Rock/Pop)', 'grade' => '5',       'score' => 70],
+            // Self-applicant — candidate booked their own exam. Their name
+            // is both the applicant AND the child in the entry.
+            ['name' => 'Seth Barraclough',  'role' => 'self',   'email' => 'fakeqe.seth@example.com',     'child' => 'Seth Barraclough',    'instrument' => 'Trombone',           'grade' => '8',       'score' => 93],
         ];
 
         foreach ($parentBookings as $p) {
             ExamContact::updateOrCreate(
-                ['name' => $p['name'], 'role' => 'parent'],
+                ['name' => $p['name'], 'role' => $p['role']],
                 ['email' => $p['email']]
             );
 
