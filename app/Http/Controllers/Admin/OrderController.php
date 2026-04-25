@@ -21,7 +21,7 @@ class OrderController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = Order::with(['teacher:id,name', 'school:id,name'])
+        $query = Order::with(['teacher:id,name', 'createdByContact:id,name', 'school:id,name'])
             ->withCount('examEntries');
 
         if ($search = $request->input('search')) {
@@ -75,9 +75,11 @@ class OrderController extends Controller
         $allowedSorts = ['trinity_order_number', 'candidates', 'commission_amount', 'order_status', 'delivery_method', 'subject_area', 'requested_start_date', 'created_at'];
 
         if ($sortBy === 'teacher') {
+            // Sort by the unified contact's name, falling back to legacy
+            // applicant_name for orders that aren't yet linked.
             $query->orderBy(
-                User::select('name')
-                    ->whereColumn('users.id', 'orders.user_id')
+                ExamContact::select('name')
+                    ->whereColumn('exam_contacts.id', 'orders.created_by_contact_id')
                     ->limit(1),
                 $sortDir
             );
@@ -97,8 +99,8 @@ class OrderController extends Controller
         $orders->through(fn ($order) => [
             'id' => $order->id,
             'trinity_order_number' => $order->trinity_order_number,
-            'teacher_name' => $order->teacher->name ?? $order->applicant_name ?? '—',
-            'teacher_id' => $order->user_id,
+            'teacher_name' => $order->createdByContact->name ?? $order->teacher->name ?? $order->applicant_name ?? '—',
+            'teacher_contact_id' => $order->created_by_contact_id,
             'school_name' => $order->school->name ?? '—',
             'school_id' => $order->school_id,
             'delivery_method' => $order->isDigital() ? 'DG' : 'F2F',
@@ -249,6 +251,7 @@ class OrderController extends Controller
     {
         $order->load([
             'teacher:id,name,email,phone',
+            'createdByContact:id,name,email,phone',
             'school:id,name,city',
             'examEntries' => fn ($q) => $q->with(['student:id,first_name,last_name', 'instrument:id,name']),
         ]);
@@ -267,12 +270,23 @@ class OrderController extends Controller
             'requested_start_date' => $order->requested_start_date?->format('d M Y'),
             'notes' => $order->notes,
             'created_at' => $order->created_at->format('d M Y'),
-            'teacher' => $order->teacher ? [
-                'id' => $order->teacher->id,
-                'name' => $order->teacher->name,
-                'email' => $order->teacher->email,
-                'phone' => $order->teacher->phone,
-            ] : null,
+            // Prefer the unified contact (createdByContact) when present; fall back
+            // to the legacy teacher (User) for orders not yet linked to a contact.
+            'teacher' => match (true) {
+                $order->createdByContact !== null => [
+                    'id' => $order->createdByContact->id,
+                    'name' => $order->createdByContact->name,
+                    'email' => $order->createdByContact->email,
+                    'phone' => $order->createdByContact->phone,
+                ],
+                $order->teacher !== null => [
+                    'id' => null, // legacy User id — Vue renders without link if id is null
+                    'name' => $order->teacher->name,
+                    'email' => $order->teacher->email,
+                    'phone' => $order->teacher->phone,
+                ],
+                default => null,
+            },
             'school' => $order->school ? [
                 'id' => $order->school->id,
                 'name' => $order->school->name,

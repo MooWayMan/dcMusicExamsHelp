@@ -131,9 +131,10 @@ const examColumns = [
                     </MyTextConstructor>
                 </div>
                 <div v-if="order.teacher" class="mt-4">
-                    <Link :href="`/admin/teachers/${order.teacher.id}`" class="text-xl font-semibold text-brand-accent hover:underline">
+                    <Link v-if="order.teacher.id" :href="`/admin/contacts/${order.teacher.id}`" class="text-xl font-semibold text-brand-accent hover:underline">
                         {{ order.teacher.name }}
                     </Link>
+                    <span v-else class="text-xl font-semibold text-brand-text">{{ order.teacher.name }}</span>
                     <p class="mt-1 truncate text-base text-brand-text-soft">{{ order.teacher.email }}</p>
                     <p v-if="order.teacher.phone" class="text-base text-brand-text-soft">{{ order.teacher.phone }}</p>
                 </div>

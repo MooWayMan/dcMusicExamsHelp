@@ -16,9 +16,7 @@ use App\Http\Controllers\Admin\SchoolController;
 use App\Http\Controllers\Admin\SessionLogController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\TaskController;
-use App\Http\Controllers\Admin\TeacherController;
 use App\Http\Middleware\SyncCalendarTasks;
-use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
@@ -34,18 +32,9 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
         // Dashboard
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-        // Teachers CRUD — bind {teacher} to User model
-        Route::resource('teachers', TeacherController::class)->parameters([
-            'teachers' => 'teacher:id',
-        ]);
-
-        // Teacher extras: restore from archive, deletion impact warning
-        Route::post('teachers/{id}/restore', [TeacherController::class, 'restore'])->name('teachers.restore');
-        Route::get('teachers/{teacher}/deletion-impact', [TeacherController::class, 'deletionImpact'])->name('teachers.deletion-impact');
-
-        // Contact logs for teachers
-        Route::post('teachers/{teacher}/contact-logs', [ContactLogController::class, 'store'])->name('teachers.contact-logs.store');
-        Route::delete('teachers/{teacher}/contact-logs/{contactLog}', [ContactLogController::class, 'destroy'])->name('teachers.contact-logs.destroy');
+        // Contact logs for any contact
+        Route::post('contacts/{contact}/contact-logs', [ContactLogController::class, 'store'])->name('contacts.contact-logs.store');
+        Route::delete('contacts/{contact}/contact-logs/{contactLog}', [ContactLogController::class, 'destroy'])->name('contacts.contact-logs.destroy');
 
         // Schools CRUD
         Route::resource('schools', SchoolController::class);
@@ -103,8 +92,3 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
         Route::patch('page-maintenance/{page}/toggle', [PageMaintenanceController::class, 'toggle'])->name('page-maintenance.toggle');
         Route::patch('page-maintenance/{page}/message', [PageMaintenanceController::class, 'updateMessage'])->name('page-maintenance.message');
     });
-
-// Explicit model binding: 'teacher' param resolves to User model (teachers are users with role=teacher)
-Route::bind('teacher', function ($value) {
-    return User::where('id', $value)->where('role', 'teacher')->firstOrFail();
-});

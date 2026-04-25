@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Models\ExamContact;
 use App\Models\ExamEntry;
 use App\Models\School;
 use App\Models\Student;
-use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
 
@@ -31,15 +31,17 @@ class PopulateFromEntries extends Command
 
         $teachersCreated = 0;
         $teachersExisted = 0;
-        $teacherMap = []; // name (lowercase) => User model
+        $teacherMap = []; // name (lowercase) => ExamContact model
 
         foreach ($teacherNames as $name) {
-            $existing = User::where('role', 'teacher')
-                ->whereRaw('LOWER(name) = ?', [strtolower(trim($name))])
+            $trimmed = trim($name);
+
+            $existing = ExamContact::withType('teacher')
+                ->whereRaw('LOWER(TRIM(name)) = ?', [strtolower($trimmed)])
                 ->first();
 
             if ($existing) {
-                $teacherMap[strtolower(trim($name))] = $existing;
+                $teacherMap[strtolower($trimmed)] = $existing;
                 $teachersExisted++;
                 $this->line("  Teacher exists: {$name} (ID {$existing->id})");
             } else {
@@ -47,15 +49,14 @@ class PopulateFromEntries extends Command
                     $this->line("  Would create teacher: {$name}");
                     $teachersCreated++;
                 } else {
-                    $user = User::create([
-                        'name' => trim($name),
-                        'email' => Str::slug($name) . '@placeholder.musicexams.help',
-                        'password' => bcrypt(Str::random(32)),
-                        'role' => 'teacher',
+                    $contact = ExamContact::create([
+                        'name' => $trimmed,
+                        'email' => Str::slug($trimmed) . '@placeholder.musicexams.help',
                     ]);
-                    $teacherMap[strtolower(trim($name))] = $user;
+                    $contact->addType('teacher');
+                    $teacherMap[strtolower($trimmed)] = $contact;
                     $teachersCreated++;
-                    $this->line("  Created teacher: {$name} (ID {$user->id})");
+                    $this->line("  Created teacher: {$name} (ID {$contact->id})");
                 }
             }
         }
@@ -140,7 +141,7 @@ class PopulateFromEntries extends Command
 
             // Find teacher for this student (use first entry with a teacher)
             $teacherEntry = $studentEntries->first(fn ($e) => $e->teacher_name);
-            $teacherUser = $teacherEntry
+            $teacherContact = $teacherEntry
                 ? ($teacherMap[strtolower(trim($teacherEntry->teacher_name))] ?? null)
                 : null;
 
@@ -152,13 +153,14 @@ class PopulateFromEntries extends Command
                 $studentsExisted++;
             } else {
                 if ($dryRun) {
-                    $this->line("  Would create student: {$fullName}" . ($teacherUser ? " (teacher: {$teacherUser->name})" : ''));
+                    $teacherDisplay = $teacherContact?->name;
+                    $this->line("  Would create student: {$fullName}" . ($teacherDisplay ? " (teacher: {$teacherDisplay})" : ''));
                     $studentsCreated++;
                 } else {
                     $student = Student::create([
                         'first_name' => $firstName,
                         'last_name' => $lastName,
-                        'user_id' => $teacherUser?->id,
+                        'teacher_contact_id' => $teacherContact?->id,
                         'instrument_id' => $firstEntry->instrument_id,
                     ]);
                     $studentMap[$nameKey] = $student;
@@ -199,8 +201,12 @@ class PopulateFromEntries extends Command
                 $order = \App\Models\Order::find($orderId);
                 if (! $order) continue;
 
-                // Find teacher from first entry with a teacher_name
-                if (! $order->user_id) {
+                // Find teacher from first entry with a teacher_name; attach via order_contacts pivot
+                $alreadyLinked = \DB::table('order_contacts')
+                    ->where('order_id', $order->id)
+                    ->exists();
+
+                if (! $alreadyLinked) {
                     $teacherEntry = ExamEntry::where('order_id', $orderId)
                         ->whereNotNull('teacher_name')
                         ->first();
@@ -208,7 +214,14 @@ class PopulateFromEntries extends Command
                     if ($teacherEntry) {
                         $teacher = $teacherMap[strtolower(trim($teacherEntry->teacher_name))] ?? null;
                         if ($teacher) {
-                            $order->update(['user_id' => $teacher->id]);
+                            \DB::table('order_contacts')->insertOrIgnore([
+                                'order_id' => $order->id,
+                                'exam_contact_id' => $teacher->id,
+                                'role_in_order' => 'teacher',
+                                'is_primary' => true,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]);
                         }
                     }
                 }

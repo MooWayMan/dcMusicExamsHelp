@@ -3,11 +3,11 @@
 namespace App\Console\Commands;
 
 use App\Models\ContactLog;
+use App\Models\ExamContact;
 use App\Models\ExamEntry;
 use App\Models\Order;
 use App\Models\School;
 use App\Models\Student;
-use App\Models\User;
 use Illuminate\Console\Command;
 
 class CleanFakeData extends Command
@@ -19,16 +19,21 @@ class CleanFakeData extends Command
     {
         $dryRun = $this->option('dry-run');
 
-        // 1. Fake teachers = users with @example.com emails
-        $fakeTeachers = User::where('email', 'ilike', '%@example.com')
-            ->where('role', 'teacher')
+        // 1. Fake teachers = exam_contacts tagged 'teacher' with @example.com emails
+        $fakeTeachers = ExamContact::withType('teacher')
+            ->where('email', 'ilike', '%@example.com')
             ->get();
         $fakeTeacherIds = $fakeTeachers->pluck('id');
 
-        // 2. Fake orders = orders linked to fake teachers OR with dates before 2026
+        // 2. Fake orders = orders linked to fake teacher contacts (via order_contacts pivot)
+        //    OR with dates before 2026
+        $fakeOrderIdsFromContacts = \DB::table('order_contacts')
+            ->whereIn('exam_contact_id', $fakeTeacherIds)
+            ->pluck('order_id');
+
         $fakeOrders = Order::withTrashed()
-            ->where(function ($q) use ($fakeTeacherIds) {
-                $q->whereIn('user_id', $fakeTeacherIds)
+            ->where(function ($q) use ($fakeOrderIdsFromContacts) {
+                $q->whereIn('id', $fakeOrderIdsFromContacts)
                   ->orWhere('requested_start_date', '<', '2026-01-01');
             })
             ->get();
@@ -37,11 +42,11 @@ class CleanFakeData extends Command
         // 3. Fake entries = entries tied to fake orders
         $fakeEntryCount = ExamEntry::whereIn('order_id', $fakeOrderIds)->count();
 
-        // 4. Fake contact logs = logs for fake teachers
-        $fakeContactLogs = ContactLog::whereIn('user_id', $fakeTeacherIds)->count();
+        // 4. Fake contact logs = logs for fake teacher contacts
+        $fakeContactLogs = ContactLog::whereIn('exam_contact_id', $fakeTeacherIds)->count();
 
-        // 5. Fake students = students owned by fake teachers
-        $fakeStudents = Student::whereIn('user_id', $fakeTeacherIds)->count();
+        // 5. Fake students = students owned by fake teacher contacts
+        $fakeStudents = Student::whereIn('teacher_contact_id', $fakeTeacherIds)->count();
 
         // 6. Schools that only have fake teachers attached (no real teachers)
         // We'll check after deletion which schools have no teachers left
@@ -77,20 +82,23 @@ class CleanFakeData extends Command
         Order::withTrashed()->whereIn('id', $fakeOrderIds)->forceDelete();
 
         $this->info('Deleting contact logs...');
-        ContactLog::whereIn('user_id', $fakeTeacherIds)->delete();
+        ContactLog::whereIn('exam_contact_id', $fakeTeacherIds)->delete();
 
         $this->info('Deleting students...');
-        Student::whereIn('user_id', $fakeTeacherIds)->delete();
+        Student::whereIn('teacher_contact_id', $fakeTeacherIds)->delete();
 
-        // Detach pivot relationships before deleting teachers
+        // Detach pivot relationships before deleting teacher contacts
         foreach ($fakeTeachers as $teacher) {
             $teacher->schools()->detach();
             $teacher->instruments()->detach();
-            $teacher->subjectAreas()->detach();
+            // contact_types pivot, contact_emails, order_contacts
+            \DB::table('contact_types')->where('exam_contact_id', $teacher->id)->delete();
+            \DB::table('contact_emails')->where('exam_contact_id', $teacher->id)->delete();
+            \DB::table('order_contacts')->where('exam_contact_id', $teacher->id)->delete();
         }
 
-        $this->info('Deleting fake teachers...');
-        User::whereIn('id', $fakeTeacherIds)->forceDelete();
+        $this->info('Deleting fake teacher contacts...');
+        ExamContact::whereIn('id', $fakeTeacherIds)->forceDelete();
 
         // Clean up any remaining orphan students with no exam entries
         $orphanStudents = Student::whereDoesntHave('examEntries')->count();

@@ -281,7 +281,7 @@ const { animClass } = usePageAnimation()
                                 {{ order.requested_start_date || '—' }}
                             </td>
                             <td class="px-4 py-3">
-                                <Link v-if="order.teacher_id" :href="`/admin/teachers/${order.teacher_id}`" class="text-base text-brand-text hover:text-brand-accent hover:underline">
+                                <Link v-if="order.teacher_contact_id" :href="`/admin/contacts/${order.teacher_contact_id}`" class="text-base text-brand-text hover:text-brand-accent hover:underline">
                                     {{ order.teacher_name }}
                                 </Link>
                                 <span v-else class="text-base text-brand-text-soft">{{ order.teacher_name }}</span>

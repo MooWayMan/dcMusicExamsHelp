@@ -41,8 +41,9 @@ class SchoolController extends Controller
         // Build a single "primary contact" display per school, preferring the
         // unified-model contact_school pivot, falling back to the legacy
         // schools.contact_name string for rows that haven't been migrated.
+        // Precedence within the pivot: school_admin > teacher > anyone else.
         $schools->through(function ($school) {
-            $primaryContact = $school->contacts->first();
+            $primaryContact = $this->pickPrimarySchoolContact($school);
 
             return [
                 'id' => $school->id,
@@ -101,10 +102,11 @@ class SchoolController extends Controller
     public function show(School $school): Response
     {
         $school->load([
-            'teachers' => fn ($q) => $q->select('users.id', 'users.name', 'users.email', 'users.phone')
-                ->withCount(['students', 'orders']),
-            'orders' => fn ($q) => $q->with('teacher:id,name')->latest(),
+            'contacts' => fn ($q) => $q->withCount(['examEntries', 'orders']),
+            'orders' => fn ($q) => $q->with(['teacher:id,name', 'createdByContact:id,name'])->latest(),
         ]);
+
+        $primary = $this->pickPrimarySchoolContact($school);
 
         $schoolData = [
             'id' => $school->id,
@@ -112,23 +114,27 @@ class SchoolController extends Controller
             'address' => $school->address,
             'city' => $school->city,
             'postcode' => $school->postcode,
-            'phone' => $school->phone,
+            'phone' => $primary?->phone ?? $school->phone,
             'email' => $school->email,
-            'contact_name' => $school->contact_name,
+            'contact_name' => $primary?->name ?? $school->contact_name,
+            'contact_id' => $primary?->id,
             'notes' => $school->notes,
             'created_at' => $school->created_at->format('d M Y'),
-            'teachers' => $school->teachers->map(fn ($t) => [
-                'id' => $t->id,
-                'name' => $t->name,
-                'email' => $t->email,
-                'phone' => $t->phone,
-                'students_count' => $t->students_count,
-                'orders_count' => $t->orders_count,
+            // "teachers" key kept for the existing Vue table; rows now point
+            // at exam_contacts (so row clicks land on /admin/contacts/{id}).
+            'teachers' => $school->contacts->map(fn ($c) => [
+                'id' => $c->id,
+                'name' => $c->name,
+                'email' => $c->email,
+                'phone' => $c->phone,
+                'types' => $c->types,
+                'students_count' => 0, // count via contact's students relation if needed later
+                'orders_count' => $c->orders_count,
             ]),
             'orders' => $school->orders->map(fn ($o) => [
                 'id' => $o->id,
                 'trinity_order_number' => $o->trinity_order_number,
-                'teacher_name' => $o->teacher->name ?? $o->applicant_name ?? '—',
+                'teacher_name' => $o->createdByContact?->name ?? $o->teacher?->name ?? $o->applicant_name ?? '—',
                 'delivery_method' => $o->isDigital() ? 'DG' : 'F2F',
                 'candidates' => $o->candidates,
                 'commission_amount' => number_format($o->commission_amount, 2),
@@ -185,5 +191,30 @@ class SchoolController extends Controller
 
         return redirect()->route('admin.schools.index')
             ->with('success', "{$name} has been archived.");
+    }
+
+    /**
+     * Pick the canonical "primary" contact to display alongside the school
+     * row. Precedence: school_admin > teacher > anyone else > none.
+     * This stops alphabetically-first teachers (e.g. Tracey Lea) from
+     * masquerading as the school's main contact when a real school_admin
+     * (e.g. Peter Rainsford) exists.
+     */
+    private function pickPrimarySchoolContact(School $school): ?\App\Models\ExamContact
+    {
+        $byPrecedence = [
+            fn ($c) => $c->isSchoolAdmin(),
+            fn ($c) => $c->isTeacher(),
+            fn () => true, // anyone else
+        ];
+
+        foreach ($byPrecedence as $matches) {
+            $hit = $school->contacts->first($matches);
+            if ($hit) {
+                return $hit;
+            }
+        }
+
+        return null;
     }
 }

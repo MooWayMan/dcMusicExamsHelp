@@ -140,7 +140,7 @@ const orderColumns = [
                         :full-width="true"
                         :bare="true"
                         :clickable-rows="true"
-                        @row-click="(row: any) => router.visit(`/admin/teachers/${row.id}`)"
+                        @row-click="(row: any) => router.visit(`/admin/contacts/${row.id}`)"
                     />
                     <p v-else class="py-4 text-center text-base text-brand-text-soft">No teachers linked to this school</p>
                 </div>

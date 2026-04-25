@@ -45,8 +45,8 @@ class DashboardController extends Controller
             ->map(fn ($order) => [
                 'id' => $order->id,
                 'trinity_order_number' => $order->trinity_order_number,
-                'teacher_id' => $order->user_id,
-                'teacher_name' => $order->teacher?->name ?? $order->createdByContact?->name ?? 'Unknown',
+                'teacher_contact_id' => $order->created_by_contact_id,
+                'teacher_name' => $order->createdByContact?->name ?? $order->teacher?->name ?? 'Unknown',
                 'school_name' => $order->school->name ?? '—',
                 'delivery_method' => $order->isDigital() ? 'DG' : 'F2F',
                 'candidates' => $order->candidates,
@@ -63,8 +63,8 @@ class DashboardController extends Controller
             ->get()
             ->map(fn ($log) => [
                 'id' => $log->id,
-                'teacher_id' => $log->exam_contact_id ?? $log->user_id,
-                'teacher_name' => $log->contact->name ?? $log->teacher->name ?? 'Unknown',
+                'teacher_contact_id' => $log->exam_contact_id,
+                'teacher_name' => $log->contact?->name ?? $log->teacher?->name ?? 'Unknown',
                 'contact_type' => $log->contact_type,
                 'direction' => $log->direction,
                 'subject' => $log->subject,

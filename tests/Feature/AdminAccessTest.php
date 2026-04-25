@@ -30,29 +30,6 @@ test('admin can access admin dashboard', function () {
         ->assertStatus(200);
 });
 
-// ── Teachers section ──
-
-test('guest cannot access teachers list', function () {
-    $this->get('/admin/teachers')
-        ->assertRedirect('/login');
-});
-
-test('teacher cannot access teachers list', function () {
-    $teacher = User::factory()->create(['role' => 'teacher']);
-
-    $this->actingAs($teacher)
-        ->get('/admin/teachers')
-        ->assertStatus(403);
-});
-
-test('admin can access teachers list', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-
-    $this->actingAs($admin)
-        ->get('/admin/teachers')
-        ->assertStatus(200);
-});
-
 // ── Schools section ──
 
 test('guest cannot access schools list', function () {

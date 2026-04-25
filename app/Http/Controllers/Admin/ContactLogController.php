@@ -6,16 +6,16 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ContactLog;
-use App\Models\User;
+use App\Models\ExamContact;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class ContactLogController extends Controller
 {
     /**
-     * Store a new contact log for a teacher.
+     * Store a new contact log for a contact.
      */
-    public function store(Request $request, User $teacher): RedirectResponse
+    public function store(Request $request, ExamContact $contact): RedirectResponse
     {
         $validated = $request->validate([
             'contact_type' => 'required|string|in:email,phone,face_to_face,other',
@@ -26,25 +26,24 @@ class ContactLogController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $teacher->contactLogs()->create($validated);
+        $contact->contactLogs()->create($validated);
 
-        return redirect()->route('admin.teachers.show', $teacher)
+        return redirect()->route('admin.contacts.show', $contact)
             ->with('success', 'Contact log added.');
     }
 
     /**
      * Delete a contact log entry.
      */
-    public function destroy(User $teacher, ContactLog $contactLog): RedirectResponse
+    public function destroy(ExamContact $contact, ContactLog $contactLog): RedirectResponse
     {
-        // Ensure the log belongs to this teacher
-        if ($contactLog->user_id !== $teacher->id) {
+        if ($contactLog->exam_contact_id !== $contact->id) {
             abort(403);
         }
 
         $contactLog->delete();
 
-        return redirect()->route('admin.teachers.show', $teacher)
+        return redirect()->route('admin.contacts.show', $contact)
             ->with('success', 'Contact log removed.');
     }
 }
