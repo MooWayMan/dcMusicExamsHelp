@@ -102,8 +102,8 @@ class UnifyContacts extends Command
              'notes' => 'Parent of Maya + Megan Parkinson.'],
             ['name' => 'Maria Nielsen',      'types' => ['parent'], 'email' => 'mkn21@me.com',
              'notes' => 'Parent of Delfina Yelich Battisacchi (Singing Grade 1 DG, March 2026).'],
-            ['name' => 'Claire Reed',        'types' => ['parent'], 'email' => null,
-             'notes' => 'Parent — unrelated to Clare Keeling (different spelling).'],
+            ['name' => 'Claire Reed',        'types' => ['parent'], 'email' => 'closborn@hotmail.co.uk',
+             'notes' => 'Parent (Claire Jemima Reed) — unrelated to Clare Keeling. Phone +07540064457. Possible children: Olivia, Georgia, Charlie Reed.'],
 
             // === CANDIDATES (the candidates themselves; their submitter
             // (parent/guardian) lives as a separate contact below) ===
