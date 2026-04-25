@@ -709,7 +709,11 @@ class UnifyContacts extends Command
                 $order->user_id = $contact->user_id;
                 $changes[] = 'user_id';
             }
-            if (empty($order->created_by_contact_id) && ! empty($contact->id)) {
+            // Always sync created_by_contact_id from the canonical email match
+            // (not just when null) so wrong FKs from earlier imports get fixed.
+            // Example: order 1-15549565825 had applicant_email=musicexams@... but
+            // was linked to Mark Shore's contact id from a prior bad import.
+            if (! empty($contact->id) && $order->created_by_contact_id !== $contact->id) {
                 $order->created_by_contact_id = $contact->id;
                 $changes[] = 'created_by_contact_id';
             }
