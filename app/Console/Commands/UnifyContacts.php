@@ -688,11 +688,13 @@ class UnifyContacts extends Command
             }
         }
 
-        $orders = \App\Models\Order::whereNotNull('applicant_email')
-            ->where(function ($q) {
-                $q->whereNull('user_id')->orWhereNull('created_by_contact_id');
-            })
-            ->get();
+        // Look at every order with an applicant_email — even those that already
+        // have user_id and created_by_contact_id set, because some earlier
+        // imports linked the wrong contact (e.g. order 1-15549565825 was
+        // pointed at Mark Shore even though applicant_email is Paul's).
+        // The inner logic only writes if there's an actual change, so this is
+        // safe and idempotent.
+        $orders = \App\Models\Order::whereNotNull('applicant_email')->get();
 
         $linked = 0;
         $unmatchedByEmail = [];
