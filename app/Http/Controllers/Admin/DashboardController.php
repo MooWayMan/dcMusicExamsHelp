@@ -34,16 +34,19 @@ class DashboardController extends Controller
         $f2fOrders = Order::where('delivery_method', 'Default')->count();
         $totalCandidates = Order::sum('candidates');
 
-        // Recent orders
-        $recentOrders = Order::with(['teacher:id,name', 'school:id,name'])
+        // Recent orders. Teacher resolves via Order::teacher (legacy User FK)
+        // first, then falls back to createdByContact (the unified model) — so
+        // orders for contacts without a placeholder user (Megan, Rachel, Maria)
+        // still display the right name.
+        $recentOrders = Order::with(['teacher:id,name', 'createdByContact:id,name', 'school:id,name'])
             ->latest()
             ->take(5)
             ->get()
             ->map(fn ($order) => [
                 'id' => $order->id,
                 'trinity_order_number' => $order->trinity_order_number,
-                'teacher_id' => $order->teacher_id,
-                'teacher_name' => $order->teacher->name ?? 'Unknown',
+                'teacher_id' => $order->user_id,
+                'teacher_name' => $order->teacher?->name ?? $order->createdByContact?->name ?? 'Unknown',
                 'school_name' => $order->school->name ?? '—',
                 'delivery_method' => $order->isDigital() ? 'DG' : 'F2F',
                 'candidates' => $order->candidates,
