@@ -100,6 +100,8 @@ class UnifyContacts extends Command
              'notes' => 'Parent of Alice Jun Mei Khoo. Personal friend of Paul.'],
             ['name' => 'Jay Parkinson',      'types' => ['parent'], 'email' => 'jaydashome@yahoo.co.uk',
              'notes' => 'Parent of Maya + Megan Parkinson.'],
+            ['name' => 'Maria Nielsen',      'types' => ['parent'], 'email' => 'mkn21@me.com',
+             'notes' => 'Parent of Delfina Yelich Battisacchi (Singing Grade 1 DG, March 2026).'],
             ['name' => 'Claire Reed',        'types' => ['parent'], 'email' => null,
              'notes' => 'Parent — unrelated to Clare Keeling (different spelling).'],
 
@@ -150,6 +152,7 @@ class UnifyContacts extends Command
             $this->relinkExamEntryFKs($contactsByName);
             $this->relinkStudentFKs($contactsByName);
             $this->migrateSubscribers($contactsByName);
+            $this->backfillOrderFKs($contactsByName);
 
             if ($this->dryRun) {
                 DB::rollBack();
@@ -635,6 +638,73 @@ class UnifyContacts extends Command
                 $sub->unsubscribed_at = now();
                 $sub->save();
             }
+        }
+        $this->newLine();
+    }
+
+    /**
+     * Backfill orders.user_id and orders.created_by_contact_id from
+     * applicant_email → canonical contact match. Catches DG orders where
+     * the import didn't link the teacher (Trinity Submitter) properly.
+     */
+    private function backfillOrderFKs(array $byName): void
+    {
+        $this->info('Step 10/10: Backfill orders.user_id + created_by_contact_id from applicant_email');
+
+        // Build email → canonical-contact index (primary + secondary emails).
+        $emailIndex = [];
+        foreach ($this->getCanonicalContacts() as $row) {
+            $key = mb_strtolower(trim($row['name']));
+            $contact = $byName[$key] ?? null;
+            if (! $contact) {
+                continue;
+            }
+            if (! empty($row['email'])) {
+                $emailIndex[mb_strtolower($row['email'])] = $contact;
+            }
+            foreach ($row['secondary_emails'] ?? [] as $email) {
+                $emailIndex[mb_strtolower($email)] = $contact;
+            }
+        }
+
+        $orders = \App\Models\Order::whereNotNull('applicant_email')
+            ->where(function ($q) {
+                $q->whereNull('user_id')->orWhereNull('created_by_contact_id');
+            })
+            ->get();
+
+        $linked = 0;
+        $unmatchedByEmail = [];
+
+        foreach ($orders as $order) {
+            $contact = $emailIndex[mb_strtolower($order->applicant_email)] ?? null;
+            if (! $contact) {
+                $unmatchedByEmail[$order->applicant_email] = ($unmatchedByEmail[$order->applicant_email] ?? 0) + 1;
+                continue;
+            }
+
+            $changes = [];
+            if (empty($order->user_id) && ! empty($contact->user_id)) {
+                $order->user_id = $contact->user_id;
+                $changes[] = 'user_id';
+            }
+            if (empty($order->created_by_contact_id) && ! empty($contact->id)) {
+                $order->created_by_contact_id = $contact->id;
+                $changes[] = 'created_by_contact_id';
+            }
+
+            if ($changes) {
+                $this->line("  + {$order->trinity_order_number} → {$contact->name} (".implode(', ', $changes).')');
+                if (! $this->dryRun) {
+                    $order->save();
+                }
+                $linked++;
+            }
+        }
+
+        $this->line("  ($linked orders linked)");
+        foreach ($unmatchedByEmail as $email => $count) {
+            $this->warn("  ? $count orders with applicant_email='$email' (no canonical match)");
         }
         $this->newLine();
     }

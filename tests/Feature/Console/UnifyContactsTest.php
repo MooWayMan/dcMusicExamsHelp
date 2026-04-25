@@ -164,6 +164,50 @@ it('backfills exam_entries.teacher_contact_id from teacher_name', function () {
     expect($entry->fresh()->teacher_contact_id)->toBe($alex->id);
 });
 
+it('backfills orders.user_id and created_by_contact_id from applicant_email', function () {
+    // Existing order with NULL user_id and created_by_contact_id, but applicant_email
+    // matching a canonical contact (Megan Price → meganclr96@gmail.com)
+    $order = makeUnifyTestOrder('1-MARIA-TEST-1');
+    $order->update([
+        'user_id' => null,
+        'applicant_email' => 'meganclr96@gmail.com',
+        'applicant_name' => 'Megan Price',
+    ]);
+
+    // Pre-create the canonical contact's User row so the unify can link to it
+    $user = User::create([
+        'name' => 'Megan Price',
+        'email' => 'megan-price@placeholder.musicexams.help',
+        'password' => bcrypt('test'),
+        'role' => 'teacher',
+    ]);
+
+    $this->artisan('contacts:unify')->assertExitCode(0);
+
+    $megan = ExamContact::whereRaw('LOWER(name) = ?', ['megan price'])->first();
+
+    expect($order->fresh()->user_id)->toBe($user->id);
+    expect($order->fresh()->created_by_contact_id)->toBe($megan->id);
+});
+
+it('backfills only created_by_contact_id when canonical contact has no User', function () {
+    // Maria Nielsen has no User in our system. Her order should still get
+    // created_by_contact_id populated from her exam_contact, but user_id stays null.
+    $order = makeUnifyTestOrder('1-MARIA-TEST-2');
+    $order->update([
+        'user_id' => null,
+        'applicant_email' => 'mkn21@me.com',
+        'applicant_name' => 'Maria Nielsen',
+    ]);
+
+    $this->artisan('contacts:unify')->assertExitCode(0);
+
+    $maria = ExamContact::whereRaw('LOWER(name) = ?', ['maria nielsen'])->first();
+
+    expect($order->fresh()->user_id)->toBeNull();
+    expect($order->fresh()->created_by_contact_id)->toBe($maria->id);
+});
+
 it('backfills students.teacher_contact_id via the student\'s exam_entries', function () {
     $order = makeUnifyTestOrder();
     $student = Student::create([
