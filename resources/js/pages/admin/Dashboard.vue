@@ -83,7 +83,7 @@ const { animClass } = usePageAnimation()
         <!-- Stat Cards Row 1: Counts -->
         <div :class="['mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4', animClass('fade-up', 1)]">
             <!-- Teachers -->
-            <Link href="/admin/teachers" class="group">
+            <Link href="/admin/contacts?role=teacher" class="group">
                 <div class="rounded-xl border border-brand-border bg-brand-surface p-5 transition-shadow hover:shadow-md">
                     <div class="flex items-center justify-between">
                         <div>
@@ -275,7 +275,7 @@ const { animClass } = usePageAnimation()
                     <Link
                         v-for="teacher in staleTeachers"
                         :key="teacher.id"
-                        :href="`/admin/teachers/${teacher.id}`"
+                        :href="`/admin/contacts/${teacher.id}`"
                         class="flex items-center justify-between rounded-lg border border-brand-border bg-brand-surface p-4 transition-colors hover:bg-brand-surface-soft"
                     >
                         <div>
