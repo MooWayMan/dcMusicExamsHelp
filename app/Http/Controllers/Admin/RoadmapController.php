@@ -22,6 +22,8 @@ class RoadmapController extends Controller
                     ['title' => 'Admin panel with full CRUD', 'done' => true],
                     ['title' => 'Brand identity & logo design', 'done' => true],
                     ['title' => 'Database schema & models', 'done' => true],
+                    ['title' => 'Unified Contacts data model (multi-type pivot, legacy schema dropped)', 'done' => true],
+                    ['title' => 'Nightwatch application monitoring live', 'done' => true],
                     ['title' => 'Task manager with GCal sync', 'done' => true],
                     ['title' => 'Email DNS setup (MX, SPF, DMARC, DKIM)', 'done' => true],
                     ['title' => 'Constructor component library', 'done' => true],
@@ -79,7 +81,7 @@ class RoadmapController extends Controller
                     ['title' => 'Session hours tracking page', 'done' => true],
                     ['title' => 'Student Certificate of Achievement — Merit (Canva)', 'done' => true],
                     ['title' => 'Rewards graphic with correct logo', 'done' => true],
-                    ['title' => 'Turn off hibernation', 'done' => false, 'description' => 'Remove sleep mode for musicexams.help at go-live'],
+                    ['title' => 'Turn off hibernation', 'done' => true, 'description' => 'DB cluster hibernation turned off 25 Apr 2026 for launch weekend; review in 2 months'],
                 ],
             ],
             [
