@@ -9,21 +9,21 @@ interface ContactData {
     name: string
     email: string | null
     phone: string | null
-    role: string | null
+    types: string[]
     source: string | null
     notes: string | null
 }
 
 const props = defineProps<{
     contact: ContactData
-    roles: string[]
+    allTypes: string[]
 }>()
 
 const form = useForm({
     name: props.contact.name,
     email: props.contact.email ?? '',
     phone: props.contact.phone ?? '',
-    role: props.contact.role ?? 'unknown',
+    types: [...(props.contact.types ?? [])],
     notes: props.contact.notes ?? '',
 })
 
@@ -31,21 +31,30 @@ function submit() {
     form.put(`/admin/contacts/${props.contact.id}`)
 }
 
-const { animClass } = usePageAnimation()
+function toggleType(type: string) {
+    const i = form.types.indexOf(type)
+    if (i === -1) {
+        form.types.push(type)
+    } else {
+        form.types.splice(i, 1)
+    }
+}
 
-function goBack() { window.history.back() }
-
-function roleLabel(role: string): string {
+function typeLabel(type: string): string {
     const map: Record<string, string> = {
         teacher: 'Teacher',
         parent: 'Parent',
-        self: 'Self (adult candidate)',
-        applicant: 'Applicant',
-        admin: 'Admin',
-        unknown: 'Unknown',
+        candidate: 'Candidate (adult or child applicant)',
+        school_admin: 'School Admin',
+        trinity_admin: 'Trinity Admin',
+        subscriber: 'Newsletter Subscriber',
     }
-    return map[role] ?? role
+    return map[type] ?? type
 }
+
+const { animClass } = usePageAnimation()
+
+function goBack() { window.history.back() }
 </script>
 
 <template>
@@ -89,17 +98,23 @@ function roleLabel(role: string): string {
                 <p v-if="form.errors.phone" class="mt-1 text-sm text-brand-danger">{{ form.errors.phone }}</p>
             </div>
 
-            <!-- Role -->
+            <!-- Types (multi-select) -->
             <div>
-                <label for="role" class="block text-sm font-semibold uppercase tracking-wider text-brand-text-soft">Role</label>
+                <span class="block text-sm font-semibold uppercase tracking-wider text-brand-text-soft">Types</span>
                 <p class="mt-1 text-sm text-brand-text-soft">
-                    Role controls who the contact is treated as. Parents are excluded from the teacher prize draw.
+                    A contact can be more than one thing — e.g. a teacher who also enters their own children, or a teacher who runs a school.
                 </p>
-                <select id="role" v-model="form.role" required
-                    class="mt-2 w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-base text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent">
-                    <option v-for="r in roles" :key="r" :value="r">{{ roleLabel(r) }}</option>
-                </select>
-                <p v-if="form.errors.role" class="mt-1 text-sm text-brand-danger">{{ form.errors.role }}</p>
+                <div class="mt-3 flex flex-wrap gap-2">
+                    <button v-for="t in allTypes" :key="t" type="button"
+                        @click="toggleType(t)"
+                        class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium border transition-colors"
+                        :class="form.types.includes(t)
+                            ? 'bg-brand-accent text-brand-text-inverse border-brand-accent'
+                            : 'bg-brand-surface text-brand-text-soft border-brand-border hover:text-brand-text'">
+                        {{ typeLabel(t) }}
+                    </button>
+                </div>
+                <p v-if="form.errors.types" class="mt-1 text-sm text-brand-danger">{{ form.errors.types }}</p>
             </div>
 
             <!-- Notes -->

@@ -80,7 +80,9 @@ class QuarterEndController extends Controller
                 // own-order applicant_email if they actually applied themselves.
                 $teacherEmail = $parentContact->primary_email ?? $ownOrder?->applicant_email;
             } else {
-                $teacherRecord = Teacher::with('emails')->where('name', $teacherName)->first();
+                $teacherRecord = ExamContact::with('emails')
+                    ->whereRaw('LOWER(name) = ?', [strtolower($teacherName)])
+                    ->first();
                 $teacherEmail = $teacherRecord?->primary_email
                     ?? $ownOrder?->applicant_email
                     ?? $firstOrder?->applicant_email;

@@ -54,7 +54,7 @@ interface Contact {
     name: string
     email: string | null
     phone: string | null
-    role: string
+    types: string[]
     source: string | null
     notes: string | null
     primary_email: string | null
@@ -72,13 +72,23 @@ const props = defineProps<{ contact: Contact }>()
 
 function goBack() { window.history.back() }
 
-function roleBadgeClass(role: string): string {
-    switch (role) {
+function typeBadgeClass(type: string): string {
+    switch (type) {
         case 'teacher': return 'bg-brand-accent/10 text-brand-accent'
         case 'parent': return 'bg-brand-teal-soft text-brand-teal'
-        case 'admin': return 'bg-brand-success-soft text-brand-success'
-        case 'applicant': return 'bg-brand-surface-soft text-brand-text-soft'
+        case 'candidate': return 'bg-brand-surface-soft text-brand-text-soft'
+        case 'school_admin': return 'bg-brand-success-soft text-brand-success'
+        case 'trinity_admin': return 'bg-brand-burgundy-soft text-brand-burgundy'
+        case 'subscriber': return 'bg-brand-surface-soft text-brand-text-soft'
         default: return 'bg-brand-surface-soft text-brand-text-soft'
+    }
+}
+
+function typeLabel(type: string): string {
+    switch (type) {
+        case 'school_admin': return 'School Admin'
+        case 'trinity_admin': return 'Trinity Admin'
+        default: return type.charAt(0).toUpperCase() + type.slice(1)
     }
 }
 
@@ -130,10 +140,17 @@ const visibleOrders = computed(() =>
                 <p class="text-sm font-semibold uppercase tracking-wider text-brand-text-soft">Contact</p>
                 <h1 class="text-2xl font-bold text-brand-text sm:text-3xl">{{ contact.name }}</h1>
             </div>
-            <span class="ml-2 rounded-full px-3 py-1 text-sm font-medium capitalize"
-                :class="roleBadgeClass(contact.role)">
-                {{ contact.role }}
-            </span>
+            <div class="ml-2 flex flex-wrap gap-1">
+                <span v-for="t in contact.types" :key="t"
+                    class="rounded-full px-3 py-1 text-sm font-medium"
+                    :class="typeBadgeClass(t)">
+                    {{ typeLabel(t) }}
+                </span>
+                <span v-if="!contact.types || contact.types.length === 0"
+                    class="rounded-full bg-brand-surface-soft px-3 py-1 text-sm text-brand-text-soft">
+                    unknown
+                </span>
+            </div>
             <Link :href="`/admin/contacts/${contact.id}/edit`"
                 class="ml-auto inline-flex items-center gap-2 rounded-lg bg-brand-accent px-3 py-2 text-sm font-semibold text-brand-text-inverse transition-colors hover:opacity-90">
                 <Pencil class="h-4 w-4" />

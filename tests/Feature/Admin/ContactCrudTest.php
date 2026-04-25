@@ -34,38 +34,38 @@ test('admin can view the contact edit form', function () {
         ->assertStatus(200);
 });
 
-test('admin can change a contact role from parent to teacher', function () {
-    $contact = makeContact(['role' => 'parent']);
+test('admin can change a contact type from parent to teacher', function () {
+    $contact = makeContact();
+    $contact->addType('parent');
 
     $response = $this->actingAs($this->admin)
         ->put("/admin/contacts/{$contact->id}", [
             'name' => $contact->name,
             'email' => $contact->email,
             'phone' => '',
-            'role' => 'teacher',
+            'types' => ['teacher'],
             'notes' => '',
         ]);
 
     $response->assertRedirect("/admin/contacts/{$contact->id}");
 
-    $this->assertDatabaseHas('exam_contacts', [
-        'id' => $contact->id,
-        'role' => 'teacher',
-    ]);
+    expect($contact->fresh()->isTeacher())->toBeTrue();
+    expect($contact->fresh()->isParent())->toBeFalse();
 });
 
-test('contact update rejects an unknown role value', function () {
+test('contact update rejects an unknown type value', function () {
     $contact = makeContact();
+    $contact->addType('parent');
 
     $this->actingAs($this->admin)
         ->from("/admin/contacts/{$contact->id}/edit")
         ->put("/admin/contacts/{$contact->id}", [
             'name' => $contact->name,
-            'role' => 'wizard',
+            'types' => ['wizard'],
         ])
-        ->assertSessionHasErrors('role');
+        ->assertSessionHasErrors('types.0');
 
-    expect($contact->fresh()->role)->toBe('parent');
+    expect($contact->fresh()->isParent())->toBeTrue();
 });
 
 test('contact update requires a name', function () {
@@ -75,7 +75,7 @@ test('contact update requires a name', function () {
         ->from("/admin/contacts/{$contact->id}/edit")
         ->put("/admin/contacts/{$contact->id}", [
             'name' => '',
-            'role' => 'teacher',
+            'types' => ['teacher'],
         ])
         ->assertSessionHasErrors('name');
 });
@@ -91,16 +91,18 @@ test('non-admin cannot reach the contact edit form', function () {
 
 test('non-admin cannot update a contact', function () {
     $teacher = User::factory()->create(['role' => 'teacher']);
-    $contact = makeContact(['role' => 'parent']);
+    $contact = makeContact();
+    $contact->addType('parent');
 
     $this->actingAs($teacher)
         ->put("/admin/contacts/{$contact->id}", [
             'name' => $contact->name,
-            'role' => 'teacher',
+            'types' => ['teacher'],
         ])
         ->assertStatus(403);
 
-    expect($contact->fresh()->role)->toBe('parent');
+    expect($contact->fresh()->isParent())->toBeTrue();
+    expect($contact->fresh()->isTeacher())->toBeFalse();
 });
 
 test('guests are redirected to login', function () {

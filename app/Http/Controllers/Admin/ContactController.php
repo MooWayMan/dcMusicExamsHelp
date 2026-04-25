@@ -12,20 +12,10 @@ use Inertia\Inertia;
 
 class ContactController extends Controller
 {
-    /**
-     * @deprecated Use ExamContact::TYPES (the multi-type model). Kept here
-     * temporarily so older Vue pages that pass `role` still validate while
-     * the frontend is migrated to checkbox-based types.
-     */
-    public const ROLES = ['teacher', 'parent', 'self', 'applicant', 'admin', 'unknown'];
-
-
     public function index(Request $request)
     {
         $search = $request->input('search');
-        // Accept both `type` (new, multi-type pivot) and `role` (legacy single column)
-        // so existing bookmarks/links keep working through the transition.
-        $type = $request->input('type') ?? $request->input('role');
+        $type = $request->input('type');
         $sort = $request->input('sort', 'name');
         $direction = $request->input('direction', 'asc');
 
@@ -154,7 +144,7 @@ class ContactController extends Controller
                 'name' => $contact->name,
                 'email' => $contact->email,
                 'phone' => $contact->phone,
-                'role' => $contact->role,
+                'types' => $contact->types,
                 'source' => $contact->source,
                 'notes' => $contact->notes,
                 'primary_email' => $contact->primary_email,
@@ -208,11 +198,11 @@ class ContactController extends Controller
                 'name' => $contact->name,
                 'email' => $contact->email,
                 'phone' => $contact->phone,
-                'role' => $contact->role,
+                'types' => $contact->types,
                 'source' => $contact->source,
                 'notes' => $contact->notes,
             ],
-            'roles' => self::ROLES,
+            'allTypes' => ExamContact::TYPES,
         ]);
     }
 
@@ -222,18 +212,45 @@ class ContactController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
-            'role' => ['required', 'string', 'in:' . implode(',', self::ROLES)],
+            'types' => ['array'],
+            'types.*' => ['string', 'in:' . implode(',', ExamContact::TYPES)],
             'notes' => ['nullable', 'string'],
         ]);
 
         DB::transaction(function () use ($contact, $validated): void {
-            $contact->update($validated);
+            // Update plain fields (name, email, phone, notes) — exclude `types`
+            // because that lives in the contact_types pivot, not on the row.
+            $contact->update([
+                'name' => $validated['name'],
+                'email' => $validated['email'] ?? null,
+                'phone' => $validated['phone'] ?? null,
+                'notes' => $validated['notes'] ?? null,
+            ]);
             $this->syncPrimaryEmail($contact, $validated['email'] ?? null);
+            $this->syncTypes($contact, $validated['types'] ?? []);
         });
 
         return redirect()
             ->route('admin.contacts.show', $contact)
             ->with('success', 'Contact updated.');
+    }
+
+    /**
+     * Sync the contact_types pivot to exactly match the submitted array.
+     */
+    private function syncTypes(ExamContact $contact, array $types): void
+    {
+        $current = DB::table('contact_types')
+            ->where('exam_contact_id', $contact->id)
+            ->pluck('type')
+            ->all();
+
+        foreach (array_diff($types, $current) as $add) {
+            $contact->addType($add);
+        }
+        foreach (array_diff($current, $types) as $remove) {
+            $contact->removeType($remove);
+        }
     }
 
     /**
