@@ -124,7 +124,7 @@ class UnifyContacts extends Command
 
             // === CENTRE OWNER ===
             ['name' => 'Paul Sheridan',      'types' => ['teacher', 'trinity_admin'], 'email' => 'madmusic6@hotmail.com',
-             'secondary_emails' => ['musicexams@musicexams.help', 'paul.sheridan@trinitycollege.co.uk'],
+             'secondary_emails' => ['musicexams@musicexams.help', 'paul.sheridan@trinitycollege.co.uk', 'tclexamsliverpool@outlook.com'],
              'notes' => 'Centre 120 owner. Brass/piano/keyboard/guitar teacher. trinity_admin = LAR with co-controller status.'],
         ];
     }
@@ -550,22 +550,11 @@ class UnifyContacts extends Command
         $this->info('Step 9/9: Migrate subscribers → exam_contacts');
         $subs = Subscriber::whereNull('unsubscribed_at')->get();
         foreach ($subs as $sub) {
-            // Paul's test entries — anyone with email containing "paul" or "musicexams" or "test"
-            $isTest = preg_match('/(paul|musicexams|test|spider)/i', $sub->email)
-                && ! str_contains(mb_strtolower($sub->email), 'musiclearn');
-            if ($isTest) {
-                $this->line("  - drop test sub: {$sub->name} <{$sub->email}>");
-                if (! $this->dryRun) {
-                    $sub->unsubscribed_at = now();
-                    $sub->save();
-                }
-                continue;
-            }
-
-            // Match to existing contact by email (primary or secondary) or name
+            // Match to existing contact by email (primary or secondary) or name first.
+            // We do this BEFORE the test-drop check so that real emails that
+            // happen to contain "paul"/"musicexams" still merge correctly.
             $contact = ExamContact::whereRaw('LOWER(email) = ?', [mb_strtolower($sub->email)])->first();
             if (! $contact) {
-                // Check contact_emails for secondary matches
                 $row = ContactEmail::whereRaw('LOWER(email) = ?', [mb_strtolower($sub->email)])->first();
                 if ($row) {
                     $contact = ExamContact::find($row->exam_contact_id);
@@ -574,26 +563,15 @@ class UnifyContacts extends Command
             if (! $contact) {
                 $contact = ExamContact::whereRaw('LOWER(TRIM(name)) = ?', [mb_strtolower(trim($sub->name))])->first();
             }
-            // Last-ditch: match a single-word subscriber name (e.g. "Clare")
+            // Last-ditch: match single-word subscriber name (e.g. "Clare")
             // against the FIRST WORD of any canonical contact name.
             if (! $contact && ! str_contains(trim($sub->name), ' ')) {
                 $first = mb_strtolower(trim($sub->name));
                 $contact = ExamContact::whereRaw("LOWER(SPLIT_PART(name, ' ', 1)) = ?", [$first])->first();
             }
 
-            if (! $contact) {
-                $this->line("  + create from sub: {$sub->name} <{$sub->email}>");
-                if (! $this->dryRun) {
-                    $contact = ExamContact::create([
-                        'name' => $sub->name,
-                        'email' => $sub->email,
-                        'source' => $sub->source,
-                    ]);
-                }
-            }
-
-            // Add subscriber type
             if ($contact) {
+                // Found a canonical match — add subscriber type if not already present.
                 $exists = $this->dryRun ? false : DB::table('contact_types')
                     ->where('exam_contact_id', $contact->id)
                     ->where('type', 'subscriber')
@@ -609,6 +587,17 @@ class UnifyContacts extends Command
                         ]);
                     }
                 }
+                continue;
+            }
+
+            // No canonical match. Soft-delete (the only "real" subscriber not
+            // in the canonical map should be Clare, and she matches via her
+            // squashgirl73@ secondary email — anything still here is a Paul
+            // test entry or stray signup, safe to drop).
+            $this->line("  - drop unmatched sub: {$sub->name} <{$sub->email}>");
+            if (! $this->dryRun) {
+                $sub->unsubscribed_at = now();
+                $sub->save();
             }
         }
         $this->newLine();
