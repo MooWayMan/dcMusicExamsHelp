@@ -121,16 +121,16 @@ test('orders can be filtered by this quarter', function () {
     $admin = orderAdmin();
     $teacher = orderTeacher();
 
-    // This quarter
+    // This quarter — filter uses requested_start_date (the exam date), not created_at
     Order::factory()->create([
         'user_id' => $teacher->id,
-        'created_at' => now(),
+        'requested_start_date' => now(),
     ]);
 
     // Last year (outside this quarter)
     Order::factory()->create([
         'user_id' => $teacher->id,
-        'created_at' => now()->subYear(),
+        'requested_start_date' => now()->subYear(),
     ]);
 
     $this->actingAs($admin)
@@ -148,13 +148,13 @@ test('orders can be filtered by this year', function () {
     // This year
     Order::factory()->count(2)->create([
         'user_id' => $teacher->id,
-        'created_at' => now()->startOfYear()->addDays(10),
+        'requested_start_date' => now()->startOfYear()->addDays(10),
     ]);
 
     // Previous year
     Order::factory()->create([
         'user_id' => $teacher->id,
-        'created_at' => now()->subYear()->startOfYear(),
+        'requested_start_date' => now()->subYear()->startOfYear(),
     ]);
 
     $this->actingAs($admin)
@@ -172,13 +172,13 @@ test('orders can be filtered by last 12 months', function () {
     // 6 months ago (within last 12)
     Order::factory()->create([
         'user_id' => $teacher->id,
-        'created_at' => now()->subMonths(6),
+        'requested_start_date' => now()->subMonths(6),
     ]);
 
     // 18 months ago (outside last 12)
     Order::factory()->create([
         'user_id' => $teacher->id,
-        'created_at' => now()->subMonths(18),
+        'requested_start_date' => now()->subMonths(18),
     ]);
 
     $this->actingAs($admin)
@@ -197,14 +197,14 @@ test('summary stats respect time period filter', function () {
         'user_id' => $teacher->id,
         'commission_amount' => 100.00,
         'candidates' => 5,
-        'created_at' => now(),
+        'requested_start_date' => now(),
     ]);
 
     Order::factory()->create([
         'user_id' => $teacher->id,
         'commission_amount' => 200.00,
         'candidates' => 10,
-        'created_at' => now()->subYear(),
+        'requested_start_date' => now()->subYear(),
     ]);
 
     $this->actingAs($admin)

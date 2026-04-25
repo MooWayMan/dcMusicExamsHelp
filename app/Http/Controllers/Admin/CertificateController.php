@@ -5,8 +5,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ExamContact;
 use App\Models\ExamEntry;
-use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -101,11 +101,13 @@ class CertificateController extends Controller
             ->groupBy('teacher_name');
 
         $teachers = $quarterEntriesByTeacher->map(function ($entries, $teacherName) {
-            $user = User::where('role', 'teacher')->where('name', $teacherName)->first();
+            $contact = ExamContact::withType('teacher')
+                ->whereRaw('LOWER(name) = ?', [mb_strtolower($teacherName)])
+                ->first();
             $count = $entries->count();
 
             return [
-                'id'               => $user?->id,
+                'id'               => $contact?->id,
                 'name'             => $teacherName,
                 'candidates_count' => $count,
                 'tier'             => match (true) {
@@ -698,8 +700,11 @@ class CertificateController extends Controller
             $teacherDir = "{$outputDir}/{$safeTeacher}";
 
             // Look up school name for this teacher — certificates show school, not personal name
-            $teacherUser = User::with('schools')->where('name', $teacher)->where('role', 'teacher')->first();
-            $certDisplayName = $teacherUser?->schools->first()?->name ?? $teacher;
+            $teacherContact = ExamContact::withType('teacher')
+                ->with('schools')
+                ->whereRaw('LOWER(name) = ?', [mb_strtolower($teacher)])
+                ->first();
+            $certDisplayName = $teacherContact?->schools->first()?->name ?? $teacher;
 
             // Badges reset per-quarter — count only this quarter's non-cancelled entries.
             $quarterCandidates = $teacherEntries->count();

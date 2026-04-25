@@ -86,6 +86,12 @@ class MarkOrderPaid extends Command
             $this->warn('Dry-run: no rows updated.');
         }
 
+        // If we were asked to mark orders paid but found nothing matching at all,
+        // that's a failure — caller (Paul or a script) needs to know.
+        if ($ordersMarked === 0 && ! $dryRun) {
+            return self::FAILURE;
+        }
+
         return self::SUCCESS;
     }
 

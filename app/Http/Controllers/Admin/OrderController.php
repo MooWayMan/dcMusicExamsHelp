@@ -5,11 +5,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ExamContact;
 use App\Models\ExamEntry;
 use App\Models\Instrument;
 use App\Models\Order;
 use App\Models\School;
-use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -174,7 +174,7 @@ class OrderController extends Controller
     public function create(): Response
     {
         return Inertia::render('admin/Orders/Create', [
-            'teachers' => User::where('role', 'teacher')
+            'teachers' => ExamContact::withType('teacher')
                 ->orderBy('name')
                 ->get(['id', 'name', 'email']),
             'schools' => School::orderBy('name')->get(['id', 'name']),
@@ -326,7 +326,7 @@ class OrderController extends Controller
                     'notes' => $e->notes,
                 ])->values(),
             ],
-            'teachers' => User::where('role', 'teacher')
+            'teachers' => ExamContact::withType('teacher')
                 ->orderBy('name')
                 ->get(['id', 'name', 'email']),
             'schools' => School::orderBy('name')->get(['id', 'name']),

@@ -14,6 +14,7 @@ class ContactLog extends Model
 
     protected $fillable = [
         'user_id',
+        'exam_contact_id',
         'contact_type',
         'direction',
         'subject',
@@ -30,7 +31,18 @@ class ContactLog extends Model
     }
 
     /**
-     * The teacher this contact log relates to.
+     * The contact this log relates to (preferred — unified contacts model).
+     */
+    public function contact(): BelongsTo
+    {
+        return $this->belongsTo(ExamContact::class, 'exam_contact_id');
+    }
+
+    /**
+     * Legacy: the teacher (User) this log relates to.
+     * Will be removed once user_id column is dropped.
+     *
+     * @deprecated Use contact() instead.
      */
     public function teacher(): BelongsTo
     {

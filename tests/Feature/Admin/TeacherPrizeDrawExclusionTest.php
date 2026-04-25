@@ -42,10 +42,8 @@ function makeEntry(array $attrs): ExamEntry
 }
 
 test('teacher flagged as parent is excluded by teacher_contact_id', function () {
-    $parentContact = ExamContact::create([
-        'name' => 'Mrs Khoo',
-        'role' => 'parent',
-    ]);
+    $parentContact = ExamContact::create(['name' => 'Mrs Khoo']);
+    $parentContact->addType('parent');
 
     // Parent submitted 3 entries — would otherwise qualify (>=2 entries rule)
     makeEntry(['teacher_name' => 'Mrs Khoo', 'teacher_contact_id' => $parentContact->id]);
@@ -53,10 +51,8 @@ test('teacher flagged as parent is excluded by teacher_contact_id', function () 
     makeEntry(['teacher_name' => 'Mrs Khoo', 'teacher_contact_id' => $parentContact->id]);
 
     // A real teacher in the mix
-    $teacherContact = ExamContact::create([
-        'name' => 'Ms Keeling',
-        'role' => 'teacher',
-    ]);
+    $teacherContact = ExamContact::create(['name' => 'Ms Keeling']);
+    $teacherContact->addType('teacher');
     makeEntry(['teacher_name' => 'Ms Keeling', 'teacher_contact_id' => $teacherContact->id]);
     makeEntry(['teacher_name' => 'Ms Keeling', 'teacher_contact_id' => $teacherContact->id]);
 
@@ -75,12 +71,12 @@ test('teacher flagged as parent is excluded by teacher_contact_id', function () 
 
 test('teacher flagged as parent is excluded by name fallback when no teacher_contact_id linked', function () {
     // Legacy entries — teacher_contact_id not linked, match by name
-    ExamContact::create(['name' => 'Mrs Khoo', 'role' => 'parent']);
+    ExamContact::create(['name' => 'Mrs Khoo'])->addType('parent');
 
     makeEntry(['teacher_name' => 'Mrs Khoo']);
     makeEntry(['teacher_name' => 'Mrs Khoo']);
 
-    ExamContact::create(['name' => 'Ms Keeling', 'role' => 'teacher']);
+    ExamContact::create(['name' => 'Ms Keeling'])->addType('teacher');
     makeEntry(['teacher_name' => 'Ms Keeling']);
     makeEntry(['teacher_name' => 'Ms Keeling']);
 
@@ -97,12 +93,12 @@ test('teacher flagged as parent is excluded by name fallback when no teacher_con
 });
 
 test('name match for excluded contacts is case-insensitive', function () {
-    ExamContact::create(['name' => 'mrs khoo', 'role' => 'parent']);
+    ExamContact::create(['name' => 'mrs khoo'])->addType('parent');
 
     makeEntry(['teacher_name' => 'Mrs Khoo']);
     makeEntry(['teacher_name' => 'Mrs Khoo']);
 
-    ExamContact::create(['name' => 'Ms Keeling', 'role' => 'teacher']);
+    ExamContact::create(['name' => 'Ms Keeling'])->addType('teacher');
     makeEntry(['teacher_name' => 'Ms Keeling']);
     makeEntry(['teacher_name' => 'Ms Keeling']);
 

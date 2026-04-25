@@ -7,8 +7,6 @@ use App\Models\ExamContact;
 use App\Models\ExamEntry;
 use App\Models\Order;
 use App\Models\PrizeDraw;
-use App\Models\Teacher;
-use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -170,9 +168,9 @@ class QuarterEndController extends Controller
         ])->values()->toArray();
 
         // Teacher draw: get registered teachers from users table
-        $registeredTeacherNames = User::where('role', 'teacher')
+        $registeredTeacherNames = ExamContact::withType('teacher')
             ->get()
-            ->map(fn ($u) => strtolower(trim($u->name)))
+            ->map(fn ($c) => strtolower(trim($c->name)))
             ->toArray();
 
         // Build teacher eligibility from teacher_name (curated field, not order applicant)
@@ -389,18 +387,22 @@ class QuarterEndController extends Controller
         }
 
         // Teacher draw
-        $registeredTeacherNames = User::where('role', 'teacher')
+        $registeredTeacherNames = ExamContact::withType('teacher')
             ->get()
-            ->map(fn ($u) => strtolower(trim($u->name)))
+            ->map(fn ($c) => strtolower(trim($c->name)))
             ->toArray();
 
-        // Exclude contacts explicitly flagged as parent/self from the teacher draw.
-        // Match by teacher_contact_id if linked; fall back to case-insensitive name match.
-        $excludedContactIds = ExamContact::whereIn('role', ['parent', 'self'])
-            ->pluck('id')
-            ->all();
+        // Exclude contacts explicitly flagged as parent/candidate from the
+        // teacher draw. Multi-type contacts (e.g. Alexandra Bibby is
+        // teacher AND parent) stay eligible because they have the teacher
+        // type — we only exclude pure parents/candidates.
+        $pureNonTeachers = ExamContact::withType(['parent', 'candidate'])
+            ->get()
+            ->reject(fn ($c) => $c->isTeacher());
 
-        $excludedNamesLower = ExamContact::whereIn('role', ['parent', 'self'])
+        $excludedContactIds = $pureNonTeachers->pluck('id')->all();
+
+        $excludedNamesLower = $pureNonTeachers
             ->pluck('name')
             ->map(fn ($n) => strtolower(trim($n)))
             ->filter()

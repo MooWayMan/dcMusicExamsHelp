@@ -6,10 +6,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ContactLog;
+use App\Models\ExamContact;
 use App\Models\Order;
 use App\Models\School;
 use App\Models\Student;
-use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -18,8 +18,8 @@ class DashboardController extends Controller
 {
     public function index(): Response
     {
-        // Summary stats
-        $totalTeachers = User::where('role', 'teacher')->count();
+        // Summary stats — teachers now come from the unified contacts model.
+        $totalTeachers = ExamContact::withType('teacher')->count();
         $totalStudents = Student::count();
         $totalOrders = Order::count();
         $totalSchools = School::count();
@@ -52,15 +52,16 @@ class DashboardController extends Controller
                 'requested_start_date' => $order->requested_start_date?->format('d M Y'),
             ]);
 
-        // Recent contact logs
-        $recentContacts = ContactLog::with('teacher:id,name')
+        // Recent contact logs — prefer the new unified contact relation,
+        // fall back to the deprecated teacher relation while user_id still exists.
+        $recentContacts = ContactLog::with(['contact:id,name', 'teacher:id,name'])
             ->latest('contacted_at')
             ->take(5)
             ->get()
             ->map(fn ($log) => [
                 'id' => $log->id,
-                'teacher_id' => $log->teacher_id,
-                'teacher_name' => $log->teacher->name ?? 'Unknown',
+                'teacher_id' => $log->exam_contact_id ?? $log->user_id,
+                'teacher_name' => $log->contact->name ?? $log->teacher->name ?? 'Unknown',
                 'contact_type' => $log->contact_type,
                 'direction' => $log->direction,
                 'subject' => $log->subject,
@@ -68,7 +69,7 @@ class DashboardController extends Controller
             ]);
 
         // Teachers who haven't been contacted recently (over 30 days)
-        $staleTeachers = User::where('role', 'teacher')
+        $staleTeachers = ExamContact::withType('teacher')
             ->whereDoesntHave('contactLogs', function ($query) {
                 $query->where('contacted_at', '>=', now()->subDays(30));
             })

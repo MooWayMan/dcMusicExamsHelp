@@ -12,17 +12,24 @@ use Inertia\Inertia;
 
 class ContactController extends Controller
 {
+    /**
+     * @deprecated Use ExamContact::TYPES (the multi-type model). Kept here
+     * temporarily so older Vue pages that pass `role` still validate while
+     * the frontend is migrated to checkbox-based types.
+     */
     public const ROLES = ['teacher', 'parent', 'self', 'applicant', 'admin', 'unknown'];
 
 
     public function index(Request $request)
     {
         $search = $request->input('search');
-        $role = $request->input('role');
+        // Accept both `type` (new, multi-type pivot) and `role` (legacy single column)
+        // so existing bookmarks/links keep working through the transition.
+        $type = $request->input('type') ?? $request->input('role');
         $sort = $request->input('sort', 'name');
         $direction = $request->input('direction', 'asc');
 
-        $allowedSorts = ['name', 'email', 'role', 'created_at'];
+        $allowedSorts = ['name', 'email', 'created_at'];
         if (! in_array($sort, $allowedSorts)) {
             $sort = 'name';
         }
@@ -42,8 +49,8 @@ class ContactController extends Controller
             });
         }
 
-        if ($role) {
-            $query->where('role', $role);
+        if ($type) {
+            $query->withType($type);
         }
 
         $contacts = $query
@@ -53,23 +60,29 @@ class ContactController extends Controller
 
         // Fall back to related contact_emails table when the direct email column is empty,
         // so legacy-imported rows (e.g. Roxanne) show their email in the list view.
+        // `role` is kept for back-compat with the existing Vue pages — derived
+        // from the new types[] array using a fixed precedence.
         $contacts->through(fn ($contact) => [
             'id' => $contact->id,
             'name' => $contact->name,
             'email' => $contact->primary_email,
             'phone' => $contact->phone,
-            'role' => $contact->role,
+            'types' => $contact->types,
+            'role' => $this->primaryType($contact),
             'exam_entries_count' => $contact->exam_entries_count,
             'students_count' => $contact->students_count,
             'orders_count' => $contact->orders_count,
         ]);
 
-        // Summary stats (unfiltered totals)
+        // Summary stats — counted via the new pivot, not the single role column.
         $summary = [
             'total' => ExamContact::count(),
-            'teachers' => ExamContact::where('role', 'teacher')->count(),
-            'parents' => ExamContact::where('role', 'parent')->count(),
-            'applicants' => ExamContact::where('role', 'applicant')->count(),
+            'teachers' => ExamContact::withType('teacher')->count(),
+            'parents' => ExamContact::withType('parent')->count(),
+            'candidates' => ExamContact::withType('candidate')->count(),
+            'school_admins' => ExamContact::withType('school_admin')->count(),
+            'trinity_admins' => ExamContact::withType('trinity_admin')->count(),
+            'subscribers' => ExamContact::withType('subscriber')->count(),
         ];
 
         return Inertia::render('admin/Contacts/Index', [
@@ -77,11 +90,29 @@ class ContactController extends Controller
             'summary' => $summary,
             'filters' => [
                 'search' => $search,
-                'role' => $role,
+                'type' => $type,
+                // back-compat: existing Vue page reads filters.role
+                'role' => $type,
                 'sort' => $sort,
                 'direction' => $direction,
             ],
         ]);
+    }
+
+    /**
+     * Single-string "primary" type for a contact, derived from its types[] pivot.
+     * Precedence: teacher > school_admin > trinity_admin > parent > candidate > subscriber.
+     * Used for back-compat with Vue pages that show a single role chip.
+     */
+    private function primaryType(ExamContact $contact): string
+    {
+        foreach (['teacher', 'school_admin', 'trinity_admin', 'parent', 'candidate', 'subscriber'] as $candidate) {
+            if (in_array($candidate, $contact->types, true)) {
+                return $candidate;
+            }
+        }
+
+        return $contact->role ?? 'unknown';
     }
 
     public function show(ExamContact $contact)
