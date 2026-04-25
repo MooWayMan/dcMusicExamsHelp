@@ -105,13 +105,27 @@ class UnifyContacts extends Command
             ['name' => 'Claire Reed',        'types' => ['parent'], 'email' => null,
              'notes' => 'Parent — unrelated to Clare Keeling (different spelling).'],
 
-            // === CANDIDATES (self-applicants) ===
-            ['name' => 'Ravi Steff',         'types' => ['candidate'], 'email' => 'sofieroberts@yahoo.co.uk',
-             'notes' => 'Self-booked candidate — Trombone. Email unusual but confirmed correct by Paul 2026-04-25.'],
+            // === CANDIDATES (the candidates themselves; their submitter
+            // (parent/guardian) lives as a separate contact below) ===
+            ['name' => 'Ravi Steff',         'types' => ['candidate'], 'email' => null,
+             'notes' => 'Candidate — Trombone. Submitted by Sofie Roberts (separate contact). No own email known.'],
+            ['name' => 'Mark Shore',         'types' => ['candidate'], 'email' => null,
+             'notes' => 'Candidate. Submitted by Fiona Shore (separate contact). No own email known.'],
+            ['name' => 'Benjamin Shore',     'types' => ['candidate'], 'email' => null,
+             'notes' => 'Candidate. Sibling of Mark Shore. Submitted by Fiona Shore (parent).'],
             ['name' => 'Seth Barraclough',   'types' => ['candidate'], 'email' => 'sethbarraclough@gmail.com',
              'notes' => 'Self-booked candidate — Seth James Barraclough.'],
             ['name' => 'Solomon Wetherall',  'types' => ['candidate'], 'email' => 'solwetherall@gmail.com',
              'notes' => 'Self-booked candidate — Tenor Horn.'],
+
+            // === PARENTS WHO SUBMIT FOR A SEPARATE CANDIDATE ===
+            // Listed AFTER the matching candidate so Mark/Ravi get their
+            // mistakenly-assigned emails cleared first, before the
+            // submitter\'s canonical entry lays claim to that email.
+            ['name' => 'Fiona Shore',        'types' => ['parent'], 'email' => 'fionajshore@hotmail.co.uk',
+             'notes' => 'Parent of Mark + Benjamin Shore. Email per TOL (with J) — earlier DB import had typo "fionashore@" which gets cleared by the unify when Mark\'s record processes first.'],
+            ['name' => 'Sofie Roberts',      'types' => ['parent'], 'email' => 'sofieroberts@yahoo.co.uk',
+             'notes' => 'Parent of Ravi Steff. Email previously attached to Ravi by mistake.'],
 
             // === SCHOOL ADMINS ===
             ['name' => 'Daniel Rogers',      'types' => ['school_admin'], 'email' => 'rogers@pulsemusicliverpool.com',
@@ -212,8 +226,13 @@ class UnifyContacts extends Command
                     $changes[] = "name: '{$contact->name}' → '{$row['name']}'";
                     $contact->name = $row['name'];
                 }
-                if (! empty($row['email']) && $contact->email !== $row['email']) {
-                    $changes[] = "email: '{$contact->email}' → '{$row['email']}'";
+                // Email: canonical wins, including when canonical specifies null
+                // (which is how we clean up emails that were attached to the
+                // wrong human — e.g. Sofie's email that was on Ravi's record).
+                if (array_key_exists('email', $row) && $contact->email !== $row['email']) {
+                    $oldEmail = $contact->email ?? '(none)';
+                    $newEmail = $row['email'] ?? '(none)';
+                    $changes[] = "email: '{$oldEmail}' → '{$newEmail}'";
                     $contact->email = $row['email'];
                 }
                 if (! empty($row['notes']) && empty($contact->notes)) {
