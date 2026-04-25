@@ -6,7 +6,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Instrument extends Model
@@ -17,12 +16,6 @@ class Instrument extends Model
         'name',
         'family',
     ];
-
-    public function teachers(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class, 'teacher_instrument')
-            ->withTimestamps();
-    }
 
     public function students(): HasMany
     {

@@ -118,8 +118,8 @@ const { animClass } = usePageAnimation()
                             <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('city')">
                                 Location{{ sortIcon('city') }}
                             </th>
-                            <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('contact_name')">
-                                Contact{{ sortIcon('contact_name') }}
+                            <th class="px-4 py-3 font-semibold text-brand-text">
+                                Contact
                             </th>
                             <th class="cursor-pointer px-4 py-3 text-center font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('teachers_count')">
                                 Teachers{{ sortIcon('teachers_count') }}

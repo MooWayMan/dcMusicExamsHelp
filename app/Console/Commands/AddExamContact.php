@@ -44,21 +44,41 @@ class AddExamContact extends Command
             return Command::FAILURE;
         }
 
+        // Phase D-3: exam_contacts.role was dropped — map the legacy CLI
+        // labels onto the unified contact_types pivot. 'self' became
+        // 'candidate'; 'applicant' and 'admin' have no first-class type.
+        $typeMap = [
+            'teacher' => 'teacher',
+            'parent' => 'parent',
+            'self' => 'candidate',
+            // applicant + admin → no type added
+        ];
+        $type = $typeMap[$role] ?? null;
+
         // Create or update the ExamContact (idempotent).
-        $existing = ExamContact::where('name', $name)->where('role', $role)->first();
+        $existingQuery = ExamContact::where('name', $name);
+        if ($type !== null) {
+            $existingQuery->withType($type);
+        }
+        $existing = $existingQuery->first();
         if ($existing) {
             $this->warn("{$name} already exists as {$role} (id={$existing->id}).");
             if ($email !== null && $existing->email !== $email) {
                 $existing->update(['email' => $email]);
                 $this->info("Updated email to {$email}.");
             }
+            if ($type !== null) {
+                $existing->addType($type);
+            }
         } else {
             $contact = ExamContact::create([
                 'name' => $name,
-                'role' => $role,
                 'email' => $email,
                 'source' => 'manual',
             ]);
+            if ($type !== null) {
+                $contact->addType($type);
+            }
             $this->info("Created ExamContact id={$contact->id}: {$name} ({$role})" . ($email ? " — {$email}" : ' — no email'));
         }
 

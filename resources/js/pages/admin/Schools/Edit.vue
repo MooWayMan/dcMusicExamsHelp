@@ -10,9 +10,7 @@ interface SchoolData {
     address: string | null
     city: string | null
     postcode: string | null
-    phone: string | null
     email: string | null
-    contact_name: string | null
     notes: string | null
 }
 
@@ -23,9 +21,7 @@ const form = useForm({
     address: props.school.address ?? '',
     city: props.school.city ?? '',
     postcode: props.school.postcode ?? '',
-    phone: props.school.phone ?? '',
     email: props.school.email ?? '',
-    contact_name: props.school.contact_name ?? '',
     notes: props.school.notes ?? '',
 })
 
@@ -77,18 +73,8 @@ function goBack() { window.history.back() }
                             class="w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3 text-lg text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent" />
                     </div>
                     <div>
-                        <label class="mb-1 block text-lg font-medium text-brand-text">Phone</label>
-                        <input v-model="form.phone" type="text"
-                            class="w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3 text-lg text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent" />
-                    </div>
-                    <div>
                         <label class="mb-1 block text-lg font-medium text-brand-text">Email</label>
                         <input v-model="form.email" type="email"
-                            class="w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3 text-lg text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent" />
-                    </div>
-                    <div>
-                        <label class="mb-1 block text-lg font-medium text-brand-text">Contact Name</label>
-                        <input v-model="form.contact_name" type="text"
                             class="w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3 text-lg text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent" />
                     </div>
                 </div>

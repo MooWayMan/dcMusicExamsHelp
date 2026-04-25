@@ -102,7 +102,7 @@ class ContactController extends Controller
             }
         }
 
-        return $contact->role ?? 'unknown';
+        return 'unknown';
     }
 
     public function show(ExamContact $contact)

@@ -4,13 +4,11 @@
 
 namespace Database\Seeders;
 
-use App\Models\ContactLog;
 use App\Models\ExamEntry;
 use App\Models\Instrument;
 use App\Models\Order;
 use App\Models\School;
 use App\Models\Student;
-use App\Models\SubjectArea;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -22,20 +20,23 @@ class FakeDataSeeder extends Seeder
     public function run(): void
     {
         $instruments = Instrument::all();
-        $subjectAreas = SubjectArea::all();
+        // Subject-area variety previously came from the SubjectArea model;
+        // since the dropped teacher_subject_area pivot used a small fixed list,
+        // we hard-code those names here for fake-order generation.
+        $subjectAreaNames = ['Classical & Jazz', 'Rock & Pop'];
 
         // ──────────────────────────────────────────
         // Schools
         // ──────────────────────────────────────────
         $schoolsData = [
-            ['name' => 'Birkenhead School', 'address' => '58 Beresford Road', 'city' => 'Birkenhead', 'postcode' => 'CH43 2JD', 'phone' => '0151 652 4014', 'contact_name' => 'Mrs Thompson'],
-            ['name' => 'Calday Grange Grammar School', 'address' => 'Grammar School Lane', 'city' => 'West Kirby', 'postcode' => 'CH48 8GG', 'phone' => '0151 625 2727', 'contact_name' => 'Mr Davies'],
-            ['name' => 'Wirral Grammar School for Boys', 'address' => 'Cross Lane', 'city' => 'Bebington', 'postcode' => 'CH63 3AQ', 'phone' => '0151 644 0908', 'contact_name' => 'Ms Patel'],
-            ['name' => 'Upton Hall School', 'address' => 'Moreton Road', 'city' => 'Upton', 'postcode' => 'CH49 6LJ', 'phone' => '0151 677 4015', 'contact_name' => 'Mrs O\'Brien'],
-            ['name' => 'West Kirby Residential School', 'address' => 'Meols Drive', 'city' => 'West Kirby', 'postcode' => 'CH48 5DH', 'phone' => '0151 632 3201', 'contact_name' => 'Mr Singh'],
-            ['name' => 'St Anselm\'s College', 'address' => 'Manor Hill', 'city' => 'Birkenhead', 'postcode' => 'CH43 1UQ', 'phone' => '0151 652 1408', 'contact_name' => 'Mrs Williams'],
-            ['name' => 'Hilbre High School', 'address' => 'Frankby Road', 'city' => 'West Kirby', 'postcode' => 'CH48 6EQ', 'phone' => '0151 625 5566', 'contact_name' => 'Mr Hughes'],
-            ['name' => 'Prenton High School', 'address' => 'Christchurch Road', 'city' => 'Prenton', 'postcode' => 'CH43 5RE', 'phone' => '0151 608 6414', 'contact_name' => 'Mrs Clark'],
+            ['name' => 'Birkenhead School', 'address' => '58 Beresford Road', 'city' => 'Birkenhead', 'postcode' => 'CH43 2JD'],
+            ['name' => 'Calday Grange Grammar School', 'address' => 'Grammar School Lane', 'city' => 'West Kirby', 'postcode' => 'CH48 8GG'],
+            ['name' => 'Wirral Grammar School for Boys', 'address' => 'Cross Lane', 'city' => 'Bebington', 'postcode' => 'CH63 3AQ'],
+            ['name' => 'Upton Hall School', 'address' => 'Moreton Road', 'city' => 'Upton', 'postcode' => 'CH49 6LJ'],
+            ['name' => 'West Kirby Residential School', 'address' => 'Meols Drive', 'city' => 'West Kirby', 'postcode' => 'CH48 5DH'],
+            ['name' => 'St Anselm\'s College', 'address' => 'Manor Hill', 'city' => 'Birkenhead', 'postcode' => 'CH43 1UQ'],
+            ['name' => 'Hilbre High School', 'address' => 'Frankby Road', 'city' => 'West Kirby', 'postcode' => 'CH48 6EQ'],
+            ['name' => 'Prenton High School', 'address' => 'Christchurch Road', 'city' => 'Prenton', 'postcode' => 'CH43 5RE'],
         ];
 
         $schools = collect();
@@ -74,22 +75,19 @@ class FakeDataSeeder extends Seeder
             $teachers->push($teacher);
         }
 
-        // Assign teachers to schools (1-3 schools each)
+        // The legacy User-keyed pivots (teacher_school, teacher_instrument,
+        // teacher_subject_area) have been dropped — the unified ExamContact
+        // model owns those relations now (see FakeContactsSeeder for the
+        // contact-side fixtures). For raw fake-data dev we just keep
+        // teachers/students/orders without those joins.
+        // Pre-pick a random instrument set per teacher purely for the
+        // student/exam-entry generation below.
+        $teacherInstrumentIdsByTeacher = [];
         foreach ($teachers as $teacher) {
-            $teacherSchools = $schools->random(rand(1, 3));
-            $teacher->schools()->attach($teacherSchools->pluck('id'));
-        }
-
-        // Assign instruments to teachers (1-4 instruments each)
-        foreach ($teachers as $teacher) {
-            $teacherInstruments = $instruments->random(rand(1, 4));
-            $teacher->instruments()->attach($teacherInstruments->pluck('id'));
-        }
-
-        // Assign subject areas to teachers (1-2 subject areas each)
-        foreach ($teachers as $teacher) {
-            $teacherSubjectAreas = $subjectAreas->random(rand(1, 2));
-            $teacher->subjectAreas()->attach($teacherSubjectAreas->pluck('id'));
+            $teacherInstrumentIdsByTeacher[$teacher->id] = $instruments
+                ->random(rand(1, 4))
+                ->pluck('id')
+                ->toArray();
         }
 
         // ──────────────────────────────────────────
@@ -101,7 +99,7 @@ class FakeDataSeeder extends Seeder
         $allStudents = collect();
         foreach ($teachers as $teacher) {
             $numStudents = rand(3, 8);
-            $teacherInstrumentIds = $teacher->instruments->pluck('id')->toArray();
+            $teacherInstrumentIds = $teacherInstrumentIdsByTeacher[$teacher->id];
 
             for ($i = 0; $i < $numStudents; $i++) {
                 $student = Student::create([
@@ -124,9 +122,13 @@ class FakeDataSeeder extends Seeder
         $venues = ['Birkenhead Studio', 'West Kirby Centre', 'Liverpool Hub', 'Online (Digital)'];
         $orderNumber = 120000;
 
+        $schoolIds = $schools->pluck('id')->toArray();
+
         foreach ($teachers as $teacher) {
             $numOrders = rand(1, 4);
-            $teacherSchoolIds = $teacher->schools->pluck('id')->toArray();
+            // No more teacher_school pivot — just sprinkle each teacher's
+            // orders across the available schools at random.
+            $teacherSchoolIds = $schoolIds;
             $teacherStudents = $allStudents->where('user_id', $teacher->id);
 
             for ($o = 0; $o < $numOrders; $o++) {
@@ -135,7 +137,7 @@ class FakeDataSeeder extends Seeder
                 $deliveryMethod = $isDigital ? 'Digital' : 'Default';
                 $commissionRate = $isDigital ? 20.00 : 28.00;
                 $candidates = rand(2, 8);
-                $subjectArea = $subjectAreas->random()->name;
+                $subjectArea = $subjectAreaNames[array_rand($subjectAreaNames)];
                 $status = $orderStatuses[array_rand($orderStatuses)];
 
                 // Estimate commission: roughly £30-60 per candidate
@@ -174,32 +176,8 @@ class FakeDataSeeder extends Seeder
             }
         }
 
-        // ──────────────────────────────────────────
-        // Contact Logs
-        // ──────────────────────────────────────────
-        $contactSubjects = [
-            'email' => ['Welcome email sent', 'Follow-up on exam registration', 'Commission payment query', 'Digital exam setup help', 'Venue booking confirmation', 'Exam results discussion'],
-            'phone' => ['Introductory call', 'Exam deadline reminder', 'Discussed switching to digital', 'Commission rate query', 'Venue availability check'],
-            'face_to_face' => ['Met at Trinity event', 'School visit', 'Studio meeting', 'Exam day chat', 'Training session'],
-        ];
-
-        foreach ($teachers as $teacher) {
-            $numLogs = rand(1, 5);
-
-            for ($l = 0; $l < $numLogs; $l++) {
-                $contactType = ['email', 'phone', 'face_to_face'][array_rand(['email', 'phone', 'face_to_face'])];
-                $subjects = $contactSubjects[$contactType];
-                $subject = $subjects[array_rand($subjects)];
-
-                ContactLog::create([
-                    'user_id' => $teacher->id,
-                    'contact_type' => $contactType,
-                    'direction' => ['outbound', 'inbound'][array_rand(['outbound', 'inbound'])],
-                    'subject' => $subject,
-                    'summary' => "Contacted {$teacher->name} regarding: {$subject}.",
-                    'contacted_at' => now()->subDays(rand(1, 200))->format('Y-m-d'),
-                ]);
-            }
-        }
+        // Contact logs intentionally omitted in this seeder — they now live
+        // on the unified contacts model (exam_contact_id), and FakeContactsSeeder
+        // owns the contact-side fixtures.
     }
 }

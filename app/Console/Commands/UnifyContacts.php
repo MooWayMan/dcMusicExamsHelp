@@ -7,7 +7,6 @@ use App\Models\ExamContact;
 use App\Models\ExamEntry;
 use App\Models\Student;
 use App\Models\Subscriber;
-use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -399,6 +398,12 @@ class UnifyContacts extends Command
     private function backfillSchools(array $byName): void
     {
         $this->info('Step 4/9: Migrate teacher_school → contact_school');
+        // Phase D-3 dropped teacher_school. Skip silently on later runs.
+        if (! \Schema::hasTable('teacher_school')) {
+            $this->line('  (skipped — teacher_school has been dropped)');
+            $this->newLine();
+            return;
+        }
         $rows = DB::table('teacher_school')->get();
         $copied = 0;
         foreach ($rows as $r) {
@@ -434,6 +439,12 @@ class UnifyContacts extends Command
     private function backfillInstruments(array $byName): void
     {
         $this->info('Step 5/9: Migrate teacher_instrument → contact_instrument');
+        // Phase D-3 dropped teacher_instrument. Skip silently on later runs.
+        if (! \Schema::hasTable('teacher_instrument')) {
+            $this->line('  (skipped — teacher_instrument has been dropped)');
+            $this->newLine();
+            return;
+        }
         $rows = DB::table('teacher_instrument')->get();
         $copied = 0;
         foreach ($rows as $r) {
@@ -469,6 +480,15 @@ class UnifyContacts extends Command
     private function backfillContactLogs(array $byName): void
     {
         $this->info('Step 6/9: Repoint contact_logs.user_id → exam_contact_id');
+
+        // Phase D-3 dropped contact_logs.user_id. If the column no longer
+        // exists this step is a historical no-op; bail early.
+        if (! \Schema::hasColumn('contact_logs', 'user_id')) {
+            $this->line('  (skipped — contact_logs.user_id has been dropped)');
+            $this->newLine();
+            return;
+        }
+
         $rows = DB::table('contact_logs')->whereNull('exam_contact_id')->get();
         $copied = 0;
         foreach ($rows as $r) {

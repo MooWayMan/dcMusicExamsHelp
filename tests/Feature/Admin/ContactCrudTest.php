@@ -20,7 +20,6 @@ function makeContact(array $overrides = []): ExamContact
         'name' => 'Seth Barraclough',
         'email' => 'seth@example.com',
         'phone' => null,
-        'role' => 'parent',
         'source' => 'trinity_csv',
         'notes' => null,
     ], $overrides));
@@ -121,9 +120,9 @@ test('index lists email from contact_emails relation when direct column is empty
     $contact = ExamContact::create([
         'name' => 'Roxanne Legacy',
         'email' => null,
-        'role' => 'teacher',
         'source' => 'legacy_db',
     ]);
+    $contact->addType('teacher');
 
     ContactEmail::create([
         'exam_contact_id' => $contact->id,

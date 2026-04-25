@@ -59,7 +59,7 @@ class LinkExamEntryTeachers extends Command
             }
 
             $teacherCandidates = $candidates
-                ->filter(fn (ExamContact $contact) => $contact->role === 'teacher')
+                ->filter(fn (ExamContact $contact) => $contact->isTeacher())
                 ->values();
 
             $chosen = null;

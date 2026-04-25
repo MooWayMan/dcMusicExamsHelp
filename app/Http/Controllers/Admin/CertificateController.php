@@ -204,7 +204,7 @@ class CertificateController extends Controller
             'format'       => 'nullable|in:png,pdf',
         ]);
 
-        $teacher = User::with('schools')->findOrFail($validated['teacher_id']);
+        $teacher = User::findOrFail($validated['teacher_id']);
         $templateKey = $validated['template'];
         $format = $validated['format'] ?? 'pdf';
 
@@ -212,8 +212,14 @@ class CertificateController extends Controller
             return back()->withErrors(['template' => 'Invalid template selected.']);
         }
 
-        // Use custom name if provided, otherwise school name, falling back to teacher name
-        $schoolName = $teacher->schools->first()?->name;
+        // Use custom name if provided, otherwise look up the teacher's school
+        // via the unified ExamContact → contact_school pivot. Falls back to the
+        // teacher's display name if no school is linked.
+        $schoolName = \App\Models\ExamContact::query()
+            ->where('user_id', $teacher->id)
+            ->with('schools:id,name')
+            ->first()
+            ?->schools->first()?->name;
         $name = $validated['custom_name'] ?? $schoolName ?? $teacher->name;
         $quarter = $validated['quarter'] ?? $this->getQuarterLabel(now());
 

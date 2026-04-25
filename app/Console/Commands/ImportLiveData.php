@@ -31,16 +31,10 @@ class ImportLiveData extends Command
         $this->newLine();
 
         // Show summary
-        $tables = ['instruments', 'subject_areas', 'schools', 'users', 'students', 'orders', 'exam_entries', 'contact_logs'];
+        $tables = ['instruments', 'schools', 'users', 'students', 'orders', 'exam_entries', 'contact_logs'];
         foreach ($tables as $table) {
             $count = count($data[$table] ?? []);
             $this->info("  {$table}: {$count} records");
-        }
-
-        $pivots = ['school_user', 'instrument_user', 'subject_area_user'];
-        foreach ($pivots as $pivot) {
-            $count = count($data[$pivot] ?? []);
-            $this->info("  {$pivot}: {$count} records");
         }
 
         $this->newLine();
@@ -57,8 +51,7 @@ class ImportLiveData extends Command
             $this->info('Clearing existing data...');
             $truncateOrder = [
                 'contact_logs', 'exam_entries', 'students', 'orders',
-                'school_user', 'instrument_user', 'subject_area_user',
-                'schools', 'users', 'instruments', 'subject_areas',
+                'schools', 'users', 'instruments',
             ];
 
             foreach ($truncateOrder as $table) {
@@ -70,7 +63,6 @@ class ImportLiveData extends Command
             // Insert in dependency order
             $insertOrder = [
                 'instruments' => 'instruments',
-                'subject_areas' => 'subject_areas',
                 'schools' => 'schools',
                 'users' => 'users',
                 'students' => 'students',
@@ -99,28 +91,9 @@ class ImportLiveData extends Command
                 }
             }
 
-            // Insert pivot tables
-            foreach ($pivots as $pivot) {
-                $records = $data[$pivot] ?? [];
-                if (empty($records)) {
-                    continue;
-                }
-
-                $this->info("Importing {$pivot}... (" . count($records) . " records)");
-
-                // Convert stdClass to array if needed
-                $records = array_map(function ($r) {
-                    return (array) $r;
-                }, $records);
-
-                foreach (array_chunk($records, 100) as $chunk) {
-                    DB::table($pivot)->insert($chunk);
-                }
-            }
-
             // Reset auto-increment sequences (PostgreSQL)
             $this->info('Resetting sequences...');
-            $sequenceTables = ['instruments', 'subject_areas', 'schools', 'users', 'students', 'orders', 'exam_entries', 'contact_logs'];
+            $sequenceTables = ['instruments', 'schools', 'users', 'students', 'orders', 'exam_entries', 'contact_logs'];
             foreach ($sequenceTables as $table) {
                 $max = DB::table($table)->max('id');
                 if ($max) {

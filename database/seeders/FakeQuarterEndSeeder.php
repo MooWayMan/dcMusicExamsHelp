@@ -190,10 +190,15 @@ class FakeQuarterEndSeeder extends Seeder
         ];
 
         foreach ($parentBookings as $p) {
-            ExamContact::updateOrCreate(
-                ['name' => $p['name'], 'role' => $p['role']],
+            // Phase D-3: exam_contacts.role gone — types now live on the
+            // contact_types pivot. 'self' maps to 'candidate' on the unified
+            // model; 'parent' stays as is.
+            $type = $p['role'] === 'self' ? 'candidate' : $p['role'];
+            $contact = ExamContact::updateOrCreate(
+                ['name' => $p['name']],
                 ['email' => $p['email']]
             );
+            $contact->addType($type);
 
             $instrument = Instrument::where('name', $p['instrument'])->first();
             if (! $instrument) {

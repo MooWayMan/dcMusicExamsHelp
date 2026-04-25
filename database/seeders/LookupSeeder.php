@@ -5,25 +5,15 @@
 namespace Database\Seeders;
 
 use App\Models\Instrument;
-use App\Models\SubjectArea;
 use Illuminate\Database\Seeder;
 
 class LookupSeeder extends Seeder
 {
     /**
-     * Seed the lookup tables with standard Trinity instruments and subject areas.
+     * Seed the lookup tables with standard Trinity instruments.
      */
     public function run(): void
     {
-        // ──────────────────────────────────────────
-        // Subject Areas
-        // ──────────────────────────────────────────
-        $subjectAreas = ['Music', 'Rock and Pop', 'Jazz'];
-
-        foreach ($subjectAreas as $name) {
-            SubjectArea::firstOrCreate(['name' => $name]);
-        }
-
         // ──────────────────────────────────────────
         // Instruments grouped by family
         // ──────────────────────────────────────────

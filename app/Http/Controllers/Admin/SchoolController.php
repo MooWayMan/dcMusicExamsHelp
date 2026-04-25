@@ -15,22 +15,31 @@ class SchoolController extends Controller
 {
     public function index(Request $request): Response
     {
+        // Count contacts who are flagged as teachers in the unified contacts
+        // model (was: legacy `teachers` BelongsToMany via teacher_school).
         $query = School::with(['contacts:id,name,phone'])
-            ->withCount(['teachers', 'orders']);
+            ->withCount([
+                'contacts as teachers_count' => fn ($q) => $q->whereExists(function ($s) {
+                    $s->select(\DB::raw(1))
+                        ->from('contact_types')
+                        ->whereColumn('contact_types.exam_contact_id', 'exam_contacts.id')
+                        ->where('type', 'teacher');
+                }),
+                'orders',
+            ]);
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'ilike', "%{$search}%")
                   ->orWhere('city', 'ilike', "%{$search}%")
                   ->orWhere('postcode', 'ilike', "%{$search}%")
-                  ->orWhere('contact_name', 'ilike', "%{$search}%")
                   ->orWhereHas('contacts', fn ($cq) => $cq->where('name', 'ilike', "%{$search}%"));
             });
         }
 
         $sortBy = $request->input('sort', 'name');
         $sortDir = $request->input('direction', 'asc');
-        $allowedSorts = ['name', 'city', 'contact_name', 'teachers_count', 'orders_count', 'created_at'];
+        $allowedSorts = ['name', 'city', 'teachers_count', 'orders_count', 'created_at'];
 
         if (in_array($sortBy, $allowedSorts)) {
             $query->orderBy($sortBy, $sortDir);
@@ -51,9 +60,9 @@ class SchoolController extends Controller
                 'address' => $school->address,
                 'city' => $school->city,
                 'postcode' => $school->postcode,
-                'phone' => $primaryContact?->phone ?? $school->phone,
+                'phone' => $primaryContact?->phone,
                 'email' => $school->email,
-                'contact_name' => $primaryContact?->name ?? $school->contact_name,
+                'contact_name' => $primaryContact?->name,
                 'contact_id' => $primaryContact?->id,
                 'contacts' => $school->contacts->map(fn ($c) => [
                     'id' => $c->id,
@@ -87,9 +96,7 @@ class SchoolController extends Controller
             'address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
             'postcode' => 'nullable|string|max:20',
-            'phone' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:255',
-            'contact_name' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
         ]);
 
@@ -114,9 +121,9 @@ class SchoolController extends Controller
             'address' => $school->address,
             'city' => $school->city,
             'postcode' => $school->postcode,
-            'phone' => $primary?->phone ?? $school->phone,
+            'phone' => $primary?->phone,
             'email' => $school->email,
-            'contact_name' => $primary?->name ?? $school->contact_name,
+            'contact_name' => $primary?->name,
             'contact_id' => $primary?->id,
             'notes' => $school->notes,
             'created_at' => $school->created_at->format('d M Y'),
@@ -157,9 +164,7 @@ class SchoolController extends Controller
                 'address' => $school->address,
                 'city' => $school->city,
                 'postcode' => $school->postcode,
-                'phone' => $school->phone,
                 'email' => $school->email,
-                'contact_name' => $school->contact_name,
                 'notes' => $school->notes,
             ],
         ]);
@@ -172,9 +177,7 @@ class SchoolController extends Controller
             'address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
             'postcode' => 'nullable|string|max:20',
-            'phone' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:255',
-            'contact_name' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
         ]);
 

@@ -114,12 +114,4 @@ class ExamEntry extends Model
     {
         return $this->belongsTo(ExamContact::class, 'teacher_contact_id');
     }
-
-    /**
-     * @deprecated Use teacherContact() instead. Kept for backward compatibility.
-     */
-    public function teacher(): BelongsTo
-    {
-        return $this->belongsTo(Teacher::class);
-    }
 }

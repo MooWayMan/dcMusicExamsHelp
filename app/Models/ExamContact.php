@@ -18,7 +18,6 @@ class ExamContact extends Model
         'name',
         'email',
         'phone',
-        'role',
         'source',
         'notes',
         'user_id',

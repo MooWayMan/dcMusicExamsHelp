@@ -79,10 +79,12 @@ class ImportLegacyContacts extends Command
                     ->first();
             }
 
+            // Phase D-3: exam_contacts.role was dropped. 'applicant' has no
+            // first-class type — these contacts are created untyped and
+            // promoted later (e.g. to 'parent' / 'candidate') by review.
             $payload = [
                 'name' => $name,
                 'email' => $email,
-                'role' => 'applicant',
                 'source' => 'legacy_db',
             ];
 
@@ -109,7 +111,6 @@ class ImportLegacyContacts extends Command
                 $existing->fill([
                     'name' => $existing->name ?: $payload['name'],
                     'email' => $existing->email ?: $payload['email'],
-                    'role' => $existing->role ?: $payload['role'],
                     'source' => $existing->source ?: $payload['source'],
                 ]);
 
@@ -181,7 +182,6 @@ class ImportLegacyContacts extends Command
 
             if ($existing) {
                 $existing->fill([
-                    'role' => $existing->role ?: 'teacher',
                     'source' => $existing->source ?: 'legacy_db',
                 ]);
 
@@ -191,12 +191,14 @@ class ImportLegacyContacts extends Command
                 } else {
                     $skipped++;
                 }
+                // Ensure the contact is flagged as a teacher in the unified pivot.
+                $existing->addType('teacher');
             } else {
-                ExamContact::create([
+                $newTeacher = ExamContact::create([
                     'name' => $name,
-                    'role' => 'teacher',
                     'source' => 'legacy_db',
                 ]);
+                $newTeacher->addType('teacher');
                 $created++;
             }
         }

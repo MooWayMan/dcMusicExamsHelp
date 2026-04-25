@@ -49,20 +49,17 @@ it('creates applicant and teacher contacts from the legacy source', function () 
     $this->assertDatabaseHas('exam_contacts', [
         'name' => 'Clare Keeling',
         'email' => 'clare@example.com',
-        'role' => 'applicant',
     ]);
 
-    $this->assertDatabaseHas('exam_contacts', [
-        'name' => 'Daniel Rogers',
-        'role' => 'teacher',
-    ]);
+    $daniel = ExamContact::where('name', 'Daniel Rogers')->first();
+    expect($daniel)->not->toBeNull();
+    expect($daniel->isTeacher())->toBeTrue();
 });
 
 it('does not duplicate an existing contact matched by email', function () {
     ExamContact::create([
         'name' => 'Clare Keeling',
         'email' => 'clare@example.com',
-        'role' => 'applicant',
     ]);
 
     DB::connection('source_pgsql')->table('orders')->insert([

@@ -19,17 +19,9 @@ class School extends Model
         'address',
         'city',
         'postcode',
-        'phone',
         'email',
-        'contact_name',
         'notes',
     ];
-
-    public function teachers(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class, 'teacher_school')
-            ->withTimestamps();
-    }
 
     /**
      * Unified-model contacts linked to this school (teachers, school_admins, etc.)

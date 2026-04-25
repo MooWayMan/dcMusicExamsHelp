@@ -157,31 +157,14 @@ class SeedProductionData extends Command
             ]);
         }
 
-        // Teacher ↔ School links
-        $links = [
-            ['user_id' => 24, 'school_id' => 11], // Roxanne → School of Rox
-            ['user_id' => 19, 'school_id' => 13], // Clare → Learn Music
-            ['user_id' => 23, 'school_id' => 10], // Daniel → Pulse Music
-            ['user_id' => 20, 'school_id' => 9],  // Jenny → Hillside High
-            ['user_id' => 26, 'school_id' => 12], // Tracey → Wirral School of Music
-            ['user_id' => 28, 'school_id' => 12], // Stephen → Wirral School of Music
-            ['user_id' => 25, 'school_id' => 12], // Megan T → Wirral School of Music
-            ['user_id' => 27, 'school_id' => 12], // Christopher → Wirral School of Music
-        ];
-
-        foreach ($links as $link) {
-            DB::table('teacher_school')->insert([
-                'user_id' => $link['user_id'],
-                'school_id' => $link['school_id'],
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
+        // Note: the legacy `teacher_school` pivot was dropped in Phase D-3.
+        // Teacher↔school relationships now live on the unified contacts model
+        // via `contact_school` (ExamContact ↔ School). Re-seed those via the
+        // contacts:unify command after this seeder if you need them locally.
 
         DB::statement("SELECT setval('schools_id_seq', (SELECT MAX(id) FROM schools))");
-        DB::statement("SELECT setval('teacher_school_id_seq', (SELECT MAX(id) FROM teacher_school))");
 
-        $this->info(count($schools) . ' schools + ' . count($links) . ' teacher links created.');
+        $this->info(count($schools) . ' schools created.');
     }
 
     private function seedStudents(): void

@@ -9,7 +9,6 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -58,24 +57,6 @@ class User extends Authenticatable
     // Relationships
     // ──────────────────────────────────────────
 
-    public function schools(): BelongsToMany
-    {
-        return $this->belongsToMany(School::class, 'teacher_school')
-            ->withTimestamps();
-    }
-
-    public function instruments(): BelongsToMany
-    {
-        return $this->belongsToMany(Instrument::class, 'teacher_instrument')
-            ->withTimestamps();
-    }
-
-    public function subjectAreas(): BelongsToMany
-    {
-        return $this->belongsToMany(SubjectArea::class, 'teacher_subject_area')
-            ->withTimestamps();
-    }
-
     public function students(): HasMany
     {
         return $this->hasMany(Student::class);
@@ -84,10 +65,5 @@ class User extends Authenticatable
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
-    }
-
-    public function contactLogs(): HasMany
-    {
-        return $this->hasMany(ContactLog::class);
     }
 }

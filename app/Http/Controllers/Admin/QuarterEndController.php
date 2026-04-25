@@ -52,8 +52,9 @@ class QuarterEndController extends Controller
         // the same Copy Email + Open Gmail workflow as teachers — they just
         // get a parent-variant template. Build a lookup so we can tag each row
         // with is_parent_booking and fetch the correct email from ExamContact.
+        // Post Phase D-3: 'self' was folded into 'candidate' on the unified model.
         $parentOrSelfLookup = ExamContact::with('emails')
-            ->whereIn('role', ['parent', 'self'])
+            ->withType(['parent', 'candidate'])
             ->get()
             ->keyBy(fn ($c) => strtolower(trim($c->name)));
 
@@ -69,7 +70,15 @@ class QuarterEndController extends Controller
             // Is this row a parent/self booking?
             $parentContact = $parentOrSelfLookup->get(strtolower(trim($teacherName)));
             $isParentBooking = $parentContact !== null;
-            $bookingRole = $parentContact?->role; // 'parent' | 'self' | null
+            // Map back to the legacy two-string label the rest of the page expects.
+            // 'self' is preserved as a label even though candidates are the new
+            // umbrella type — Vue templates branch on 'parent' vs 'self'.
+            $bookingRole = match (true) {
+                $parentContact === null => null,
+                $parentContact->isParent() => 'parent',
+                $parentContact->isCandidate() => 'self',
+                default => null,
+            };
 
             // Get email — different strategy for parents vs teachers.
             $firstOrder = $entries->first()?->order;

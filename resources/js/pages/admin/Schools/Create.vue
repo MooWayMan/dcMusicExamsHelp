@@ -9,9 +9,7 @@ const form = useForm({
     address: '',
     city: '',
     postcode: '',
-    phone: '',
     email: '',
-    contact_name: '',
     notes: '',
 })
 
@@ -67,22 +65,10 @@ function goBack() { window.history.back() }
                             placeholder="e.g. CH43 2JD" />
                     </div>
                     <div>
-                        <label class="mb-1 block text-lg font-medium text-brand-text">Phone</label>
-                        <input v-model="form.phone" type="text"
-                            class="w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3 text-lg text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
-                            placeholder="Phone number" />
-                    </div>
-                    <div>
                         <label class="mb-1 block text-lg font-medium text-brand-text">Email</label>
                         <input v-model="form.email" type="email"
                             class="w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3 text-lg text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
                             placeholder="School email" />
-                    </div>
-                    <div>
-                        <label class="mb-1 block text-lg font-medium text-brand-text">Contact Name</label>
-                        <input v-model="form.contact_name" type="text"
-                            class="w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3 text-lg text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
-                            placeholder="e.g. Mrs Thompson" />
                     </div>
                 </div>
                 <div class="mt-4">

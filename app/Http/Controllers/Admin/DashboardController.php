@@ -55,16 +55,15 @@ class DashboardController extends Controller
                 'requested_start_date' => $order->requested_start_date?->format('d M Y'),
             ]);
 
-        // Recent contact logs — prefer the new unified contact relation,
-        // fall back to the deprecated teacher relation while user_id still exists.
-        $recentContacts = ContactLog::with(['contact:id,name', 'teacher:id,name'])
+        // Recent contact logs — unified contacts model only.
+        $recentContacts = ContactLog::with(['contact:id,name'])
             ->latest('contacted_at')
             ->take(5)
             ->get()
             ->map(fn ($log) => [
                 'id' => $log->id,
                 'teacher_contact_id' => $log->exam_contact_id,
-                'teacher_name' => $log->contact?->name ?? $log->teacher?->name ?? 'Unknown',
+                'teacher_name' => $log->contact?->name ?? 'Unknown',
                 'contact_type' => $log->contact_type,
                 'direction' => $log->direction,
                 'subject' => $log->subject,
