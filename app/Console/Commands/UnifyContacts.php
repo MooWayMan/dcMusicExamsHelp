@@ -548,26 +548,62 @@ class UnifyContacts extends Command
     private function migrateSubscribers(array $byName): void
     {
         $this->info('Step 9/9: Migrate subscribers → exam_contacts');
+
+        // Build an in-memory email→canonical-contact index from the canonical map.
+        // This works in dry-run mode too (where Step 1's secondary_emails INSERTs
+        // are rolled back, so DB lookups would miss).
+        $emailIndex = [];
+        foreach ($this->getCanonicalContacts() as $row) {
+            $key = mb_strtolower(trim($row['name']));
+            $contact = $byName[$key] ?? null;
+            if (! $contact) {
+                continue;
+            }
+            if (! empty($row['email'])) {
+                $emailIndex[mb_strtolower($row['email'])] = $contact;
+            }
+            foreach ($row['secondary_emails'] ?? [] as $email) {
+                $emailIndex[mb_strtolower($email)] = $contact;
+            }
+        }
+
         $subs = Subscriber::whereNull('unsubscribed_at')->get();
         foreach ($subs as $sub) {
-            // Match to existing contact by email (primary or secondary) or name first.
-            // We do this BEFORE the test-drop check so that real emails that
-            // happen to contain "paul"/"musicexams" still merge correctly.
-            $contact = ExamContact::whereRaw('LOWER(email) = ?', [mb_strtolower($sub->email)])->first();
+            $emailLower = mb_strtolower($sub->email);
+
+            // 1. Canonical email index (primary OR secondary, in-memory).
+            $contact = $emailIndex[$emailLower] ?? null;
+
+            // 2. Fall back to live DB lookup on exam_contacts.email
             if (! $contact) {
-                $row = ContactEmail::whereRaw('LOWER(email) = ?', [mb_strtolower($sub->email)])->first();
+                $contact = ExamContact::whereRaw('LOWER(email) = ?', [$emailLower])->first();
+            }
+            // 3. ContactEmail rows (for any non-canonical secondary emails)
+            if (! $contact) {
+                $row = ContactEmail::whereRaw('LOWER(email) = ?', [$emailLower])->first();
                 if ($row) {
                     $contact = ExamContact::find($row->exam_contact_id);
                 }
             }
+            // 4. Exact name match
             if (! $contact) {
                 $contact = ExamContact::whereRaw('LOWER(TRIM(name)) = ?', [mb_strtolower(trim($sub->name))])->first();
             }
-            // Last-ditch: match single-word subscriber name (e.g. "Clare")
+            // 5. Last-ditch: single-word subscriber name (e.g. "Clare")
             // against the FIRST WORD of any canonical contact name.
+            // Check the in-memory canonical map first (for dry-run accuracy
+            // when the canonical contact would be newly created), then DB.
             if (! $contact && ! str_contains(trim($sub->name), ' ')) {
                 $first = mb_strtolower(trim($sub->name));
-                $contact = ExamContact::whereRaw("LOWER(SPLIT_PART(name, ' ', 1)) = ?", [$first])->first();
+                foreach ($byName as $canonicalKey => $canonicalContact) {
+                    if (str_starts_with($canonicalKey, $first . ' ')) {
+                        $contact = $canonicalContact;
+                        break;
+                    }
+                }
+                if (! $contact) {
+                    $contact = ExamContact::whereRaw("LOWER(SPLIT_PART(name, ' ', 1)) = ?", [$first])->first();
+                }
             }
 
             if ($contact) {
