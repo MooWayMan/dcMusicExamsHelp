@@ -131,6 +131,8 @@ class UnifyContacts extends Command
             ['name' => 'Daniel Rogers',      'types' => ['school_admin'], 'email' => 'rogers@pulsemusicliverpool.com',
              'secondary_emails' => ['exams@pulsemusicliverpool.com'],
              'notes' => 'Pulse Music School — admin/coordinator. KEY CLIENT relationship. Not a teacher.'],
+            ['name' => 'Peter Rainsford',    'types' => ['school_admin'], 'email' => null,
+             'notes' => 'Tafelmusik — owner. School enters candidates AND is the Wirral venue. Phone 0151 652 3440.'],
 
             // === TRINITY ADMINS ===
             ['name' => 'Madeleine Gordon',   'types' => ['trinity_admin'], 'email' => 'Madeleine.Gordon@trinitycollege.com',

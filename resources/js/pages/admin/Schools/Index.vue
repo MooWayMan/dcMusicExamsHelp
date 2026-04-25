@@ -6,6 +6,12 @@ import { Plus, Search, Eye, Pencil, Trash2, MapPin, Phone } from 'lucide-vue-nex
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import PageHeader from '@/components/reusables/PageHeader.vue'
 
+interface SchoolContact {
+    id: number
+    name: string
+    phone: string | null
+}
+
 interface School {
     id: number
     name: string
@@ -15,6 +21,8 @@ interface School {
     phone: string | null
     email: string | null
     contact_name: string | null
+    contact_id: number | null
+    contacts: SchoolContact[]
     teachers_count: number
     orders_count: number
 }
@@ -136,7 +144,13 @@ const { animClass } = usePageAnimation()
                                 </div>
                             </td>
                             <td class="px-4 py-3">
-                                <p class="text-base text-brand-text">{{ school.contact_name || '—' }}</p>
+                                <Link
+                                    v-if="school.contact_id"
+                                    :href="`/admin/contacts/${school.contact_id}`"
+                                    class="text-base font-medium text-brand-accent hover:underline"
+                                    @click.stop
+                                >{{ school.contact_name }}</Link>
+                                <p v-else class="text-base text-brand-text">{{ school.contact_name || '—' }}</p>
                                 <p v-if="school.phone" class="text-sm text-brand-text-soft">{{ school.phone }}</p>
                             </td>
                             <td class="px-4 py-3 text-center text-base text-brand-text">{{ school.teachers_count }}</td>

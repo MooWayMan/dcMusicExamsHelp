@@ -31,6 +31,16 @@ class School extends Model
             ->withTimestamps();
     }
 
+    /**
+     * Unified-model contacts linked to this school (teachers, school_admins, etc.)
+     * via the contact_school pivot.
+     */
+    public function contacts(): BelongsToMany
+    {
+        return $this->belongsToMany(ExamContact::class, 'contact_school')
+            ->withTimestamps();
+    }
+
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);

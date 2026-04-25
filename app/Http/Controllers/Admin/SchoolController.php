@@ -15,14 +15,16 @@ class SchoolController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = School::withCount(['teachers', 'orders']);
+        $query = School::with(['contacts:id,name,phone'])
+            ->withCount(['teachers', 'orders']);
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'ilike', "%{$search}%")
                   ->orWhere('city', 'ilike', "%{$search}%")
                   ->orWhere('postcode', 'ilike', "%{$search}%")
-                  ->orWhere('contact_name', 'ilike', "%{$search}%");
+                  ->orWhere('contact_name', 'ilike', "%{$search}%")
+                  ->orWhereHas('contacts', fn ($cq) => $cq->where('name', 'ilike', "%{$search}%"));
             });
         }
 
@@ -36,18 +38,31 @@ class SchoolController extends Controller
 
         $schools = $query->paginate(15)->withQueryString();
 
-        $schools->through(fn ($school) => [
-            'id' => $school->id,
-            'name' => $school->name,
-            'address' => $school->address,
-            'city' => $school->city,
-            'postcode' => $school->postcode,
-            'phone' => $school->phone,
-            'email' => $school->email,
-            'contact_name' => $school->contact_name,
-            'teachers_count' => $school->teachers_count,
-            'orders_count' => $school->orders_count,
-        ]);
+        // Build a single "primary contact" display per school, preferring the
+        // unified-model contact_school pivot, falling back to the legacy
+        // schools.contact_name string for rows that haven't been migrated.
+        $schools->through(function ($school) {
+            $primaryContact = $school->contacts->first();
+
+            return [
+                'id' => $school->id,
+                'name' => $school->name,
+                'address' => $school->address,
+                'city' => $school->city,
+                'postcode' => $school->postcode,
+                'phone' => $primaryContact?->phone ?? $school->phone,
+                'email' => $school->email,
+                'contact_name' => $primaryContact?->name ?? $school->contact_name,
+                'contact_id' => $primaryContact?->id,
+                'contacts' => $school->contacts->map(fn ($c) => [
+                    'id' => $c->id,
+                    'name' => $c->name,
+                    'phone' => $c->phone,
+                ]),
+                'teachers_count' => $school->teachers_count,
+                'orders_count' => $school->orders_count,
+            ];
+        });
 
         return Inertia::render('admin/Schools/Index', [
             'schools' => $schools,
