@@ -16,6 +16,7 @@ import {
     Gift,
     FileSpreadsheet,
     Contact as ContactIcon,
+    MessageSquareText,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
@@ -124,6 +125,11 @@ const adminToolsNavItems: NavItem[] = [
         title: 'Roadmap',
         href: '/admin/roadmap',
         icon: Map,
+    },
+    {
+        title: 'Quick Replies',
+        href: '/admin/quick-replies',
+        icon: MessageSquareText,
     },
     {
         title: 'Page Maintenance',

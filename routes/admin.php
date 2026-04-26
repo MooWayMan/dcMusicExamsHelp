@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PageMaintenanceController;
 use App\Http\Controllers\Admin\PendingResultsController;
 use App\Http\Controllers\Admin\QuarterEndController;
+use App\Http\Controllers\Admin\QuickRepliesController;
 use App\Http\Controllers\Admin\RoadmapController;
 use App\Http\Controllers\Admin\SchoolController;
 use App\Http\Controllers\Admin\SessionLogController;
@@ -80,6 +81,9 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
 
         // Roadmap — visual project roadmap
         Route::get('roadmap', [RoadmapController::class, 'index'])->name('roadmap');
+
+        // Quick Replies — phone-friendly template bank for inbound enquiries
+        Route::get('quick-replies', [QuickRepliesController::class, 'index'])->name('quick-replies.index');
 
         // Session Logs — daily hours tracking
         Route::get('session-logs', [SessionLogController::class, 'index'])->name('session-logs.index');

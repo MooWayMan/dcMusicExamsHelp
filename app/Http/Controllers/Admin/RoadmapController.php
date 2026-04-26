@@ -37,7 +37,7 @@ class RoadmapController extends Controller
             [
                 'number' => 2,
                 'title' => 'Launch Ready',
-                'status' => 'active',
+                'status' => 'complete',
                 'subtitle' => 'Content, visuals & business decisions',
                 'milestones' => [
                     ['title' => 'Landing page content (why use this, incentives, FAQs)', 'done' => true],

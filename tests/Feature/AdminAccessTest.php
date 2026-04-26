@@ -166,3 +166,51 @@ test('admin can access roadmap', function () {
         ->get('/admin/roadmap')
         ->assertStatus(200);
 });
+
+// ── Quick Replies section ──
+
+test('guest cannot access quick replies', function () {
+    $this->get('/admin/quick-replies')
+        ->assertRedirect('/login');
+});
+
+test('admin can access quick replies and sees the four templates', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+
+    $this->actingAs($admin)
+        ->get('/admin/quick-replies')
+        ->assertStatus(200)
+        ->assertInertia(fn ($page) => $page
+            ->component('admin/QuickReplies/Index')
+            ->has('templates', 4)
+            ->where('templates.0.id', 'parent-enquiry')
+            ->where('templates.1.id', 'teacher-enquiry')
+            ->where('templates.2.id', 'old-address-nudge')
+            ->where('templates.3.id', 'who-books')
+        );
+});
+
+test('quick replies template content includes the canonical site references', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+
+    $this->actingAs($admin)
+        ->get('/admin/quick-replies')
+        ->assertStatus(200)
+        ->assertInertia(fn ($page) => $page
+            ->component('admin/QuickReplies/Index')
+            // Parent template should mention /for-parents
+            ->where(
+                'templates.0.body',
+                fn ($body) => str_contains($body, 'musicexams.help/for-parents')
+                    && str_contains($body, 'Take a Bow')
+                    && str_contains($body, 'Standing Ovation')
+            )
+            // Teacher template should mention centre 120 + Faber + /for-teachers
+            ->where(
+                'templates.1.body',
+                fn ($body) => str_contains($body, 'centre code **120**')
+                    && str_contains($body, 'musicexams.help/for-teachers')
+                    && str_contains($body, 'Faber')
+            )
+        );
+});
