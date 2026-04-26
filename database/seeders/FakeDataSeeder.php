@@ -4,9 +4,11 @@
 
 namespace Database\Seeders;
 
+use App\Models\ExamContact;
 use App\Models\ExamEntry;
 use App\Models\Instrument;
 use App\Models\Order;
+use App\Models\OrderContact;
 use App\Models\School;
 use App\Models\Student;
 use App\Models\User;
@@ -75,6 +77,29 @@ class FakeDataSeeder extends Seeder
             $teachers->push($teacher);
         }
 
+        // Mirror local data shape to prod: every teacher has a corresponding
+        // ExamContact (the unified contacts model is the single source of
+        // truth, so the Students Index, contact pages, prize draw, etc. all
+        // resolve through ExamContact). FakeContactsSeeder runs first and
+        // creates 8 teacher contacts; firstOrCreate finds those by name and
+        // creates the remaining 7 fresh — net result is 15 teacher Users
+        // each with a matching contact.
+        $teacherContactByNameLower = [];
+        foreach ($teachers as $teacherUser) {
+            $contact = ExamContact::firstOrCreate(
+                ['name' => $teacherUser->name],
+                [
+                    'email'  => $teacherUser->email,
+                    'phone'  => $teacherUser->phone ?? null,
+                    'source' => 'fake_seed',
+                ],
+            );
+            if (! $contact->hasType('teacher')) {
+                $contact->addType('teacher');
+            }
+            $teacherContactByNameLower[strtolower(trim($teacherUser->name))] = $contact;
+        }
+
         // The legacy User-keyed pivots (teacher_school, teacher_instrument,
         // teacher_subject_area) have been dropped — the unified ExamContact
         // model owns those relations now (see FakeContactsSeeder for the
@@ -100,6 +125,7 @@ class FakeDataSeeder extends Seeder
         foreach ($teachers as $teacher) {
             $numStudents = rand(3, 8);
             $teacherInstrumentIds = $teacherInstrumentIdsByTeacher[$teacher->id];
+            $teacherContact = $teacherContactByNameLower[strtolower(trim($teacher->name))] ?? null;
 
             for ($i = 0; $i < $numStudents; $i++) {
                 $student = Student::create([
@@ -107,6 +133,9 @@ class FakeDataSeeder extends Seeder
                     'first_name' => $firstNames[array_rand($firstNames)],
                     'last_name' => $lastNames[array_rand($lastNames)],
                     'email' => null,
+                    // Mirror prod: students.teacher_contact_id is the canonical
+                    // teacher link (was backfilled on prod 25 Apr).
+                    'teacher_contact_id' => $teacherContact?->id,
                 ]);
                 $allStudents->push($student);
             }
@@ -144,8 +173,17 @@ class FakeDataSeeder extends Seeder
                 $totalFees = $feePerCandidate * $candidates;
                 $commissionAmount = round($totalFees * ($commissionRate / 100), 2);
 
+                $teacherContact = $teacherContactByNameLower[strtolower(trim($teacher->name))] ?? null;
+                $orderSchoolId = ! empty($teacherSchoolIds) ? $teacherSchoolIds[array_rand($teacherSchoolIds)] : null;
+                $orderSchoolName = $orderSchoolId
+                    ? optional($schools->firstWhere('id', $orderSchoolId))->name
+                    : null;
+
                 $order = Order::create([
-                    'school_id' => !empty($teacherSchoolIds) ? $teacherSchoolIds[array_rand($teacherSchoolIds)] : null,
+                    'school_id' => $orderSchoolId,
+                    // Canonical "who submitted this order" link (mirrors prod's
+                    // unified contacts model — 25 Apr Phase B step 10 backfill).
+                    'created_by_contact_id' => $teacherContact?->id,
                     'trinity_order_number' => 'TCL-' . $orderNumber,
                     'delivery_method' => $deliveryMethod,
                     'subject_area' => $subjectArea,
@@ -157,20 +195,47 @@ class FakeDataSeeder extends Seeder
                     'commission_amount' => $commissionAmount,
                 ]);
 
+                // Mirror prod's order_contacts pivot — every order has a
+                // teacher row with role_in_order='teacher'. The Students Index
+                // teacher resolver no longer reads from this (uses the per-
+                // entry FK instead) but plenty of other places still do.
+                if ($teacherContact) {
+                    OrderContact::create([
+                        'order_id'        => $order->id,
+                        'exam_contact_id' => $teacherContact->id,
+                        'role_in_order'   => 'teacher',
+                        'is_primary'      => true,
+                    ]);
+                }
+
                 // Create exam entries for each candidate in this order. The
                 // instrument is now per-entry (lives on exam_entries directly,
                 // not on students), so we pick from the teacher's instrument
                 // pool rather than from a single instrument on the student.
+                // teacher_name + teacher_contact_id are stamped per-entry so
+                // the Students Index Teacher column has something to render.
                 $orderStudents = $teacherStudents->random(min($candidates, $teacherStudents->count()));
                 foreach ($orderStudents as $student) {
                     ExamEntry::create([
                         'order_id' => $order->id,
                         'student_id' => $student->id,
+                        // Trinity always provides a candidate_name string on
+                        // the entry (separate from student_id). Mirror that on
+                        // local so contact show pages have a value to display.
+                        'candidate_name' => $student->full_name,
+                        // Trinity-style candidate numbers (e.g. 1-15899370904).
+                        'candidate_number' => '1-' . fake()->unique()->numerify('###########'),
                         'instrument_id' => $teacherInstrumentIdsByTeacher[$teacher->id][array_rand($teacherInstrumentIdsByTeacher[$teacher->id])],
+                        'teacher_name' => $teacher->name,
+                        'teacher_contact_id' => $teacherContact?->id,
+                        // Stamp school_name so the SchoolController's derived
+                        // teachers_count subquery has something to match on.
+                        'school_name' => $orderSchoolName,
                         'grade' => $grades[array_rand($grades)],
                         'subject_area' => $subjectArea,
                         'delivery_method' => $deliveryMethod,
                         'result' => $status === 'Completed' ? ['Pass', 'Merit', 'Distinction'][array_rand(['Pass', 'Merit', 'Distinction'])] : null,
+                        'score' => $status === 'Completed' ? rand(60, 96) : null,
                         'exam_date' => $status === 'Completed' ? now()->subDays(rand(1, 120))->format('Y-m-d') : null,
                     ]);
                 }

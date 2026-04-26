@@ -140,7 +140,7 @@ const { animClass } = usePageAnimation()
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-1.5 text-base text-brand-text-soft">
                                     <MapPin class="h-5 w-5" />
-                                    {{ school.city || '—' }}<span v-if="school.postcode">, {{ school.postcode }}</span>
+                                    <span>{{ school.city || '—' }}</span>
                                 </div>
                             </td>
                             <td class="px-4 py-3">

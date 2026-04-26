@@ -3,7 +3,6 @@
 import { Link, router } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
 import { ArrowLeft, Mail, Phone, User, Music, ShoppingCart, Tag, Pencil, ChevronDown, ChevronUp } from 'lucide-vue-next'
-import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyTableConstructor from '@/components/reusables/MyTableConstructor.vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
 
@@ -164,9 +163,7 @@ const visibleOrders = computed(() =>
             <div class="rounded-xl border border-brand-border bg-brand-surface p-5">
                 <div class="flex items-center gap-2">
                     <User class="h-5 w-5 text-brand-text-soft" />
-                    <MyTextConstructor variant="button-lg">
-                        <template #myTitle>Details</template>
-                    </MyTextConstructor>
+                    <h2 class="text-xl font-semibold text-brand-text">Details</h2>
                 </div>
                 <div class="mt-4 space-y-3">
                     <div class="flex items-start gap-2">
@@ -196,9 +193,7 @@ const visibleOrders = computed(() =>
 
             <!-- Stats -->
             <div class="rounded-xl border border-brand-border bg-brand-surface p-5">
-                <MyTextConstructor variant="button-lg">
-                    <template #myTitle>Activity</template>
-                </MyTextConstructor>
+                <h2 class="text-xl font-semibold text-brand-text">Activity</h2>
                 <div class="mt-4 space-y-3">
                     <div class="flex justify-between">
                         <span class="text-base text-brand-text-soft">Exam Entries</span>
@@ -221,9 +216,7 @@ const visibleOrders = computed(() =>
         <div :class="['mt-6 rounded-xl border border-brand-border bg-brand-surface', animClass('fade-up', 2)]">
             <div class="flex items-center gap-2 border-b border-brand-border p-4">
                 <Music class="h-5 w-5 text-brand-text-soft" />
-                <MyTextConstructor variant="button-lg">
-                    <template #myTitle>Exam Entries ({{ contact.exam_entries.length }})</template>
-                </MyTextConstructor>
+                <h2 class="text-xl font-semibold text-brand-text">Exam Entries ({{ contact.exam_entries.length }})</h2>
             </div>
             <div class="p-4">
                 <MyTableConstructor
@@ -239,10 +232,25 @@ const visibleOrders = computed(() =>
                     :clickable-rows="true"
                     @row-click="(row: ExamEntry) => router.visit(`/admin/orders/${row.order_id}`)"
                 >
+                    <template #cell-exam_date="{ value }">
+                        <span class="text-sm text-brand-text-soft">{{ value ?? '—' }}</span>
+                    </template>
                     <template #cell-order_number="{ row }">
                         <Link :href="`/admin/orders/${row.order_id}`" class="text-brand-accent hover:underline" @click.stop>
                             {{ row.order_number }}
                         </Link>
+                    </template>
+                    <template #cell-candidate_name="{ value }">
+                        <span class="text-base text-brand-text">{{ value ?? '—' }}</span>
+                    </template>
+                    <template #cell-grade="{ value }">
+                        <span class="text-sm text-brand-text-soft">{{ value ?? '—' }}</span>
+                    </template>
+                    <template #cell-subject_area="{ value }">
+                        <span class="text-sm text-brand-text-soft">{{ value ?? '—' }}</span>
+                    </template>
+                    <template #cell-delivery_method="{ value }">
+                        <span class="text-sm text-brand-text-soft">{{ value ?? '—' }}</span>
                     </template>
                     <template #cell-result="{ value }">
                         <span v-if="value" class="rounded-full px-2 py-0.5 text-sm font-medium"
@@ -253,7 +261,11 @@ const visibleOrders = computed(() =>
                             }">
                             {{ value }}
                         </span>
-                        <span v-else>—</span>
+                        <span v-else class="text-brand-text-soft">—</span>
+                    </template>
+                    <template #cell-score="{ value }">
+                        <span v-if="value !== null && value !== undefined" class="text-sm font-medium text-brand-text">{{ value }}</span>
+                        <span v-else class="text-sm text-brand-text-soft">—</span>
                     </template>
                 </MyTableConstructor>
                 <p v-else class="py-4 text-center text-base text-brand-text-soft">No exam entries recorded</p>
@@ -280,9 +292,7 @@ const visibleOrders = computed(() =>
         <div :class="['mt-6 rounded-xl border border-brand-border bg-brand-surface', animClass('fade-up', 3)]">
             <div class="flex items-center gap-2 border-b border-brand-border p-4">
                 <ShoppingCart class="h-5 w-5 text-brand-text-soft" />
-                <MyTextConstructor variant="button-lg">
-                    <template #myTitle>Orders ({{ contact.orders.length }})</template>
-                </MyTextConstructor>
+                <h2 class="text-xl font-semibold text-brand-text">Orders ({{ contact.orders.length }})</h2>
             </div>
             <div class="p-4">
                 <MyTableConstructor
@@ -312,12 +322,22 @@ const visibleOrders = computed(() =>
                             </span>
                         </span>
                     </template>
+                    <template #cell-delivery_method="{ value }">
+                        <span class="text-sm text-brand-text-soft">{{ value }}</span>
+                    </template>
+                    <template #cell-subject_area="{ value }">
+                        <span class="text-sm text-brand-text-soft">{{ value ?? '—' }}</span>
+                    </template>
+                    <template #cell-candidates="{ value }">
+                        <span class="text-sm text-brand-text-soft">{{ value }}</span>
+                    </template>
                     <template #cell-order_status="{ value }">
                         <span class="rounded-full px-2 py-0.5 text-sm font-medium"
                             :class="{
                                 'bg-brand-success-soft text-brand-success': value === 'Completed',
                                 'bg-brand-accent/10 text-brand-accent': value === 'Confirmed',
                                 'bg-brand-surface-soft text-brand-text-soft': value === 'Submitted',
+                                'bg-brand-danger-soft text-brand-danger': value === 'Cancelled',
                             }">
                             {{ value }}
                         </span>

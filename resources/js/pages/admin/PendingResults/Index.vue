@@ -1,6 +1,6 @@
 <!-- resources/js/pages/admin/PendingResults/Index.vue -->
 <script setup lang="ts">
-import { router } from '@inertiajs/vue3'
+import { Link, router } from '@inertiajs/vue3'
 import { ref, watch } from 'vue'
 import { Search, AlertCircle, CheckCircle, Clock } from 'lucide-vue-next'
 import PageHeader from '@/components/reusables/PageHeader.vue'
@@ -8,6 +8,9 @@ import MyTableConstructor from '@/components/reusables/MyTableConstructor.vue'
 
 interface PendingEntry {
     id: number
+    order_id: number | null
+    student_id: number | null
+    teacher_contact_id: number | null
     candidate_number: string
     candidate_name: string
     instrument: string
@@ -148,7 +151,44 @@ const columns = [
                 size="medium"
                 title="Pending Results"
                 subtitle="Copy candidate numbers to search in MOB Candidates & Contacts"
-            />
+            >
+                <template #cell-candidate_name="{ row }">
+                    <Link v-if="row.student_id"
+                        :href="`/admin/exam-entries?student_id=${row.student_id}&from=pending`"
+                        class="font-medium text-brand-accent hover:underline">
+                        {{ row.candidate_name }}
+                    </Link>
+                    <span v-else class="font-medium text-brand-text">{{ row.candidate_name }}</span>
+                </template>
+                <template #cell-candidate_number="{ row }">
+                    <Link v-if="row.order_id && row.candidate_number !== '—'"
+                        :href="`/admin/orders/${row.order_id}`"
+                        class="text-sm font-medium text-brand-accent hover:underline">
+                        {{ row.candidate_number }}
+                    </Link>
+                    <span v-else class="text-sm text-brand-text-soft">{{ row.candidate_number }}</span>
+                </template>
+                <template #cell-instrument="{ row }">
+                    <span class="text-sm text-brand-text-soft">{{ row.instrument }}</span>
+                </template>
+                <template #cell-grade="{ row }">
+                    <span class="text-sm text-brand-text-soft">{{ row.grade }}</span>
+                </template>
+                <template #cell-delivery_method="{ row }">
+                    <span class="text-sm text-brand-text-soft">{{ row.delivery_method }}</span>
+                </template>
+                <template #cell-teacher_name="{ row }">
+                    <Link v-if="row.teacher_contact_id"
+                        :href="`/admin/contacts/${row.teacher_contact_id}`"
+                        class="text-brand-accent hover:underline">
+                        {{ row.teacher_name }}
+                    </Link>
+                    <span v-else class="text-brand-text">{{ row.teacher_name }}</span>
+                </template>
+                <template #cell-order_date="{ row }">
+                    <span class="text-sm text-brand-text-soft">{{ row.order_date }}</span>
+                </template>
+            </MyTableConstructor>
 
             <!-- Empty state -->
             <div v-else class="rounded-xl border border-green-200 bg-green-50 p-12 text-center">

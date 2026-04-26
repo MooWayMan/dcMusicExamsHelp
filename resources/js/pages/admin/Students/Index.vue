@@ -30,6 +30,60 @@ function uniqueFamilies(instruments: InstrumentChip[]): string[] {
     return [...new Set(instruments.map((i) => i.family).filter(Boolean))]
 }
 
+// Short labels used below `lg` so chips don't eat column width on mobile/tablet.
+const instrumentShort: Record<string, string> = {
+    'Saxophone': 'Sax',
+    'Guitar (Acoustic)': 'Gtr (Ac)',
+    'Guitar (Classical)': 'Gtr (Cl)',
+    'Guitar (Rock/Pop)': 'Gtr (R/P)',
+    'Bass Guitar': 'Bass',
+    'Ukulele': 'Uke',
+    'Violin': 'Vln',
+    'Viola': 'Vla',
+    'Cello': 'Vc',
+    'Double Bass': 'D.Bass',
+    'Bassoon': 'Bsn',
+    'Clarinet': 'Cl',
+    'Flute': 'Fl',
+    'Oboe': 'Ob',
+    'Recorder': 'Rec',
+    'Trumpet': 'Tpt',
+    'Trombone': 'Tbn',
+    'Cornet': 'Cnt',
+    'Tenor Horn': 'T.Horn',
+    'Euphonium': 'Euph',
+    'Tuba': 'Tba',
+    'French Horn': 'F.Horn',
+    'Piano': 'Pno',
+    'Electronic Keyboard': 'E.Kbd',
+    'Organ': 'Org',
+    'Harp': 'Hp',
+    'Drum Kit': 'Drums',
+    'Snare Drum': 'Snare',
+    'Tuned Percussion': 'T.Perc',
+    'Singing': 'Sing',
+    'Singing (Rock/Pop)': 'Sing (R/P)',
+    'Singing (Classical)': 'Sing (Cl)',
+    'Musical Theatre': 'MT',
+}
+
+const familyShort: Record<string, string> = {
+    'Strings': 'Str',
+    'Brass': 'Brs',
+    'Woodwind': 'Wood',
+    'Keyboard': 'Keys',
+    'Voice': 'Voc',
+    'Percussion': 'Perc',
+}
+
+function shortInstrument(name: string): string {
+    return instrumentShort[name] ?? name
+}
+
+function shortFamily(name: string): string {
+    return familyShort[name] ?? name
+}
+
 interface PaginatedData {
     data: Student[]
     current_page: number
@@ -185,16 +239,18 @@ const families = ['Keyboard', 'Strings', 'Brass', 'Woodwind', 'Voice', 'Percussi
                                 <Link v-if="student.teacher_name !== '—'"
                                     :href="`/admin/exam-entries?search=${encodeURIComponent(student.teacher_name)}`"
                                     class="text-brand-accent hover:underline">
-                                    {{ student.teacher_name }}
+                                    <span class="text-brand-accent">{{ student.teacher_name }}</span>
                                 </Link>
-                                <span v-else class="text-brand-text-soft">—</span>
+                                <span v-else class="text-sm text-brand-text-soft">—</span>
                             </td>
                             <td class="px-4 py-3">
                                 <div v-if="student.instruments.length" class="flex flex-wrap items-center gap-1.5">
                                     <Music class="h-4 w-4 shrink-0 text-brand-text-soft" />
                                     <span v-for="inst in student.instruments" :key="inst.id"
-                                        class="rounded-full bg-brand-surface-soft px-2 py-0.5 text-sm font-medium text-brand-text">
-                                        {{ inst.name }}
+                                        class="rounded-full bg-brand-surface-soft px-2 py-0.5 text-sm font-medium text-brand-text"
+                                        :title="inst.name">
+                                        <span class="lg:hidden">{{ shortInstrument(inst.name) }}</span>
+                                        <span class="hidden lg:inline">{{ inst.name }}</span>
                                     </span>
                                 </div>
                                 <span v-else class="text-brand-text-soft">—</span>
@@ -202,15 +258,17 @@ const families = ['Keyboard', 'Strings', 'Brass', 'Woodwind', 'Voice', 'Percussi
                             <td class="px-4 py-3">
                                 <div v-if="uniqueFamilies(student.instruments).length" class="flex flex-wrap gap-1">
                                     <span v-for="fam in uniqueFamilies(student.instruments)" :key="fam"
-                                        class="rounded-full bg-brand-surface-soft px-2.5 py-1 text-sm font-medium text-brand-text-soft">
-                                        {{ fam }}
+                                        class="rounded-full bg-brand-surface-soft px-2.5 py-1 text-sm font-medium text-brand-text-soft"
+                                        :title="fam">
+                                        <span class="lg:hidden">{{ shortFamily(fam) }}</span>
+                                        <span class="hidden lg:inline">{{ fam }}</span>
                                     </span>
                                 </div>
                                 <span v-else class="text-brand-text-soft">—</span>
                             </td>
                             <td class="px-4 py-3 text-center">
                                 <Link :href="`/admin/exam-entries?student_id=${student.id}&from=students`"
-                                    class="text-brand-accent hover:underline">
+                                    class="font-medium text-brand-accent hover:underline">
                                     {{ student.exam_entries_count }}
                                 </Link>
                             </td>

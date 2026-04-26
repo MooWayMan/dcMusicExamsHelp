@@ -39,6 +39,9 @@ class PendingResultsController extends Controller
 
         $data = $entries->map(fn ($e) => [
             'id' => $e->id,
+            'order_id' => $e->order_id,
+            'student_id' => $e->student_id,
+            'teacher_contact_id' => $e->teacher_contact_id,
             'candidate_number' => $e->candidate_number ?? '—',
             'candidate_name' => $e->candidate_name
                 ?? ($e->student ? "{$e->student->first_name} {$e->student->last_name}" : '—'),

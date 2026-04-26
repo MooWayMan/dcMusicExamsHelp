@@ -3,15 +3,16 @@
 import { Link } from '@inertiajs/vue3'
 import { ArrowLeft, Monitor, MapPin, School, User, Music, Pencil } from 'lucide-vue-next'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
-import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyTableConstructor from '@/components/reusables/MyTableConstructor.vue'
 
 interface ExamEntry {
     id: number
+    student_id: number | null
     student_name: string
     instrument: string
     grade: string
     result: string
+    score: number | null
     exam_date: string
 }
 
@@ -84,9 +85,7 @@ const examColumns = [
         <div :class="['grid grid-cols-1 gap-6 lg:grid-cols-3', animClass('fade-up', 1)]">
             <!-- Order Details -->
             <div class="rounded-xl border border-brand-border bg-brand-surface p-5">
-                <MyTextConstructor variant="button-lg">
-                    <template #myTitle>Order Details</template>
-                </MyTextConstructor>
+                <h2 class="text-xl font-semibold text-brand-text">Order Details</h2>
                 <div class="mt-4 space-y-3">
                     <div class="flex justify-between">
                         <span class="text-base text-brand-text-soft">Subject Area</span>
@@ -126,9 +125,7 @@ const examColumns = [
             <div class="rounded-xl border border-brand-border bg-brand-surface p-5">
                 <div class="flex items-center gap-2">
                     <User class="h-5 w-5 text-brand-text-soft" />
-                    <MyTextConstructor variant="button-lg">
-                        <template #myTitle>Teacher</template>
-                    </MyTextConstructor>
+                    <h2 class="text-xl font-semibold text-brand-text">Teacher</h2>
                 </div>
                 <div v-if="order.teacher" class="mt-4">
                     <Link v-if="order.teacher.id" :href="`/admin/contacts/${order.teacher.id}`" class="text-xl font-semibold text-brand-accent hover:underline">
@@ -145,9 +142,7 @@ const examColumns = [
             <div class="rounded-xl border border-brand-border bg-brand-surface p-5">
                 <div class="flex items-center gap-2">
                     <School class="h-5 w-5 text-brand-text-soft" />
-                    <MyTextConstructor variant="button-lg">
-                        <template #myTitle>School</template>
-                    </MyTextConstructor>
+                    <h2 class="text-xl font-semibold text-brand-text">School</h2>
                 </div>
                 <div v-if="order.school" class="mt-4">
                     <Link :href="`/admin/schools/${order.school.id}`" class="text-xl font-semibold text-brand-accent hover:underline">
@@ -163,9 +158,7 @@ const examColumns = [
         <div :class="['mt-6 rounded-xl border border-brand-border bg-brand-surface', animClass('fade-up', 2)]">
             <div class="flex items-center gap-2 border-b border-brand-border p-4">
                 <Music class="h-5 w-5 text-brand-text-soft" />
-                <MyTextConstructor variant="button-lg">
-                    <template #myTitle>Exam Entries ({{ order.exam_entries.length }})</template>
-                </MyTextConstructor>
+                <h2 class="text-xl font-semibold text-brand-text">Exam Entries ({{ order.exam_entries.length }})</h2>
             </div>
             <div class="p-4">
                 <MyTableConstructor
@@ -178,7 +171,38 @@ const examColumns = [
                     :bordered="false"
                     :full-width="true"
                     :bare="true"
-                />
+                >
+                    <template #cell-student_name="{ row }">
+                        <Link v-if="row.student_id"
+                            :href="`/admin/exam-entries?student_id=${row.student_id}&from=order`"
+                            class="font-medium text-brand-accent hover:underline"
+                            @click.stop>
+                            {{ row.student_name }}
+                        </Link>
+                        <span v-else class="text-brand-text">{{ row.student_name }}</span>
+                    </template>
+                    <template #cell-instrument="{ value }">
+                        <span class="text-sm text-brand-text-soft">{{ value }}</span>
+                    </template>
+                    <template #cell-grade="{ value }">
+                        <span class="text-sm text-brand-text-soft">{{ value }}</span>
+                    </template>
+                    <template #cell-result="{ value }">
+                        <span v-if="value && value !== 'Pending'" class="rounded-full px-2 py-0.5 text-sm font-medium"
+                            :class="{
+                                'bg-brand-success-soft text-brand-success': value === 'Distinction',
+                                'bg-brand-accent/10 text-brand-accent': value === 'Merit',
+                                'bg-brand-surface-soft text-brand-text-soft': value === 'Pass',
+                                'bg-brand-danger-soft text-brand-danger': value === 'Below Pass',
+                            }">
+                            {{ value }}
+                        </span>
+                        <span v-else class="text-sm text-brand-text-soft">{{ value }}</span>
+                    </template>
+                    <template #cell-exam_date="{ value }">
+                        <span class="text-sm text-brand-text-soft">{{ value }}</span>
+                    </template>
+                </MyTableConstructor>
                 <p v-else class="py-4 text-center text-base text-brand-text-soft">No exam entries recorded</p>
             </div>
         </div>

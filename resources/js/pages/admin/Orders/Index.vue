@@ -3,7 +3,6 @@
 import { Link, router } from '@inertiajs/vue3'
 import { ref, watch } from 'vue'
 import { Search, Eye, Monitor, MapPin, TrendingUp, ChevronLeft, ChevronRight, Plus, CheckCircle2, Clock } from 'lucide-vue-next'
-import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import PageHeader from '@/components/reusables/PageHeader.vue'
 
@@ -277,20 +276,20 @@ const { animClass } = usePageAnimation()
                                     {{ order.trinity_order_number }}
                                 </Link>
                             </td>
-                            <td class="whitespace-nowrap px-4 py-3 text-base text-brand-text-soft">
-                                {{ order.requested_start_date || '—' }}
+                            <td class="whitespace-nowrap px-4 py-3">
+                                <span class="text-sm text-brand-text-soft">{{ order.requested_start_date || '—' }}</span>
                             </td>
                             <td class="px-4 py-3">
-                                <Link v-if="order.teacher_contact_id" :href="`/admin/contacts/${order.teacher_contact_id}`" class="text-base text-brand-text hover:text-brand-accent hover:underline">
+                                <Link v-if="order.teacher_contact_id" :href="`/admin/contacts/${order.teacher_contact_id}`" class="font-medium text-brand-accent hover:underline">
                                     {{ order.teacher_name }}
                                 </Link>
-                                <span v-else class="text-base text-brand-text-soft">{{ order.teacher_name }}</span>
+                                <span v-else class="text-brand-text">{{ order.teacher_name }}</span>
                             </td>
-                            <td class="px-4 py-3 text-base">
-                                <Link v-if="order.school_id" :href="`/admin/schools/${order.school_id}`" class="text-brand-text-soft hover:text-brand-accent hover:underline">
+                            <td class="px-4 py-3">
+                                <Link v-if="order.school_id" :href="`/admin/schools/${order.school_id}`" class="text-sm text-brand-text-soft hover:text-brand-accent hover:underline">
                                     {{ order.school_name }}
                                 </Link>
-                                <span v-else class="text-brand-text-soft">{{ order.school_name }}</span>
+                                <span v-else class="text-sm text-brand-text-soft">{{ order.school_name }}</span>
                             </td>
                             <td class="px-4 py-3 text-center">
                                 <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-sm font-medium"
@@ -300,10 +299,10 @@ const { animClass } = usePageAnimation()
                                     {{ order.delivery_method }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-base text-brand-text-soft">{{ order.subject_area }}</td>
-                            <td class="px-4 py-3 text-center text-base text-brand-text">{{ order.candidates }}</td>
-                            <td class="px-4 py-3 text-right text-base">
-                                <div class="font-medium text-brand-success">&pound;{{ order.commission_amount }}</div>
+                            <td class="px-4 py-3"><span class="text-sm text-brand-text-soft">{{ order.subject_area }}</span></td>
+                            <td class="px-4 py-3 text-center"><span class="text-sm text-brand-text-soft">{{ order.candidates }}</span></td>
+                            <td class="px-4 py-3 text-right">
+                                <div class="font-medium text-brand-text">&pound;{{ order.commission_amount }}</div>
                                 <div v-if="order.is_paid" class="mt-0.5 inline-flex items-center gap-1 text-xs text-brand-success">
                                     <CheckCircle2 class="h-3 w-3" />
                                     Paid {{ order.commission_paid_at }}
@@ -319,6 +318,7 @@ const { animClass } = usePageAnimation()
                                         'bg-brand-success-soft text-brand-success': order.order_status === 'Completed',
                                         'bg-brand-accent/10 text-brand-accent': order.order_status === 'Confirmed',
                                         'bg-brand-surface-soft text-brand-text-soft': order.order_status === 'Submitted',
+                                        'bg-brand-danger-soft text-brand-danger': order.order_status === 'Cancelled',
                                     }">
                                     {{ order.order_status }}
                                 </span>

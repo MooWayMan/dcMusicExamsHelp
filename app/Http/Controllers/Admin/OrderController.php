@@ -283,10 +283,14 @@ class OrderController extends Controller
             ] : null,
             'exam_entries' => $order->examEntries->map(fn ($e) => [
                 'id' => $e->id,
-                'student_name' => $e->student ? "{$e->student->first_name} {$e->student->last_name}" : '—',
+                'student_id' => $e->student_id,
+                'student_name' => $e->student
+                    ? "{$e->student->first_name} {$e->student->last_name}"
+                    : ($e->candidate_name ?? '—'),
                 'instrument' => $e->instrument->name ?? '—',
                 'grade' => $e->grade,
                 'result' => $e->result ?? 'Pending',
+                'score' => $e->score,
                 'exam_date' => $e->exam_date?->format('d M Y') ?? '—',
             ]),
         ];

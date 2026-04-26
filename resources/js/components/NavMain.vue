@@ -61,7 +61,7 @@ props.items.forEach(item => {
 
 <template>
     <SidebarGroup class="px-2 py-0">
-        <SidebarGroupLabel>{{ label }}</SidebarGroupLabel>
+        <SidebarGroupLabel class="!text-xs">{{ label }}</SidebarGroupLabel>
         <SidebarMenu>
             <template v-for="item in items" :key="item.title">
                 <!-- Items WITH children: collapsible -->
@@ -75,6 +75,7 @@ props.items.forEach(item => {
                     <SidebarMenuItem>
                         <SidebarMenuButton
                             as-child
+                            size="sm"
                             :is-active="isActive(item.href) || hasActiveChild(item)"
                             :tooltip="item.title"
                         >
@@ -108,6 +109,7 @@ props.items.forEach(item => {
                 <SidebarMenuItem v-else>
                     <SidebarMenuButton
                         as-child
+                        size="sm"
                         :is-active="isActive(item.href)"
                         :tooltip="item.title"
                     >

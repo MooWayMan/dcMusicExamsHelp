@@ -767,15 +767,25 @@ const teacherWinner = computed(() => {
                     </thead>
                     <tbody>
                       <tr v-for="(student, i) in teacher.students" :key="i" class="border-t border-brand-border">
-                        <td class="px-3 py-2 font-medium">{{ student.name }}</td>
-                        <td class="px-3 py-2">{{ student.instrument }}</td>
-                        <td class="px-3 py-2 text-center">{{ student.grade }}</td>
-                        <td class="px-3 py-2 text-center font-bold" :class="{
+                        <td class="px-3 py-2"><span class="font-medium text-brand-text">{{ student.name }}</span></td>
+                        <td class="px-3 py-2"><span class="text-sm text-brand-text-soft">{{ student.instrument }}</span></td>
+                        <td class="px-3 py-2 text-center"><span class="text-sm text-brand-text-soft">{{ student.grade }}</span></td>
+                        <td class="px-3 py-2 text-center text-sm font-bold" :class="{
                           'text-yellow-600': student.score >= 87,
                           'text-brand-accent': student.score >= 75 && student.score < 87,
                           'text-brand-text': student.score < 75,
                         }">{{ student.score }}</td>
-                        <td class="px-3 py-2">{{ student.result }}</td>
+                        <td class="px-3 py-2">
+                          <span class="rounded-full px-2 py-0.5 text-sm font-medium"
+                            :class="{
+                              'bg-brand-success-soft text-brand-success': student.result === 'Distinction',
+                              'bg-brand-accent/10 text-brand-accent': student.result === 'Merit',
+                              'bg-brand-surface-soft text-brand-text-soft': student.result === 'Pass',
+                              'bg-brand-danger-soft text-brand-danger': student.result === 'Below Pass',
+                            }">
+                            {{ student.result }}
+                          </span>
+                        </td>
                         <td class="px-3 py-2">
                           <span class="inline-block rounded-full bg-brand-accent/10 px-2 py-0.5 text-xs font-semibold text-brand-accent">
                             {{ student.certificate }}
@@ -977,16 +987,16 @@ const teacherWinner = computed(() => {
                   </thead>
                   <tbody>
                     <tr v-for="t in prizeDraw.eligible_teachers" :key="t.name" class="border-t border-brand-border">
-                      <td class="px-3 py-2 font-medium">
-                        {{ t.name }}
+                      <td class="px-3 py-2">
+                        <span class="font-medium text-brand-text">{{ t.name }}</span>
                         <span v-if="t.is_registered" class="ml-1 inline-block rounded-full bg-brand-accent/10 px-1.5 py-0.5 text-xs text-brand-accent">registered</span>
                       </td>
-                      <td class="px-3 py-2 text-center">{{ t.entries }}</td>
+                      <td class="px-3 py-2 text-center"><span class="text-sm font-medium text-brand-text">{{ t.entries }}</span></td>
                       <td class="px-3 py-2 text-center">
                         <CheckCircle2 v-if="t.eligible" class="inline h-4 w-4 text-brand-success" />
                         <span v-else class="text-brand-text-soft">—</span>
                       </td>
-                      <td class="px-3 py-2 text-brand-text-soft">{{ t.reason }}</td>
+                      <td class="px-3 py-2"><span class="text-sm text-brand-text-soft">{{ t.reason }}</span></td>
                     </tr>
                   </tbody>
                 </table>

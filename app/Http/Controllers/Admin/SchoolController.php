@@ -15,18 +15,24 @@ class SchoolController extends Controller
 {
     public function index(Request $request): Response
     {
-        // Count contacts who are flagged as teachers in the unified contacts
-        // model (was: legacy `teachers` BelongsToMany via teacher_school).
-        $query = School::with(['contacts:id,name,phone'])
-            ->withCount([
-                'contacts as teachers_count' => fn ($q) => $q->whereExists(function ($s) {
-                    $s->select(\DB::raw(1))
-                        ->from('contact_types')
-                        ->whereColumn('contact_types.exam_contact_id', 'exam_contacts.id')
-                        ->where('type', 'teacher');
-                }),
-                'orders',
-            ]);
+        // teachers_count = distinct teachers who have actually submitted exam
+        // entries via this school's name. Counts canonical teacher_contact_id
+        // when present, falling back to a normalised teacher_name string for
+        // entries without an FK link. This is more useful than counting the
+        // sparse contact_school pivot (which only has manually-linked rows).
+        $query = School::query()
+            ->select('schools.*')
+            ->with(['contacts:id,name,phone'])
+            ->withCount(['orders'])
+            ->selectSub(
+                \DB::table('exam_entries')
+                    ->whereColumn('exam_entries.school_name', 'schools.name')
+                    ->whereNotNull('exam_entries.teacher_name')
+                    ->selectRaw(
+                        'COUNT(DISTINCT COALESCE(exam_entries.teacher_contact_id::text, LOWER(TRIM(exam_entries.teacher_name))))'
+                    ),
+                'teachers_count'
+            );
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -110,10 +116,32 @@ class SchoolController extends Controller
     {
         $school->load([
             'contacts' => fn ($q) => $q->withCount(['examEntries', 'orders']),
-            'orders' => fn ($q) => $q->with(['teacher:id,name', 'createdByContact:id,name'])->latest(),
+            'orders' => fn ($q) => $q->with(['createdByContact:id,name'])->latest(),
         ]);
 
         $primary = $this->pickPrimarySchoolContact($school);
+
+        // Derive teachers from exam_entries — same source the index page uses
+        // for `teachers_count`. The contact_school pivot is sparse on prod;
+        // this gives a complete list of who's actually submitted via this
+        // school, ordered by entry volume so the most active teachers surface
+        // first.
+        $derivedTeachers = \DB::table('exam_entries')
+            ->join('exam_contacts', 'exam_contacts.id', '=', 'exam_entries.teacher_contact_id')
+            ->where('exam_entries.school_name', $school->name)
+            ->whereNotNull('exam_entries.teacher_contact_id')
+            ->groupBy('exam_contacts.id', 'exam_contacts.name', 'exam_contacts.email', 'exam_contacts.phone')
+            ->select(
+                'exam_contacts.id',
+                'exam_contacts.name',
+                'exam_contacts.email',
+                'exam_contacts.phone',
+                \DB::raw('COUNT(DISTINCT exam_entries.student_id) as students_count'),
+                \DB::raw('COUNT(DISTINCT exam_entries.order_id) as orders_count'),
+                \DB::raw('COUNT(*) as entries_count'),
+            )
+            ->orderByRaw('COUNT(*) DESC')
+            ->get();
 
         $schoolData = [
             'id' => $school->id,
@@ -127,21 +155,20 @@ class SchoolController extends Controller
             'contact_id' => $primary?->id,
             'notes' => $school->notes,
             'created_at' => $school->created_at->format('d M Y'),
-            // "teachers" key kept for the existing Vue table; rows now point
-            // at exam_contacts (so row clicks land on /admin/contacts/{id}).
-            'teachers' => $school->contacts->map(fn ($c) => [
-                'id' => $c->id,
-                'name' => $c->name,
-                'email' => $c->email,
-                'phone' => $c->phone,
-                'types' => $c->types,
-                'students_count' => 0, // count via contact's students relation if needed later
-                'orders_count' => $c->orders_count,
+            'teachers' => $derivedTeachers->map(fn ($t) => [
+                'id' => $t->id,
+                'name' => $t->name,
+                'email' => $t->email,
+                'phone' => $t->phone,
+                'students_count' => (int) $t->students_count,
+                'orders_count' => (int) $t->orders_count,
+                'entries_count' => (int) $t->entries_count,
             ]),
             'orders' => $school->orders->map(fn ($o) => [
                 'id' => $o->id,
                 'trinity_order_number' => $o->trinity_order_number,
                 'teacher_name' => $o->createdByContact?->name ?? $o->applicant_name ?? '—',
+                'teacher_contact_id' => $o->created_by_contact_id,
                 'delivery_method' => $o->isDigital() ? 'DG' : 'F2F',
                 'candidates' => $o->candidates,
                 'commission_amount' => number_format($o->commission_amount, 2),
@@ -218,6 +245,19 @@ class SchoolController extends Controller
             }
         }
 
-        return null;
+        // Fallback: the teacher who has submitted the most students through
+        // this school by name match on exam_entries. Means schools without a
+        // contact_school pivot row still get a useful "Contact" — the de-facto
+        // lead teacher — instead of "—".
+        $topTeacherId = \DB::table('exam_entries')
+            ->where('school_name', $school->name)
+            ->whereNotNull('teacher_contact_id')
+            ->groupBy('teacher_contact_id')
+            ->orderByRaw('COUNT(*) DESC')
+            ->value('teacher_contact_id');
+
+        return $topTeacherId
+            ? \App\Models\ExamContact::find($topTeacherId)
+            : null;
     }
 }

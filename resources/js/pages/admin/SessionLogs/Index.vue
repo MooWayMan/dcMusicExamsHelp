@@ -4,7 +4,6 @@ import { ref, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { Clock, Plus, Trash2, Edit3, CheckSquare } from 'lucide-vue-next'
 import PageHeader from '@/components/reusables/PageHeader.vue'
-import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyInputConstructor from '@/components/reusables/MyInputConstructor.vue'
 import MyTextareaConstructor from '@/components/reusables/MyTextareaConstructor.vue'
@@ -195,9 +194,7 @@ const tableColumns = [
 
             <!-- Chart -->
             <div :class="animClass('fade-up', 2)" class="mb-8 rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-xl">
-                <MyTextConstructor variant="button-lg" spacing="tight" class="mb-6">
-                    <template #myTitle>Hours Per Day</template>
-                </MyTextConstructor>
+                <h2 class="mb-6 text-xl font-semibold text-brand-text">Hours Per Day</h2>
 
                 <div class="flex items-end gap-2 sm:gap-3" style="height: 280px;">
                     <div
@@ -238,11 +235,9 @@ const tableColumns = [
                     @click.self="showForm = false"
                 >
                     <div class="w-full max-w-md rounded-2xl bg-brand-surface p-6 shadow-2xl">
-                        <MyTextConstructor variant="button-lg" spacing="tight" class="mb-4">
-                            <template #myTitle>
-                                {{ editingId ? 'Edit Session Log' : 'Log Hours' }}
-                            </template>
-                        </MyTextConstructor>
+                        <h2 class="mb-4 text-xl font-semibold text-brand-text">
+                            {{ editingId ? 'Edit Session Log' : 'Log Hours' }}
+                        </h2>
 
                         <form @submit.prevent="submitForm" class="space-y-4">
                             <MyInputConstructor
@@ -296,9 +291,7 @@ const tableColumns = [
                     @click.self="showNotesModal = false"
                 >
                     <div class="w-full max-w-lg rounded-2xl bg-brand-surface p-6 shadow-2xl">
-                        <MyTextConstructor variant="button-lg" spacing="tight" class="mb-4">
-                            <template #myTitle>{{ notesModalContent.date }}</template>
-                        </MyTextConstructor>
+                        <h2 class="mb-4 text-xl font-semibold text-brand-text">{{ notesModalContent.date }}</h2>
                         <p class="whitespace-pre-wrap text-sm leading-relaxed text-brand-text">
                             {{ notesModalContent.notes }}
                         </p>
@@ -329,11 +322,14 @@ const tableColumns = [
                     striped
                     hoverable
                 >
+                    <template #cell-dateFormatted="{ value }">
+                        <span class="text-sm text-brand-text-soft">{{ value }}</span>
+                    </template>
                     <template #cell-hours="{ value }">
-                        <span class="font-bold text-brand-accent">{{ value }}h</span>
+                        <span class="text-sm font-medium text-brand-accent">{{ value }}h</span>
                     </template>
                     <template #cell-tasks="{ value }">
-                        <span class="font-semibold text-brand-teal">{{ value }}</span>
+                        <span class="text-sm font-medium text-brand-teal">{{ value }}</span>
                     </template>
                     <template #cell-notes="{ value, row }">
                         <div v-if="value" class="max-w-[200px] sm:max-w-[300px] md:max-w-[400px]">

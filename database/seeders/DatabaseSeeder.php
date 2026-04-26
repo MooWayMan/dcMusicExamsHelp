@@ -28,10 +28,13 @@ class DatabaseSeeder extends Seeder
             LookupSeeder::class,
         ]);
 
-        // Seed fake data for admin panel development
+        // Seed fake data for admin panel development.
+        // Order matters: FakeContactsSeeder runs first so the teacher
+        // ExamContacts exist before FakeDataSeeder stamps
+        // exam_entries.teacher_contact_id by name match.
         $this->call([
-            FakeDataSeeder::class,
             FakeContactsSeeder::class,
+            FakeDataSeeder::class,
         ]);
     }
 }

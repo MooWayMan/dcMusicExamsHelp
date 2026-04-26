@@ -119,6 +119,7 @@ function resultBadgeClass(result: string): string {
         case 'Distinction': return 'bg-brand-success-soft text-brand-success'
         case 'Merit': return 'bg-brand-accent/10 text-brand-accent'
         case 'Pass': return 'bg-brand-surface-soft text-brand-text-soft'
+        case 'Below Pass': return 'bg-brand-danger-soft text-brand-danger'
         default: return 'bg-brand-surface-soft text-brand-text-soft'
     }
 }
@@ -277,7 +278,7 @@ function resultBadgeClass(result: string): string {
                     </thead>
                     <tbody class="divide-y divide-brand-border">
                         <tr v-for="entry in entries.data" :key="entry.id" class="transition-colors hover:bg-brand-surface-soft">
-                            <td class="px-4 py-3 text-brand-text">{{ entry.exam_date ?? '—' }}</td>
+                            <td class="px-4 py-3"><span class="text-sm text-brand-text-soft">{{ entry.exam_date ?? '—' }}</span></td>
                             <td class="px-4 py-3">
                                 <Link :href="`/admin/orders/${entry.order_id}`" class="font-medium text-brand-accent hover:underline">
                                     {{ entry.order_number }}
@@ -285,7 +286,7 @@ function resultBadgeClass(result: string): string {
                             </td>
                             <td class="px-4 py-3">
                                 <button v-if="entry.candidate_name" type="button"
-                                    class="text-left text-brand-text hover:text-brand-accent hover:underline"
+                                    class="text-left font-medium text-brand-accent hover:underline"
                                     @click="filterByValue(entry.candidate_name)">
                                     {{ entry.candidate_name }}
                                 </button>
@@ -293,14 +294,14 @@ function resultBadgeClass(result: string): string {
                             </td>
                             <td class="px-4 py-3">
                                 <button v-if="entry.subject_area" type="button"
-                                    class="text-left text-brand-text-soft hover:text-brand-accent hover:underline"
+                                    class="text-left text-sm text-brand-text-soft hover:text-brand-accent hover:underline"
                                     @click="filterByValue(entry.subject_area)">
                                     {{ entry.subject_area }}
                                 </button>
                                 <span v-else class="text-brand-text-soft">—</span>
                             </td>
-                            <td class="px-4 py-3 text-brand-text">{{ entry.grade ?? '—' }}</td>
-                            <td class="px-4 py-3 text-brand-text-soft">{{ entry.delivery_method ?? '—' }}</td>
+                            <td class="px-4 py-3"><span class="text-sm text-brand-text-soft">{{ entry.grade ?? '—' }}</span></td>
+                            <td class="px-4 py-3"><span class="text-sm text-brand-text-soft">{{ entry.delivery_method ?? '—' }}</span></td>
                             <td class="px-4 py-3">
                                 <span v-if="entry.result" class="rounded-full px-2 py-0.5 text-sm font-medium"
                                     :class="resultBadgeClass(entry.result)">
@@ -308,10 +309,10 @@ function resultBadgeClass(result: string): string {
                                 </span>
                                 <span v-else class="text-brand-text-soft">—</span>
                             </td>
-                            <td class="px-4 py-3 text-center text-brand-text">{{ entry.score ?? '—' }}</td>
+                            <td class="px-4 py-3 text-center"><span class="text-sm font-medium text-brand-text">{{ entry.score ?? '—' }}</span></td>
                             <td class="px-4 py-3">
                                 <button v-if="entry.teacher_name" type="button"
-                                    class="text-left text-brand-text hover:text-brand-accent hover:underline"
+                                    class="text-left text-brand-accent hover:underline"
                                     @click="filterByValue(entry.teacher_name)">
                                     {{ entry.teacher_name }}
                                 </button>
@@ -319,7 +320,7 @@ function resultBadgeClass(result: string): string {
                             </td>
                             <td class="px-4 py-3">
                                 <button v-if="entry.school_name" type="button"
-                                    class="text-left text-brand-text-soft hover:text-brand-accent hover:underline"
+                                    class="text-left text-sm text-brand-text-soft hover:text-brand-accent hover:underline"
                                     @click="filterByValue(entry.school_name)">
                                     {{ entry.school_name }}
                                 </button>

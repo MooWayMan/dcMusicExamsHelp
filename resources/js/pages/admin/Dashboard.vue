@@ -13,7 +13,6 @@ import {
     Mail,
     AlertCircle,
 } from 'lucide-vue-next'
-import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import PageHeader from '@/components/reusables/PageHeader.vue'
 
 interface Stats {
@@ -187,9 +186,7 @@ const { animClass } = usePageAnimation()
             <!-- Recent Orders -->
             <div class="rounded-xl border border-brand-border bg-brand-surface">
                 <div class="border-b border-brand-border p-4">
-                    <MyTextConstructor variant="button-lg">
-                        <template #myTitle>Recent Orders</template>
-                    </MyTextConstructor>
+                    <h2 class="text-xl font-semibold text-brand-text">Recent Orders</h2>
                 </div>
                 <div class="overflow-x-auto">
                     <table v-if="recentOrders.length" class="w-full text-left">
@@ -208,18 +205,28 @@ const { animClass } = usePageAnimation()
                                 class="cursor-pointer border-b border-brand-border transition-colors hover:bg-brand-surface-soft"
                                 :class="idx % 2 === 1 ? 'bg-brand-surface-soft/50' : ''"
                                 @click="router.visit(`/admin/orders/${order.id}`)">
-                                <td class="px-4 py-3 text-base font-medium text-brand-accent">{{ order.trinity_order_number }}</td>
-                                <td class="px-4 py-3 text-base text-brand-text">
+                                <td class="px-4 py-3"><span class="font-medium text-brand-accent hover:underline">{{ order.trinity_order_number }}</span></td>
+                                <td class="px-4 py-3">
                                     <Link v-if="order.teacher_contact_id"
                                         :href="`/admin/contacts/${order.teacher_contact_id}`"
-                                        class="text-brand-text hover:text-brand-accent hover:underline"
+                                        class="text-brand-accent hover:underline"
                                         @click.stop>{{ order.teacher_name }}</Link>
-                                    <span v-else class="text-brand-text-soft">{{ order.teacher_name }}</span>
+                                    <span v-else class="text-brand-text">{{ order.teacher_name }}</span>
                                 </td>
-                                <td class="px-4 py-3 text-base text-brand-text">{{ order.delivery_method }}</td>
-                                <td class="px-4 py-3 text-base text-brand-text">{{ order.candidates }}</td>
-                                <td class="px-4 py-3 text-base text-brand-text">&pound;{{ order.commission_amount }}</td>
-                                <td class="px-4 py-3 text-base text-brand-text">{{ order.order_status }}</td>
+                                <td class="px-4 py-3"><span class="text-sm text-brand-text-soft">{{ order.delivery_method }}</span></td>
+                                <td class="px-4 py-3"><span class="text-sm text-brand-text-soft">{{ order.candidates }}</span></td>
+                                <td class="px-4 py-3"><span class="font-medium text-brand-text">&pound;{{ order.commission_amount }}</span></td>
+                                <td class="px-4 py-3">
+                                    <span class="rounded-full px-2 py-0.5 text-sm font-medium"
+                                        :class="{
+                                            'bg-brand-success-soft text-brand-success': order.order_status === 'Completed',
+                                            'bg-brand-accent/10 text-brand-accent': order.order_status === 'Confirmed',
+                                            'bg-brand-surface-soft text-brand-text-soft': order.order_status === 'Submitted',
+                                            'bg-brand-danger-soft text-brand-danger': order.order_status === 'Cancelled',
+                                        }">
+                                        {{ order.order_status }}
+                                    </span>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -230,9 +237,7 @@ const { animClass } = usePageAnimation()
             <!-- Recent Contacts -->
             <div class="rounded-xl border border-brand-border bg-brand-surface">
                 <div class="border-b border-brand-border p-4">
-                    <MyTextConstructor variant="button-lg">
-                        <template #myTitle>Recent Contact Activity</template>
-                    </MyTextConstructor>
+                    <h2 class="text-xl font-semibold text-brand-text">Recent Contact Activity</h2>
                 </div>
                 <div class="overflow-x-auto">
                     <table v-if="recentContacts.length" class="w-full text-left">
@@ -249,12 +254,18 @@ const { animClass } = usePageAnimation()
                             <tr v-for="(contact, idx) in recentContacts" :key="contact.id"
                                 class="cursor-pointer border-b border-brand-border transition-colors hover:bg-brand-surface-soft"
                                 :class="idx % 2 === 1 ? 'bg-brand-surface-soft/50' : ''"
-                                @click="router.visit(`/admin/teachers/${contact.teacher_id}`)">
-                                <td class="px-4 py-3 text-base font-medium text-brand-accent">{{ contact.teacher_name }}</td>
-                                <td class="px-4 py-3 text-base text-brand-text">{{ contact.contact_type }}</td>
-                                <td class="px-4 py-3 text-base text-brand-text">{{ contact.direction }}</td>
-                                <td class="px-4 py-3 text-base text-brand-text">{{ contact.subject }}</td>
-                                <td class="px-4 py-3 text-base text-brand-text">{{ contact.contacted_at }}</td>
+                                @click="contact.teacher_contact_id && router.visit(`/admin/contacts/${contact.teacher_contact_id}`)">
+                                <td class="px-4 py-3">
+                                    <Link v-if="contact.teacher_contact_id"
+                                        :href="`/admin/contacts/${contact.teacher_contact_id}`"
+                                        class="font-medium text-brand-accent hover:underline"
+                                        @click.stop>{{ contact.teacher_name }}</Link>
+                                    <span v-else class="font-medium text-brand-text">{{ contact.teacher_name }}</span>
+                                </td>
+                                <td class="px-4 py-3"><span class="text-sm text-brand-text-soft">{{ contact.contact_type }}</span></td>
+                                <td class="px-4 py-3"><span class="text-sm text-brand-text-soft">{{ contact.direction }}</span></td>
+                                <td class="px-4 py-3"><span class="text-brand-text">{{ contact.subject }}</span></td>
+                                <td class="px-4 py-3"><span class="text-sm text-brand-text-soft">{{ contact.contacted_at }}</span></td>
                             </tr>
                         </tbody>
                     </table>
@@ -268,9 +279,7 @@ const { animClass } = usePageAnimation()
             <div class="rounded-xl border border-brand-accent/30 bg-brand-surface-soft p-5">
                 <div class="mb-3 flex items-center gap-2">
                     <AlertCircle class="h-5 w-5 text-brand-accent" />
-                    <MyTextConstructor variant="button-lg" textColor="text-brand-accent">
-                        <template #myTitle>Teachers Needing Follow-up</template>
-                    </MyTextConstructor>
+                    <h2 class="text-xl font-semibold text-brand-accent">Teachers Needing Follow-up</h2>
                 </div>
                 <p class="mb-4 text-lg text-brand-text-soft">
                     These teachers haven't been contacted in the last 30 days.

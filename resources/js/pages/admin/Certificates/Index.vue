@@ -477,16 +477,16 @@ async function generateTeacherCert(mode: 'preview' | 'download' = 'preview') {
                 :class="{ 'bg-brand-accent/10 ring-1 ring-brand-accent': selectedEntry === entry.id }"
                 @click="selectStudentEntry(entry)"
               >
-                <td class="px-3 py-2 font-medium">{{ entry.candidate_name }}</td>
-                <td class="px-3 py-2">{{ entry.instrument }}</td>
-                <td class="px-3 py-2 text-center">{{ entry.grade }}</td>
-                <td class="px-3 py-2 text-center">{{ entry.score }}</td>
+                <td class="px-3 py-2"><span class="font-medium text-brand-text">{{ entry.candidate_name }}</span></td>
+                <td class="px-3 py-2"><span class="text-sm text-brand-text-soft">{{ entry.instrument }}</span></td>
+                <td class="px-3 py-2 text-center"><span class="text-sm text-brand-text-soft">{{ entry.grade }}</span></td>
+                <td class="px-3 py-2 text-center"><span class="text-sm font-medium text-brand-text">{{ entry.score }}</span></td>
                 <td class="px-3 py-2">
                   <span class="inline-block rounded-full bg-brand-accent/10 px-2 py-0.5 text-xs font-semibold text-brand-accent">
                     {{ entry.certificate }}
                   </span>
                 </td>
-                <td class="px-3 py-2 text-brand-text-soft">{{ entry.exam_date }}</td>
+                <td class="px-3 py-2"><span class="text-sm text-brand-text-soft">{{ entry.exam_date }}</span></td>
               </tr>
               <tr v-if="filteredStudents().length === 0">
                 <td colspan="6" class="px-3 py-8 text-center text-brand-text-soft">No entries found</td>
@@ -606,8 +606,8 @@ async function generateTeacherCert(mode: 'preview' | 'download' = 'preview') {
                 :class="{ 'bg-brand-accent/10 ring-1 ring-brand-accent': selectedTeacher === teacher.id }"
                 @click="selectTeacherRow(teacher)"
               >
-                <td class="px-3 py-2 font-medium">{{ teacher.name }}</td>
-                <td class="px-3 py-2 text-center">{{ teacher.candidates_count }}</td>
+                <td class="px-3 py-2"><span class="font-medium text-brand-text">{{ teacher.name }}</span></td>
+                <td class="px-3 py-2 text-center"><span class="text-sm font-medium text-brand-text">{{ teacher.candidates_count }}</span></td>
                 <td class="px-3 py-2">
                   <span
                     class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold"
