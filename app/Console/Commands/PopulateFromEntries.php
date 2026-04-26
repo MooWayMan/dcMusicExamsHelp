@@ -157,11 +157,13 @@ class PopulateFromEntries extends Command
                     $this->line("  Would create student: {$fullName}" . ($teacherDisplay ? " (teacher: {$teacherDisplay})" : ''));
                     $studentsCreated++;
                 } else {
+                    // Note: instrument is no longer stored on students (column
+                    // dropped 2026-04-26 — students take multiple instruments
+                    // over time). Per-exam instrument lives on exam_entries.
                     $student = Student::create([
                         'first_name' => $firstName,
                         'last_name' => $lastName,
                         'teacher_contact_id' => $teacherContact?->id,
-                        'instrument_id' => $firstEntry->instrument_id,
                     ]);
                     $studentMap[$nameKey] = $student;
                     $studentsCreated++;

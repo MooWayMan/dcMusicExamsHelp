@@ -11,7 +11,7 @@ interface Order {
     id: number
     trinity_order_number: string
     teacher_name: string
-    teacher_id: number | null
+    teacher_contact_id: number | null
     school_name: string
     school_id: number | null
     delivery_method: string

@@ -21,7 +21,7 @@ class OrderController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = Order::with(['teacher:id,name', 'createdByContact:id,name', 'school:id,name'])
+        $query = Order::with(['createdByContact:id,name', 'school:id,name'])
             ->withCount('examEntries');
 
         if ($search = $request->input('search')) {
@@ -29,7 +29,7 @@ class OrderController extends Controller
                 $q->where('trinity_order_number', 'ilike', "%{$search}%")
                   ->orWhere('venue', 'ilike', "%{$search}%")
                   ->orWhere('applicant_name', 'ilike', "%{$search}%")
-                  ->orWhereHas('teacher', fn ($tq) => $tq->where('name', 'ilike', "%{$search}%"))
+                  ->orWhereHas('createdByContact', fn ($cq) => $cq->where('name', 'ilike', "%{$search}%"))
                   ->orWhereHas('school', fn ($sq) => $sq->where('name', 'ilike', "%{$search}%"));
             });
         }
@@ -99,7 +99,7 @@ class OrderController extends Controller
         $orders->through(fn ($order) => [
             'id' => $order->id,
             'trinity_order_number' => $order->trinity_order_number,
-            'teacher_name' => $order->createdByContact->name ?? $order->teacher->name ?? $order->applicant_name ?? '—',
+            'teacher_name' => $order->createdByContact->name ?? $order->applicant_name ?? '—',
             'teacher_contact_id' => $order->created_by_contact_id,
             'school_name' => $order->school->name ?? '—',
             'school_id' => $order->school_id,
@@ -125,7 +125,7 @@ class OrderController extends Controller
             $summaryQuery->where(function ($q) use ($search) {
                 $q->where('trinity_order_number', 'ilike', "%{$search}%")
                   ->orWhere('applicant_name', 'ilike', "%{$search}%")
-                  ->orWhereHas('teacher', fn ($tq) => $tq->where('name', 'ilike', "%{$search}%"));
+                  ->orWhereHas('createdByContact', fn ($cq) => $cq->where('name', 'ilike', "%{$search}%"));
             });
         }
         if ($method) $summaryQuery->where('delivery_method', $method);
@@ -203,7 +203,7 @@ class OrderController extends Controller
             'subject_area' => 'nullable|string|max:100',
             'order_status' => 'required|string|max:50',
             'requested_start_date' => 'required|date',
-            'user_id' => 'nullable|exists:users,id',
+            'created_by_contact_id' => 'nullable|exists:exam_contacts,id',
             'school_id' => 'nullable|exists:schools,id',
             'venue' => 'nullable|string|max:255',
             'commission_rate' => 'required|numeric|min:0|max:100',
@@ -250,7 +250,6 @@ class OrderController extends Controller
     public function show(Order $order): Response
     {
         $order->load([
-            'teacher:id,name,email,phone',
             'createdByContact:id,name,email,phone',
             'school:id,name,city',
             'examEntries' => fn ($q) => $q->with(['student:id,first_name,last_name', 'instrument:id,name']),
@@ -270,23 +269,13 @@ class OrderController extends Controller
             'requested_start_date' => $order->requested_start_date?->format('d M Y'),
             'notes' => $order->notes,
             'created_at' => $order->created_at->format('d M Y'),
-            // Prefer the unified contact (createdByContact) when present; fall back
-            // to the legacy teacher (User) for orders not yet linked to a contact.
-            'teacher' => match (true) {
-                $order->createdByContact !== null => [
-                    'id' => $order->createdByContact->id,
-                    'name' => $order->createdByContact->name,
-                    'email' => $order->createdByContact->email,
-                    'phone' => $order->createdByContact->phone,
-                ],
-                $order->teacher !== null => [
-                    'id' => null, // legacy User id — Vue renders without link if id is null
-                    'name' => $order->teacher->name,
-                    'email' => $order->teacher->email,
-                    'phone' => $order->teacher->phone,
-                ],
-                default => null,
-            },
+            // Single source of truth: the unified contact for this order.
+            'teacher' => $order->createdByContact ? [
+                'id' => $order->createdByContact->id,
+                'name' => $order->createdByContact->name,
+                'email' => $order->createdByContact->email,
+                'phone' => $order->createdByContact->phone,
+            ] : null,
             'school' => $order->school ? [
                 'id' => $order->school->id,
                 'name' => $order->school->name,
@@ -319,7 +308,7 @@ class OrderController extends Controller
                 'subject_area' => $order->subject_area,
                 'order_status' => $order->order_status,
                 'requested_start_date' => $order->requested_start_date?->format('Y-m-d'),
-                'user_id' => $order->user_id,
+                'created_by_contact_id' => $order->created_by_contact_id,
                 'school_id' => $order->school_id,
                 'venue' => $order->venue,
                 'commission_rate' => $order->commission_rate,
@@ -367,7 +356,7 @@ class OrderController extends Controller
             'subject_area' => 'nullable|string|max:100',
             'order_status' => 'required|string|max:50',
             'requested_start_date' => 'required|date',
-            'user_id' => 'nullable|exists:users,id',
+            'created_by_contact_id' => 'nullable|exists:exam_contacts,id',
             'school_id' => 'nullable|exists:schools,id',
             'venue' => 'nullable|string|max:255',
             'commission_rate' => 'required|numeric|min:0|max:100',

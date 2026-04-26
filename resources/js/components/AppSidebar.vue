@@ -45,11 +45,26 @@ const mainNavItems: NavItem[] = [
     },
 ];
 
-const adminNavItems: NavItem[] = [
+// The admin nav is grouped by intent so related screens sit together,
+// rather than one long flat list.
+//   1. Overview  — single landing screen for the admin
+//   2. People    — Contacts / Schools / Students
+//   3. Exams     — Orders → Exam Entries → Pending Results → Certificates → Quarter End
+//   4. Tools     — Tasks / Roadmap / Page Maintenance / Session Hours
+
+const adminOverviewNavItems: NavItem[] = [
     {
         title: 'Admin Dashboard',
         href: '/admin',
         icon: BarChart3,
+    },
+];
+
+const adminPeopleNavItems: NavItem[] = [
+    {
+        title: 'Contacts',
+        href: '/admin/contacts',
+        icon: ContactIcon,
     },
     {
         title: 'Schools',
@@ -61,14 +76,17 @@ const adminNavItems: NavItem[] = [
         ],
     },
     {
+        title: 'Students',
+        href: '/admin/students',
+        icon: GraduationCap,
+    },
+];
+
+const adminExamsNavItems: NavItem[] = [
+    {
         title: 'Orders',
         href: '/admin/orders',
         icon: ClipboardList,
-    },
-    {
-        title: 'Pending Results',
-        href: '/admin/pending-results',
-        icon: AlertCircle,
     },
     {
         title: 'Exam Entries',
@@ -76,23 +94,9 @@ const adminNavItems: NavItem[] = [
         icon: FileSpreadsheet,
     },
     {
-        title: 'Students',
-        href: '/admin/students',
-        icon: GraduationCap,
-    },
-    {
-        title: 'Contacts',
-        href: '/admin/contacts',
-        icon: ContactIcon,
-    },
-    {
-        title: 'Tasks',
-        href: '/admin/tasks',
-        icon: CheckSquare,
-        children: [
-            { title: 'All Tasks', href: '/admin/tasks' },
-            { title: 'Add Task', href: '/admin/tasks/create' },
-        ],
+        title: 'Pending Results',
+        href: '/admin/pending-results',
+        icon: AlertCircle,
     },
     {
         title: 'Certificates',
@@ -103,6 +107,18 @@ const adminNavItems: NavItem[] = [
         title: 'Quarter End',
         href: '/admin/quarter-end',
         icon: Gift,
+    },
+];
+
+const adminToolsNavItems: NavItem[] = [
+    {
+        title: 'Tasks',
+        href: '/admin/tasks',
+        icon: CheckSquare,
+        children: [
+            { title: 'All Tasks', href: '/admin/tasks' },
+            { title: 'Add Task', href: '/admin/tasks/create' },
+        ],
     },
     {
         title: 'Roadmap',
@@ -139,7 +155,12 @@ const footerNavItems: NavItem[] = [];
 
         <SidebarContent>
             <NavMain :items="mainNavItems" />
-            <NavMain v-if="isAdmin" :items="adminNavItems" label="Admin" />
+            <template v-if="isAdmin">
+                <NavMain :items="adminOverviewNavItems" label="Admin" />
+                <NavMain :items="adminPeopleNavItems" label="People" />
+                <NavMain :items="adminExamsNavItems" label="Exams" />
+                <NavMain :items="adminToolsNavItems" label="Tools" />
+            </template>
         </SidebarContent>
 
         <SidebarFooter>

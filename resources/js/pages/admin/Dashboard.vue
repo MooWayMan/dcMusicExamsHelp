@@ -32,7 +32,7 @@ interface Stats {
 interface RecentOrder {
     id: number
     trinity_order_number: string
-    teacher_id: number
+    teacher_contact_id: number | null
     teacher_name: string
     school_name: string
     delivery_method: string
@@ -44,7 +44,7 @@ interface RecentOrder {
 
 interface RecentContact {
     id: number
-    teacher_id: number
+    teacher_contact_id: number | null
     teacher_name: string
     contact_type: string
     direction: string
@@ -210,7 +210,11 @@ const { animClass } = usePageAnimation()
                                 @click="router.visit(`/admin/orders/${order.id}`)">
                                 <td class="px-4 py-3 text-base font-medium text-brand-accent">{{ order.trinity_order_number }}</td>
                                 <td class="px-4 py-3 text-base text-brand-text">
-                                    <Link :href="`/admin/teachers/${order.teacher_id}`" class="text-brand-text hover:text-brand-accent hover:underline" @click.stop>{{ order.teacher_name }}</Link>
+                                    <Link v-if="order.teacher_contact_id"
+                                        :href="`/admin/contacts/${order.teacher_contact_id}`"
+                                        class="text-brand-text hover:text-brand-accent hover:underline"
+                                        @click.stop>{{ order.teacher_name }}</Link>
+                                    <span v-else class="text-brand-text-soft">{{ order.teacher_name }}</span>
                                 </td>
                                 <td class="px-4 py-3 text-base text-brand-text">{{ order.delivery_method }}</td>
                                 <td class="px-4 py-3 text-base text-brand-text">{{ order.candidates }}</td>

@@ -141,7 +141,7 @@ class SchoolController extends Controller
             'orders' => $school->orders->map(fn ($o) => [
                 'id' => $o->id,
                 'trinity_order_number' => $o->trinity_order_number,
-                'teacher_name' => $o->createdByContact?->name ?? $o->teacher?->name ?? $o->applicant_name ?? '—',
+                'teacher_name' => $o->createdByContact?->name ?? $o->applicant_name ?? '—',
                 'delivery_method' => $o->isDigital() ? 'DG' : 'F2F',
                 'candidates' => $o->candidates,
                 'commission_amount' => number_format($o->commission_amount, 2),

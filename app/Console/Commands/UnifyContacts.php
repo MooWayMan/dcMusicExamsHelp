@@ -684,13 +684,14 @@ class UnifyContacts extends Command
     }
 
     /**
-     * Backfill orders.user_id and orders.created_by_contact_id from
-     * applicant_email → canonical contact match. Catches DG orders where
-     * the import didn't link the teacher (Trinity Submitter) properly.
+     * Backfill orders.created_by_contact_id from applicant_email → canonical
+     * contact match. Catches DG orders where the import didn't link the
+     * teacher (Trinity Submitter) properly. (Pre-2026-04-26 this also wrote
+     * to orders.user_id; that column has since been dropped.)
      */
     private function backfillOrderFKs(array $byName): void
     {
-        $this->info('Step 10/10: Backfill orders.user_id + created_by_contact_id from applicant_email');
+        $this->info('Step 10/10: Backfill orders.created_by_contact_id from applicant_email');
 
         // Build email → canonical-contact index (primary + secondary emails).
         $emailIndex = [];
@@ -709,11 +710,10 @@ class UnifyContacts extends Command
         }
 
         // Look at every order with an applicant_email — even those that already
-        // have user_id and created_by_contact_id set, because some earlier
-        // imports linked the wrong contact (e.g. order 1-15549565825 was
-        // pointed at Mark Shore even though applicant_email is Paul's).
-        // The inner logic only writes if there's an actual change, so this is
-        // safe and idempotent.
+        // have created_by_contact_id set, because some earlier imports linked
+        // the wrong contact (e.g. order 1-15549565825 was pointed at Mark
+        // Shore even though applicant_email is Paul's). The inner logic only
+        // writes if there's an actual change, so this is safe and idempotent.
         $orders = \App\Models\Order::whereNotNull('applicant_email')->get();
 
         $linked = 0;
@@ -726,23 +726,12 @@ class UnifyContacts extends Command
                 continue;
             }
 
-            $changes = [];
-            if (empty($order->user_id) && ! empty($contact->user_id)) {
-                $order->user_id = $contact->user_id;
-                $changes[] = 'user_id';
-            }
-            // Always sync created_by_contact_id from the canonical email match
-            // (not just when null) so wrong FKs from earlier imports get fixed.
-            // Example: order 1-15549565825 had applicant_email=musicexams@... but
-            // was linked to Mark Shore's contact id from a prior bad import.
+            // Sync created_by_contact_id from the canonical email match (not
+            // just when null) so wrong FKs from earlier imports get fixed.
             if (! empty($contact->id) && $order->created_by_contact_id !== $contact->id) {
-                $order->created_by_contact_id = $contact->id;
-                $changes[] = 'created_by_contact_id';
-            }
-
-            if ($changes) {
-                $this->line("  + {$order->trinity_order_number} → {$contact->name} (".implode(', ', $changes).')');
+                $this->line("  + {$order->trinity_order_number} → {$contact->name} (created_by_contact_id)");
                 if (! $this->dryRun) {
+                    $order->created_by_contact_id = $contact->id;
                     $order->save();
                 }
                 $linked++;

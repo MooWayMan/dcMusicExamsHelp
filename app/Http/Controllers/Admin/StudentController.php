@@ -8,6 +8,7 @@ use App\Models\ExamContact;
 use App\Models\Instrument;
 use App\Models\Student;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,17 +19,17 @@ class StudentController extends Controller
         $search = $request->input('search');
         $family = $request->input('family');
 
-        $query = Student::with([
-            'instrument:id,name,family',
-            'examEntries.order.orderContacts.examContact',
-        ])->withCount('examEntries');
+        // Base filtered query — used for both the listing and the summary
+        // counts so the totals at the top respond to the active filters.
+        // (Bug fix: previously `summary.total` was an unfiltered global count.)
+        $base = Student::query();
 
         if ($search) {
-            $query->where(function ($q) use ($search) {
+            $base->where(function ($q) use ($search) {
                 $q->where('first_name', 'ilike', "%{$search}%")
                     ->orWhere('last_name', 'ilike', "%{$search}%")
                     ->orWhere('email', 'ilike', "%{$search}%")
-                    ->orWhereHas('instrument', fn ($iq) => $iq->where('name', 'ilike', "%{$search}%"))
+                    ->orWhereHas('examEntries.instrument', fn ($iq) => $iq->where('name', 'ilike', "%{$search}%"))
                     ->orWhereHas('examEntries', function ($eq) use ($search) {
                         $eq->where('candidate_name', 'ilike', "%{$search}%")
                             ->orWhere('teacher_name', 'ilike', "%{$search}%")
@@ -38,24 +39,40 @@ class StudentController extends Controller
         }
 
         if ($family) {
-            $query->whereHas('instrument', fn ($q) => $q->where('family', $family));
+            // A student "belongs to" a family if any of their exam entries'
+            // instruments are in that family (chips model — many-per-student).
+            $base->whereHas('examEntries.instrument', fn ($q) => $q->where('family', $family));
         }
+
+        // Listing query: clone base, attach eager loads + sort + count.
+        $query = (clone $base)
+            ->with([
+                'examEntries.instrument:id,name,family',
+                'examEntries.order.orderContacts.examContact',
+            ])
+            ->withCount('examEntries');
 
         $sortBy = $request->input('sort', 'last_name');
         $sortDir = $request->input('direction', 'asc');
         $allowedSorts = ['first_name', 'last_name', 'exam_entries_count', 'created_at'];
 
         if ($sortBy === 'instrument') {
+            // Order by the alphabetically-first instrument name across the
+            // student's exam entries. Works as a stable tiebreaker for chips.
             $query->orderBy(
-                Instrument::select('name')
-                    ->whereColumn('instruments.id', 'students.instrument_id')
+                Instrument::select('instruments.name')
+                    ->join('exam_entries', 'exam_entries.instrument_id', '=', 'instruments.id')
+                    ->whereColumn('exam_entries.student_id', 'students.id')
+                    ->orderBy('instruments.name')
                     ->limit(1),
                 $sortDir
             );
         } elseif ($sortBy === 'instrument_family') {
             $query->orderBy(
-                Instrument::select('family')
-                    ->whereColumn('instruments.id', 'students.instrument_id')
+                Instrument::select('instruments.family')
+                    ->join('exam_entries', 'exam_entries.instrument_id', '=', 'instruments.id')
+                    ->whereColumn('exam_entries.student_id', 'students.id')
+                    ->orderBy('instruments.family')
                     ->limit(1),
                 $sortDir
             );
@@ -68,6 +85,18 @@ class StudentController extends Controller
         $students->through(function ($student) {
             $teacherContact = $this->resolveTeacherContact($student);
 
+            // Distinct instruments across all exam entries — chips model.
+            $instruments = $student->examEntries
+                ->pluck('instrument')
+                ->filter()
+                ->unique('id')
+                ->values()
+                ->map(fn ($i) => [
+                    'id'     => $i->id,
+                    'name'   => $i->name,
+                    'family' => $i->family,
+                ]);
+
             return [
                 'id' => $student->id,
                 'first_name' => $student->first_name,
@@ -76,17 +105,25 @@ class StudentController extends Controller
                 'email' => $student->email,
                 'teacher_name' => $teacherContact?->name ?? '—',
                 'teacher_id' => $teacherContact?->id,
-                'instrument' => $student->instrument->name ?? '—',
-                'instrument_family' => $student->instrument->family ?? '—',
+                'instruments' => $instruments,
                 'exam_entries_count' => $student->exam_entries_count,
             ];
         });
 
-        // Summary stats (unfiltered)
+        // Filter-aware summary counts. Each summary number reflects the
+        // currently active search/family filter.
+        $matchedIds = (clone $base)->pluck('students.id');
+
+        $familyCount = Instrument::query()
+            ->join('exam_entries', 'exam_entries.instrument_id', '=', 'instruments.id')
+            ->whereIn('exam_entries.student_id', $matchedIds)
+            ->distinct()
+            ->count(DB::raw('instruments.family'));
+
         $summary = [
-            'total' => Student::count(),
-            'with_exams' => Student::has('examEntries')->count(),
-            'families' => Instrument::whereIn('id', Student::select('instrument_id'))->distinct('family')->count('family'),
+            'total'      => $matchedIds->count(),
+            'with_exams' => (clone $base)->has('examEntries')->count(),
+            'families'   => $familyCount,
         ];
 
         return Inertia::render('admin/Students/Index', [

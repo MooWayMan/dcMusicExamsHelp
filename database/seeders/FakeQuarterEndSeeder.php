@@ -115,7 +115,6 @@ class FakeQuarterEndSeeder extends Seeder
                     $examDate = Carbon::create(2026, $month, $day);
 
                     $order = Order::create([
-                        'user_id' => $teacher->id,
                         'trinity_order_number' => self::TAG . str_pad($orderCounter++, 4, '0', STR_PAD_LEFT),
                         'delivery_method' => $deliveryMethod,
                         'subject_area' => 'Music',
@@ -208,7 +207,6 @@ class FakeQuarterEndSeeder extends Seeder
             $examDate = Carbon::create(2026, 3, rand(1, 28));
 
             $order = Order::create([
-                'user_id' => $teachers->first()['user']->id, // any user; real prod sets Paul
                 'trinity_order_number' => self::TAG . 'P' . str_pad($orderCounter++, 3, '0', STR_PAD_LEFT),
                 'delivery_method' => 'Default',
                 'subject_area' => 'Rock and Pop',

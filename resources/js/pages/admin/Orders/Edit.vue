@@ -31,7 +31,7 @@ interface OrderPayload {
     subject_area: string | null
     order_status: string
     requested_start_date: string | null
-    user_id: number | null
+    created_by_contact_id: number | null
     school_id: number | null
     venue: string | null
     commission_rate: number | string
@@ -79,7 +79,7 @@ const form = useForm({
     subject_area: props.order.subject_area ?? 'Music',
     order_status: props.order.order_status,
     requested_start_date: props.order.requested_start_date ?? '',
-    user_id: props.order.user_id,
+    created_by_contact_id: props.order.created_by_contact_id,
     school_id: props.order.school_id,
     venue: props.order.venue ?? '',
     commission_rate: Number(props.order.commission_rate),
@@ -198,11 +198,11 @@ function inputClass() {
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                         <label class="mb-1 block text-lg font-medium text-brand-text">Teacher</label>
-                        <select v-model="form.user_id" :class="inputClass()">
+                        <select v-model="form.created_by_contact_id" :class="inputClass()">
                             <option :value="null">— No teacher (applicant-only) —</option>
                             <option v-for="t in teachers" :key="t.id" :value="t.id">{{ t.name }}</option>
                         </select>
-                        <p v-if="form.errors.user_id" class="mt-1 text-sm text-brand-danger">{{ form.errors.user_id }}</p>
+                        <p v-if="form.errors.created_by_contact_id" class="mt-1 text-sm text-brand-danger">{{ form.errors.created_by_contact_id }}</p>
                     </div>
                     <div>
                         <label class="mb-1 block text-lg font-medium text-brand-text">School</label>

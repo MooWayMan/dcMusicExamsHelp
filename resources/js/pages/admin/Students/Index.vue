@@ -8,6 +8,12 @@ import { usePageAnimation } from '@/composables/usePageAnimation'
 
 const { animClass } = usePageAnimation()
 
+interface InstrumentChip {
+    id: number
+    name: string
+    family: string
+}
+
 interface Student {
     id: number
     first_name: string
@@ -16,9 +22,12 @@ interface Student {
     email: string | null
     teacher_name: string
     teacher_id: number | null
-    instrument: string
-    instrument_family: string
+    instruments: InstrumentChip[]
     exam_entries_count: number
+}
+
+function uniqueFamilies(instruments: InstrumentChip[]): string[] {
+    return [...new Set(instruments.map((i) => i.family).filter(Boolean))]
 }
 
 interface PaginatedData {
@@ -74,7 +83,7 @@ const families = ['Keyboard', 'Strings', 'Brass', 'Woodwind', 'Voice', 'Percussi
 
 <template>
     <div class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <PageHeader title="Students" subtitle="All students across your teaching network" eyebrow="Admin" size="compact" />
+        <PageHeader title="Students" subtitle="All students across your exam network" eyebrow="Admin" size="compact" />
 
         <!-- Summary pills -->
         <div :class="['mt-6 flex flex-wrap gap-3', animClass('fade-up', 1)]">
@@ -179,15 +188,23 @@ const families = ['Keyboard', 'Strings', 'Brass', 'Woodwind', 'Voice', 'Percussi
                                 <span v-else class="text-brand-text-soft">—</span>
                             </td>
                             <td class="px-4 py-3">
-                                <div class="flex items-center gap-1.5">
-                                    <Music class="h-4 w-4 text-brand-text-soft" />
-                                    <span class="text-brand-text">{{ student.instrument }}</span>
+                                <div v-if="student.instruments.length" class="flex flex-wrap items-center gap-1.5">
+                                    <Music class="h-4 w-4 shrink-0 text-brand-text-soft" />
+                                    <span v-for="inst in student.instruments" :key="inst.id"
+                                        class="rounded-full bg-brand-surface-soft px-2 py-0.5 text-sm font-medium text-brand-text">
+                                        {{ inst.name }}
+                                    </span>
                                 </div>
+                                <span v-else class="text-brand-text-soft">—</span>
                             </td>
                             <td class="px-4 py-3">
-                                <span class="rounded-full bg-brand-surface-soft px-2.5 py-1 text-sm font-medium text-brand-text-soft">
-                                    {{ student.instrument_family }}
-                                </span>
+                                <div v-if="uniqueFamilies(student.instruments).length" class="flex flex-wrap gap-1">
+                                    <span v-for="fam in uniqueFamilies(student.instruments)" :key="fam"
+                                        class="rounded-full bg-brand-surface-soft px-2.5 py-1 text-sm font-medium text-brand-text-soft">
+                                        {{ fam }}
+                                    </span>
+                                </div>
+                                <span v-else class="text-brand-text-soft">—</span>
                             </td>
                             <td class="px-4 py-3 text-center">
                                 <Link :href="`/admin/exam-entries?student_id=${student.id}&from=students`"

@@ -45,40 +45,47 @@ class ExamEntryController extends Controller
             $quarter = '';
         }
 
+        // Shared filter logic — applied to both the paginated entries query AND the summary counts
+        // so that switching the quarter pill or typing in search updates the stat cards too.
+        $applyFilters = function ($q) use ($studentId, $search, $quarter) {
+            if ($studentId) {
+                $q->where('exam_entries.student_id', $studentId);
+            }
+
+            if ($search !== '') {
+                $q->where(function ($qq) use ($search) {
+                    $qq->where('exam_entries.candidate_name', 'ilike', "%{$search}%")
+                        ->orWhere('exam_entries.candidate_number', 'ilike', "%{$search}%")
+                        ->orWhere('exam_entries.teacher_name', 'ilike', "%{$search}%")
+                        ->orWhere('exam_entries.school_name', 'ilike', "%{$search}%")
+                        ->orWhere('orders.trinity_order_number', 'ilike', "%{$search}%");
+                });
+            }
+
+            if ($quarter !== '') {
+                $months = match ($quarter) {
+                    'Q1' => [1, 2, 3],
+                    'Q2' => [4, 5, 6],
+                    'Q3' => [7, 8, 9],
+                    'Q4' => [10, 11, 12],
+                    default => [],
+                };
+
+                if ($months !== []) {
+                    $q->whereIn(\DB::raw('EXTRACT(MONTH FROM exam_entries.exam_date)'), $months);
+                }
+            }
+
+            return $q;
+        };
+
         $query = ExamEntry::query()
             ->leftJoin('orders', 'exam_entries.order_id', '=', 'orders.id')
             ->select([
                 'exam_entries.*',
                 'orders.trinity_order_number as order_number',
             ]);
-
-        if ($studentId) {
-            $query->where('exam_entries.student_id', $studentId);
-        }
-
-        if ($search !== '') {
-            $query->where(function ($q) use ($search) {
-                $q->where('exam_entries.candidate_name', 'ilike', "%{$search}%")
-                    ->orWhere('exam_entries.candidate_number', 'ilike', "%{$search}%")
-                    ->orWhere('exam_entries.teacher_name', 'ilike', "%{$search}%")
-                    ->orWhere('exam_entries.school_name', 'ilike', "%{$search}%")
-                    ->orWhere('orders.trinity_order_number', 'ilike', "%{$search}%");
-            });
-        }
-
-        if ($quarter !== '') {
-            $months = match ($quarter) {
-                'Q1' => [1, 2, 3],
-                'Q2' => [4, 5, 6],
-                'Q3' => [7, 8, 9],
-                'Q4' => [10, 11, 12],
-                default => [],
-            };
-
-            if ($months !== []) {
-                $query->whereIn(\DB::raw('EXTRACT(MONTH FROM exam_entries.exam_date)'), $months);
-            }
-        }
+        $applyFilters($query);
 
         if ($sort === 'order_number') {
             $query->orderBy('orders.trinity_order_number', $direction);
@@ -108,12 +115,16 @@ class ExamEntryController extends Controller
                 'fee' => $entry->fee !== null ? number_format((float) $entry->fee, 2) : null,
             ]);
 
-        // Summary stats (unfiltered)
+        // Summary stats — same filters applied so the cards reflect the visible table
+        $summaryBase = fn () => $applyFilters(
+            ExamEntry::query()->leftJoin('orders', 'exam_entries.order_id', '=', 'orders.id')
+        );
+
         $summary = [
-            'total' => ExamEntry::count(),
-            'with_results' => ExamEntry::whereNotNull('result')->count(),
-            'distinctions' => ExamEntry::where('result', 'Distinction')->count(),
-            'merits' => ExamEntry::where('result', 'Merit')->count(),
+            'total' => $summaryBase()->count('exam_entries.id'),
+            'with_results' => $summaryBase()->whereNotNull('exam_entries.result')->count('exam_entries.id'),
+            'distinctions' => $summaryBase()->where('exam_entries.result', 'Distinction')->count('exam_entries.id'),
+            'merits' => $summaryBase()->where('exam_entries.result', 'Merit')->count('exam_entries.id'),
         ];
 
         return Inertia::render('admin/ExamEntries/Index', [

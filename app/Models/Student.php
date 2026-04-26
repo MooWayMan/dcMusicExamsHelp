@@ -17,7 +17,6 @@ class Student extends Model
         'first_name',
         'last_name',
         'email',
-        'instrument_id',
         'notes',
         'teacher_contact_id',
         'teacher_credit_status',
@@ -43,14 +42,25 @@ class Student extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function instrument(): BelongsTo
-    {
-        return $this->belongsTo(Instrument::class);
-    }
-
     public function examEntries(): HasMany
     {
         return $this->hasMany(ExamEntry::class);
+    }
+
+    /**
+     * All distinct instruments this student has appeared on across exam_entries.
+     * Replaces the old students.instrument_id single FK (dropped 2026_04_26):
+     * a student can take Piano + Drums grade entries, so a single FK was
+     * always going to be wrong sometimes.
+     */
+    public function instruments(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(
+            Instrument::class,
+            'exam_entries',
+            'student_id',
+            'instrument_id'
+        )->distinct();
     }
 
     // ──────────────────────────────────────────

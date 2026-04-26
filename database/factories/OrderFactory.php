@@ -4,7 +4,6 @@ namespace Database\Factories;
 
 use App\Models\Order;
 use App\Models\School;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -15,7 +14,6 @@ class OrderFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => User::factory(),
             'school_id' => School::factory(),
             'trinity_order_number' => 'TRN-' . fake()->unique()->numerify('######'),
             'delivery_method' => fake()->randomElement(['digital', 'default']),

@@ -262,13 +262,16 @@ class SeedProductionData extends Command
             ['id' => 155, 'user_id' => 23, 'first_name' => 'Charlotte', 'last_name' => 'Sutton', 'instrument_id' => 31],
         ];
 
+        // Note: students.instrument_id was dropped 2026-04-26 — instrument
+        // now lives per-exam on exam_entries.instrument_id. The instrument_id
+        // values in the array above are kept for historical context but no
+        // longer written to the students table.
         foreach ($students as $s) {
             DB::table('students')->insert([
                 'id' => $s['id'],
                 'user_id' => $s['user_id'],
                 'first_name' => $s['first_name'],
                 'last_name' => $s['last_name'],
-                'instrument_id' => $s['instrument_id'],
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

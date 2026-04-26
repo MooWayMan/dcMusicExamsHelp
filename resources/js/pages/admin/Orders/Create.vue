@@ -46,7 +46,7 @@ const form = useForm({
     subject_area: 'Music',
     order_status: 'Submitted',
     requested_start_date: '',
-    user_id: null as number | null,
+    created_by_contact_id: null as number | null,
     school_id: null as number | null,
     venue: '',
     commission_rate: 20,
@@ -159,11 +159,11 @@ function inputClass() {
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                         <label class="mb-1 block text-lg font-medium text-brand-text">Teacher</label>
-                        <select v-model="form.user_id" :class="inputClass()">
+                        <select v-model="form.created_by_contact_id" :class="inputClass()">
                             <option :value="null">— No teacher (applicant-only) —</option>
                             <option v-for="t in teachers" :key="t.id" :value="t.id">{{ t.name }}</option>
                         </select>
-                        <p v-if="form.errors.user_id" class="mt-1 text-sm text-brand-danger">{{ form.errors.user_id }}</p>
+                        <p v-if="form.errors.created_by_contact_id" class="mt-1 text-sm text-brand-danger">{{ form.errors.created_by_contact_id }}</p>
                     </div>
                     <div>
                         <label class="mb-1 block text-lg font-medium text-brand-text">School</label>

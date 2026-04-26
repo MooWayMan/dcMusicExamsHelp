@@ -1,8 +1,8 @@
 <!-- resources/js/pages/admin/ExamEntries/Index.vue -->
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3'
-import { ref, watch } from 'vue'
-import { Search, ArrowLeft, Award, Star, Trophy, ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { computed, ref, watch } from 'vue'
+import { Search, ArrowLeft, Award, Star, Trophy, ChevronLeft, ChevronRight, Clock, CheckCircle2 } from 'lucide-vue-next'
 import PageHeader from '@/components/reusables/PageHeader.vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
 
@@ -55,6 +55,14 @@ const props = defineProps<{
 }>()
 
 const search = ref(props.filters.search ?? '')
+
+// Derived stats — make the nesting explicit so the cards are self-documenting
+const passCount = computed(() => Math.max(0, props.summary.with_results - props.summary.distinctions - props.summary.merits))
+const awaitingCount = computed(() => Math.max(0, props.summary.total - props.summary.with_results))
+function pct(part: number, whole: number): string {
+    if (!whole) return '0%'
+    return `${Math.round((part / whole) * 100)}%`
+}
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
 
 function currentFilters(overrides: Record<string, string | number | undefined | null> = {}) {
@@ -129,26 +137,48 @@ function resultBadgeClass(result: string): string {
 
         <PageHeader title="Exam Entries" subtitle="Imported candidate results and raw exam data" eyebrow="Admin" size="compact" />
 
-        <!-- Summary pills -->
-        <div :class="['mt-6 flex flex-wrap gap-3', animClass('fade-up', 1)]">
-            <div class="inline-flex items-center gap-2 rounded-xl border border-brand-border bg-brand-surface px-4 py-2">
-                <Award class="h-4 w-4 text-brand-text-soft" />
-                <span class="text-sm font-medium text-brand-text-soft">Total</span>
-                <span class="text-xl font-bold text-brand-text">{{ summary.total }}</span>
+        <!-- Summary pills — top row: top-level totals; bottom row: breakdown of "Results In" -->
+        <div :class="['mt-6 space-y-2', animClass('fade-up', 1)]">
+            <!-- Top row: Total | Results In | Awaiting -->
+            <div class="flex flex-wrap gap-3">
+                <div class="inline-flex items-center gap-2 rounded-xl border border-brand-border bg-brand-surface px-4 py-2">
+                    <Award class="h-4 w-4 text-brand-text-soft" />
+                    <span class="text-sm font-medium text-brand-text-soft">Total</span>
+                    <span class="text-xl font-bold text-brand-text">{{ summary.total }}</span>
+                </div>
+                <div class="inline-flex items-center gap-2 rounded-xl border border-brand-border bg-brand-surface px-4 py-2">
+                    <CheckCircle2 class="h-4 w-4 text-brand-text-soft" />
+                    <span class="text-sm font-medium text-brand-text-soft">Results In</span>
+                    <span class="text-xl font-bold text-brand-text">{{ summary.with_results }}</span>
+                    <span class="text-sm text-brand-text-soft">of {{ summary.total }}</span>
+                </div>
+                <div v-if="awaitingCount > 0" class="inline-flex items-center gap-2 rounded-xl border border-brand-border bg-brand-surface px-4 py-2">
+                    <Clock class="h-4 w-4 text-brand-text-soft" />
+                    <span class="text-sm font-medium text-brand-text-soft">Awaiting</span>
+                    <span class="text-xl font-bold text-brand-text">{{ awaitingCount }}</span>
+                </div>
             </div>
-            <div class="inline-flex items-center gap-2 rounded-xl border border-brand-border bg-brand-surface px-4 py-2">
-                <span class="text-sm font-medium text-brand-text-soft">Results In</span>
-                <span class="text-xl font-bold text-brand-text">{{ summary.with_results }}</span>
-            </div>
-            <div class="inline-flex items-center gap-2 rounded-xl border border-brand-border bg-brand-surface px-4 py-2">
-                <Trophy class="h-4 w-4 text-brand-success" />
-                <span class="text-sm font-medium text-brand-text-soft">Distinctions</span>
-                <span class="text-xl font-bold text-brand-success">{{ summary.distinctions }}</span>
-            </div>
-            <div class="inline-flex items-center gap-2 rounded-xl border border-brand-border bg-brand-surface px-4 py-2">
-                <Star class="h-4 w-4 text-brand-accent" />
-                <span class="text-sm font-medium text-brand-text-soft">Merits</span>
-                <span class="text-xl font-bold text-brand-accent">{{ summary.merits }}</span>
+
+            <!-- Bottom row: breakdown of the "Results In" total -->
+            <div v-if="summary.with_results > 0" class="flex flex-wrap items-center gap-3 pl-2">
+                <span class="text-xs font-medium uppercase tracking-wide text-brand-text-soft">Result breakdown:</span>
+                <div class="inline-flex items-center gap-2 rounded-xl border border-brand-border bg-brand-surface-soft px-3 py-1.5">
+                    <Trophy class="h-4 w-4 text-brand-success" />
+                    <span class="text-sm text-brand-text-soft">Distinction</span>
+                    <span class="text-base font-bold text-brand-success">{{ summary.distinctions }}</span>
+                    <span class="text-xs text-brand-text-soft">({{ pct(summary.distinctions, summary.with_results) }})</span>
+                </div>
+                <div class="inline-flex items-center gap-2 rounded-xl border border-brand-border bg-brand-surface-soft px-3 py-1.5">
+                    <Star class="h-4 w-4 text-brand-accent" />
+                    <span class="text-sm text-brand-text-soft">Merit</span>
+                    <span class="text-base font-bold text-brand-accent">{{ summary.merits }}</span>
+                    <span class="text-xs text-brand-text-soft">({{ pct(summary.merits, summary.with_results) }})</span>
+                </div>
+                <div class="inline-flex items-center gap-2 rounded-xl border border-brand-border bg-brand-surface-soft px-3 py-1.5">
+                    <span class="text-sm text-brand-text-soft">Pass</span>
+                    <span class="text-base font-bold text-brand-text">{{ passCount }}</span>
+                    <span class="text-xs text-brand-text-soft">({{ pct(passCount, summary.with_results) }})</span>
+                </div>
             </div>
         </div>
 

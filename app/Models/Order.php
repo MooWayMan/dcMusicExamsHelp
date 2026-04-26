@@ -15,7 +15,6 @@ class Order extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'user_id',
         'school_id',
         'trinity_order_number',
         'delivery_method',
@@ -51,16 +50,9 @@ class Order extends Model
     // ──────────────────────────────────────────
 
     /**
-     * Legacy teacher/user link.
-     * Keep for backward compatibility while refactoring.
-     */
-    public function teacher(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'user_id');
-    }
-
-    /**
-     * The contact who created / submitted the order in the new system.
+     * The contact who created / submitted the order. This is the single
+     * canonical link from an order to a person (replaces the old
+     * orders.user_id → users FK that was dropped in 2026_04_26).
      */
     public function createdByContact(): BelongsTo
     {

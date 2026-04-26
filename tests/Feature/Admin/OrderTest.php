@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\ExamContact;
 use App\Models\Order;
 use App\Models\User;
 
@@ -13,6 +14,17 @@ function orderAdmin(): User
 function orderTeacher(): User
 {
     return User::factory()->create(['role' => 'teacher']);
+}
+
+function orderTeacherContact(string $name = null): ExamContact
+{
+    $contact = ExamContact::create([
+        'name'  => $name ?? 'Test Teacher '.uniqid(),
+        'email' => uniqid('t', true).'@example.test',
+    ]);
+    $contact->addType('teacher');
+
+    return $contact;
 }
 
 // ──────────────────────────────────────────
@@ -36,8 +48,7 @@ test('non-admin users cannot access orders index', function () {
 
 test('admin can view orders index', function () {
     $admin = orderAdmin();
-    $teacher = orderTeacher();
-    Order::factory()->count(3)->create(['user_id' => $teacher->id]);
+    Order::factory()->count(3)->create();
 
     $this->actingAs($admin)
         ->get(route('admin.orders.index'))
@@ -50,9 +61,8 @@ test('admin can view orders index', function () {
 
 test('orders can be filtered by delivery method', function () {
     $admin = orderAdmin();
-    $teacher = orderTeacher();
-    Order::factory()->digital()->count(2)->create(['user_id' => $teacher->id]);
-    Order::factory()->faceToFace()->count(3)->create(['user_id' => $teacher->id]);
+    Order::factory()->digital()->count(2)->create();
+    Order::factory()->faceToFace()->count(3)->create();
 
     $this->actingAs($admin)
         ->get(route('admin.orders.index', ['method' => 'digital']))
@@ -64,10 +74,8 @@ test('orders can be filtered by delivery method', function () {
 
 test('orders index payload includes formatted requested_start_date', function () {
     $admin = orderAdmin();
-    $teacher = orderTeacher();
 
     Order::factory()->create([
-        'user_id' => $teacher->id,
         'requested_start_date' => '2026-03-07',
     ]);
 
@@ -81,15 +89,12 @@ test('orders index payload includes formatted requested_start_date', function ()
 
 test('orders can be sorted by requested_start_date ascending and descending', function () {
     $admin = orderAdmin();
-    $teacher = orderTeacher();
 
     Order::factory()->create([
-        'user_id' => $teacher->id,
         'trinity_order_number' => 'TRN-OLDEST',
         'requested_start_date' => '2026-01-13',
     ]);
     Order::factory()->create([
-        'user_id' => $teacher->id,
         'trinity_order_number' => 'TRN-NEWEST',
         'requested_start_date' => '2026-03-07',
     ]);
@@ -119,19 +124,11 @@ test('orders can be sorted by requested_start_date ascending and descending', fu
 
 test('orders can be filtered by this quarter', function () {
     $admin = orderAdmin();
-    $teacher = orderTeacher();
 
     // This quarter — filter uses requested_start_date (the exam date), not created_at
-    Order::factory()->create([
-        'user_id' => $teacher->id,
-        'requested_start_date' => now(),
-    ]);
-
+    Order::factory()->create(['requested_start_date' => now()]);
     // Last year (outside this quarter)
-    Order::factory()->create([
-        'user_id' => $teacher->id,
-        'requested_start_date' => now()->subYear(),
-    ]);
+    Order::factory()->create(['requested_start_date' => now()->subYear()]);
 
     $this->actingAs($admin)
         ->get(route('admin.orders.index', ['period' => 'this_quarter']))
@@ -143,17 +140,13 @@ test('orders can be filtered by this quarter', function () {
 
 test('orders can be filtered by this year', function () {
     $admin = orderAdmin();
-    $teacher = orderTeacher();
 
     // This year
     Order::factory()->count(2)->create([
-        'user_id' => $teacher->id,
         'requested_start_date' => now()->startOfYear()->addDays(10),
     ]);
-
     // Previous year
     Order::factory()->create([
-        'user_id' => $teacher->id,
         'requested_start_date' => now()->subYear()->startOfYear(),
     ]);
 
@@ -167,19 +160,11 @@ test('orders can be filtered by this year', function () {
 
 test('orders can be filtered by last 12 months', function () {
     $admin = orderAdmin();
-    $teacher = orderTeacher();
 
     // 6 months ago (within last 12)
-    Order::factory()->create([
-        'user_id' => $teacher->id,
-        'requested_start_date' => now()->subMonths(6),
-    ]);
-
+    Order::factory()->create(['requested_start_date' => now()->subMonths(6)]);
     // 18 months ago (outside last 12)
-    Order::factory()->create([
-        'user_id' => $teacher->id,
-        'requested_start_date' => now()->subMonths(18),
-    ]);
+    Order::factory()->create(['requested_start_date' => now()->subMonths(18)]);
 
     $this->actingAs($admin)
         ->get(route('admin.orders.index', ['period' => 'last_12']))
@@ -191,17 +176,14 @@ test('orders can be filtered by last 12 months', function () {
 
 test('summary stats respect time period filter', function () {
     $admin = orderAdmin();
-    $teacher = orderTeacher();
 
     Order::factory()->create([
-        'user_id' => $teacher->id,
         'commission_amount' => 100.00,
         'candidates' => 5,
         'requested_start_date' => now(),
     ]);
 
     Order::factory()->create([
-        'user_id' => $teacher->id,
         'commission_amount' => 200.00,
         'candidates' => 10,
         'requested_start_date' => now()->subYear(),
@@ -233,9 +215,7 @@ test('period filter passes through to frontend filters', function () {
 
 test('admin can view an order', function () {
     $admin = orderAdmin();
-    $teacher = orderTeacher();
     $order = Order::factory()->create([
-        'user_id' => $teacher->id,
         'trinity_order_number' => 'TRN-123456',
     ]);
 
@@ -270,7 +250,7 @@ test('non-admin cannot view create order form', function () {
 
 test('admin can create order with one candidate', function () {
     $admin = orderAdmin();
-    $teacher = orderTeacher();
+    $contact = orderTeacherContact();
 
     $this->actingAs($admin)
         ->post(route('admin.orders.store'), [
@@ -279,7 +259,7 @@ test('admin can create order with one candidate', function () {
             'subject_area' => 'Music',
             'order_status' => 'Delivered',
             'requested_start_date' => '2026-03-30',
-            'user_id' => $teacher->id,
+            'created_by_contact_id' => $contact->id,
             'commission_rate' => 20,
             'applicant_name' => 'Maria Nielsen',
             'applicant_email' => 'mkn21@me.com',
@@ -295,7 +275,7 @@ test('admin can create order with one candidate', function () {
 
     $this->assertDatabaseHas('orders', [
         'trinity_order_number' => '1-15899713974',
-        'user_id' => $teacher->id,
+        'created_by_contact_id' => $contact->id,
         'candidates' => 1,
     ]);
 
@@ -309,7 +289,7 @@ test('admin can create order with one candidate', function () {
 
 test('admin can create order with multiple candidates', function () {
     $admin = orderAdmin();
-    $teacher = orderTeacher();
+    $contact = orderTeacherContact();
 
     $this->actingAs($admin)
         ->post(route('admin.orders.store'), [
@@ -318,7 +298,7 @@ test('admin can create order with multiple candidates', function () {
             'subject_area' => 'Music',
             'order_status' => 'Delivered',
             'requested_start_date' => '2026-03-30',
-            'user_id' => $teacher->id,
+            'created_by_contact_id' => $contact->id,
             'commission_rate' => 28,
             'entries' => [
                 ['candidate_name' => 'Student A', 'grade' => '1'],
@@ -338,7 +318,7 @@ test('store requires trinity order number', function () {
     $this->actingAs(orderAdmin())
         ->post(route('admin.orders.store'), [
             'delivery_method' => 'Digital',
-            'user_id' => orderTeacher()->id,
+            'created_by_contact_id' => orderTeacherContact()->id,
             'order_status' => 'Delivered',
             'commission_rate' => 20,
             'entries' => [['candidate_name' => 'X']],
@@ -354,7 +334,7 @@ test('store accepts order without teacher (applicant-only)', function () {
             'subject_area' => 'Music',
             'order_status' => 'Delivered',
             'requested_start_date' => '2026-03-30',
-            'user_id' => null,
+            'created_by_contact_id' => null,
             'commission_rate' => 20,
             'applicant_name' => 'Daniel Rogers',
             'applicant_email' => 'exams@pulsemusicliverpool.com',
@@ -364,7 +344,7 @@ test('store accepts order without teacher (applicant-only)', function () {
 
     $this->assertDatabaseHas('orders', [
         'trinity_order_number' => 'TRN-NO-TEACHER',
-        'user_id' => null,
+        'created_by_contact_id' => null,
         'applicant_name' => 'Daniel Rogers',
     ]);
 });
@@ -375,7 +355,7 @@ test('store requires at least one candidate', function () {
             'trinity_order_number' => 'TRN-NO-ENTRIES',
             'delivery_method' => 'Digital',
             'order_status' => 'Delivered',
-            'user_id' => orderTeacher()->id,
+            'created_by_contact_id' => orderTeacherContact()->id,
             'commission_rate' => 20,
             'entries' => [],
         ])
@@ -390,7 +370,7 @@ test('trinity order number must be unique', function () {
             'trinity_order_number' => 'TRN-DUPLICATE',
             'delivery_method' => 'Digital',
             'order_status' => 'Delivered',
-            'user_id' => orderTeacher()->id,
+            'created_by_contact_id' => orderTeacherContact()->id,
             'commission_rate' => 20,
             'entries' => [['candidate_name' => 'X']],
         ])
@@ -403,7 +383,7 @@ test('non-admin cannot store orders', function () {
             'trinity_order_number' => 'TRN-FORBIDDEN',
             'delivery_method' => 'Digital',
             'order_status' => 'Delivered',
-            'user_id' => orderTeacher()->id,
+            'created_by_contact_id' => orderTeacherContact()->id,
             'commission_rate' => 20,
             'entries' => [['candidate_name' => 'X']],
         ])
@@ -416,7 +396,6 @@ test('non-admin cannot store orders', function () {
 
 test('admin can view edit order form', function () {
     $order = Order::factory()->create([
-        'user_id' => orderTeacher()->id,
         'requested_start_date' => '2026-03-30',
     ]);
 
@@ -431,7 +410,7 @@ test('admin can view edit order form', function () {
 });
 
 test('non-admin cannot view edit order form', function () {
-    $order = Order::factory()->create(['user_id' => orderTeacher()->id]);
+    $order = Order::factory()->create();
 
     $this->actingAs(orderTeacher())
         ->get(route('admin.orders.edit', $order))
@@ -439,9 +418,9 @@ test('non-admin cannot view edit order form', function () {
 });
 
 test('admin can update an existing order', function () {
-    $teacher = orderTeacher();
+    $contact = orderTeacherContact();
     $order = Order::factory()->create([
-        'user_id' => $teacher->id,
+        'created_by_contact_id' => $contact->id,
         'trinity_order_number' => 'TRN-UPDATE-001',
         'order_status' => 'Submitted',
         'requested_start_date' => '2026-03-30',
@@ -462,7 +441,7 @@ test('admin can update an existing order', function () {
             'subject_area' => 'Music',
             'order_status' => 'Delivered',
             'requested_start_date' => '2026-03-30',
-            'user_id' => $teacher->id,
+            'created_by_contact_id' => $contact->id,
             'commission_rate' => 20,
             'entries' => [
                 [
@@ -491,9 +470,9 @@ test('admin can update an existing order', function () {
 });
 
 test('admin can add a new candidate to existing order', function () {
-    $teacher = orderTeacher();
+    $contact = orderTeacherContact();
     $order = Order::factory()->create([
-        'user_id' => $teacher->id,
+        'created_by_contact_id' => $contact->id,
         'requested_start_date' => '2026-03-30',
     ]);
 
@@ -510,7 +489,7 @@ test('admin can add a new candidate to existing order', function () {
             'subject_area' => 'Music',
             'order_status' => 'Delivered',
             'requested_start_date' => '2026-03-30',
-            'user_id' => $teacher->id,
+            'created_by_contact_id' => $contact->id,
             'commission_rate' => 20,
             'entries' => [
                 ['id' => $existing->id, 'candidate_name' => 'First Candidate'],
@@ -524,7 +503,7 @@ test('admin can add a new candidate to existing order', function () {
 });
 
 test('non-admin cannot update orders', function () {
-    $order = Order::factory()->create(['user_id' => orderTeacher()->id]);
+    $order = Order::factory()->create();
 
     $this->actingAs(orderTeacher())
         ->put(route('admin.orders.update', $order), [
@@ -532,7 +511,7 @@ test('non-admin cannot update orders', function () {
             'delivery_method' => 'Digital',
             'order_status' => 'Delivered',
             'requested_start_date' => '2026-03-30',
-            'user_id' => orderTeacher()->id,
+            'created_by_contact_id' => orderTeacherContact()->id,
             'commission_rate' => 20,
             'entries' => [['candidate_name' => 'X']],
         ])

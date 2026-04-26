@@ -107,7 +107,6 @@ class FakeDataSeeder extends Seeder
                     'first_name' => $firstNames[array_rand($firstNames)],
                     'last_name' => $lastNames[array_rand($lastNames)],
                     'email' => null,
-                    'instrument_id' => $teacherInstrumentIds[array_rand($teacherInstrumentIds)],
                 ]);
                 $allStudents->push($student);
             }
@@ -146,7 +145,6 @@ class FakeDataSeeder extends Seeder
                 $commissionAmount = round($totalFees * ($commissionRate / 100), 2);
 
                 $order = Order::create([
-                    'user_id' => $teacher->id,
                     'school_id' => !empty($teacherSchoolIds) ? $teacherSchoolIds[array_rand($teacherSchoolIds)] : null,
                     'trinity_order_number' => 'TCL-' . $orderNumber,
                     'delivery_method' => $deliveryMethod,
@@ -159,13 +157,16 @@ class FakeDataSeeder extends Seeder
                     'commission_amount' => $commissionAmount,
                 ]);
 
-                // Create exam entries for each candidate in this order
+                // Create exam entries for each candidate in this order. The
+                // instrument is now per-entry (lives on exam_entries directly,
+                // not on students), so we pick from the teacher's instrument
+                // pool rather than from a single instrument on the student.
                 $orderStudents = $teacherStudents->random(min($candidates, $teacherStudents->count()));
                 foreach ($orderStudents as $student) {
                     ExamEntry::create([
                         'order_id' => $order->id,
                         'student_id' => $student->id,
-                        'instrument_id' => $student->instrument_id,
+                        'instrument_id' => $teacherInstrumentIdsByTeacher[$teacher->id][array_rand($teacherInstrumentIdsByTeacher[$teacher->id])],
                         'grade' => $grades[array_rand($grades)],
                         'subject_area' => $subjectArea,
                         'delivery_method' => $deliveryMethod,
