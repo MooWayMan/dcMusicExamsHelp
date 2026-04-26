@@ -161,7 +161,9 @@ const families = ['Keyboard', 'Strings', 'Brass', 'Woodwind', 'Voice', 'Percussi
                             <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('last_name')">
                                 Name{{ sortIcon('last_name') }}
                             </th>
-                            <th class="px-4 py-3 font-semibold text-brand-text">Teacher</th>
+                            <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('teacher')">
+                                Teacher{{ sortIcon('teacher') }}
+                            </th>
                             <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('instrument')">
                                 Instrument{{ sortIcon('instrument') }}
                             </th>

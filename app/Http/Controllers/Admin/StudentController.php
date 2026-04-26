@@ -45,10 +45,14 @@ class StudentController extends Controller
         }
 
         // Listing query: clone base, attach eager loads + sort + count.
+        // Per-entry teacher (exam_entries.teacher_contact_id) is the
+        // authoritative source — order_contacts.teacher is the order-level
+        // coordinator (Paul on F2F batches), which is wrong for individual
+        // candidates. Backfilled 24 Apr in `exam-entries:link-teachers`.
         $query = (clone $base)
             ->with([
                 'examEntries.instrument:id,name,family',
-                'examEntries.order.orderContacts.examContact',
+                'examEntries.teacherContact:id,name',
             ])
             ->withCount('examEntries');
 
@@ -73,6 +77,16 @@ class StudentController extends Controller
                     ->join('exam_entries', 'exam_entries.instrument_id', '=', 'instruments.id')
                     ->whereColumn('exam_entries.student_id', 'students.id')
                     ->orderBy('instruments.family')
+                    ->limit(1),
+                $sortDir
+            );
+        } elseif ($sortBy === 'teacher') {
+            // Same shape as instrument sort but joining through teacherContact.
+            $query->orderBy(
+                ExamContact::select('exam_contacts.name')
+                    ->join('exam_entries', 'exam_entries.teacher_contact_id', '=', 'exam_contacts.id')
+                    ->whereColumn('exam_entries.student_id', 'students.id')
+                    ->orderBy('exam_contacts.name')
                     ->limit(1),
                 $sortDir
             );
@@ -138,33 +152,43 @@ class StudentController extends Controller
         ]);
     }
 
+    /**
+     * Resolve a student's "main" teacher from the per-entry FK
+     * (exam_entries.teacher_contact_id), which was the source of truth from
+     * 24 Apr's exam-entries:link-teachers backfill onwards.
+     *
+     * Picks the most-frequent teacher across the student's entries (handles
+     * the rare case where the same student has been entered by two different
+     * teachers over time). Returns null when no entry has a teacher FK —
+     * those students are surfaced as "—" in the table, not falsely attributed
+     * to whoever happened to coordinate the F2F batch order.
+     */
     private function resolveTeacherContact(Student $student): ?ExamContact
     {
         $teacherCounts = [];
 
         foreach ($student->examEntries as $entry) {
-            $order = $entry->order;
+            $contact = $entry->teacherContact;
 
-            if (! $order || ! $order->relationLoaded('orderContacts')) {
+            if (! $contact) {
                 continue;
             }
 
-            foreach ($order->orderContacts as $orderContact) {
-                if ($orderContact->role_in_order !== 'teacher') {
-                    continue;
-                }
-
-                $contact = $orderContact->examContact;
-
-                if (! $contact) {
-                    continue;
-                }
-
-                $teacherCounts[$contact->id] = [
-                    'contact' => $contact,
-                    'count' => ($teacherCounts[$contact->id]['count'] ?? 0) + 1,
-                ];
+            // Defensive: only surface contacts who carry 'teacher' OR
+            // 'school_admin' (Daniel Rogers / Pulse Music represents the
+            // school's teachers). F2F imports historically stamped the
+            // Trinity submitter (often a parent or self-applicant) into
+            // exam_entries.teacher_contact_id; this filter keeps those out
+            // of the Teacher column. See submitter_vs_teacher pending memory
+            // for the import-side fix.
+            if (! $contact->hasType('teacher') && ! $contact->hasType('school_admin')) {
+                continue;
             }
+
+            $teacherCounts[$contact->id] = [
+                'contact' => $contact,
+                'count'   => ($teacherCounts[$contact->id]['count'] ?? 0) + 1,
+            ];
         }
 
         if ($teacherCounts === []) {
@@ -173,8 +197,6 @@ class StudentController extends Controller
 
         uasort($teacherCounts, fn ($a, $b) => $b['count'] <=> $a['count']);
 
-        $top = reset($teacherCounts);
-
-        return $top['contact'] ?? null;
+        return reset($teacherCounts)['contact'] ?? null;
     }
 }

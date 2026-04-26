@@ -178,13 +178,29 @@ class QuarterEndController extends Controller
             'teacher' => $e->teacher_name ?? 'Unknown',
         ])->values()->toArray();
 
-        // Teacher draw: get registered teachers from users table
+        // Teacher draw eligibility — built from `exam_entries.teacher_name`
+        // (the curated string, not order applicant) but cross-checked against
+        // the unified contacts model so non-teachers can't slip in via the
+        // ≥2-entry heuristic.
         $registeredTeacherNames = ExamContact::withType('teacher')
             ->get()
             ->map(fn ($c) => strtolower(trim($c->name)))
             ->toArray();
 
-        // Build teacher eligibility from teacher_name (curated field, not order applicant)
+        // Names of contacts who are pure parents or self-applicants — these
+        // must NEVER win prize-draw tickets even if they appear on multiple
+        // entries (a parent with two kids in the same quarter would otherwise
+        // qualify under the ≥2-entry heuristic). School admins like Daniel
+        // Rogers are NOT excluded — they represent their school's teachers
+        // and are eligible to win on behalf of the school.
+        $knownNonTeacherNames = ExamContact::withType(['parent', 'candidate'])
+            ->get()
+            ->reject(fn ($c) => $c->isTeacher() || $c->hasType('school_admin'))
+            ->pluck('name')
+            ->map(fn ($n) => strtolower(trim($n)))
+            ->toArray();
+
+        // Build teacher eligibility from teacher_name
         $applicantEntries = $allEntries
             ->filter(fn ($e) => $e->teacher_name !== null)
             ->groupBy(fn ($e) => $e->teacher_name);
@@ -192,13 +208,20 @@ class QuarterEndController extends Controller
         $teacherTickets = [];
         foreach ($applicantEntries as $applicantName => $entries) {
             $entryCount = $entries->count();
-            $isRegistered = in_array(strtolower(trim($applicantName)), $registeredTeacherNames);
+            $nameKey = strtolower(trim($applicantName));
+            $isRegistered = in_array($nameKey, $registeredTeacherNames);
+            $isKnownNonTeacher = in_array($nameKey, $knownNonTeacherNames);
 
-            // Eligibility: registered = always, 2+ entries = eligible, 1 entry = not eligible (likely parent)
-            $eligible = $isRegistered || $entryCount >= 2;
+            // Eligibility:
+            //  - Registered teacher  → always in
+            //  - Known non-teacher   → always out (parent, candidate, school admin)
+            //  - Unknown name with ≥2 entries → in (the catch-all heuristic
+            //    for teachers who haven't been formally added yet)
+            //  - Unknown name with 1 entry → out (almost always a parent)
+            $eligible = $isRegistered
+                || (! $isKnownNonTeacher && $entryCount >= 2);
 
             if ($eligible) {
-                // More entries = more tickets
                 for ($i = 0; $i < $entryCount; $i++) {
                     $teacherTickets[] = [
                         'name' => $applicantName,
@@ -209,18 +232,28 @@ class QuarterEndController extends Controller
             }
         }
 
-        // Unique eligible teachers for display
-        $eligibleTeachers = collect($applicantEntries)->map(function ($entries, $name) use ($registeredTeacherNames) {
+        // Unique eligible teachers for display — same eligibility rules as
+        // the ticket loop above so the table matches the actual draw.
+        $eligibleTeachers = collect($applicantEntries)->map(function ($entries, $name) use ($registeredTeacherNames, $knownNonTeacherNames) {
             $count = $entries->count();
-            $isRegistered = in_array(strtolower(trim($name)), $registeredTeacherNames);
-            $eligible = $isRegistered || $count >= 2;
+            $nameKey = strtolower(trim($name));
+            $isRegistered = in_array($nameKey, $registeredTeacherNames);
+            $isKnownNonTeacher = in_array($nameKey, $knownNonTeacherNames);
+            $eligible = $isRegistered || (! $isKnownNonTeacher && $count >= 2);
+
+            $reason = match (true) {
+                $isRegistered      => 'Registered teacher',
+                $isKnownNonTeacher => 'Excluded — '.($this->nonTeacherType($nameKey) ?? 'non-teacher contact'),
+                $count >= 2        => "{$count} entries",
+                default            => 'Only 1 entry (likely parent)',
+            };
 
             return [
                 'name' => $name,
                 'entries' => $count,
                 'is_registered' => $isRegistered,
                 'eligible' => $eligible,
-                'reason' => $isRegistered ? 'Registered teacher' : ($count >= 2 ? "{$count} entries" : 'Only 1 entry (likely parent)'),
+                'reason' => $reason,
             ];
         })->values()->toArray();
 
@@ -403,13 +436,14 @@ class QuarterEndController extends Controller
             ->map(fn ($c) => strtolower(trim($c->name)))
             ->toArray();
 
-        // Exclude contacts explicitly flagged as parent/candidate from the
-        // teacher draw. Multi-type contacts (e.g. Alexandra Bibby is
-        // teacher AND parent) stay eligible because they have the teacher
-        // type — we only exclude pure parents/candidates.
+        // Exclude pure parents and self-applicants from the teacher draw.
+        // School admins (Daniel Rogers / Pulse Music) STAY eligible —
+        // they represent their school's teaching staff and stand in for
+        // the teachers there. Multi-type contacts who hold 'teacher' (e.g.
+        // Alexandra Bibby = teacher + parent) also stay eligible.
         $pureNonTeachers = ExamContact::withType(['parent', 'candidate'])
             ->get()
-            ->reject(fn ($c) => $c->isTeacher());
+            ->reject(fn ($c) => $c->isTeacher() || $c->hasType('school_admin'));
 
         $excludedContactIds = $pureNonTeachers->pluck('id')->all();
 
@@ -431,6 +465,8 @@ class QuarterEndController extends Controller
             $entryCount = $entries->count();
             $isRegistered = in_array(strtolower(trim($applicantName)), $registeredTeacherNames);
 
+            // Same eligibility logic as the index() display so the draw
+            // matches what the admin sees in the eligible list.
             if ($isRegistered || $entryCount >= 2) {
                 for ($i = 0; $i < $entryCount; $i++) {
                     $tickets[] = $applicantName;
@@ -528,5 +564,37 @@ class QuarterEndController extends Controller
         $firstName = end($parts);
 
         return $firstName.' '.strtoupper($surname[0]);
+    }
+
+    /**
+     * Look up the contact_type(s) for a given non-teacher contact name —
+     * used to label why they're excluded from the prize draw eligible list
+     * ("Excluded — parent" / "Excluded — school admin" / etc).
+     */
+    private function nonTeacherType(string $nameKey): ?string
+    {
+        $contactId = ExamContact::query()
+            ->whereRaw('LOWER(TRIM(name)) = ?', [$nameKey])
+            ->value('id');
+
+        if (! $contactId) {
+            return null;
+        }
+
+        $type = DB::table('contact_types')
+            ->where('exam_contact_id', $contactId)
+            ->orderByRaw("CASE type
+                WHEN 'parent' THEN 1
+                WHEN 'candidate' THEN 2
+                WHEN 'school_admin' THEN 3
+                ELSE 9 END")
+            ->value('type');
+
+        return match ($type) {
+            'parent'       => 'parent',
+            'candidate'    => 'self-applicant',
+            'school_admin' => 'school admin',
+            default        => $type,
+        };
     }
 }
