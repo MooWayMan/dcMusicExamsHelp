@@ -144,7 +144,12 @@ return [
     */
 
     'features' => [
-        Features::registration(),
+        // Features::registration() removed 2026-04-27 — public teacher signups
+        // disabled until we have something concrete on /dashboard for them.
+        // Removing it makes Fortify skip the /register routes entirely (returns
+        // 404) and flips Features::enabled(Features::registration()) to false,
+        // which auto-hides the "Sign up" link on /login via the canRegister
+        // prop. Re-add this line to turn signups back on.
         Features::resetPasswords(),
         Features::emailVerification(),
         Features::twoFactorAuthentication([

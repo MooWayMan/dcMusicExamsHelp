@@ -67,6 +67,23 @@ Paul
 TEXT,
             ],
             [
+                'id' => 'teacher-text-booking-nudge',
+                'audience' => 'Teacher / School Admin',
+                'title' => 'Teacher text — quick booking + site nudge',
+                'when' => 'Use when a teacher messages by text/WhatsApp asking for the centre code or booking info. Casual format, no subject line. Replace [Name] with their first name.',
+                'subject' => null,
+                'body' => <<<'TEXT'
+Hi [Name], good to hear from you! Hope you're well.
+
+Easiest path: head to https://musicexams.help/for-teachers, tap the menu (top-right) → Book Your Exam → pick the right exam type (Theory, F2F, or Digital). It routes you to the right system with my code already filled in. No manual entry needed.
+
+While you're there you'll see what students get on top of their Trinity cert (recognition awards, quarterly prize draw, Faber book discounts).
+
+Good luck with the entries!
+Paul
+TEXT,
+            ],
+            [
                 'id' => 'old-address-nudge',
                 'audience' => 'Snippet',
                 'title' => 'Old-address nudge (slot near top of reply)',

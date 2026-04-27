@@ -244,11 +244,9 @@ const navClasses = computed(() =>
               <template #myTitle>Dashboard</template>
             </MyTextConstructor>
           </Link>
-          <Link v-else href="/login" class="transition hover:opacity-70">
-            <MyTextConstructor variant="button" textColor="text-slate-700" spacing="none">
-              <template #myTitle>Sign In</template>
-            </MyTextConstructor>
-          </Link>
+          <!-- Public "Sign In" link removed 2026-04-27 — signups are disabled,
+               only Paul needs to log in, and he can type /login directly.
+               Existing logged-in users still see Admin or Dashboard above. -->
 
           <!-- Social icons (desktop only) -->
           <MySocials
@@ -351,11 +349,7 @@ const navClasses = computed(() =>
             <template #myTitle>Dashboard</template>
           </MyTextConstructor>
         </Link>
-        <Link v-else href="/login" class="block rounded-xl px-3 py-3 hover:bg-slate-50" @click="isOpen = false">
-          <MyTextConstructor variant="button" textColor="text-slate-700" spacing="none">
-            <template #myTitle>Sign In</template>
-          </MyTextConstructor>
-        </Link>
+        <!-- Public "Sign In" link removed 2026-04-27 — see desktop comment above. -->
 
         <div class="mt-3">
           <MyButtonConstructor variant="primary" size="medium" fullWidth @click="showBookingModal = true; isOpen = false">

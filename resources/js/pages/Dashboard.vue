@@ -1,10 +1,17 @@
 <script setup lang="ts">
-import { Head, Link, usePage } from '@inertiajs/vue3'
+import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
-import { LayoutDashboard, ClipboardList, Users, GraduationCap, CheckSquare, Award, AlertCircle } from 'lucide-vue-next'
+import { LayoutDashboard, ClipboardList, Users, GraduationCap, CheckSquare, Award, AlertCircle, Home, LogOut } from 'lucide-vue-next'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
-import { dashboard } from '@/routes'
+import { dashboard, logout } from '@/routes'
+
+// Non-admin users (e.g. anyone who signed up before we disabled registration)
+// land here and previously had no visible way out — sidebar hamburger on
+// mobile is too easy to miss. These two buttons give them an obvious exit.
+const handleLogout = () => {
+    router.flushAll()
+}
 
 const page = usePage()
 const user = computed(() => (page.props.auth as any)?.user)
@@ -72,9 +79,33 @@ defineOptions({
             </div>
         </div>
 
-        <!-- Non-admin message -->
-        <p v-else class="mt-8 text-lg text-brand-text-soft">
-            Your dashboard is being set up. Check back soon.
-        </p>
+        <!-- Non-admin message + visible exit -->
+        <div v-else class="mt-8 flex w-full max-w-md flex-col items-center gap-6">
+            <p class="text-center text-lg text-brand-text-soft">
+                Thanks for signing up — your dashboard is being set up. Check back soon.
+            </p>
+
+            <div class="flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
+                <Link
+                    href="/"
+                    class="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-brand-border bg-brand-surface px-6 py-3 text-base font-semibold text-brand-primary shadow-sm transition-colors hover:bg-brand-bg"
+                    data-test="dashboard-home-link"
+                >
+                    <Home class="h-5 w-5" />
+                    Back to home
+                </Link>
+
+                <Link
+                    :href="logout()"
+                    @click="handleLogout"
+                    as="button"
+                    class="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border border-transparent bg-brand-primary px-6 py-3 text-base font-semibold text-brand-text-inverse shadow-sm transition-colors hover:bg-brand-primary-dark"
+                    data-test="dashboard-logout-button"
+                >
+                    <LogOut class="h-5 w-5" />
+                    Log out
+                </Link>
+            </div>
+        </div>
     </div>
 </template>
