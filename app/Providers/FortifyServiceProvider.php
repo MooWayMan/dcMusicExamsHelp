@@ -66,7 +66,9 @@ class FortifyServiceProvider extends ServiceProvider
             'status' => $request->session()->get('status'),
         ]));
 
-        Fortify::registerView(fn () => Inertia::render('auth/Register'));
+        // Fortify::registerView(...) removed 2026-04-27 — registration feature
+        // is disabled in config/fortify.php so this closure is never called.
+        // Re-add this line and the auth/Register.vue page to turn signups back on.
 
         Fortify::twoFactorChallengeView(fn () => Inertia::render('auth/TwoFactorChallenge'));
 
