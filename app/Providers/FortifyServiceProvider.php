@@ -49,7 +49,9 @@ class FortifyServiceProvider extends ServiceProvider
     {
         Fortify::loginView(fn (Request $request) => Inertia::render('auth/Login', [
             'canResetPassword' => Features::enabled(Features::resetPasswords()),
-            'canRegister' => Features::enabled(Features::registration()),
+            // 'canRegister' prop dropped 2026-04-27 — Login.vue no longer
+            // expects it; restore alongside the Sign up link if signups
+            // are turned back on in config/fortify.php.
             'status' => $request->session()->get('status'),
         ]));
 

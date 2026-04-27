@@ -7,9 +7,12 @@ import MyInputConstructor from '@/components/reusables/MyInputConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Spinner } from '@/components/ui/spinner'
-import { register } from '@/routes'
 import { store } from '@/routes/login'
 import { request } from '@/routes/password'
+
+// `register` import + `canRegister` prop removed 2026-04-27 — registration
+// feature disabled in config/fortify.php so Wayfinder no longer exports the
+// `register` route helper, which would otherwise break the Vite build.
 
 defineOptions({
     layout: {
@@ -21,7 +24,6 @@ defineOptions({
 defineProps<{
     status?: string
     canResetPassword: boolean
-    canRegister: boolean
 }>()
 </script>
 
@@ -93,14 +95,6 @@ defineProps<{
                 <Spinner v-if="processing" class="mr-2" />
                 Log in
             </MyButtonConstructor>
-        </div>
-
-        <div
-            v-if="canRegister"
-            class="text-center text-base text-brand-text-soft sm:text-lg"
-        >
-            Don't have an account?
-            <TextLink :href="register()" class="font-semibold text-brand-accent hover:underline">Sign up</TextLink>
         </div>
 
         <div class="text-center">
