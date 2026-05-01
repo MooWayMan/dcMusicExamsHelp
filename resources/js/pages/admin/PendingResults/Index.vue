@@ -28,28 +28,46 @@ const props = defineProps<{
     entries: PendingEntry[]
     summary: { pending: number; with_results: number; total: number }
     filters: { search: string | null; method: string | null }
+    quarter: number
+    year: number
+    quarterLabel: string
 }>()
 
 const search = ref(props.filters.search ?? '')
 const method = ref(props.filters.method ?? '')
 let searchTimeout: ReturnType<typeof setTimeout>
 
+// Always include the active quarter/year on every navigation so a search
+// inside Q2 doesn't accidentally bounce the page back to the default Q.
+function navigate(overrides: Record<string, string | number | undefined> = {}) {
+    router.get('/admin/pending-results', {
+        search: search.value || undefined,
+        method: method.value || undefined,
+        quarter: props.quarter,
+        year: props.year,
+        ...overrides,
+    }, { preserveState: true, replace: true })
+}
+
 watch(search, (value) => {
     clearTimeout(searchTimeout)
-    searchTimeout = setTimeout(() => {
-        router.get('/admin/pending-results', {
-            search: value || undefined,
-            method: method.value || undefined,
-        }, { preserveState: true, replace: true })
-    }, 300)
+    searchTimeout = setTimeout(() => navigate({ search: value || undefined }), 300)
 })
 
 function filterByMethod(val: string) {
     method.value = val
+    navigate({ method: val || undefined })
+}
+
+function changeQuarter(q: number, y: number) {
+    // Drop preserveState — switching quarter is a full context change, the
+    // user expects fresh data and a scroll-to-top.
     router.get('/admin/pending-results', {
         search: search.value || undefined,
-        method: val || undefined,
-    }, { preserveState: true, replace: true })
+        method: method.value || undefined,
+        quarter: q,
+        year: y,
+    }, { preserveState: false })
 }
 
 const columns = [
@@ -66,10 +84,34 @@ const columns = [
 <template>
     <div>
         <PageHeader
-            title="Pending Results"
-            subtitle="Candidates awaiting exam scores — check these in MOB each week"
+            :title="`Pending Results — ${quarterLabel}`"
+            subtitle="Candidates whose exam date has passed but whose results aren't in yet"
             eyebrow="Weekly Checklist"
-        />
+            size="compact"
+        >
+            <template #actions>
+                <div class="flex items-center gap-3">
+                    <select
+                        :value="quarter"
+                        class="rounded-lg border border-brand-border bg-brand-surface px-2 py-1 text-sm"
+                        @change="changeQuarter(Number(($event.target as HTMLSelectElement).value), year)"
+                    >
+                        <option :value="1">Q1</option>
+                        <option :value="2">Q2</option>
+                        <option :value="3">Q3</option>
+                        <option :value="4">Q4</option>
+                    </select>
+                    <select
+                        :value="year"
+                        class="rounded-lg border border-brand-border bg-brand-surface px-2 py-1 text-sm"
+                        @change="changeQuarter(quarter, Number(($event.target as HTMLSelectElement).value))"
+                    >
+                        <option :value="2026">2026</option>
+                        <option :value="2027">2027</option>
+                    </select>
+                </div>
+            </template>
+        </PageHeader>
 
         <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
             <!-- Summary cards -->
