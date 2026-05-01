@@ -16,7 +16,7 @@ function orderTeacher(): User
     return User::factory()->create(['role' => 'teacher']);
 }
 
-function orderTeacherContact(string $name = null): ExamContact
+function orderTeacherContact(?string $name = null): ExamContact
 {
     $contact = ExamContact::create([
         'name'  => $name ?? 'Test Teacher '.uniqid(),
