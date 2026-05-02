@@ -144,12 +144,13 @@ return [
     */
 
     'features' => [
-        // Features::registration() removed 2026-04-27 — public teacher signups
-        // disabled until we have something concrete on /dashboard for them.
-        // Removing it makes Fortify skip the /register routes entirely (returns
-        // 404) and flips Features::enabled(Features::registration()) to false,
-        // which auto-hides the "Sign up" link on /login via the canRegister
-        // prop. Re-add this line to turn signups back on.
+        // Re-enabled 2026-05-02. Registration was off between 2026-04-27 and now
+        // because there was nothing on /dashboard for a logged-in teacher to do.
+        // Now that we're building out a per-role dashboard (teachers/parents/self
+        // see their own candidates with PDF/CSV/Excel export), public signups are
+        // back on. Non-admins still land on Dashboard.vue's holding message until
+        // the per-role dashboard work lands.
+        Features::registration(),
         Features::resetPasswords(),
         Features::emailVerification(),
         Features::twoFactorAuthentication([
