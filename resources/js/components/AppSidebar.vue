@@ -3,6 +3,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 import {
     LayoutGrid,
     Users,
+    UserCog,
     School,
     ClipboardList,
     AlertCircle,
@@ -66,6 +67,11 @@ const adminPeopleNavItems: NavItem[] = [
         title: 'Contacts',
         href: '/admin/contacts',
         icon: ContactIcon,
+    },
+    {
+        title: 'Users',
+        href: '/admin/users',
+        icon: UserCog,
     },
     {
         title: 'Schools',

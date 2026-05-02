@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SubscriberController;
 use App\Http\Controllers\ThankYouController;
 use Illuminate\Support\Facades\Route;
@@ -56,7 +57,11 @@ Route::post('/subscribe', [SubscriberController::class, 'store'])->name('subscri
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'Dashboard')->name('dashboard');
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('dashboard/link-request', [DashboardController::class, 'linkRequest'])
+        ->name('dashboard.link-request');
+    Route::post('dashboard/entries/{entry}/correction-request', [DashboardController::class, 'correctionRequest'])
+        ->name('dashboard.correction-request');
 });
 
 require __DIR__.'/settings.php';
