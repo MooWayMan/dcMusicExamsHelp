@@ -4,7 +4,6 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
-use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -50,7 +49,9 @@ class FortifyServiceProvider extends ServiceProvider
     {
         Fortify::loginView(fn (Request $request) => Inertia::render('auth/Login', [
             'canResetPassword' => Features::enabled(Features::resetPasswords()),
-            'canRegister' => Features::enabled(Features::registration()),
+            // 'canRegister' prop dropped 2026-04-27 — Login.vue no longer
+            // expects it; restore alongside the Sign up link if signups
+            // are turned back on in config/fortify.php.
             'status' => $request->session()->get('status'),
         ]));
 
@@ -67,9 +68,9 @@ class FortifyServiceProvider extends ServiceProvider
             'status' => $request->session()->get('status'),
         ]));
 
-        Fortify::registerView(fn () => Inertia::render('auth/Register', [
-            'roles' => User::ROLES,
-        ]));
+        // Fortify::registerView(...) removed 2026-04-27 — registration feature
+        // is disabled in config/fortify.php so this closure is never called.
+        // Re-add this line and the auth/Register.vue page to turn signups back on.
 
         Fortify::twoFactorChallengeView(fn () => Inertia::render('auth/TwoFactorChallenge'));
 

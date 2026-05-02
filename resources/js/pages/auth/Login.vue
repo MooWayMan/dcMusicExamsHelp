@@ -10,10 +10,9 @@ import { Spinner } from '@/components/ui/spinner'
 import { store } from '@/routes/login'
 import { request } from '@/routes/password'
 
-// Registration was re-enabled 2026-05-02. We can't safely import from
-// `@/routes/register` until Wayfinder regenerates its helpers (happens on
-// next dev/build), so we link to the literal `/register` URL — Fortify owns
-// this path and it's part of its public contract.
+// `register` import + `canRegister` prop removed 2026-04-27 — registration
+// feature disabled in config/fortify.php so Wayfinder no longer exports the
+// `register` route helper, which would otherwise break the Vite build.
 
 defineOptions({
     layout: {
@@ -25,7 +24,6 @@ defineOptions({
 defineProps<{
     status?: string
     canResetPassword: boolean
-    canRegister?: boolean
 }>()
 </script>
 
@@ -99,11 +97,7 @@ defineProps<{
             </MyButtonConstructor>
         </div>
 
-        <div class="flex flex-col items-center gap-2 text-center">
-            <p v-if="canRegister" class="text-base text-brand-text-soft sm:text-lg">
-                Don&rsquo;t have an account?
-                <TextLink href="/register" class="text-brand-accent hover:underline">Sign up</TextLink>
-            </p>
+        <div class="text-center">
             <a href="/" class="text-base text-brand-text-soft hover:text-brand-accent hover:underline sm:text-lg">
                 ← Return to home page
             </a>

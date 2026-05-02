@@ -244,20 +244,9 @@ const navClasses = computed(() =>
               <template #myTitle>Dashboard</template>
             </MyTextConstructor>
           </Link>
-          <!-- Guests: Login + Sign up. Restored 2026-05-02 alongside re-enabling
-               registration in config/fortify.php. -->
-          <template v-else>
-            <Link href="/login" class="transition hover:opacity-70">
-              <MyTextConstructor variant="button" textColor="text-slate-700" spacing="none">
-                <template #myTitle>Log in</template>
-              </MyTextConstructor>
-            </Link>
-            <Link href="/register" class="transition hover:opacity-70">
-              <MyTextConstructor variant="button" textColor="text-brand-accent" spacing="none">
-                <template #myTitle>Sign up</template>
-              </MyTextConstructor>
-            </Link>
-          </template>
+          <!-- Public "Sign In" link removed 2026-04-27 — signups are disabled,
+               only Paul needs to log in, and he can type /login directly.
+               Existing logged-in users still see Admin or Dashboard above. -->
 
           <!-- Social icons (desktop only) -->
           <MySocials
@@ -360,19 +349,7 @@ const navClasses = computed(() =>
             <template #myTitle>Dashboard</template>
           </MyTextConstructor>
         </Link>
-        <!-- Guests (mobile): Login + Sign up. -->
-        <template v-else>
-          <Link href="/login" class="block rounded-xl px-3 py-3 hover:bg-slate-50" @click="isOpen = false">
-            <MyTextConstructor variant="button" textColor="text-slate-700" spacing="none">
-              <template #myTitle>Log in</template>
-            </MyTextConstructor>
-          </Link>
-          <Link href="/register" class="block rounded-xl px-3 py-3 hover:bg-slate-50" @click="isOpen = false">
-            <MyTextConstructor variant="button" textColor="text-brand-accent" spacing="none">
-              <template #myTitle>Sign up</template>
-            </MyTextConstructor>
-          </Link>
-        </template>
+        <!-- Public "Sign In" link removed 2026-04-27 — see desktop comment above. -->
 
         <div class="mt-3">
           <MyButtonConstructor variant="primary" size="medium" fullWidth @click="showBookingModal = true; isOpen = false">
