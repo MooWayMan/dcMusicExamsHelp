@@ -105,6 +105,67 @@ const groupedCandidates = computed<CandidateGroup[]>(() => {
     )
 })
 
+// ─────────────────────────────────────────────────────────────────────────
+// Result summary + filter pills
+//
+// Teachers want answers at a glance: "how many distinctions did my class
+// score?" — and to be able to slice the list by result band rather than
+// drilling into each candidate. Counts are at ENTRY level (not candidate)
+// because one candidate can have a Distinction AND a Merit in the same
+// quarter; the totals should add up to total exams, not total candidates.
+// ─────────────────────────────────────────────────────────────────────────
+const resultSummary = computed(() => {
+    const summary = { distinctions: 0, merits: 0, passes: 0, fails: 0, pending: 0 }
+    for (const e of entries.value) {
+        switch (e.result) {
+            case 'Distinction': summary.distinctions++; break
+            case 'Merit':       summary.merits++; break
+            case 'Pass':        summary.passes++; break
+            case 'Fail':        summary.fails++; break
+            default:            summary.pending++
+        }
+    }
+    return summary
+})
+
+type ResultFilter = 'all' | 'Distinction' | 'Merit' | 'Pass' | 'Pending'
+const activeFilter = ref<ResultFilter>('all')
+
+// A candidate is included in a filter if ANY of their exam entries match.
+// "Pending" matches entries where result is null (waiting on Trinity scores).
+const filteredCandidates = computed<CandidateGroup[]>(() => {
+    if (activeFilter.value === 'all') return groupedCandidates.value
+    if (activeFilter.value === 'Pending') {
+        return groupedCandidates.value.filter((g) => g.entries.some((e) => e.result === null))
+    }
+    return groupedCandidates.value.filter((g) =>
+        g.entries.some((e) => e.result === activeFilter.value),
+    )
+})
+
+// For the parent row inline summary: when a candidate has 1 exam, show that
+// exam's result + score directly (no need to drill in). For 2+ exams, show
+// a compact mix like "1 Dist · 1 Merit · 1 Pending" so the teacher can see
+// the spread without expanding.
+function candidateInlineResult(group: CandidateGroup): { single: ExamEntryRow | null; mix: { label: string; cls: string }[] } {
+    if (group.entries.length === 1) {
+        return { single: group.entries[0], mix: [] }
+    }
+    const counts = { Distinction: 0, Merit: 0, Pass: 0, Fail: 0, Pending: 0 }
+    for (const e of group.entries) {
+        const k = (e.result ?? 'Pending') as keyof typeof counts
+        counts[k]++
+    }
+    const mix = [
+        { label: counts.Distinction ? `${counts.Distinction} Dist` : '', cls: 'bg-brand-success-soft text-brand-success' },
+        { label: counts.Merit ? `${counts.Merit} Merit` : '', cls: 'bg-brand-accent/10 text-brand-accent' },
+        { label: counts.Pass ? `${counts.Pass} Pass` : '', cls: 'bg-brand-surface-soft text-brand-text-soft' },
+        { label: counts.Fail ? `${counts.Fail} Fail` : '', cls: 'bg-brand-danger-soft text-brand-danger' },
+        { label: counts.Pending ? `${counts.Pending} Pending` : '', cls: 'bg-brand-surface-soft text-brand-text-soft' },
+    ].filter((m) => m.label !== '')
+    return { single: null, mix }
+}
+
 const expandedCandidates = ref<Set<string>>(new Set())
 function toggleCandidate(key: string) {
     if (expandedCandidates.value.has(key)) {
@@ -235,18 +296,88 @@ defineOptions({
 
             <!-- Candidates table — when the user is linked and has entries -->
             <div v-if="hasEntries" class="rounded-xl border border-brand-border bg-brand-surface">
-                <div class="flex items-center justify-between border-b border-brand-border px-5 py-4">
-                    <div>
-                        <h2 class="text-xl font-semibold text-brand-text">Your candidates</h2>
-                        <p class="text-sm text-brand-text-soft">
-                            One row per candidate. Click a row to see their individual exams.
-                        </p>
+                <div class="border-b border-brand-border px-5 py-4">
+                    <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                            <h2 class="text-xl font-semibold text-brand-text">Your candidates</h2>
+                            <p class="text-sm text-brand-text-soft">
+                                One row per candidate. Click a row to drill into individual exam details.
+                            </p>
+                        </div>
+                        <!-- Result summary chips: total counts at a glance.
+                             Counts are entry-level so they sum to total exams. -->
+                        <div class="flex flex-wrap items-center gap-2 text-sm">
+                            <span class="rounded-full bg-brand-surface-soft px-3 py-1 font-medium text-brand-text-soft">
+                                {{ groupedCandidates.length }} {{ groupedCandidates.length === 1 ? 'candidate' : 'candidates' }}
+                                &middot;
+                                {{ entries.length }} {{ entries.length === 1 ? 'exam' : 'exams' }}
+                            </span>
+                            <span v-if="resultSummary.distinctions" class="rounded-full bg-brand-success-soft px-3 py-1 font-semibold text-brand-success">
+                                {{ resultSummary.distinctions }} Distinction{{ resultSummary.distinctions === 1 ? '' : 's' }}
+                            </span>
+                            <span v-if="resultSummary.merits" class="rounded-full bg-brand-accent/10 px-3 py-1 font-semibold text-brand-accent">
+                                {{ resultSummary.merits }} Merit{{ resultSummary.merits === 1 ? '' : 's' }}
+                            </span>
+                            <span v-if="resultSummary.passes" class="rounded-full bg-brand-surface-soft px-3 py-1 font-semibold text-brand-text-soft">
+                                {{ resultSummary.passes }} Pass{{ resultSummary.passes === 1 ? '' : 'es' }}
+                            </span>
+                            <span v-if="resultSummary.fails" class="rounded-full bg-brand-danger-soft px-3 py-1 font-semibold text-brand-danger">
+                                {{ resultSummary.fails }} Fail{{ resultSummary.fails === 1 ? '' : 's' }}
+                            </span>
+                            <span v-if="resultSummary.pending" class="rounded-full bg-brand-surface-soft px-3 py-1 font-semibold text-brand-text-soft">
+                                {{ resultSummary.pending }} Pending
+                            </span>
+                        </div>
                     </div>
-                    <span class="rounded-full bg-brand-surface-soft px-3 py-1 text-sm font-medium text-brand-text-soft">
-                        {{ groupedCandidates.length }} {{ groupedCandidates.length === 1 ? 'candidate' : 'candidates' }}
-                        &middot;
-                        {{ entries.length }} {{ entries.length === 1 ? 'exam' : 'exams' }}
-                    </span>
+                    <!-- Filter pills — match the /admin/users pattern. Only
+                         shown when there are at least 2 candidates AND the
+                         results are mixed enough to warrant filtering. -->
+                    <div v-if="groupedCandidates.length > 1" class="mt-4 flex flex-wrap gap-1.5">
+                        <button
+                            type="button"
+                            class="cursor-pointer rounded-full px-3 py-1 text-sm font-medium transition-colors"
+                            :class="activeFilter === 'all' ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'"
+                            @click="activeFilter = 'all'"
+                        >
+                            All
+                        </button>
+                        <button
+                            v-if="resultSummary.distinctions"
+                            type="button"
+                            class="cursor-pointer rounded-full px-3 py-1 text-sm font-medium transition-colors"
+                            :class="activeFilter === 'Distinction' ? 'bg-brand-success text-white' : 'bg-brand-success-soft text-brand-success hover:opacity-80'"
+                            @click="activeFilter = 'Distinction'"
+                        >
+                            Distinctions
+                        </button>
+                        <button
+                            v-if="resultSummary.merits"
+                            type="button"
+                            class="cursor-pointer rounded-full px-3 py-1 text-sm font-medium transition-colors"
+                            :class="activeFilter === 'Merit' ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-accent/10 text-brand-accent hover:opacity-80'"
+                            @click="activeFilter = 'Merit'"
+                        >
+                            Merits
+                        </button>
+                        <button
+                            v-if="resultSummary.passes"
+                            type="button"
+                            class="cursor-pointer rounded-full px-3 py-1 text-sm font-medium transition-colors"
+                            :class="activeFilter === 'Pass' ? 'bg-brand-text text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'"
+                            @click="activeFilter = 'Pass'"
+                        >
+                            Passes
+                        </button>
+                        <button
+                            v-if="resultSummary.pending"
+                            type="button"
+                            class="cursor-pointer rounded-full px-3 py-1 text-sm font-medium transition-colors"
+                            :class="activeFilter === 'Pending' ? 'bg-brand-text text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'"
+                            @click="activeFilter = 'Pending'"
+                        >
+                            Pending
+                        </button>
+                    </div>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -266,9 +397,107 @@ defineOptions({
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-brand-border">
-                            <template v-for="group in groupedCandidates" :key="group.key">
-                                <!-- Parent row: candidate summary -->
+                            <template v-for="group in filteredCandidates" :key="group.key">
+                                <!-- Single-exam candidate: render as a normal
+                                     data row with every column filled, so it
+                                     lines up with the headers. No chevron, no
+                                     drill-down — the one exam IS the row.
+                                     This is the common Q1 case where every
+                                     candidate sat exactly one exam. -->
                                 <tr
+                                    v-if="group.entries.length === 1"
+                                    class="transition-colors hover:bg-brand-surface-soft"
+                                >
+                                    <td class="px-4 py-3">
+                                        <div>
+                                            <div class="text-base font-medium text-brand-text">{{ group.candidate_name ?? '—' }}</div>
+                                            <div v-if="group.candidate_number" class="text-xs text-brand-text-soft">
+                                                {{ group.candidate_number }}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 text-brand-text-soft">{{ group.date_of_birth ?? '—' }}</td>
+                                    <td class="px-4 py-3 text-brand-text-soft">{{ group.entries[0].instrument ?? '—' }}</td>
+                                    <td class="px-4 py-3 text-brand-text-soft">{{ group.entries[0].grade ?? '—' }}</td>
+                                    <td class="px-4 py-3 text-brand-text-soft">{{ group.entries[0].subject_area ?? '—' }}</td>
+                                    <td class="px-4 py-3 text-brand-text-soft">{{ group.entries[0].delivery_method ?? '—' }}</td>
+                                    <td class="px-4 py-3 text-brand-text-soft">{{ group.entries[0].exam_date ?? '—' }}</td>
+                                    <td class="px-4 py-3">
+                                        <span v-if="group.entries[0].result" class="rounded-full px-2 py-0.5 text-sm font-medium" :class="resultBadgeClass(group.entries[0].result)">
+                                            {{ group.entries[0].result }}
+                                        </span>
+                                        <span v-else class="text-brand-text-soft">Pending</span>
+                                    </td>
+                                    <td class="px-4 py-3 text-center">
+                                        <span v-if="group.entries[0].score !== null && group.entries[0].score !== undefined" class="font-medium text-brand-text">{{ group.entries[0].score }}</span>
+                                        <span v-else class="text-brand-text-soft">—</span>
+                                    </td>
+                                    <td class="px-4 py-3 text-right">
+                                        <div class="flex flex-col items-end gap-1.5">
+                                            <button
+                                                v-if="group.entries[0].pending_correction"
+                                                type="button"
+                                                class="cursor-pointer inline-flex items-center gap-1.5 rounded-full bg-brand-accent/10 px-2.5 py-0.5 text-xs font-medium text-brand-accent transition-colors hover:bg-brand-accent/20"
+                                                @click.stop="openCorrectionView(group.entries[0].id)"
+                                            >
+                                                ✓ Correction sent
+                                            </button>
+                                            <button
+                                                type="button"
+                                                class="cursor-pointer inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-brand-surface px-3 py-1.5 text-xs font-medium text-brand-text-soft transition-colors hover:bg-brand-accent/10 hover:text-brand-accent"
+                                                @click.stop="toggleCorrectionForm(group.entries[0].id)"
+                                            >
+                                                <MessageCircle class="h-3.5 w-3.5" />
+                                                <template v-if="correctionFormFor === group.entries[0].id">Cancel</template>
+                                                <template v-else-if="group.entries[0].pending_correction">Send another</template>
+                                                <template v-else>Report correction</template>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- Inline correction form for single-exam candidates -->
+                                <tr v-if="group.entries.length === 1 && correctionFormFor === group.entries[0].id" class="bg-brand-surface-soft/60">
+                                    <td colspan="10" class="px-5 py-4">
+                                        <Form
+                                            :action="`/dashboard/entries/${group.entries[0].id}/correction-request`"
+                                            method="post"
+                                            :reset-on-success="['note']"
+                                            v-slot="{ errors, processing }"
+                                            class="grid gap-3"
+                                            @success="correctionFormFor = null"
+                                        >
+                                            <p class="text-sm text-brand-text-soft">
+                                                What needs correcting for {{ group.entries[0].candidate_name }} ({{ group.entries[0].grade }}, {{ group.entries[0].subject_area }})?
+                                            </p>
+                                            <textarea
+                                                name="note"
+                                                rows="3"
+                                                required
+                                                placeholder="e.g. Name spelled wrong on certificate, wrong DOB, wrong grade..."
+                                                class="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-sm text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                                            />
+                                            <p v-if="errors.note" class="text-xs text-brand-danger">{{ errors.note }}</p>
+                                            <div class="flex justify-end gap-2">
+                                                <button type="button" class="cursor-pointer rounded-lg border border-brand-border bg-brand-surface px-3 py-1.5 text-xs font-medium text-brand-text-soft hover:bg-brand-surface-soft" @click="correctionFormFor = null">Cancel</button>
+                                                <button type="submit" :disabled="processing" class="cursor-pointer rounded-lg bg-brand-accent px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50">
+                                                    <span v-if="processing">Sending…</span>
+                                                    <span v-else>Send to musicExams.help</span>
+                                                </button>
+                                            </div>
+                                        </Form>
+                                    </td>
+                                </tr>
+
+                                <!-- Multi-exam candidate (Q2+): keep the
+                                     parent + expandable children pattern, with
+                                     a mix-of-results summary on the parent.
+                                     NOTE: explicit v-if (not v-else) because
+                                     the inline correction form above acts as
+                                     a v-if sibling and would steal the v-else
+                                     binding, double-rendering every single-
+                                     exam candidate. -->
+                                <tr
+                                    v-if="group.entries.length > 1"
                                     class="cursor-pointer transition-colors hover:bg-brand-surface-soft"
                                     @click="toggleCandidate(group.key)"
                                 >
@@ -284,21 +513,33 @@ defineOptions({
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-4 py-3 text-brand-text">{{ group.date_of_birth ?? '—' }}</td>
+                                    <td class="px-4 py-3 text-brand-text-soft">{{ group.date_of_birth ?? '—' }}</td>
                                     <td colspan="7" class="px-4 py-3">
-                                        <span class="rounded-full bg-brand-accent/10 px-3 py-1 text-sm font-medium text-brand-accent">
-                                            {{ group.entries.length }} {{ group.entries.length === 1 ? 'exam' : 'exams' }}
-                                        </span>
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <span class="rounded-full bg-brand-surface-soft px-3 py-1 text-sm font-medium text-brand-text-soft">
+                                                {{ group.entries.length }} exams
+                                            </span>
+                                            <span
+                                                v-for="m in candidateInlineResult(group).mix"
+                                                :key="m.label"
+                                                class="rounded-full px-3 py-1 text-sm font-semibold"
+                                                :class="m.cls"
+                                            >
+                                                {{ m.label }}
+                                            </span>
+                                        </div>
                                     </td>
                                     <td class="px-4 py-3 text-right">
                                         <span class="text-xs text-brand-text-soft">
-                                            {{ isExpanded(group.key) ? 'Hide' : 'Show' }}
+                                            {{ isExpanded(group.key) ? 'Hide' : 'Details' }}
                                         </span>
                                     </td>
                                 </tr>
 
-                                <!-- Child rows: individual exams + correction form -->
-                                <template v-if="isExpanded(group.key)">
+                                <!-- Child rows: only for multi-exam candidates
+                                     (single-exam groups already render their
+                                     one entry as the parent row above). -->
+                                <template v-if="group.entries.length > 1 && isExpanded(group.key)">
                                     <template v-for="row in group.entries" :key="row.id">
                                         <tr class="bg-brand-surface-soft/30">
                                             <td colspan="2" class="pl-12 pr-4 py-3">
