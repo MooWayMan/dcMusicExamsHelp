@@ -490,9 +490,14 @@ defineOptions({
 
                                 <!-- Multi-exam candidate (Q2+): keep the
                                      parent + expandable children pattern, with
-                                     a mix-of-results summary on the parent. -->
+                                     a mix-of-results summary on the parent.
+                                     NOTE: explicit v-if (not v-else) because
+                                     the inline correction form above acts as
+                                     a v-if sibling and would steal the v-else
+                                     binding, double-rendering every single-
+                                     exam candidate. -->
                                 <tr
-                                    v-else
+                                    v-if="group.entries.length > 1"
                                     class="cursor-pointer transition-colors hover:bg-brand-surface-soft"
                                     @click="toggleCandidate(group.key)"
                                 >
