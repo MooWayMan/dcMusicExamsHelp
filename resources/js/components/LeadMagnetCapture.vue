@@ -1,6 +1,6 @@
 <!-- resources/js/components/LeadMagnetCapture.vue -->
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { CheckCircle2, FileDown } from 'lucide-vue-next'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 
@@ -19,6 +19,12 @@ const props = withDefaults(defineProps<Props>(), {
   variant: 'light',
 })
 
+// localStorage key — once a visitor has successfully grabbed the PDF in
+// this browser, we remember it so they don't see the form again on
+// subsequent visits. Stops repeat-submissions out of confusion. Per-browser,
+// per-incognito-session — fresh device = fresh form.
+const STORAGE_KEY = 'leadMagnetClaimed:trinity-exam-checklist'
+
 const name = ref('')
 const email = ref('')
 const marketingConsent = ref(false)
@@ -26,6 +32,23 @@ const isSubmitting = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
 const isDone = ref(false)
+const claimedPreviously = ref(false)
+const claimedFirstName = ref('')
+
+onMounted(() => {
+  if (typeof window === 'undefined') return
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw) as { name?: string; at?: string }
+      claimedPreviously.value = true
+      claimedFirstName.value = (parsed.name ?? '').split(' ')[0] || ''
+      isDone.value = true
+    }
+  } catch {
+    // Bad/empty localStorage — treat as fresh visitor.
+  }
+})
 
 async function handleSubmit() {
   errorMessage.value = ''
@@ -70,6 +93,18 @@ async function handleSubmit() {
 
     successMessage.value = data.message ?? 'Check your inbox — the checklist is on its way.'
     isDone.value = true
+
+    // Remember in this browser so they don't see the form on every visit.
+    try {
+      window.localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ name: name.value.trim(), at: new Date().toISOString() }),
+      )
+      claimedFirstName.value = name.value.trim().split(' ')[0]
+    } catch {
+      // localStorage might be disabled — non-fatal, the form still
+      // worked, they just won't get the persisted thank-you on refresh.
+    }
   } catch {
     errorMessage.value = 'Something went wrong. Please try again.'
   } finally {
@@ -82,14 +117,26 @@ async function handleSubmit() {
   <div
     class="rounded-2xl border-4 border-brand-accent bg-brand-surface p-6 shadow-xl sm:p-8"
   >
-    <!-- Success state -->
-    <div v-if="isDone" class="flex flex-col items-center gap-3 text-center">
+    <!-- Success state — fresh submit -->
+    <div v-if="isDone && !claimedPreviously" class="flex flex-col items-center gap-3 text-center">
       <CheckCircle2 class="h-10 w-10 text-brand-success" />
       <h3 class="text-xl font-bold text-brand-text sm:text-2xl">
         {{ successMessage }}
       </h3>
       <p class="text-base text-brand-text-soft">
-        It usually arrives within a minute. Check your spam folder if it doesn't show up.
+        It usually arrives within a minute. Check your spam folder if it doesn&rsquo;t show up.
+      </p>
+    </div>
+
+    <!-- Returning-visitor state — already grabbed the PDF in this browser -->
+    <div v-else-if="isDone && claimedPreviously" class="flex flex-col items-center gap-3 text-center">
+      <CheckCircle2 class="h-8 w-8 text-brand-success" />
+      <h3 class="text-lg font-bold text-brand-text sm:text-xl">
+        <template v-if="claimedFirstName">You&rsquo;ve got the Trinity Exam Checklist, {{ claimedFirstName }}.</template>
+        <template v-else>You&rsquo;ve got the Trinity Exam Checklist.</template>
+      </h3>
+      <p class="text-sm text-brand-text-soft">
+        Need it again? <button type="button" @click="claimedPreviously = false; isDone = false" class="font-medium text-brand-accent underline hover:opacity-80">Send a fresh copy</button>
       </p>
     </div>
 
