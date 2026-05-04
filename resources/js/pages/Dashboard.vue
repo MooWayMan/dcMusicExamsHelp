@@ -222,6 +222,17 @@ defineOptions({
                 </p>
             </div>
 
+            <!-- "More coming soon" — sets expectations for Phase B (Music Register lite) -->
+            <div v-if="hasEntries" class="mb-6 flex items-start gap-3 rounded-xl border border-brand-accent/30 bg-brand-accent/5 px-4 py-3 text-sm text-brand-text">
+                <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-accent/20 text-xs font-bold text-brand-accent">★</span>
+                <div>
+                    <p class="font-semibold text-brand-text">More coming soon</p>
+                    <p class="mt-0.5 text-brand-text-soft">
+                        We&rsquo;re building a <span class="font-medium text-brand-text">piece tracker</span> so you can plan and follow your students&rsquo; next exam pieces &mdash; with Trinity syllabus dropdowns where available. Look out for it in the next couple of weeks.
+                    </p>
+                </div>
+            </div>
+
             <!-- Candidates table — when the user is linked and has entries -->
             <div v-if="hasEntries" class="rounded-xl border border-brand-border bg-brand-surface">
                 <div class="flex items-center justify-between border-b border-brand-border px-5 py-4">
