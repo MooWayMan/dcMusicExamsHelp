@@ -10,6 +10,26 @@ Route::inertia('/', 'Welcome', [
     'canRegister' => Features::enabled(Features::registration()),
 ])->name('home');
 
+Route::get('/robots.txt', function () {
+    if (app()->environment('production')) {
+        $body = "User-agent: *\n"
+            ."Disallow: /admin\n"
+            ."Disallow: /dashboard\n"
+            ."Disallow: /settings\n"
+            ."Disallow: /login\n"
+            ."Disallow: /register\n"
+            ."Disallow: /forgot-password\n"
+            ."Disallow: /reset-password\n"
+            ."\n"
+            ."Sitemap: https://musicexams.help/sitemap.xml\n";
+    } else {
+        // Non-prod (local, staging, testing): block all crawlers entirely.
+        $body = "User-agent: *\nDisallow: /\n";
+    }
+
+    return response($body, 200, ['Content-Type' => 'text/plain']);
+})->name('robots');
+
 Route::inertia('/faq', 'Faq')->name('faq');
 Route::inertia('/for-teachers', 'ForTeachers')->name('for-teachers');
 Route::redirect('/for-teachers/faber-discounts', '/books', 301);

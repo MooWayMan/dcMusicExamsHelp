@@ -20,10 +20,27 @@ sail npm run dev
 Two terminal tabs always open: npm run dev + git/commands. Don't tell Paul to start dev server.
 
 ## Deployment
-- All work on `dev` branch; merge to `main` to deploy
-- Laravel Cloud auto-deploys from `main`, runs migrations automatically
+
+### Branch flow (dev → staging → main → prod)
+1. All work on `dev` branch
+2. Push to GitHub → Laravel Cloud auto-deploys `dev` to **staging**
+3. Smoke test on staging URL: `https://dcmusicexamshelp-staging-kbe3t6.laravel.cloud`
+4. If green: merge `dev` into `main`
+5. Push `main` → Laravel Cloud auto-deploys to **prod** (`musicexams.help`)
+6. **Never push directly to `main`** — always go via `dev` + staging
+
+### Staging environment guarantees
+- `APP_ENV=staging`, `APP_DEBUG=true`
+- `MAIL_MAILER=log` — no real emails ever sent from staging
+- `MAILCHIMP_API_KEY` and `MAILCHIMP_LIST_ID` blank — no list comms
+- Separate database (`newtest` in `mooway_database_cluster`) — staging cannot affect prod data
+- `/robots.txt` route serves `Disallow: /` on non-prod (Google blocked from indexing staging URL)
+- Basic auth currently NOT enabled (relies on URL obscurity); add via middleware if staging starts getting scanned
+
+### Misc
+- Laravel Cloud auto-runs migrations on deploy (both staging and prod)
 - Seeding is manual only
-- Live URL: dcmusicexamshelp-main-g97abz.laravel.cloud
+- Prod live URL: `dcmusicexamshelp-main-g97abz.laravel.cloud` (custom: `musicexams.help`)
 - Commands tab pre-fills `php artisan` — only give the part after it
 - Never use `tinker --execute` on Cloud — build artisan commands instead
 
