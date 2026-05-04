@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\RoadmapController;
 use App\Http\Controllers\Admin\SchoolController;
 use App\Http\Controllers\Admin\SessionLogController;
 use App\Http\Controllers\Admin\StudentController;
+use App\Http\Controllers\Admin\SubscriberController;
 use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Middleware\SyncCalendarTasks;
@@ -34,6 +35,9 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
         // Users — registered accounts (auth side, not the wider exam_contacts list)
         Route::get('users', [UserController::class, 'index'])->name('users.index');
         Route::get('users/{user}', [UserController::class, 'show'])->name('users.show');
+
+        // Subscribers — newsletter + lead-magnet sign-ups (separate from users)
+        Route::get('subscribers', [SubscriberController::class, 'index'])->name('subscribers.index');
 
         // Dashboard
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');

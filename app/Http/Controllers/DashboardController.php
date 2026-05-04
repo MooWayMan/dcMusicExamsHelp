@@ -4,6 +4,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\CorrectionRequestConfirmed;
+use App\Mail\CorrectionRequestSubmitted;
+use App\Mail\LinkRequestConfirmed;
+use App\Mail\LinkRequestSubmitted;
 use App\Models\ExamContact;
 use App\Models\ExamEntry;
 use App\Models\Task;
@@ -11,6 +15,8 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -45,12 +51,13 @@ class DashboardController extends Controller
         // is messy: contact match → entries via teacher_contact_id; falling
         // back to applicant_email; finally entries where their email appears
         // anywhere on the entry.
-        $entriesQuery = ExamEntry::query()
+        $entriesCollection = ExamEntry::query()
             ->select([
-                'id', 'candidate_number', 'candidate_name', 'date_of_birth',
+                'id', 'student_id', 'instrument_id', 'candidate_number', 'candidate_name', 'date_of_birth',
                 'grade', 'subject_area', 'delivery_method',
                 'result', 'score', 'exam_date',
             ])
+            ->with('instrument:id,name')
             ->where(function ($q) use ($user, $contact) {
                 $q->where('applicant_email', $user->email);
                 if ($contact) {
@@ -58,10 +65,46 @@ class DashboardController extends Controller
                 }
             })
             ->orderBy('candidate_name')
-            ->orderByDesc('exam_date');
+            ->orderByDesc('exam_date')
+            ->get();
 
-        $entries = $entriesQuery->get()->map(fn (ExamEntry $e) => [
+        // Build a map of entry_id → existing pending correction task so the
+        // dashboard can show "Correction sent" indicators and let the user
+        // re-read their submitted note. Title pattern is set in
+        // correctionRequest() below: "Correction request: {name} (#{id})".
+        $correctionMap = [];
+        if ($entriesCollection->isNotEmpty()) {
+            $entryIds = $entriesCollection->pluck('id')->toArray();
+
+            $tasks = Task::query()
+                ->where('category', 'admin')
+                ->where('status', 'pending')
+                ->where('title', 'ILIKE', 'Correction request%')
+                ->get();
+
+            foreach ($tasks as $task) {
+                if (preg_match('/\(#(\d+)\)$/', (string) $task->title, $m)) {
+                    $entryId = (int) $m[1];
+                    if (! in_array($entryId, $entryIds, true)) {
+                        continue;
+                    }
+                    // Pull just the user's note out of the task detail.
+                    $note = (string) $task->detail;
+                    if (str_contains($note, "User's note:\n")) {
+                        $note = trim(explode("User's note:\n", $note, 2)[1] ?? '');
+                    }
+                    $correctionMap[$entryId] = [
+                        'submitted_at' => $task->created_at?->format('d M Y, H:i'),
+                        'note' => $note,
+                    ];
+                }
+            }
+        }
+
+        $entries = $entriesCollection->map(fn (ExamEntry $e) => [
             'id' => $e->id,
+            'student_id' => $e->student_id,
+            'instrument' => $e->instrument?->name,
             'candidate_number' => $e->candidate_number,
             'candidate_name' => $e->candidate_name,
             'date_of_birth' => $e->date_of_birth?->format('d M Y'),
@@ -71,6 +114,7 @@ class DashboardController extends Controller
             'result' => $e->result,
             'score' => $e->score,
             'exam_date' => $e->exam_date?->format('d M Y'),
+            'pending_correction' => $correctionMap[$e->id] ?? null,
         ]);
 
         return Inertia::render('Dashboard', [
@@ -104,13 +148,40 @@ class DashboardController extends Controller
         $detail .= "\n\nNext step: link the user to the matching exam_contacts row "
             ."(or create one) so their dashboard surfaces their exam entries.";
 
-        Task::create([
+        $task = Task::create([
             'title' => "Link {$user->email} to Trinity email {$data['alternative_email']}",
             'detail' => $detail,
             'priority' => 'medium',
             'status' => 'pending',
             'category' => 'admin',
         ]);
+
+        // Two emails — admin notification (Paul) + receipt to the user.
+        // Failures are logged but never block the redirect: the Task row
+        // still exists so the work won't be lost.
+        try {
+            Mail::to('musicexams@musicexams.help')->send(
+                new LinkRequestSubmitted(
+                    task: $task,
+                    user: $user,
+                    alternativeEmail: $data['alternative_email'],
+                    note: $data['note'] ?? null,
+                )
+            );
+        } catch (\Exception $e) {
+            Log::error('LinkRequestSubmitted email failed: '.$e->getMessage());
+        }
+
+        try {
+            Mail::to($user->email)->send(
+                new LinkRequestConfirmed(
+                    user: $user,
+                    alternativeEmail: $data['alternative_email'],
+                )
+            );
+        } catch (\Exception $e) {
+            Log::error('LinkRequestConfirmed email failed: '.$e->getMessage());
+        }
 
         return redirect()
             ->route('dashboard')
@@ -150,13 +221,39 @@ class DashboardController extends Controller
             ."Exam date: ".($entry->exam_date?->format('d M Y') ?? '—')."\n\n"
             ."User's note:\n{$data['note']}";
 
-        Task::create([
+        $task = Task::create([
             'title' => "Correction request: {$entry->candidate_name} (#{$entry->id})",
             'detail' => $detail,
             'priority' => 'medium',
             'status' => 'pending',
             'category' => 'admin',
         ]);
+
+        // Two emails — admin notification (Paul) + receipt to the user.
+        // Failures are logged but never block the redirect: the Task row
+        // still exists so the work won't be lost.
+        try {
+            Mail::to('musicexams@musicexams.help')->send(
+                new CorrectionRequestSubmitted(
+                    task: $task,
+                    user: $user,
+                    entry: $entry,
+                )
+            );
+        } catch (\Exception $e) {
+            Log::error('CorrectionRequestSubmitted email failed: '.$e->getMessage());
+        }
+
+        try {
+            Mail::to($user->email)->send(
+                new CorrectionRequestConfirmed(
+                    user: $user,
+                    entry: $entry,
+                )
+            );
+        } catch (\Exception $e) {
+            Log::error('CorrectionRequestConfirmed email failed: '.$e->getMessage());
+        }
 
         return redirect()
             ->route('dashboard')

@@ -54,6 +54,10 @@ Route::inertia('/cookies', 'CookiePolicy')->name('cookies');
 Route::inertia('/terms', 'TermsOfUse')->name('terms');
 
 Route::post('/subscribe', [SubscriberController::class, 'store'])->name('subscribe');
+// Lead magnet — captures name + email + optional marketing consent and
+// emails the Trinity Exam Checklist PDF. Distinct from /subscribe so the
+// existing newsletter forms keep working.
+Route::post('/lead-magnet/subscribe', [SubscriberController::class, 'leadMagnet'])->name('lead-magnet.subscribe');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 
 Route::middleware(['auth', 'verified'])->group(function () {

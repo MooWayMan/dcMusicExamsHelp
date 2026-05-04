@@ -1,10 +1,15 @@
 <?php
 
+use App\Mail\CorrectionRequestConfirmed;
+use App\Mail\CorrectionRequestSubmitted;
+use App\Mail\LinkRequestConfirmed;
+use App\Mail\LinkRequestSubmitted;
 use App\Models\ExamContact;
 use App\Models\ExamEntry;
 use App\Models\Order;
 use App\Models\Task;
 use App\Models\User;
+use Illuminate\Support\Facades\Mail;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
@@ -320,4 +325,71 @@ test('a teacher can report a correction via teacher_contact_id link', function (
         ->assertRedirect('/dashboard');
 
     expect(Task::count())->toBe(1);
+});
+
+// ──────────────────────────────────────────
+// Email notifications — correction & linkage
+// ──────────────────────────────────────────
+
+test('correction request fires both admin notification + user receipt emails', function () {
+    Mail::fake();
+
+    $user = User::factory()->create([
+        'role' => 'teacher',
+        'name' => 'Tina Teacher',
+        'email' => 'tina@example.com',
+    ]);
+
+    $order = makeOrderForDashboardTest();
+    $entry = ExamEntry::create([
+        'order_id' => $order->id,
+        'candidate_number' => '1-EMAIL1',
+        'candidate_name' => 'Email Candidate',
+        'grade' => '2',
+        'subject_area' => 'Music',
+        'delivery_method' => 'Digital',
+        'exam_date' => '2026-03-10',
+        'applicant_email' => 'tina@example.com',
+    ]);
+
+    $this->actingAs($user)
+        ->post("/dashboard/entries/{$entry->id}/correction-request", [
+            'note' => 'Please update DOB to 14/05/2014',
+        ])
+        ->assertRedirect('/dashboard');
+
+    // Admin notification — to Paul's address
+    Mail::assertSent(CorrectionRequestSubmitted::class, function ($mail) {
+        return $mail->hasTo('musicexams@musicexams.help');
+    });
+
+    // User receipt — to the teacher's address
+    Mail::assertSent(CorrectionRequestConfirmed::class, function ($mail) use ($user) {
+        return $mail->hasTo($user->email);
+    });
+});
+
+test('link request fires both admin notification + user receipt emails', function () {
+    Mail::fake();
+
+    $user = User::factory()->create([
+        'role' => 'teacher',
+        'name' => 'Lonely Larry',
+        'email' => 'larry@example.com',
+    ]);
+
+    $this->actingAs($user)
+        ->post('/dashboard/link-request', [
+            'alternative_email' => 'larry-on-trinity@example.com',
+            'note' => 'I run a music school in Liverpool',
+        ])
+        ->assertRedirect('/dashboard');
+
+    Mail::assertSent(LinkRequestSubmitted::class, function ($mail) {
+        return $mail->hasTo('musicexams@musicexams.help');
+    });
+
+    Mail::assertSent(LinkRequestConfirmed::class, function ($mail) use ($user) {
+        return $mail->hasTo($user->email);
+    });
 });

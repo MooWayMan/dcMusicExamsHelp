@@ -16,6 +16,7 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 import SettingsLayout from '@/layouts/settings/Layout.vue'
 import MarketingLayout from '@/layouts/MarketingLayout.vue'
+import UserLayout from '@/layouts/UserLayout.vue'
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel'
 
@@ -31,7 +32,27 @@ createInertiaApp({
         // ===============================
         // Layout switching
         // ===============================
-        
+
+        // Pull the current Inertia page payload off the root element. We
+        // can't use `usePage()` here because the Vue app hasn't been
+        // created yet — but the SSR-injected JSON on #app[data-page]
+        // already contains the auth user, so we can route a non-admin to
+        // UserLayout for the Dashboard without an extra request.
+        const rootEl = typeof document !== 'undefined'
+            ? document.getElementById('app')
+            : null
+        let authUser: { role?: string } | null = null
+        if (rootEl?.dataset.page) {
+            try {
+                const parsed = JSON.parse(rootEl.dataset.page)
+                authUser = parsed?.props?.auth?.user ?? null
+            } catch {
+                authUser = null
+            }
+        }
+        const isAuthed = !!authUser
+        const isAdmin = authUser?.role === 'admin'
+
         if (['Welcome', 'ConstructorsDemo', 'Faq', 'ForTeachers', 'TeacherAwards', 'ForParents', 'ForStudents', 'Books', 'ThankYou', 'ExamGuide', 'ExamGuideUcas', 'ExamGuideExpect', 'ExamGuideDigital', 'ExamGuideGrades', 'ExamGuideSyllabuses', 'ExamFees', 'Incentives', 'Contact', 'About', 'PrivacyPolicy', 'CookiePolicy', 'TermsOfUse', 'ComingSoonPage'].includes(name)) {
             // Public marketing pages → clean layout (no admin sidebar)
     page.default.layout = undefined
@@ -49,7 +70,21 @@ createInertiaApp({
             page.default.layout = AuthLayout
 
         } else if (name.startsWith('settings/')) {
-            page.default.layout = page.default.layout || [AppLayout, SettingsLayout]
+            // Settings pages set defineOptions({ layout: { breadcrumbs } }) —
+            // a config object, not a layout component. Always overwrite so
+            // the real layout chain renders. Non-admin users get UserLayout
+            // (their lean sidebar) + SettingsLayout (settings nav).
+            page.default.layout = isAdmin
+                ? [AppLayout, SettingsLayout]
+                : [UserLayout, SettingsLayout]
+
+        } else if (name === 'Dashboard') {
+            // Dashboard.vue uses defineOptions({ layout: { breadcrumbs: [...] } })
+            // — that's a config object, not a layout component. We must
+            // ALWAYS overwrite it (not `||`) so a real layout component
+            // is rendered. Admins get AppLayout (full admin sidebar);
+            // everyone else gets UserLayout (lean teacher sidebar).
+            page.default.layout = isAdmin ? AppLayout : UserLayout
 
         } else {
             // Default app pages
@@ -61,14 +96,16 @@ createInertiaApp({
 
     setup({ el, App, props, plugin }) {
         const CookieConsent = defineAsyncComponent(() => import('@/components/CookieConsent.vue'))
-        const NewsletterPopup = defineAsyncComponent(() => import('@/components/NewsletterPopup.vue'))
+        // NewsletterPopup retired in favour of the inline LeadMagnetCapture
+        // lead-magnet on Welcome.vue. Component file kept in the repo so
+        // existing tests / other forms still resolve, but no longer mounted
+        // globally — Paul to delete properly once the lead magnet is proven.
         const ScrollToTop = defineAsyncComponent(() => import('@/components/ScrollToTop.vue'))
 
         createApp({
             render: () => h('div', [
                 h(App, props),
                 h(CookieConsent),
-                h(NewsletterPopup),
                 h(ScrollToTop),
             ])
         })

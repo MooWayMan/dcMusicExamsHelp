@@ -15,6 +15,7 @@ import MyRunnerListTextInfo from '@/components/reusables/MyRunnerListTextInfo.vu
 import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
 import EmailCapture from '@/components/EmailCapture.vue'
+import LeadMagnetCapture from '@/components/LeadMagnetCapture.vue'
 
 const { isSubscribed } = useSubscription()
 const { showBookingModal } = useBookingModal()
@@ -400,6 +401,13 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
         Book with Centre Code 120 and unlock free support, incentives and recognition
       </p>
     </div>
+
+    <!-- LEAD MAGNET — Trinity Exam Checklist PDF -->
+    <section class="border-y border-brand-border bg-brand-surface-soft">
+      <div class="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+        <LeadMagnetCapture />
+      </div>
+    </section>
 
     <!-- WHY -->
     <section id="why" class="border-b border-brand-border bg-brand-surface">
