@@ -65,7 +65,7 @@ const inTheRoom = [
   {
     step: '4',
     title: 'Technical work and supporting tests',
-    detail: 'Classical & Jazz exams include scales, arpeggios and exercises, plus two supporting tests chosen from sight-reading, aural, improvisation or musical knowledge — you only do two and you get to choose which ones (the options vary by grade, so check the syllabus for your instrument). Rock & Pop has Session Skills instead — choose either Improvising or Playback.',
+    detail: 'Classical & Jazz exams include technical work — for many instruments and grades you can choose between scales & arpeggios OR exercises (check your instrument\'s syllabus for the exact options at your grade). Plus two supporting tests chosen from sight-reading, aural, improvisation or musical knowledge — you only do two and you get to choose which ones (the options vary by grade). Rock & Pop has Session Skills instead — choose either Improvising or Playback.',
   },
   {
     step: '5',
@@ -133,7 +133,7 @@ const afterBookingF2F = [
   {
     step: '3',
     title: 'Prepare the appointment slip',
-    detail: 'The appointment slip needs to be filled in with your choices (pieces, scales, supporting tests) and handed to the examiner when you walk into the room. Print it if you can — but if you can\'t print it or you forget it on the day, don\'t panic. You can write out the information by hand: your name, instrument, grade, and the pieces and options you\'ve chosen. The examiner just needs to know what you\'re performing.',
+    detail: 'The appointment slip needs to be filled in with your choices (pieces, technical work, supporting tests) and handed to the examiner when you walk into the room. Print it if you can — but if you can\'t print it or you forget it on the day, don\'t panic. You can write out the information by hand: your name, instrument, grade, and the pieces and options you\'ve chosen. The examiner just needs to know what you\'re performing.',
   },
   {
     step: '4',

@@ -40,7 +40,7 @@ const journeySteps = [
   {
     step: 3,
     title: 'Your child prepares for the exam',
-    detail: 'Your child will work on their exam pieces, scales, sight-reading and other elements — usually with their teacher, but self-taught candidates can prepare independently too. The Trinity syllabus sets out exactly what\'s needed for each grade — see our <a href="/exam-guide/syllabuses?from=for-parents" class="font-semibold text-white underline hover:text-white/70">syllabuses page</a> for direct links to every instrument.',
+    detail: 'Your child will work on their exam pieces, technical work, sight-reading and other elements — usually with their teacher, but self-taught candidates can prepare independently too. The Trinity syllabus sets out exactly what\'s needed for each grade — see our <a href="/exam-guide/syllabuses?from=for-parents" class="font-semibold text-white underline hover:text-white/70">syllabuses page</a> for direct links to every instrument.',
   },
   {
     step: 4,
@@ -65,7 +65,7 @@ const whatYourChildGets = [
 const faqs = [
   {
     question: 'What is a music exam?',
-    answer: 'A graded music exam is a formal assessment of your child\'s playing ability on their instrument. Depending on the grade and instrument, they may perform prepared pieces, scales, sight-reading, aural tests or a combination — not every exam includes all of these. It\'s a milestone that shows progress and gives them something to work towards.',
+    answer: 'A graded music exam is a formal assessment of your child\'s playing ability on their instrument. Depending on the grade and instrument, they may perform prepared pieces, technical work, sight-reading, aural tests or a combination — not every exam includes all of these. It\'s a milestone that shows progress and gives them something to work towards.',
   },
   {
     question: 'What grades are there?',

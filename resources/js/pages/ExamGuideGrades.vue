@@ -36,7 +36,7 @@ const gradeLevels = [
   },
   {
     grade: 'Grade 1',
-    description: 'The traditional starting point. You\'ll play simple pieces and demonstrate basic technique. Scales are straightforward and supporting tests are gentle.',
+    description: 'The traditional starting point. You\'ll play simple pieces and demonstrate basic technique. Technical work is straightforward and supporting tests are gentle.',
     typical: 'Around 6–12 months of lessons (age and regular practice are big factors)',
   },
   {
