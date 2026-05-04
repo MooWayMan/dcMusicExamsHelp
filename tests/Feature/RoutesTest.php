@@ -116,6 +116,27 @@ test('GET /terms returns 200', function () {
 });
 
 // ──────────────────────────────────────────
+// robots.txt (env-aware: blocks crawlers on non-prod)
+// ──────────────────────────────────────────
+
+test('GET /robots.txt returns 200 with plain text', function () {
+    $this->get('/robots.txt')
+        ->assertStatus(200)
+        ->assertHeader('Content-Type', 'text/plain; charset=UTF-8');
+});
+
+test('robots.txt blocks all crawlers when not in production', function () {
+    // The test env is "testing", so the non-prod branch fires:
+    // expect a blanket Disallow: / with no specific path rules.
+    $body = $this->get('/robots.txt')->getContent();
+
+    expect($body)
+        ->toContain('User-agent: *')
+        ->toContain('Disallow: /')
+        ->not->toContain('Sitemap:');
+});
+
+// ──────────────────────────────────────────
 // Breadcrumb ?from= parameter tests
 // ──────────────────────────────────────────
 

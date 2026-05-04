@@ -324,7 +324,7 @@ const faqs = [
               </div>
               <div>
                 <p class="text-base font-semibold text-white sm:text-base md:text-lg">Find your grade</p>
-                <p class="mt-1 text-base text-white/80 sm:text-base md:text-lg">On Trinity's page, select the grade you're working towards. You'll see the full list of pieces, scales and requirements.</p>
+                <p class="mt-1 text-base text-white/80 sm:text-base md:text-lg">On Trinity's page, select the grade you're working towards. You'll see the full list of pieces, technical work and requirements.</p>
               </div>
             </div>
             <div class="flex gap-4">

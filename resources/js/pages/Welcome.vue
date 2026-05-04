@@ -14,7 +14,8 @@ import MyRunnerConstructor from '@/components/reusables/MyRunnerConstructor.vue'
 import MyRunnerListTextInfo from '@/components/reusables/MyRunnerListTextInfo.vue'
 import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
-import EmailCapture from '@/components/EmailCapture.vue'
+// EmailCapture import removed 2026-05-04 — superseded by LeadMagnetCapture.
+import LeadMagnetCapture from '@/components/LeadMagnetCapture.vue'
 
 const { isSubscribed } = useSubscription()
 const { showBookingModal } = useBookingModal()
@@ -262,10 +263,9 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
               </a>
             </div>
 
-            <!-- EMAIL CAPTURE — hero (hidden once subscribed) -->
-            <div v-if="!isSubscribed" class="mt-8 w-full max-w-md">
-              <EmailCapture source="hero" variant="light" :compact="true" />
-            </div>
+            <!-- Hero email capture removed 2026-05-04 — superseded by the
+                 inline LeadMagnetCapture lower down which delivers the
+                 Trinity Exam Checklist PDF. Avoids confusing dual signups. -->
           </div>
 
           <!-- Right — photo mosaic (desktop) / row of 3 (mobile) -->
@@ -400,6 +400,13 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
         Book with Centre Code 120 and unlock free support, incentives and recognition
       </p>
     </div>
+
+    <!-- LEAD MAGNET — Trinity Exam Checklist PDF -->
+    <section class="border-y border-brand-border bg-brand-surface-soft">
+      <div class="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+        <LeadMagnetCapture />
+      </div>
+    </section>
 
     <!-- WHY -->
     <section id="why" class="border-b border-brand-border bg-brand-surface">
@@ -901,22 +908,9 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
       </div>
     </section>
 
-    <!-- EMAIL CAPTURE — bottom -->
-    <section class="bg-black">
-      <div class="mx-auto max-w-lg px-4 pb-14 sm:px-6">
-        <div class="rounded-2xl border border-white/10 bg-white/5 p-6 text-center sm:p-8">
-          <h3 class="text-xl font-bold text-white sm:text-xl">
-            Don't miss out
-          </h3>
-          <p class="mt-1 text-base text-white/60 sm:text-base">
-            Get exam tips, booking reminders and exclusive offers straight to your inbox.
-          </p>
-          <div class="mt-4">
-            <EmailCapture source="bottom" variant="dark" />
-          </div>
-        </div>
-      </div>
-    </section>
+    <!-- Bottom EmailCapture removed 2026-05-04 — replaced by the inline
+         LeadMagnetCapture lead magnet earlier on the page. Single,
+         clear CTA rather than two competing signup forms. -->
 
     <!-- FOOTER -->
     <MyFooter variant="gradient" />

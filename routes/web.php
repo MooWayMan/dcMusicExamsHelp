@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SubscriberController;
 use App\Http\Controllers\ThankYouController;
 use Illuminate\Support\Facades\Route;
@@ -9,6 +11,26 @@ use Laravel\Fortify\Features;
 Route::inertia('/', 'Welcome', [
     'canRegister' => Features::enabled(Features::registration()),
 ])->name('home');
+
+Route::get('/robots.txt', function () {
+    if (app()->environment('production')) {
+        $body = "User-agent: *\n"
+            ."Disallow: /admin\n"
+            ."Disallow: /dashboard\n"
+            ."Disallow: /settings\n"
+            ."Disallow: /login\n"
+            ."Disallow: /register\n"
+            ."Disallow: /forgot-password\n"
+            ."Disallow: /reset-password\n"
+            ."\n"
+            ."Sitemap: https://musicexams.help/sitemap.xml\n";
+    } else {
+        // Non-prod (local, staging, testing): block all crawlers entirely.
+        $body = "User-agent: *\nDisallow: /\n";
+    }
+
+    return response($body, 200, ['Content-Type' => 'text/plain']);
+})->name('robots');
 
 Route::inertia('/faq', 'Faq')->name('faq');
 Route::inertia('/for-teachers', 'ForTeachers')->name('for-teachers');
@@ -33,10 +55,23 @@ Route::inertia('/cookies', 'CookiePolicy')->name('cookies');
 Route::inertia('/terms', 'TermsOfUse')->name('terms');
 
 Route::post('/subscribe', [SubscriberController::class, 'store'])->name('subscribe');
+// Lead magnet — captures name + email + optional marketing consent and
+// emails the Trinity Exam Checklist PDF. Distinct from /subscribe so the
+// existing newsletter forms keep working.
+Route::post('/lead-magnet/subscribe', [SubscriberController::class, 'leadMagnet'])->name('lead-magnet.subscribe');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'Dashboard')->name('dashboard');
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('dashboard/link-request', [DashboardController::class, 'linkRequest'])
+        ->name('dashboard.link-request');
+    Route::post('dashboard/entries/{entry}/correction-request', [DashboardController::class, 'correctionRequest'])
+        ->name('dashboard.correction-request');
+
+    // Leave impersonation — must live outside the admin middleware because
+    // the currently-authenticated user is the non-admin being impersonated.
+    Route::post('impersonate/leave', [ImpersonationController::class, 'leave'])
+        ->name('impersonate.leave');
 });
 
 require __DIR__.'/settings.php';

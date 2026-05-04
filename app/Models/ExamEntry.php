@@ -27,16 +27,21 @@ class ExamEntry extends Model
         'score',
         'fee',
         'exam_date',
+        'date_of_birth',
         'notes',
         'teacher_contact_id',
         'teacher_credit_status',
         'source',
+        'applicant_name',
+        'applicant_email',
+        'submitter_contact_id',
     ];
 
     protected function casts(): array
     {
         return [
             'exam_date' => 'date',
+            'date_of_birth' => 'date',
             'score' => 'integer',
             'show_full_name' => 'boolean',
             'show_on_thank_you' => 'boolean',

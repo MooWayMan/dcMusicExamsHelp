@@ -66,6 +66,11 @@ const faqs = [
       'Start by checking the <a href="/exam-guide/syllabuses?from=faq" class="font-semibold text-brand-accent underline hover:opacity-70">syllabus</a> for your instrument and grade — it sets out exactly what you need to prepare, including pieces, technical work and supporting tests. If you have a teacher, they will guide you through what to work on and help you choose your pieces. If you are preparing on your own, the syllabus and Trinity\'s published books and resources have everything you need.',
   },
   {
+    question: 'Do I have to do scales and arpeggios?',
+    answer:
+      'For most Classical &amp; Jazz instruments and grades you can choose between scales &amp; arpeggios OR exercises — they are not both required. Brass at Grades 1–5, for example, lets you pick one or the other. At higher grades the alternative may be orchestral or brass band extracts instead. Always check the <a href="/exam-guide/syllabuses?from=faq" class="font-semibold text-brand-accent underline hover:opacity-70">syllabus</a> for your specific instrument and grade. If you go with scales they must be played from memory — exercises (or extracts) can be read from sheet music.',
+  },
+  {
     question: 'What results can I achieve?',
     answer:
       'Trinity graded exams are marked out of 100. A Pass is 60–74, Merit is 75–86, and Distinction is 87–100. Every student entered through centre 120 — whether face-to-face, digital or theory — receives at least a <strong>Bravo Certificate</strong> and is listed on our <a href="/recognition?from=faq" class="font-semibold text-brand-accent underline hover:opacity-70">Recognition page</a>. Merit earns a Take a Bow Certificate and Distinction earns a Standing Ovation Certificate — plus a place in the <a href="/recognition?from=faq" class="font-semibold text-brand-accent underline hover:opacity-70">Hall of Fame</a>. The highest scorers each quarter earn a Showstopper or Centre Stage Certificate and a gift token.',

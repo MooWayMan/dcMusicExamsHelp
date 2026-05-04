@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ContactController;
 use App\Http\Controllers\Admin\ContactLogController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ExamEntryController;
+use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PageMaintenanceController;
 use App\Http\Controllers\Admin\PendingResultsController;
@@ -16,7 +17,9 @@ use App\Http\Controllers\Admin\RoadmapController;
 use App\Http\Controllers\Admin\SchoolController;
 use App\Http\Controllers\Admin\SessionLogController;
 use App\Http\Controllers\Admin\StudentController;
+use App\Http\Controllers\Admin\SubscriberController;
 use App\Http\Controllers\Admin\TaskController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Middleware\SyncCalendarTasks;
 use Illuminate\Support\Facades\Route;
 
@@ -29,6 +32,20 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
         Route::get('contacts/{contact}/edit', [ContactController::class, 'edit'])->name('contacts.edit');
         Route::put('contacts/{contact}', [ContactController::class, 'update'])->name('contacts.update');
         Route::get('contacts/{contact}', [ContactController::class, 'show'])->name('contacts.show');
+
+        // Users — registered accounts (auth side, not the wider exam_contacts list)
+        Route::get('users', [UserController::class, 'index'])->name('users.index');
+        Route::get('users/{user}', [UserController::class, 'show'])->name('users.show');
+
+        // Impersonation — admin "Login as user" so Paul can verify what real
+        // teachers/parents see on their dashboard. Pair with the leave route
+        // in routes/web.php (which lives outside the admin middleware so the
+        // impersonated, non-admin user can use it to switch back).
+        Route::post('users/{user}/impersonate', [ImpersonationController::class, 'start'])
+            ->name('users.impersonate');
+
+        // Subscribers — newsletter + lead-magnet sign-ups (separate from users)
+        Route::get('subscribers', [SubscriberController::class, 'index'])->name('subscribers.index');
 
         // Dashboard
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');

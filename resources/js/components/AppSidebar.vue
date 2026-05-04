@@ -3,6 +3,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 import {
     LayoutGrid,
     Users,
+    UserCog,
     School,
     ClipboardList,
     AlertCircle,
@@ -17,6 +18,7 @@ import {
     FileSpreadsheet,
     Contact as ContactIcon,
     MessageSquareText,
+    Mail as MailIcon,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
@@ -66,6 +68,16 @@ const adminPeopleNavItems: NavItem[] = [
         title: 'Contacts',
         href: '/admin/contacts',
         icon: ContactIcon,
+    },
+    {
+        title: 'Users',
+        href: '/admin/users',
+        icon: UserCog,
+    },
+    {
+        title: 'Subscribers',
+        href: '/admin/subscribers',
+        icon: MailIcon,
     },
     {
         title: 'Schools',

@@ -15,6 +15,7 @@ class Subscriber extends Model
         'source',
         'subscribed_at',
         'unsubscribed_at',
+        'marketing_consent_at',
     ];
 
     protected function casts(): array
@@ -22,7 +23,18 @@ class Subscriber extends Model
         return [
             'subscribed_at' => 'datetime',
             'unsubscribed_at' => 'datetime',
+            'marketing_consent_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Has this subscriber actively opted-in to receive ongoing marketing
+     * comms? Lead-magnet downloads on their own do NOT count — only the
+     * explicit checkbox tick is recorded.
+     */
+    public function hasMarketingConsent(): bool
+    {
+        return ! is_null($this->marketing_consent_at);
     }
 
     public function isActive(): bool

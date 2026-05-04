@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\LeadMagnetDelivery;
 use App\Models\Subscriber;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class SubscriberController extends Controller
 {
@@ -55,6 +58,62 @@ class SubscriberController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Thank you for subscribing!',
+        ]);
+    }
+
+    /**
+     * Lead magnet entry-point: capture name + email, optionally record a
+     * marketing-consent timestamp, and email the subscriber the Trinity
+     * Exam Checklist PDF as a transactional email.
+     *
+     * Source is hard-coded to `trinity_checklist` so admin reports can
+     * always see where the subscriber came from. The original /subscribe
+     * endpoint above is kept untouched for any other forms still hitting it.
+     */
+    public function leadMagnet(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'marketing_consent' => 'nullable|boolean',
+        ]);
+
+        $marketingConsent = (bool) ($validated['marketing_consent'] ?? false);
+
+        $subscriber = Subscriber::firstOrNew(['email' => $validated['email']]);
+        $subscriber->fill([
+            'name' => $validated['name'],
+            'source' => 'trinity_checklist',
+        ]);
+
+        // Re-subscribe an unsubscribed person (lead magnet sign-up implies
+        // current interest). Only stamp marketing consent if explicitly
+        // opted-in — silence is NOT consent under GDPR.
+        if (! $subscriber->exists || $subscriber->unsubscribed_at) {
+            $subscriber->subscribed_at = now();
+            $subscriber->unsubscribed_at = null;
+        }
+
+        if ($marketingConsent && ! $subscriber->marketing_consent_at) {
+            $subscriber->marketing_consent_at = now();
+        }
+
+        $subscriber->save();
+
+        // Deliver the PDF. Failure is logged but doesn't block the
+        // success response — Paul can re-trigger from the admin panel
+        // if the bounce rate ever spikes.
+        try {
+            Mail::to($subscriber->email)->send(
+                new LeadMagnetDelivery(subscriberName: $subscriber->name)
+            );
+        } catch (\Exception $e) {
+            Log::error('LeadMagnetDelivery email failed: '.$e->getMessage());
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Thanks {$subscriber->name} — your Trinity Exam Checklist is on its way.",
         ]);
     }
 }
