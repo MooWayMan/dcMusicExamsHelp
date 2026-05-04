@@ -34,7 +34,7 @@ function returnToAdmin(): void {
     <div
         v-if="impersonating"
         role="alert"
-        class="sticky top-0 z-50 w-full border-b border-brand-burgundy/40 bg-brand-burgundy text-white shadow-md"
+        class="sticky top-0 z-50 w-full border-b border-brand-danger/40 bg-brand-danger text-white shadow-md"
     >
         <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-2 text-sm">
             <div class="flex items-center gap-2">
@@ -49,7 +49,7 @@ function returnToAdmin(): void {
             </div>
             <button
                 type="button"
-                class="rounded-md bg-white px-3 py-1 text-xs font-semibold text-brand-burgundy transition hover:bg-white/90"
+                class="cursor-pointer rounded-md bg-white px-3 py-1 text-xs font-semibold text-brand-danger transition hover:bg-white/90"
                 @click="returnToAdmin"
             >
                 Return to admin
