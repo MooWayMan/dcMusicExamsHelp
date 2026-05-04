@@ -398,10 +398,101 @@ defineOptions({
                         </thead>
                         <tbody class="divide-y divide-brand-border">
                             <template v-for="group in filteredCandidates" :key="group.key">
-                                <!-- Parent row: candidate summary with inline
-                                     result so 1-exam candidates (the common Q1
-                                     case) don't need the chevron drill-down. -->
+                                <!-- Single-exam candidate: render as a normal
+                                     data row with every column filled, so it
+                                     lines up with the headers. No chevron, no
+                                     drill-down — the one exam IS the row.
+                                     This is the common Q1 case where every
+                                     candidate sat exactly one exam. -->
                                 <tr
+                                    v-if="group.entries.length === 1"
+                                    class="transition-colors hover:bg-brand-surface-soft"
+                                >
+                                    <td class="px-4 py-3">
+                                        <div>
+                                            <div class="text-base font-medium text-brand-text">{{ group.candidate_name ?? '—' }}</div>
+                                            <div v-if="group.candidate_number" class="text-xs text-brand-text-soft">
+                                                {{ group.candidate_number }}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 text-brand-text-soft">{{ group.date_of_birth ?? '—' }}</td>
+                                    <td class="px-4 py-3 text-brand-text-soft">{{ group.entries[0].instrument ?? '—' }}</td>
+                                    <td class="px-4 py-3 text-brand-text-soft">{{ group.entries[0].grade ?? '—' }}</td>
+                                    <td class="px-4 py-3 text-brand-text-soft">{{ group.entries[0].subject_area ?? '—' }}</td>
+                                    <td class="px-4 py-3 text-brand-text-soft">{{ group.entries[0].delivery_method ?? '—' }}</td>
+                                    <td class="px-4 py-3 text-brand-text-soft">{{ group.entries[0].exam_date ?? '—' }}</td>
+                                    <td class="px-4 py-3">
+                                        <span v-if="group.entries[0].result" class="rounded-full px-2 py-0.5 text-sm font-medium" :class="resultBadgeClass(group.entries[0].result)">
+                                            {{ group.entries[0].result }}
+                                        </span>
+                                        <span v-else class="text-brand-text-soft">Pending</span>
+                                    </td>
+                                    <td class="px-4 py-3 text-center">
+                                        <span v-if="group.entries[0].score !== null && group.entries[0].score !== undefined" class="font-medium text-brand-text">{{ group.entries[0].score }}</span>
+                                        <span v-else class="text-brand-text-soft">—</span>
+                                    </td>
+                                    <td class="px-4 py-3 text-right">
+                                        <div class="flex flex-col items-end gap-1.5">
+                                            <button
+                                                v-if="group.entries[0].pending_correction"
+                                                type="button"
+                                                class="cursor-pointer inline-flex items-center gap-1.5 rounded-full bg-brand-accent/10 px-2.5 py-0.5 text-xs font-medium text-brand-accent transition-colors hover:bg-brand-accent/20"
+                                                @click.stop="openCorrectionView(group.entries[0].id)"
+                                            >
+                                                ✓ Correction sent
+                                            </button>
+                                            <button
+                                                type="button"
+                                                class="cursor-pointer inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-brand-surface px-3 py-1.5 text-xs font-medium text-brand-text-soft transition-colors hover:bg-brand-accent/10 hover:text-brand-accent"
+                                                @click.stop="toggleCorrectionForm(group.entries[0].id)"
+                                            >
+                                                <MessageCircle class="h-3.5 w-3.5" />
+                                                <template v-if="correctionFormFor === group.entries[0].id">Cancel</template>
+                                                <template v-else-if="group.entries[0].pending_correction">Send another</template>
+                                                <template v-else>Report correction</template>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- Inline correction form for single-exam candidates -->
+                                <tr v-if="group.entries.length === 1 && correctionFormFor === group.entries[0].id" class="bg-brand-surface-soft/60">
+                                    <td colspan="10" class="px-5 py-4">
+                                        <Form
+                                            :action="`/dashboard/entries/${group.entries[0].id}/correction-request`"
+                                            method="post"
+                                            :reset-on-success="['note']"
+                                            v-slot="{ errors, processing }"
+                                            class="grid gap-3"
+                                            @success="correctionFormFor = null"
+                                        >
+                                            <p class="text-sm text-brand-text-soft">
+                                                What needs correcting for {{ group.entries[0].candidate_name }} ({{ group.entries[0].grade }}, {{ group.entries[0].subject_area }})?
+                                            </p>
+                                            <textarea
+                                                name="note"
+                                                rows="3"
+                                                required
+                                                placeholder="e.g. Name spelled wrong on certificate, wrong DOB, wrong grade..."
+                                                class="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-sm text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                                            />
+                                            <p v-if="errors.note" class="text-xs text-brand-danger">{{ errors.note }}</p>
+                                            <div class="flex justify-end gap-2">
+                                                <button type="button" class="cursor-pointer rounded-lg border border-brand-border bg-brand-surface px-3 py-1.5 text-xs font-medium text-brand-text-soft hover:bg-brand-surface-soft" @click="correctionFormFor = null">Cancel</button>
+                                                <button type="submit" :disabled="processing" class="cursor-pointer rounded-lg bg-brand-accent px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50">
+                                                    <span v-if="processing">Sending…</span>
+                                                    <span v-else>Send to musicExams.help</span>
+                                                </button>
+                                            </div>
+                                        </Form>
+                                    </td>
+                                </tr>
+
+                                <!-- Multi-exam candidate (Q2+): keep the
+                                     parent + expandable children pattern, with
+                                     a mix-of-results summary on the parent. -->
+                                <tr
+                                    v-else
                                     class="cursor-pointer transition-colors hover:bg-brand-surface-soft"
                                     @click="toggleCandidate(group.key)"
                                 >
@@ -417,42 +508,20 @@ defineOptions({
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-4 py-3 text-brand-text">{{ group.date_of_birth ?? '—' }}</td>
+                                    <td class="px-4 py-3 text-brand-text-soft">{{ group.date_of_birth ?? '—' }}</td>
                                     <td colspan="7" class="px-4 py-3">
                                         <div class="flex flex-wrap items-center gap-2">
                                             <span class="rounded-full bg-brand-surface-soft px-3 py-1 text-sm font-medium text-brand-text-soft">
-                                                {{ group.entries.length }} {{ group.entries.length === 1 ? 'exam' : 'exams' }}
+                                                {{ group.entries.length }} exams
                                             </span>
-                                            <!-- Single-exam: show the actual result + score inline -->
-                                            <template v-if="candidateInlineResult(group).single">
-                                                <span
-                                                    v-if="candidateInlineResult(group).single!.result"
-                                                    class="rounded-full px-3 py-1 text-sm font-semibold"
-                                                    :class="resultBadgeClass(candidateInlineResult(group).single!.result)"
-                                                >
-                                                    {{ candidateInlineResult(group).single!.result }}<template v-if="candidateInlineResult(group).single!.score !== null && candidateInlineResult(group).single!.score !== undefined"> · {{ candidateInlineResult(group).single!.score }}</template>
-                                                </span>
-                                                <span
-                                                    v-else
-                                                    class="rounded-full bg-brand-surface-soft px-3 py-1 text-sm font-medium text-brand-text-soft"
-                                                >
-                                                    Pending
-                                                </span>
-                                                <span v-if="candidateInlineResult(group).single!.grade" class="text-sm text-brand-text-soft">
-                                                    {{ candidateInlineResult(group).single!.instrument ?? '' }} {{ candidateInlineResult(group).single!.grade }}
-                                                </span>
-                                            </template>
-                                            <!-- Multi-exam: show the mix so the spread is visible at a glance -->
-                                            <template v-else>
-                                                <span
-                                                    v-for="m in candidateInlineResult(group).mix"
-                                                    :key="m.label"
-                                                    class="rounded-full px-3 py-1 text-sm font-semibold"
-                                                    :class="m.cls"
-                                                >
-                                                    {{ m.label }}
-                                                </span>
-                                            </template>
+                                            <span
+                                                v-for="m in candidateInlineResult(group).mix"
+                                                :key="m.label"
+                                                class="rounded-full px-3 py-1 text-sm font-semibold"
+                                                :class="m.cls"
+                                            >
+                                                {{ m.label }}
+                                            </span>
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-right">
@@ -462,8 +531,10 @@ defineOptions({
                                     </td>
                                 </tr>
 
-                                <!-- Child rows: individual exams + correction form -->
-                                <template v-if="isExpanded(group.key)">
+                                <!-- Child rows: only for multi-exam candidates
+                                     (single-exam groups already render their
+                                     one entry as the parent row above). -->
+                                <template v-if="group.entries.length > 1 && isExpanded(group.key)">
                                     <template v-for="row in group.entries" :key="row.id">
                                         <tr class="bg-brand-surface-soft/30">
                                             <td colspan="2" class="pl-12 pr-4 py-3">
