@@ -87,6 +87,12 @@ class LeadMagnetDelivery extends Mailable
 
     private function firstName(): string
     {
+        // Just use the first space-separated word — works for the
+        // overwhelming majority of real-world inputs ("Paul Sheridan" →
+        // "Paul"). Edge cases like just "Mr" or "Mr Sheridan" produce
+        // slightly weird greetings, but the alternatives (title-stripping)
+        // produce equally weird results in different cases. Keeping it
+        // simple and predictable.
         $name = trim($this->subscriberName);
         if ($name === '') {
             return 'there';

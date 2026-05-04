@@ -1,11 +1,12 @@
 <!-- resources/js/pages/admin/Users/Show.vue -->
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3'
+import { Link, router } from '@inertiajs/vue3'
 import {
     ArrowLeft,
     Mail,
     Phone,
     User as UserIcon,
+    UserCog,
     Shield,
     BadgeCheck,
     BadgeX,
@@ -61,12 +62,18 @@ interface UserDetail {
     updated_at: string
 }
 
-defineProps<{
+const props = defineProps<{
     user: UserDetail
     linkedContact: LinkedContact | null
 }>()
 
 function goBack() { window.history.back() }
+
+function impersonate(): void {
+    if (props.user.role === 'admin') return
+    if (!confirm(`Log in as ${props.user.name}? You'll see exactly what they see; use the banner at the top to return to your admin account.`)) return
+    router.post(`/admin/users/${props.user.id}/impersonate`)
+}
 
 function roleBadgeClass(role: string): string {
     switch (role) {
@@ -127,6 +134,14 @@ function typeLabel(type: string): string {
                     {{ roleLabel(user.role) }}
                 </span>
             </div>
+            <button v-if="user.role !== 'admin'"
+                type="button"
+                @click="impersonate"
+                class="ml-auto inline-flex cursor-pointer items-center gap-2 rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-sm font-medium text-brand-text-soft transition hover:border-brand-accent hover:text-brand-accent"
+                title="Log in as this user to verify what they see">
+                <UserCog class="h-4 w-4" />
+                Login as {{ user.name.split(' ')[0] }}
+            </button>
         </div>
 
         <!-- Info cards -->

@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ContactController;
 use App\Http\Controllers\Admin\ContactLogController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ExamEntryController;
+use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PageMaintenanceController;
 use App\Http\Controllers\Admin\PendingResultsController;
@@ -35,6 +36,13 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
         // Users — registered accounts (auth side, not the wider exam_contacts list)
         Route::get('users', [UserController::class, 'index'])->name('users.index');
         Route::get('users/{user}', [UserController::class, 'show'])->name('users.show');
+
+        // Impersonation — admin "Login as user" so Paul can verify what real
+        // teachers/parents see on their dashboard. Pair with the leave route
+        // in routes/web.php (which lives outside the admin middleware so the
+        // impersonated, non-admin user can use it to switch back).
+        Route::post('users/{user}/impersonate', [ImpersonationController::class, 'start'])
+            ->name('users.impersonate');
 
         // Subscribers — newsletter + lead-magnet sign-ups (separate from users)
         Route::get('subscribers', [SubscriberController::class, 'index'])->name('subscribers.index');

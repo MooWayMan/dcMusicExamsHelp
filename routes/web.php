@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SubscriberController;
@@ -66,6 +67,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('dashboard.link-request');
     Route::post('dashboard/entries/{entry}/correction-request', [DashboardController::class, 'correctionRequest'])
         ->name('dashboard.correction-request');
+
+    // Leave impersonation — must live outside the admin middleware because
+    // the currently-authenticated user is the non-admin being impersonated.
+    Route::post('impersonate/leave', [ImpersonationController::class, 'leave'])
+        ->name('impersonate.leave');
 });
 
 require __DIR__.'/settings.php';

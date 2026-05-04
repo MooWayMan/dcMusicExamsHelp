@@ -10,6 +10,7 @@ import {
     Shield,
     School,
     User,
+    UserCog,
     ChevronLeft,
     ChevronRight,
 } from 'lucide-vue-next'
@@ -96,6 +97,14 @@ function roleBadgeClass(role: string): string {
         case 'self': return 'bg-brand-surface-soft text-brand-text-soft'
         default: return 'bg-brand-surface-soft text-brand-text-soft'
     }
+}
+
+function impersonate(user: UserRow, event: MouseEvent): void {
+    // Stop the row-level click that would otherwise navigate to the show page.
+    event.stopPropagation()
+    if (user.role === 'admin') return
+    if (!confirm(`Log in as ${user.name}? You'll see exactly what they see; use the banner at the top to return to your admin account.`)) return
+    router.post(`/admin/users/${user.id}/impersonate`)
 }
 
 function roleLabel(role: string): string {
@@ -220,6 +229,7 @@ const filterPills: { value: string | null; label: string }[] = [
                             <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('created_at')">
                                 Joined{{ sortIcon('created_at') }}
                             </th>
+                            <th class="px-4 py-3 font-semibold text-brand-text">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-brand-border">
@@ -245,9 +255,20 @@ const filterPills: { value: string | null; label: string }[] = [
                                 </span>
                             </td>
                             <td class="px-4 py-3"><span class="text-sm text-brand-text-soft">{{ user.created_at }}</span></td>
+                            <td class="px-4 py-3">
+                                <button v-if="user.role !== 'admin'"
+                                    type="button"
+                                    @click="(event) => impersonate(user, event)"
+                                    class="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-brand-border bg-brand-surface px-2.5 py-1 text-xs font-medium text-brand-text-soft transition hover:border-brand-accent hover:text-brand-accent"
+                                    title="Log in as this user to see what they see">
+                                    <UserCog class="h-3.5 w-3.5" />
+                                    Login as
+                                </button>
+                                <span v-else class="text-xs text-brand-text-soft/60">—</span>
+                            </td>
                         </tr>
                         <tr v-if="!users.data.length">
-                            <td colspan="6" class="px-4 py-8 text-center text-base text-brand-text-soft">No users found.</td>
+                            <td colspan="7" class="px-4 py-8 text-center text-base text-brand-text-soft">No users found.</td>
                         </tr>
                     </tbody>
                 </table>

@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\PageMaintenance;
+use App\Services\Impersonation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Inertia\Middleware;
@@ -37,11 +38,23 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        // Surface impersonation state to the frontend so the sitewide banner
+        // (resources/js/components/ImpersonationBanner.vue) can render and
+        // offer the "Return to admin" button. Resolved lazily so we don't
+        // touch the DB on every request when no impersonation is in flight.
+        $impersonation = app(Impersonation::class);
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user(),
+                'impersonating' => fn () => $impersonation->isImpersonating()
+                    ? [
+                        'admin_name' => $impersonation->originalAdmin()?->name,
+                        'target_name' => $request->user()?->name,
+                    ]
+                    : null,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'flash' => [
