@@ -7,7 +7,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ExamContact;
 use App\Models\ExamEntry;
+use App\Support\TopScorers;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -547,6 +549,21 @@ class CertificateController extends Controller
             $teacherSummary[$teacher] = $certCount;
         }
 
+        // Top-Scorer certificates — extracted into a shared helper so the
+        // standalone "Generate top-scorer certs only" endpoint can reuse
+        // the exact same rendering pipeline.
+        $topScorerResult = $this->renderTopScorerCertificates(
+            $entries,
+            $quarter,
+            $year,
+            $quarterLabel,
+            $templateImageCache,
+            true // alsoIntoTeacherFolder — bundle into the teacher's ZIP
+        );
+        $topScorerCount = $topScorerResult['count'];
+        $topScorerLog = $topScorerResult['log'];
+        $totalGenerated += $topScorerCount;
+
         // Fetch ALL entries for the quarter (including those without scores) for pending counts
         $allQuarterEntries = ExamEntry::where(function ($q) {
                 $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
@@ -842,6 +859,257 @@ class CertificateController extends Controller
             'teachers' => $teacherSummary,
             'download_links' => $downloadLinks,
             'master_zip' => $masterZipName,
+            // Top-scorer cert manifest — Paul attaches these standalone PDFs
+            // to the per-winner congratulations emails on QuarterEnd Step 3.
+            'top_scorer_certs'  => $topScorerLog,
+            'top_scorer_count'  => $topScorerCount,
+        ]);
+    }
+
+    /**
+     * Render Showstopper / Centre Stage PDFs for the four top-scorer
+     * winners (more if ties). Two output locations:
+     *
+     *   1. Standalone in `certificates/{year}-Q{quarter}/top-scorers/` —
+     *      always written. Each PDF is a single attachable file for the
+     *      per-winner congratulations email Paul sends from QuarterEnd
+     *      Step 3.
+     *
+     *   2. Optionally also into the winner's teacher folder — only when
+     *      `$alsoIntoTeacherFolder` is true (i.e. when called as part of
+     *      the full batch). Skipped for the standalone "top-scorer certs
+     *      only" endpoint, since regenerating individual teacher folders
+     *      without their other certs would make confusing partial ZIPs.
+     *
+     * @param  Collection<int, ExamEntry>  $entries
+     * @param  array  $templateImageCache  Pass-by-ref so the per-student
+     *                                     loop and this method can share
+     *                                     fetched template PNGs.
+     * @return array{count: int, log: array, dir: string}
+     */
+    private function renderTopScorerCertificates(
+        \Illuminate\Support\Collection $entries,
+        int $quarter,
+        int $year,
+        string $quarterLabel,
+        array &$templateImageCache = [],
+        bool $alsoIntoTeacherFolder = false
+    ): array {
+        $outputDir = "certificates/{$year}-Q{$quarter}";
+        $topScorersDir = "{$outputDir}/top-scorers";
+        Storage::disk('local')->makeDirectory($outputDir);
+        Storage::disk('local')->makeDirectory($topScorersDir);
+
+        $log = [];
+        $count = 0;
+
+        // Bucket the actual ExamEntry models ourselves rather than going
+        // through TopScorers::calculate, because that helper's ->toArray()
+        // call converts Eloquent models to plain associative arrays, which
+        // breaks the `$entry->candidate_name` / `$entry->instrument?->name`
+        // / `$entry->teacher_name` access we need below.
+        $awards = [];
+        foreach (['initial_5', '6_8'] as $group) {
+            foreach (['distinction', 'merit'] as $band) {
+                $bucket = $entries->filter(fn ($e) =>
+                    $e->score !== null
+                    && TopScorers::groupOf((string) $e->grade) === $group
+                    && TopScorers::bandOf((int) $e->score) === $band
+                );
+                if ($bucket->isEmpty()) continue;
+                $topScore = $bucket->max('score');
+                foreach ($bucket->where('score', $topScore) as $entry) {
+                    $awards[] = [
+                        'entry' => $entry,
+                        'group' => $group,
+                        'band'  => $band,
+                        'certificate' => $band === 'distinction' ? 'Showstopper' : 'Centre Stage',
+                    ];
+                }
+            }
+        }
+
+        foreach ($awards as $award) {
+            /** @var ExamEntry $entry */
+            $entry = $award['entry'];
+            $certName = $award['certificate'].' Certificate'; // 'Showstopper Certificate' | 'Centre Stage Certificate'
+
+            if (! isset(self::STUDENT_TEMPLATES[$certName])) {
+                continue;
+            }
+
+            try {
+                $templateUrl = self::S3_BASE.self::STUDENT_TEMPLATES[$certName];
+
+                if (! isset($templateImageCache[$templateUrl])) {
+                    $response = Http::get($templateUrl);
+                    if (! $response->successful()) {
+                        \Log::warning("Top-scorer template fetch failed: {$templateUrl}");
+                        continue;
+                    }
+                    $templateImageCache[$templateUrl] = $response->body();
+                }
+
+                $manager = new ImageManager(new Driver());
+                $image = $manager->decode($templateImageCache[$templateUrl]);
+
+                $width = $image->width();
+                $height = $image->height();
+
+                $fontPath = resource_path('fonts/Georgia.ttf');
+                if (! file_exists($fontPath)) {
+                    $fontPath = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf';
+                }
+                $boldFontPath = resource_path('fonts/Georgia-Bold.ttf');
+                if (! file_exists($boldFontPath)) {
+                    $boldFontPath = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf';
+                }
+
+                $nameSize = (int) ($width * 0.038);
+                $detailSize = (int) ($width * 0.028);
+                $quarterSize = (int) ($width * 0.042);
+                $rightTextX = (int) ($width * 0.92);
+
+                $image->text($entry->candidate_name, $rightTextX, (int) ($height * 0.47), function (FontFactory $font) use ($fontPath, $nameSize) {
+                    if ($fontPath) $font->filename($fontPath);
+                    $font->size($nameSize);
+                    $font->color('#1e3a5f');
+                    $font->align('right');
+                });
+
+                $detail = trim(($entry->instrument?->name ?? '').' Grade '.($entry->grade ?? ''));
+                $image->text($detail, $rightTextX, (int) ($height * 0.52), function (FontFactory $font) use ($fontPath, $detailSize) {
+                    if ($fontPath) $font->filename($fontPath);
+                    $font->size($detailSize);
+                    $font->color('#1e3a5f');
+                    $font->align('right');
+                });
+
+                $image->text($quarterLabel, (int) ($width * 0.50), (int) ($height * 0.96), function (FontFactory $font) use ($boldFontPath, $quarterSize) {
+                    if ($boldFontPath) $font->filename($boldFontPath);
+                    $font->size($quarterSize);
+                    $font->color('#1e3a5f');
+                    $font->align('center');
+                });
+
+                $encoded = $image->encode(new PngEncoder());
+
+                $base64 = base64_encode((string) $encoded);
+                $html = '<html><head><style>@page { margin: 0; } body { margin: 0; }</style></head><body>'
+                    .'<img src="data:image/png;base64,'.$base64.'" style="width:210mm;height:297mm;display:block;">'
+                    .'</body></html>';
+
+                $pdf = Pdf::loadHTML($html)->setPaper('a4', 'portrait');
+
+                $safeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $entry->candidate_name);
+                $shortCert = str_replace([' Certificate', ' '], ['', '_'], $certName);
+                $pdfBytes = $pdf->output();
+
+                $standalonePath = "{$topScorersDir}/{$safeName}_{$shortCert}.pdf";
+                Storage::disk('local')->put($standalonePath, $pdfBytes);
+
+                if ($alsoIntoTeacherFolder) {
+                    $teacherForWinner = $entry->teacher_name ?? 'Unassigned';
+                    $safeTeacher = preg_replace('/[^a-zA-Z0-9_-]/', '_', $teacherForWinner);
+                    $teacherDir = "{$outputDir}/{$safeTeacher}";
+                    Storage::disk('local')->makeDirectory($teacherDir);
+                    Storage::disk('local')->put("{$teacherDir}/{$safeName}_{$shortCert}.pdf", $pdfBytes);
+                }
+
+                $count++;
+                $log[] = [
+                    'name'             => $entry->candidate_name,
+                    'short_name'       => $this->shortDisplayName($entry->candidate_name),
+                    'certificate'      => $certName,
+                    'group'            => $award['group'],
+                    'band'             => $award['band'],
+                    'score'            => $entry->score,
+                    'instrument'       => $entry->instrument?->name,
+                    'grade'            => $entry->grade,
+                    'standalone_path'  => $standalonePath,
+                    'download_url'     => '/admin/certificates/download/'.$standalonePath,
+                ];
+            } catch (\Throwable $e) {
+                \Log::error("Top-scorer cert failed for {$entry->candidate_name}: {$e->getMessage()}");
+            }
+        }
+
+        return ['count' => $count, 'log' => $log, 'dir' => $topScorersDir];
+    }
+
+    /**
+     * GDPR display name: "Anna M". Mirrors ThankYouController.
+     */
+    private function shortDisplayName(string $fullName): string
+    {
+        $parts = preg_split('/\s+/', trim($fullName));
+        if (count($parts) <= 1) return $fullName;
+        return $parts[0].' '.mb_strtoupper(mb_substr(end($parts), 0, 1));
+    }
+
+    /**
+     * Standalone "Generate top-scorer certs only" endpoint.
+     *
+     * Produces ONLY the four (or more, with ties) Showstopper / Centre
+     * Stage PDFs and drops them in `certificates/{year}-Q{quarter}/top-
+     * scorers/`. Doesn't touch the per-student certs, teacher reports, or
+     * ZIPs — much faster than re-running the full batch when Paul just
+     * wants the four PDFs to attach to congratulations emails.
+     */
+    public function generateTopScorers(Request $request): JsonResponse
+    {
+        set_time_limit(60);
+
+        $validated = $request->validate([
+            'quarter' => 'required|integer|min:1|max:4',
+            'year' => 'required|integer|min:2025|max:2030',
+        ]);
+
+        $quarter = $validated['quarter'];
+        $year = $validated['year'];
+        $suffix = match ($quarter) {
+            1 => '1st', 2 => '2nd', 3 => '3rd', 4 => '4th',
+        };
+        $quarterLabel = "{$suffix} Quarter {$year}";
+
+        $startMonth = (($quarter - 1) * 3) + 1;
+        $startDate = \Carbon\Carbon::create($year, $startMonth, 1)->startOfDay();
+        $endDate = $startDate->copy()->addMonths(3)->subDay()->endOfDay();
+
+        $entries = ExamEntry::whereNotNull('score')
+            ->where('score', '>=', 60)
+            ->where(function ($q) {
+                $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
+            })
+            ->with(['instrument:id,name', 'order:id,requested_start_date'])
+            ->get()
+            ->filter(function ($entry) use ($startDate, $endDate) {
+                $date = $entry->exam_date ?? $entry->order?->requested_start_date;
+                return $date && $date->between($startDate, $endDate);
+            });
+
+        if ($entries->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'error' => "No scored entries in {$quarterLabel}.",
+            ], 422);
+        }
+
+        $cache = [];
+        $result = $this->renderTopScorerCertificates(
+            $entries,
+            $quarter,
+            $year,
+            $quarterLabel,
+            $cache,
+            false // standalone — DON'T duplicate into teacher folders
+        );
+
+        return response()->json([
+            'success' => true,
+            'count' => $result['count'],
+            'quarter_label' => $quarterLabel,
+            'certs' => $result['log'],
         ]);
     }
 

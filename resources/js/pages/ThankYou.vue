@@ -43,11 +43,34 @@ interface QuarterOption {
   year: number
 }
 
+interface TopScorerWinner {
+  name: string
+  full_name?: string
+  score: number
+  instrument: string | null
+  grade: string
+  // booking_role / show_full_name etc may be present from the snapshot
+  // — Vue ignores them at render time.
+  [key: string]: unknown
+}
+
+interface GroupAwards {
+  distinction: TopScorerWinner[]
+  merit: TopScorerWinner[]
+}
+
+interface TopScorers {
+  initial_5: GroupAwards
+  '6_8': GroupAwards
+}
+
 interface QuarterData {
   quarter: number
   year: number
   label: string
   hallOfFameEntries: HallOfFameEntry[]
+  topScorers: TopScorers
+  topScorersPublishedAt: string | null
   thankYouEntries: ThankYouEntry[]
   summary: Summary
 }
@@ -82,6 +105,26 @@ const activeData = computed<QuarterData | null>(() => {
 
 const currentQuarterLabel = computed(() => activeData.value?.label ?? `Q${activeQuarter.value} ${activeYear.value}`)
 const hallOfFameEntries = computed(() => activeData.value?.hallOfFameEntries ?? [])
+const emptyAwards = (): TopScorers => ({
+  initial_5: { distinction: [], merit: [] },
+  '6_8':     { distinction: [], merit: [] },
+})
+const topScorers = computed<TopScorers>(() => activeData.value?.topScorers ?? emptyAwards())
+const topScorersPublishedAt = computed(() => activeData.value?.topScorersPublishedAt ?? null)
+const initial5 = computed<GroupAwards>(() => topScorers.value.initial_5 ?? { distinction: [], merit: [] })
+const grades68 = computed<GroupAwards>(() => topScorers.value['6_8'] ?? { distinction: [], merit: [] })
+const hasAnyTopScorer = computed(() =>
+  initial5.value.distinction.length > 0
+  || initial5.value.merit.length > 0
+  || grades68.value.distinction.length > 0
+  || grades68.value.merit.length > 0
+)
+const tieSplitLabel = (n: number): string => {
+  if (n <= 1) return ''
+  // Mirrors backend: 1→£20, 2→£10, 3+→£5
+  const each = n === 2 ? 10 : 5
+  return `${n}-way tie · £${each} each`
+}
 const thankYouEntries = computed(() => activeData.value?.thankYouEntries ?? [])
 const summary = computed(() => activeData.value?.summary ?? { distinctions: 0, merits: 0, total: 0 })
 
@@ -338,33 +381,123 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
           class="transition-all duration-200 ease-in-out"
           :class="contentVisible ? 'opacity-100' : 'opacity-0 translate-y-2'"
         >
-          <!-- Hall of Fame winner cards — spotlight style -->
-          <div v-if="hallOfFameEntries.length > 0" class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <div
-              v-for="entry in hallOfFameEntries"
-              :key="entry.name + entry.award"
-              class="relative overflow-hidden rounded-2xl border-4 border-yellow-400 bg-white/10 p-6 shadow-2xl shadow-yellow-400/20 ring-2 ring-yellow-300/40 backdrop-blur-sm"
-            >
-              <div class="absolute right-4 top-4">
-                <Trophy class="h-10 w-10 text-brand-accent/30" />
+          <!-- Hall of Fame — four awards, two grade groups, ties supported.
+               Each card represents one (group, band) bucket; tied winners
+               are stacked inside the same card. -->
+          <div v-if="hasAnyTopScorer" class="mt-8 space-y-10">
+
+            <!-- Initial–5 group -->
+            <div v-if="initial5.distinction.length || initial5.merit.length">
+              <p class="mb-4 text-center text-sm font-bold uppercase tracking-widest text-white/80">Initial – Grade 5</p>
+              <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <!-- Showstopper -->
+                <div v-if="initial5.distinction.length" class="relative overflow-hidden rounded-2xl border-4 border-yellow-400 bg-white/10 p-6 shadow-2xl shadow-yellow-400/20 ring-2 ring-yellow-300/40 backdrop-blur-sm">
+                  <div class="absolute right-4 top-4">
+                    <Trophy class="h-10 w-10 text-brand-accent/30" />
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <Star class="h-4 w-4 text-brand-accent" />
+                    <p class="text-xs font-bold uppercase tracking-widest text-brand-accent">
+                      Showstopper
+                      <span v-if="initial5.distinction.length > 1" class="ml-1 text-white/60 normal-case font-medium">— {{ tieSplitLabel(initial5.distinction.length) }}</span>
+                    </p>
+                  </div>
+                  <div v-for="(w, i) in initial5.distinction" :key="`i5d-${i}`" :class="i > 0 ? 'mt-5 border-t border-white/15 pt-5' : 'mt-3'">
+                    <p class="text-2xl font-extrabold text-white sm:text-3xl">{{ w.name }}</p>
+                    <p class="mt-1 text-base text-white/70">{{ w.instrument }} · Grade {{ w.grade }}</p>
+                    <div class="mt-3 flex items-center gap-3">
+                      <span :class="[resultBadgeClass('Distinction'), 'rounded-full px-4 py-1.5 text-sm font-bold shadow-lg']">Distinction — {{ w.score }}</span>
+                    </div>
+                  </div>
+                  <p class="mt-3 text-xs font-semibold text-white/60">
+                    <Award class="mb-0.5 mr-1 inline h-3.5 w-3.5 text-brand-accent" />Showstopper Certificate + Gift Token
+                  </p>
+                </div>
+
+                <!-- Centre Stage -->
+                <div v-if="initial5.merit.length" class="relative overflow-hidden rounded-2xl border-4 border-brand-success bg-white/10 p-6 shadow-2xl shadow-brand-success/20 ring-2 ring-brand-success/40 backdrop-blur-sm">
+                  <div class="absolute right-4 top-4">
+                    <Award class="h-10 w-10 text-brand-success/30" />
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <Star class="h-4 w-4 text-brand-success" />
+                    <p class="text-xs font-bold uppercase tracking-widest text-brand-success">
+                      Centre Stage
+                      <span v-if="initial5.merit.length > 1" class="ml-1 text-white/60 normal-case font-medium">— {{ tieSplitLabel(initial5.merit.length) }}</span>
+                    </p>
+                  </div>
+                  <div v-for="(w, i) in initial5.merit" :key="`i5m-${i}`" :class="i > 0 ? 'mt-5 border-t border-white/15 pt-5' : 'mt-3'">
+                    <p class="text-2xl font-extrabold text-white sm:text-3xl">{{ w.name }}</p>
+                    <p class="mt-1 text-base text-white/70">{{ w.instrument }} · Grade {{ w.grade }}</p>
+                    <div class="mt-3 flex items-center gap-3">
+                      <span :class="[resultBadgeClass('Merit'), 'rounded-full px-4 py-1.5 text-sm font-bold shadow-lg']">Merit — {{ w.score }}</span>
+                    </div>
+                  </div>
+                  <p class="mt-3 text-xs font-semibold text-white/60">
+                    <Award class="mb-0.5 mr-1 inline h-3.5 w-3.5 text-brand-success" />Centre Stage Certificate + Gift Token
+                  </p>
+                </div>
               </div>
-              <div class="flex items-center gap-2">
-                <Star class="h-4 w-4 text-brand-accent" />
-                <p class="text-xs font-bold uppercase tracking-widest text-brand-accent">{{ entry.award }}</p>
-              </div>
-              <p class="mt-3 text-2xl font-extrabold text-white sm:text-3xl">{{ entry.name }}</p>
-              <p class="mt-1 text-base text-white/70 sm:text-base">
-                {{ entry.instrument }} · {{ entry.grade }}
-              </p>
-              <div class="mt-4 flex items-center gap-3">
-                <span :class="[resultBadgeClass(entry.result), 'rounded-full px-4 py-1.5 text-sm font-bold shadow-lg']">
-                  {{ entry.result }} — {{ entry.score }}
-                </span>
-              </div>
-              <p v-if="entry.certificate" class="mt-3 text-xs font-semibold text-white/60">
-                <Award class="mb-0.5 mr-1 inline h-3.5 w-3.5 text-brand-accent" />{{ entry.certificate }}
-              </p>
             </div>
+
+            <!-- Grades 6–8 group -->
+            <div v-if="grades68.distinction.length || grades68.merit.length">
+              <p class="mb-4 text-center text-sm font-bold uppercase tracking-widest text-white/80">Grades 6 – 8</p>
+              <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <!-- Showstopper -->
+                <div v-if="grades68.distinction.length" class="relative overflow-hidden rounded-2xl border-4 border-yellow-400 bg-white/10 p-6 shadow-2xl shadow-yellow-400/20 ring-2 ring-yellow-300/40 backdrop-blur-sm">
+                  <div class="absolute right-4 top-4">
+                    <Trophy class="h-10 w-10 text-brand-accent/30" />
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <Star class="h-4 w-4 text-brand-accent" />
+                    <p class="text-xs font-bold uppercase tracking-widest text-brand-accent">
+                      Showstopper
+                      <span v-if="grades68.distinction.length > 1" class="ml-1 text-white/60 normal-case font-medium">— {{ tieSplitLabel(grades68.distinction.length) }}</span>
+                    </p>
+                  </div>
+                  <div v-for="(w, i) in grades68.distinction" :key="`g68d-${i}`" :class="i > 0 ? 'mt-5 border-t border-white/15 pt-5' : 'mt-3'">
+                    <p class="text-2xl font-extrabold text-white sm:text-3xl">{{ w.name }}</p>
+                    <p class="mt-1 text-base text-white/70">{{ w.instrument }} · Grade {{ w.grade }}</p>
+                    <div class="mt-3 flex items-center gap-3">
+                      <span :class="[resultBadgeClass('Distinction'), 'rounded-full px-4 py-1.5 text-sm font-bold shadow-lg']">Distinction — {{ w.score }}</span>
+                    </div>
+                  </div>
+                  <p class="mt-3 text-xs font-semibold text-white/60">
+                    <Award class="mb-0.5 mr-1 inline h-3.5 w-3.5 text-brand-accent" />Showstopper Certificate + Gift Token
+                  </p>
+                </div>
+
+                <!-- Centre Stage -->
+                <div v-if="grades68.merit.length" class="relative overflow-hidden rounded-2xl border-4 border-brand-success bg-white/10 p-6 shadow-2xl shadow-brand-success/20 ring-2 ring-brand-success/40 backdrop-blur-sm">
+                  <div class="absolute right-4 top-4">
+                    <Award class="h-10 w-10 text-brand-success/30" />
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <Star class="h-4 w-4 text-brand-success" />
+                    <p class="text-xs font-bold uppercase tracking-widest text-brand-success">
+                      Centre Stage
+                      <span v-if="grades68.merit.length > 1" class="ml-1 text-white/60 normal-case font-medium">— {{ tieSplitLabel(grades68.merit.length) }}</span>
+                    </p>
+                  </div>
+                  <div v-for="(w, i) in grades68.merit" :key="`g68m-${i}`" :class="i > 0 ? 'mt-5 border-t border-white/15 pt-5' : 'mt-3'">
+                    <p class="text-2xl font-extrabold text-white sm:text-3xl">{{ w.name }}</p>
+                    <p class="mt-1 text-base text-white/70">{{ w.instrument }} · Grade {{ w.grade }}</p>
+                    <div class="mt-3 flex items-center gap-3">
+                      <span :class="[resultBadgeClass('Merit'), 'rounded-full px-4 py-1.5 text-sm font-bold shadow-lg']">Merit — {{ w.score }}</span>
+                    </div>
+                  </div>
+                  <p class="mt-3 text-xs font-semibold text-white/60">
+                    <Award class="mb-0.5 mr-1 inline h-3.5 w-3.5 text-brand-success" />Centre Stage Certificate + Gift Token
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- "Awards announced on…" footnote — only when from a snapshot -->
+            <p v-if="topScorersPublishedAt" class="mt-6 text-center text-xs text-white/50">
+              Awards announced on {{ new Date(topScorersPublishedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) }}
+            </p>
           </div>
 
           <!-- Waiting-for-results banner — shown above the motivational cards
@@ -382,7 +515,7 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
           <!-- Hall of Fame empty state — two motivational cards. Shown when
                no top scorers yet, regardless of pending state (the banner above
                explains the waiting when applicable). -->
-          <div v-if="hallOfFameEntries.length === 0" class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div v-if="!hasAnyTopScorer" class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
             <!-- Distinction card -->
             <div class="relative overflow-hidden rounded-2xl border-2 border-dashed border-yellow-400/40 bg-white/5 p-6 text-center backdrop-blur-sm">
               <div class="absolute right-4 top-4">
@@ -394,7 +527,7 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
               </div>
               <p class="mt-4 text-lg font-bold text-white sm:text-xl">Could this be you?</p>
               <p class="mx-auto mt-2 max-w-xs text-sm text-white/60">
-                The highest scoring Distinction each quarter earns a Showstopper Certificate. Aim for the top mark.
+                The highest scoring Distinction in each grade group — Initial–5 and 6–8 — earns a Showstopper Certificate every quarter. Aim for the top mark.
               </p>
               <div class="mt-4">
                 <span class="inline-block rounded-full bg-brand-accent/20 px-4 py-1.5 text-sm font-bold text-brand-accent ring-1 ring-brand-accent/30">
@@ -414,7 +547,7 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
               </div>
               <p class="mt-4 text-lg font-bold text-white sm:text-xl">Could this be you?</p>
               <p class="mx-auto mt-2 max-w-xs text-sm text-white/60">
-                The highest scoring Merit each quarter earns a Centre Stage Certificate. Play your best and shine.
+                The highest scoring Merit in each grade group — Initial–5 and 6–8 — earns a Centre Stage Certificate every quarter. Play your best and shine.
               </p>
               <div class="mt-4">
                 <span class="inline-block rounded-full bg-brand-success/20 px-4 py-1.5 text-sm font-bold text-brand-success ring-1 ring-brand-success/30">
@@ -620,11 +753,11 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
           </div>
           <div class="flex items-center gap-3 rounded-xl bg-brand-surface p-4 shadow-sm border-4 border-brand-accent">
             <Music class="h-6 w-6 shrink-0 text-brand-success" />
-            <p class="text-base font-semibold text-brand-text sm:text-base md:text-lg">Highest Merit each quarter earns a <span class="text-brand-success">Centre Stage Certificate</span></p>
+            <p class="text-base font-semibold text-brand-text sm:text-base md:text-lg">Highest Merit in each group (Initial–5 and 6–8) earns a <span class="text-brand-success">Centre Stage Certificate</span> each quarter</p>
           </div>
           <div class="flex items-center gap-3 rounded-xl bg-brand-surface p-4 shadow-sm border-4 border-brand-accent">
             <Trophy class="h-6 w-6 shrink-0 text-brand-accent" />
-            <p class="text-base font-semibold text-brand-text sm:text-base md:text-lg">Highest Distinction each quarter earns a <span class="text-brand-accent">Showstopper Certificate</span></p>
+            <p class="text-base font-semibold text-brand-text sm:text-base md:text-lg">Highest Distinction in each group (Initial–5 and 6–8) earns a <span class="text-brand-accent">Showstopper Certificate</span> each quarter</p>
           </div>
         </div>
 

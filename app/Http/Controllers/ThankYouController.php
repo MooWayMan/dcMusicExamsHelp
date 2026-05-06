@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Models\ExamEntry;
 use App\Models\PageMaintenance;
 use App\Models\PrizeDraw;
+use App\Models\TopScorerPublication;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -77,40 +78,86 @@ class ThankYouController extends Controller
         // Scored entries only (for top scorers + summary counts)
         $scoredEntries = $entries->filter(fn ($e) => $e->score !== null);
 
-        // Top scorers — only shown once ALL results are in AND the quarter has been finalised (real draw exists)
+        // Top scorers — TWO data sources, in this order of preference:
+        //
+        //   1. A TopScorerPublication snapshot (from /admin/quarter-end's
+        //      "Publish top-scorer awards" button). This is the canonical
+        //      published list — stable, doesn't shuffle when late scores
+        //      come in.
+        //
+        //   2. Live calculation from this quarter's entries — only used
+        //      when no snapshot exists AND the quarter is "naturally"
+        //      finalised (prize draw run + no pending). Bands match
+        //      ShowHallOfFame: Distinction ≥ 87, Merit 75-86.
+        //
+        // Returns the four-award structure: { initial_5, '6_8' } each with
+        // { distinction[], merit[] }, where each leaf is an array of tied
+        // winners. Empty arrays mean nobody hit that band in that group.
         $hasPending = $entries->contains(fn ($e) => $e->score === null);
         $quarterFinalised = PrizeDraw::where('quarter', $quarter)
             ->where('year', $year)
             ->exists();
 
-        $hallOfFameEntries = collect();
+        $publication = TopScorerPublication::forQuarter($quarter, $year);
+        $topScorers = [
+            'initial_5' => ['distinction' => [], 'merit' => []],
+            '6_8'       => ['distinction' => [], 'merit' => []],
+        ];
+        $hallOfFameEntries = collect(); // legacy flat list for old consumers
 
-        if ($quarterFinalised && ! $hasPending) {
-            $topDistinction = $scoredEntries->where('score', '>=', 87)->first();
-            $topMerit = $scoredEntries->filter(fn ($e) => $e->score >= 75 && $e->score < 87)->first();
-
-            if ($topDistinction) {
-                $hallOfFameEntries->push([
-                    'name' => $this->displayName($topDistinction),
-                    'instrument' => $topDistinction->instrument?->name ?? '—',
-                    'grade' => $topDistinction->grade,
-                    'score' => $topDistinction->score,
-                    'result' => 'Distinction',
-                    'award' => 'Showstopper',
-                    'certificate' => 'Showstopper Certificate + Gift Token',
-                ]);
+        if ($publication) {
+            // Use the snapshot. Apply GDPR display rule (first name + initial
+            // unless show_full_name was true at publication time).
+            $topScorers = $publication->winners ?? $topScorers;
+            foreach (['initial_5', '6_8'] as $group) {
+                foreach (['distinction', 'merit'] as $band) {
+                    $topScorers[$group][$band] = collect($topScorers[$group][$band] ?? [])
+                        ->map(function (array $w) {
+                            $w['name'] = ($w['show_full_name'] ?? false)
+                                ? ($w['full_name'] ?? $w['name'])
+                                : ($w['name'] ?? $this->shortDisplayName($w['full_name'] ?? ''));
+                            // Don't leak full_name to the public payload
+                            // unless the candidate opted in.
+                            if (! ($w['show_full_name'] ?? false)) {
+                                unset($w['full_name']);
+                            }
+                            return $w;
+                        })
+                        ->values()
+                        ->toArray();
+                }
             }
-            if ($topMerit) {
-                $hallOfFameEntries->push([
-                    'name' => $this->displayName($topMerit),
-                    'instrument' => $topMerit->instrument?->name ?? '—',
-                    'grade' => $topMerit->grade,
-                    'score' => $topMerit->score,
-                    'result' => 'Merit',
-                    'award' => 'Centre Stage',
-                    'certificate' => 'Centre Stage Certificate + Gift Token',
+            $hallOfFameEntries = collect(\App\Support\TopScorers::flatten($topScorers))
+                ->map(fn ($award) => [
+                    'name'        => $award['winner']['name'],
+                    'instrument'  => $award['winner']['instrument'] ?? '—',
+                    'grade'       => $award['winner']['grade'],
+                    'score'       => $award['winner']['score'],
+                    'result'      => $award['band'] === 'distinction' ? 'Distinction' : 'Merit',
+                    'award'       => $award['certificate'],
+                    'certificate' => "{$award['certificate']} Certificate + Gift Token",
                 ]);
-            }
+        } elseif ($quarterFinalised && ! $hasPending) {
+            // No publication, but quarter is naturally finalised — live calc.
+            $shapeWinner = fn (ExamEntry $e) => [
+                'name'           => $this->displayName($e),
+                'full_name'      => $e->show_full_name ? $e->candidate_name : null,
+                'show_full_name' => (bool) $e->show_full_name,
+                'score'          => $e->score,
+                'instrument'     => $e->instrument?->name,
+                'grade'          => $e->grade,
+            ];
+            $topScorers = \App\Support\TopScorers::calculate($scoredEntries, $shapeWinner);
+            $hallOfFameEntries = collect(\App\Support\TopScorers::flatten($topScorers))
+                ->map(fn ($award) => [
+                    'name'        => $award['winner']['name'],
+                    'instrument'  => $award['winner']['instrument'] ?? '—',
+                    'grade'       => $award['winner']['grade'],
+                    'score'       => $award['winner']['score'],
+                    'result'      => $award['band'] === 'distinction' ? 'Distinction' : 'Merit',
+                    'award'       => $award['certificate'],
+                    'certificate' => "{$award['certificate']} Certificate + Gift Token",
+                ]);
         }
 
         // All entries — grouped by band then alphabetical
@@ -147,7 +194,13 @@ class ThankYouController extends Controller
             'quarter' => $quarter,
             'year' => $year,
             'label' => "Q{$quarter} – {$labelStart} – {$labelEnd} {$year}",
-            'hallOfFameEntries' => $hallOfFameEntries->toArray(),
+            'hallOfFameEntries' => $hallOfFameEntries->toArray(), // legacy flat list
+            // Four-award structure (Initial-5 + 6-8, distinction + merit,
+            // with ties as arrays). The Vue page renders cards from this.
+            'topScorers' => $topScorers,
+            // Was this quarter published from a snapshot, or live-calc?
+            // Drives a small "Awards announced on…" line in the UI.
+            'topScorersPublishedAt' => $publication?->published_at?->toIso8601String(),
             'thankYouEntries' => $thankYouEntries,
             'summary' => [
                 'distinctions' => $distinctions,

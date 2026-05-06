@@ -43,7 +43,7 @@ const tiers = [
     icon: Trophy,
     title: 'Top Scorers',
     subtitle: 'Quarterly — the very best',
-    detail: 'The highest Distinction each quarter earns a <strong>Showstopper Certificate</strong>. The highest Merit earns a <strong>Centre Stage Certificate</strong>. Both earn the top spot on the <strong>Hall of Fame</strong> — plus a gift token (£20, or divided equally if there is a tie — minimum £5 each). This is the ultimate recognition for outstanding achievement.',
+    detail: 'The highest Distinction in each grade group — Initial–5 and 6–8 — earns a <strong>Showstopper Certificate</strong> each quarter. The highest Merit in each group earns a <strong>Centre Stage Certificate</strong>. Winners take the top spot on the <strong>Hall of Fame</strong> — plus a gift token (£20, or divided equally if there is a tie — minimum £5 each). This is the ultimate recognition for outstanding achievement.',
     link: '/recognition?from=for-students',
     linkText: 'See the Hall of Fame',
   },
