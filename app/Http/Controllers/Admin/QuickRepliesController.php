@@ -84,6 +84,29 @@ Paul
 TEXT,
             ],
             [
+                'id' => 'booking-system-explainer',
+                'audience' => 'Parent',
+                'title' => 'F2F booking — how it works',
+                'when' => 'Use when a parent or candidate asks about a specific F2F exam date at one of our venues (Liverpool / Wirral), what time their exam will be, or how booking works. F2F flow does NOT auto-apply centre 120 — candidate picks venue from Trinity\'s full UK list. Days open backwards from Thursday — if Thursday fills, Wednesday opens next, then Tuesday. Slots are allocated in booking order, so if you can see the current count, give them a steer on likely time. Pick the right exam-type wording — Classical & Jazz vs Rock & Pop (R&P is Liverpool only; C&J is Liverpool or Wirral). NOT for digital or theory enquiries — they have no day/time slots and centre 120 IS auto-applied for those.',
+                'subject' => 'Re: your enquiry — musicExams.help',
+                'body' => <<<'TEXT'
+Hi [Name],
+
+Thanks for getting in touch. Yes — we're running exams [at venue / on date the candidate asked about]. [Optional: mention any other nearby dates or venues, e.g. "We've also got a session on Friday 10 July at our Wirral venue, and if the Thursday fills up we'll open an additional day at Liverpool on Wednesday 8 July."]
+
+To book, head to https://musicexams.help, click Book Your Exam, and pick "Face-to-Face — [Classical & Jazz / Rock & Pop]". That opens Trinity's booking system, which shows all their UK venues — pick [Liverpool / Wirral / Liverpool or Wirral] and the day you want. The day runs from 9am to 4:30pm with breaks for lunch and so on. Slots are allocated in the order people book, so earlier bookers get earlier times — within about an hour of booking you'll get an email confirming your time slot.
+
+[Optional steer based on current bookings, e.g. "We've only got two candidates booked in for that day at the moment, so if you book in the next day or two you'd most likely get something around 10am. If you'd prefer a later slot, it'd be worth waiting a bit longer until more have booked."]
+
+[Optional light-touch site plug — drop in if the recipient seems likely to spread the word (returning family, teacher contacts, candidate going into music college, etc.): "While you're on the site, do have a wander around — it's all new and there's a recognition scheme now: Take a Bow and Standing Ovation certificates, top-scorer awards each quarter, and a prize draw every candidate is entered into. Worth a mention to anyone else you know in the music world."]
+
+Do come back to me if you have any questions.
+
+Thanks,
+Paul
+TEXT,
+            ],
+            [
                 'id' => 'old-address-nudge',
                 'audience' => 'Snippet',
                 'title' => 'Old-address nudge (slot near top of reply)',
@@ -153,6 +176,25 @@ TEXT,
 When you buy sheet music as a PDF (Trinity ebook store, Faber, Sheet Music Direct etc.), the publisher stamps a personalised line on the page — usually the buyer's name, email and an order number. It's the publisher's anti-piracy mechanism. On Trinity ebooks it reads "Prepared exclusively for [name] ([email]) Order: [number]" on the title or copyright page.
 
 If you genuinely can't see one, check the title or copyright pages first — that's the most common spot. If there's still nothing, keep the order confirmation email handy in case the examiner queries it.
+TEXT,
+            ],
+            [
+                'id' => 'dg-submission-link-not-working',
+                'audience' => 'DG Exam',
+                'title' => 'Submission link not working / option missing on profile',
+                'when' => 'Use when a teacher reports that the submission link in Trinity\'s confirmation email isn\'t working, or the submission option isn\'t showing on their MyTrinity profile. Open with a "still having trouble?" check — Trinity sometimes fixes things silently without flagging it. If still stuck, point them at MyTrinity to find the candidate manually under Submissions.',
+                'subject' => null,
+                'body' => <<<'TEXT'
+Hi [Name],
+
+Are you still having trouble with this, or has it sorted itself out in the meantime? Sometimes Trinity gets it working their end without flagging it back to me.
+
+If you're still stuck, try this: head to https://my-trinity.trinitycollege.com/, log in, then click Submissions at the top. You should see [Student name]'s name in the list — drill into it and click View Submission, and the upload option should be available from there.
+
+Let me know how you get on.
+
+Thanks,
+Paul
 TEXT,
             ],
         ];

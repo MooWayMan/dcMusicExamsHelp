@@ -115,16 +115,24 @@ class TopScorers
      * Grade → group classifier. Initial + Grades 1-5 vs Grades 6-8.
      * Diplomas / certificates / anything else returns null and is excluded
      * from the quarterly award pool.
+     *
+     * Accepts both bare ("8") and prefixed ("Grade 8") formats — production
+     * data uses the prefixed form ("Grade 1" through "Grade 8") whereas
+     * legacy seeds and tests have used bare numbers. Normalising here keeps
+     * the public-facing classification stable across both.
      */
     public static function groupOf(?string $grade): ?string
     {
         if ($grade === null) {
             return null;
         }
-        if ($grade === 'Initial' || in_array((string) $grade, ['1', '2', '3', '4', '5'], true)) {
+        // Strip an optional "Grade " (case-insensitive) prefix so "Grade 8"
+        // and "8" classify identically.
+        $normalised = preg_replace('/^grade\s+/i', '', trim($grade));
+        if ($normalised === 'Initial' || in_array((string) $normalised, ['1', '2', '3', '4', '5'], true)) {
             return 'initial_5';
         }
-        if (in_array((string) $grade, ['6', '7', '8'], true)) {
+        if (in_array((string) $normalised, ['6', '7', '8'], true)) {
             return '6_8';
         }
         return null;

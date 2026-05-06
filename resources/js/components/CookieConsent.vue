@@ -1,52 +1,91 @@
 <!-- resources/js/components/CookieConsent.vue -->
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { Cookie } from 'lucide-vue-next'
+import { router } from '@inertiajs/vue3'
 import { useCookieConsent } from '@/composables/useCookieConsent'
 
-const { markResponded } = useCookieConsent()
+const { accept: acceptConsent, decline: declineConsent } = useCookieConsent()
 const isVisible = ref(false)
 
-onMounted(() => {
-  // Only show if no preference has been set
-  if (!localStorage.getItem('cookie-consent')) {
-    // Small delay so it doesn't flash on page load
-    setTimeout(() => {
-      isVisible.value = true
-    }, 1500)
+// Pages where the banner must NOT auto-popup, otherwise it covers
+// the very content the user came to read before deciding.
+// These pages provide their own inline Accept / Decline buttons.
+const SUPPRESS_AUTO_POPUP_PATHS = ['/cookies', '/privacy']
+
+let pendingShow: ReturnType<typeof setTimeout> | null = null
+
+function clearPending() {
+  if (pendingShow) {
+    clearTimeout(pendingShow)
+    pendingShow = null
+  }
+}
+
+function evaluateBanner(path: string) {
+  const onSuppressedPage = SUPPRESS_AUTO_POPUP_PATHS.includes(path)
+  const hasConsent = !!localStorage.getItem('cookie-consent')
+
+  // Already decided — never auto-show again
+  if (hasConsent) return
+
+  // On the policy pages — keep banner hidden so user can read.
+  // The page itself shows inline Accept/Decline buttons.
+  if (onSuppressedPage) {
+    clearPending()
+    isVisible.value = false
+    return
   }
 
-  // Listen for footer "Cookie Preferences" link
-  window.addEventListener('open-cookie-preferences', () => {
+  // Not on a suppressed page, no consent yet — schedule the banner.
+  // Skip if it's already visible or already scheduled.
+  if (isVisible.value || pendingShow) return
+  pendingShow = setTimeout(() => {
     isVisible.value = true
+    pendingShow = null
+  }, 1500)
+}
+
+let removeNavigateListener: (() => void) | null = null
+
+onMounted(() => {
+  // First page load
+  evaluateBanner(window.location.pathname)
+
+  // Re-evaluate on every Inertia SPA navigation, since this component
+  // is mounted once at the app root and onMounted only fires once.
+  removeNavigateListener = router.on('navigate', (event) => {
+    const url = new URL(event.detail.page.url, window.location.origin)
+    evaluateBanner(url.pathname)
   })
+
+  // Listen for footer "Cookie Preferences" link — always honoured,
+  // even on the cookie policy page (user explicitly asked for it)
+  window.addEventListener('open-cookie-preferences', openFromFooter)
 })
 
+onBeforeUnmount(() => {
+  clearPending()
+  if (removeNavigateListener) removeNavigateListener()
+  window.removeEventListener('open-cookie-preferences', openFromFooter)
+})
+
+function openFromFooter() {
+  clearPending()
+  isVisible.value = true
+}
+
 function accept() {
-  localStorage.setItem('cookie-consent', 'accepted')
+  clearPending()
+  acceptConsent()
   isVisible.value = false
-  markResponded()
-  loadAnalytics()
 }
 
 function decline() {
-  localStorage.setItem('cookie-consent', 'declined')
+  clearPending()
+  declineConsent()
   isVisible.value = false
-  markResponded()
 }
-
-function loadAnalytics() {
-  // Load Google Analytics now that consent is given
-  const s = document.createElement('script')
-  s.async = true
-  s.src = 'https://www.googletagmanager.com/gtag/js?id=G-TZJ8ZCZW3W'
-  document.head.appendChild(s)
-  window.dataLayer = window.dataLayer || []
-  function gtag(...args: any[]) { window.dataLayer.push(args) }
-  gtag('js', new Date())
-  gtag('config', 'G-TZJ8ZCZW3W')
-}
-
 </script>
 
 <template>

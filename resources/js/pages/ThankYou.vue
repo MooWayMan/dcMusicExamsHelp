@@ -120,10 +120,21 @@ const hasAnyTopScorer = computed(() =>
   || grades68.value.merit.length > 0
 )
 const tieSplitLabel = (n: number): string => {
-  if (n <= 1) return ''
-  // Mirrors backend: 1→£20, 2→£10, 3+→£5
+  if (n <= 0) return ''
+  // Mirrors backend tokenSplit: 1→£20, 2→£10, 3+→£5
+  if (n === 1) return '£20 gift token'
   const each = n === 2 ? 10 : 5
   return `${n}-way tie · £${each} each`
+}
+// Production data stores grades as either "Grade 1" or bare "1" or "Initial"
+// — normalise to a single human-readable form. "Initial" never gets a
+// "Grade" prefix per Trinity convention.
+const formatGrade = (g: unknown): string => {
+  if (g === null || g === undefined || g === '') return ''
+  const trimmed = String(g).trim()
+  const normalised = trimmed.replace(/^grade\s+/i, '')
+  if (normalised === 'Initial') return 'Initial'
+  return `Grade ${normalised}`
 }
 const thankYouEntries = computed(() => activeData.value?.thankYouEntries ?? [])
 const summary = computed(() => activeData.value?.summary ?? { distinctions: 0, merits: 0, total: 0 })
@@ -399,12 +410,12 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
                     <Star class="h-4 w-4 text-brand-accent" />
                     <p class="text-xs font-bold uppercase tracking-widest text-brand-accent">
                       Showstopper
-                      <span v-if="initial5.distinction.length > 1" class="ml-1 text-white/60 normal-case font-medium">— {{ tieSplitLabel(initial5.distinction.length) }}</span>
+                      <span v-if="initial5.distinction.length >= 1" class="ml-1 text-white/60 normal-case font-medium">— {{ tieSplitLabel(initial5.distinction.length) }}</span>
                     </p>
                   </div>
                   <div v-for="(w, i) in initial5.distinction" :key="`i5d-${i}`" :class="i > 0 ? 'mt-5 border-t border-white/15 pt-5' : 'mt-3'">
                     <p class="text-2xl font-extrabold text-white sm:text-3xl">{{ w.name }}</p>
-                    <p class="mt-1 text-base text-white/70">{{ w.instrument }} · Grade {{ w.grade }}</p>
+                    <p class="mt-1 text-base text-white/70">{{ w.instrument }} · {{ formatGrade(w.grade) }}</p>
                     <div class="mt-3 flex items-center gap-3">
                       <span :class="[resultBadgeClass('Distinction'), 'rounded-full px-4 py-1.5 text-sm font-bold shadow-lg']">Distinction — {{ w.score }}</span>
                     </div>
@@ -423,12 +434,12 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
                     <Star class="h-4 w-4 text-brand-success" />
                     <p class="text-xs font-bold uppercase tracking-widest text-brand-success">
                       Centre Stage
-                      <span v-if="initial5.merit.length > 1" class="ml-1 text-white/60 normal-case font-medium">— {{ tieSplitLabel(initial5.merit.length) }}</span>
+                      <span v-if="initial5.merit.length >= 1" class="ml-1 text-white/60 normal-case font-medium">— {{ tieSplitLabel(initial5.merit.length) }}</span>
                     </p>
                   </div>
                   <div v-for="(w, i) in initial5.merit" :key="`i5m-${i}`" :class="i > 0 ? 'mt-5 border-t border-white/15 pt-5' : 'mt-3'">
                     <p class="text-2xl font-extrabold text-white sm:text-3xl">{{ w.name }}</p>
-                    <p class="mt-1 text-base text-white/70">{{ w.instrument }} · Grade {{ w.grade }}</p>
+                    <p class="mt-1 text-base text-white/70">{{ w.instrument }} · {{ formatGrade(w.grade) }}</p>
                     <div class="mt-3 flex items-center gap-3">
                       <span :class="[resultBadgeClass('Merit'), 'rounded-full px-4 py-1.5 text-sm font-bold shadow-lg']">Merit — {{ w.score }}</span>
                     </div>
@@ -453,12 +464,12 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
                     <Star class="h-4 w-4 text-brand-accent" />
                     <p class="text-xs font-bold uppercase tracking-widest text-brand-accent">
                       Showstopper
-                      <span v-if="grades68.distinction.length > 1" class="ml-1 text-white/60 normal-case font-medium">— {{ tieSplitLabel(grades68.distinction.length) }}</span>
+                      <span v-if="grades68.distinction.length >= 1" class="ml-1 text-white/60 normal-case font-medium">— {{ tieSplitLabel(grades68.distinction.length) }}</span>
                     </p>
                   </div>
                   <div v-for="(w, i) in grades68.distinction" :key="`g68d-${i}`" :class="i > 0 ? 'mt-5 border-t border-white/15 pt-5' : 'mt-3'">
                     <p class="text-2xl font-extrabold text-white sm:text-3xl">{{ w.name }}</p>
-                    <p class="mt-1 text-base text-white/70">{{ w.instrument }} · Grade {{ w.grade }}</p>
+                    <p class="mt-1 text-base text-white/70">{{ w.instrument }} · {{ formatGrade(w.grade) }}</p>
                     <div class="mt-3 flex items-center gap-3">
                       <span :class="[resultBadgeClass('Distinction'), 'rounded-full px-4 py-1.5 text-sm font-bold shadow-lg']">Distinction — {{ w.score }}</span>
                     </div>
@@ -477,12 +488,12 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
                     <Star class="h-4 w-4 text-brand-success" />
                     <p class="text-xs font-bold uppercase tracking-widest text-brand-success">
                       Centre Stage
-                      <span v-if="grades68.merit.length > 1" class="ml-1 text-white/60 normal-case font-medium">— {{ tieSplitLabel(grades68.merit.length) }}</span>
+                      <span v-if="grades68.merit.length >= 1" class="ml-1 text-white/60 normal-case font-medium">— {{ tieSplitLabel(grades68.merit.length) }}</span>
                     </p>
                   </div>
                   <div v-for="(w, i) in grades68.merit" :key="`g68m-${i}`" :class="i > 0 ? 'mt-5 border-t border-white/15 pt-5' : 'mt-3'">
                     <p class="text-2xl font-extrabold text-white sm:text-3xl">{{ w.name }}</p>
-                    <p class="mt-1 text-base text-white/70">{{ w.instrument }} · Grade {{ w.grade }}</p>
+                    <p class="mt-1 text-base text-white/70">{{ w.instrument }} · {{ formatGrade(w.grade) }}</p>
                     <div class="mt-3 flex items-center gap-3">
                       <span :class="[resultBadgeClass('Merit'), 'rounded-full px-4 py-1.5 text-sm font-bold shadow-lg']">Merit — {{ w.score }}</span>
                     </div>

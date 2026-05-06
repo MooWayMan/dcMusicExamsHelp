@@ -45,6 +45,20 @@ test('null and unknown grades map to null (excluded from awards)', function () {
     expect(TopScorers::groupOf('9'))->toBeNull();
 });
 
+test('prefixed "Grade X" format classifies the same as bare "X"', function () {
+    // Production data uses "Grade 1" through "Grade 8" — must classify
+    // identically to the bare-number form used in seeds and tests.
+    expect(TopScorers::groupOf('Grade 1'))->toBe('initial_5');
+    expect(TopScorers::groupOf('Grade 5'))->toBe('initial_5');
+    expect(TopScorers::groupOf('Grade 6'))->toBe('6_8');
+    expect(TopScorers::groupOf('Grade 8'))->toBe('6_8');
+    // Case-insensitive prefix
+    expect(TopScorers::groupOf('grade 7'))->toBe('6_8');
+    expect(TopScorers::groupOf('GRADE 2'))->toBe('initial_5');
+    // Whitespace tolerance
+    expect(TopScorers::groupOf(' Grade 4 '))->toBe('initial_5');
+});
+
 // ── bandOf() ─────────────────────────────────────────────────────────────
 
 test('scores 87+ are Distinction', function () {

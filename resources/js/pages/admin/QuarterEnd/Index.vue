@@ -151,6 +151,17 @@ const hasAnyAward = computed(() =>
   || grades68.value.merit.length > 0
 )
 
+// Production data stores grades as either "Grade 1" or bare "1" or "Initial"
+// — normalise to a single human-readable form. "Initial" never gets a
+// "Grade" prefix per Trinity convention.
+const formatGrade = (g: unknown): string => {
+  if (g === null || g === undefined || g === '') return ''
+  const trimmed = String(g).trim()
+  const normalised = trimmed.replace(/^grade\s+/i, '')
+  if (normalised === 'Initial') return 'Initial'
+  return `Grade ${normalised}`
+}
+
 // "Preview leaders so far" — reloads with ?finalise=1 (param name kept for
 // backend compatibility, but it's a preview, not a commitment). Backend
 // recalculates awards from whatever scores ARE in. Nothing is published,
@@ -1305,7 +1316,7 @@ const teacherWinner = computed(() => {
                     </div>
                     <div v-for="w in initial5.distinction" :key="`i5d-${w.full_name}`" class="mt-2 flex flex-wrap items-center gap-2">
                       <p class="flex-1 text-sm text-yellow-800">
-                        {{ w.name }} — {{ w.instrument }} Grade {{ w.grade }} — {{ w.score }} marks
+                        {{ w.name }} — {{ w.instrument }} {{ formatGrade(w.grade) }} — {{ w.score }} marks
                         <span class="ml-1 text-xs text-yellow-700">(admin: {{ w.full_name }} · teacher: {{ w.teacher_name ?? '—' }})</span>
                       </p>
                       <a v-if="topScorerCertPaths[w.full_name]" :href="topScorerCertPaths[w.full_name]" target="_blank" class="inline-flex items-center gap-1 rounded-md border border-yellow-700 bg-white px-2.5 py-1 text-xs font-semibold text-yellow-800 hover:bg-yellow-700 hover:text-white transition">
@@ -1329,7 +1340,7 @@ const teacherWinner = computed(() => {
                     </div>
                     <div v-for="w in initial5.merit" :key="`i5m-${w.full_name}`" class="mt-2 flex flex-wrap items-center gap-2">
                       <p class="flex-1 text-sm text-brand-text">
-                        {{ w.name }} — {{ w.instrument }} Grade {{ w.grade }} — {{ w.score }} marks
+                        {{ w.name }} — {{ w.instrument }} {{ formatGrade(w.grade) }} — {{ w.score }} marks
                         <span class="ml-1 text-xs text-brand-text-soft">(admin: {{ w.full_name }} · teacher: {{ w.teacher_name ?? '—' }})</span>
                       </p>
                       <a v-if="topScorerCertPaths[w.full_name]" :href="topScorerCertPaths[w.full_name]" target="_blank" class="inline-flex items-center gap-1 rounded-md border border-brand-accent bg-white px-2.5 py-1 text-xs font-semibold text-brand-accent hover:bg-brand-accent hover:text-white transition">
@@ -1363,7 +1374,7 @@ const teacherWinner = computed(() => {
                     </div>
                     <div v-for="w in grades68.distinction" :key="`g68d-${w.full_name}`" class="mt-2 flex flex-wrap items-center gap-2">
                       <p class="flex-1 text-sm text-yellow-800">
-                        {{ w.name }} — {{ w.instrument }} Grade {{ w.grade }} — {{ w.score }} marks
+                        {{ w.name }} — {{ w.instrument }} {{ formatGrade(w.grade) }} — {{ w.score }} marks
                         <span class="ml-1 text-xs text-yellow-700">(admin: {{ w.full_name }} · teacher: {{ w.teacher_name ?? '—' }})</span>
                       </p>
                       <a v-if="topScorerCertPaths[w.full_name]" :href="topScorerCertPaths[w.full_name]" target="_blank" class="inline-flex items-center gap-1 rounded-md border border-yellow-700 bg-white px-2.5 py-1 text-xs font-semibold text-yellow-800 hover:bg-yellow-700 hover:text-white transition">
@@ -1387,7 +1398,7 @@ const teacherWinner = computed(() => {
                     </div>
                     <div v-for="w in grades68.merit" :key="`g68m-${w.full_name}`" class="mt-2 flex flex-wrap items-center gap-2">
                       <p class="flex-1 text-sm text-brand-text">
-                        {{ w.name }} — {{ w.instrument }} Grade {{ w.grade }} — {{ w.score }} marks
+                        {{ w.name }} — {{ w.instrument }} {{ formatGrade(w.grade) }} — {{ w.score }} marks
                         <span class="ml-1 text-xs text-brand-text-soft">(admin: {{ w.full_name }} · teacher: {{ w.teacher_name ?? '—' }})</span>
                       </p>
                       <a v-if="topScorerCertPaths[w.full_name]" :href="topScorerCertPaths[w.full_name]" target="_blank" class="inline-flex items-center gap-1 rounded-md border border-brand-accent bg-white px-2.5 py-1 text-xs font-semibold text-brand-accent hover:bg-brand-accent hover:text-white transition">
@@ -1470,7 +1481,7 @@ const teacherWinner = computed(() => {
                   <span class="font-bold text-brand-text">Official Winner (recorded)</span>
                 </div>
                 <p class="text-lg font-bold text-brand-text">{{ studentRealWinner.winner_name }}</p>
-                <p class="text-sm text-brand-text-soft">{{ studentRealWinner.winner_instrument }} Grade {{ studentRealWinner.winner_grade }} — Teacher: {{ studentRealWinner.winner_teacher }}</p>
+                <p class="text-sm text-brand-text-soft">{{ studentRealWinner.winner_instrument }} {{ formatGrade(studentRealWinner.winner_grade) }} — Teacher: {{ studentRealWinner.winner_teacher }}</p>
                 <p class="mt-2 text-xs text-brand-text-soft">Drawn from {{ studentRealWinner.total_tickets }} tickets. This result is permanently recorded.</p>
               </div>
 
@@ -1483,7 +1494,7 @@ const teacherWinner = computed(() => {
                     <span class="text-sm font-semibold text-brand-accent">Practice Draw #{{ testDrawCount.student }}</span>
                   </div>
                   <p class="font-bold text-brand-text">{{ studentTestWinner.name }}</p>
-                  <p class="text-xs text-brand-text-soft">{{ studentTestWinner.instrument }} Grade {{ studentTestWinner.grade }} — Teacher: {{ studentTestWinner.teacher }}</p>
+                  <p class="text-xs text-brand-text-soft">{{ studentTestWinner.instrument }} {{ formatGrade(studentTestWinner.grade) }} — Teacher: {{ studentTestWinner.teacher }}</p>
                   <p class="mt-1 text-xs text-brand-text-soft italic">This is just a practice — not recorded.</p>
                 </div>
 
