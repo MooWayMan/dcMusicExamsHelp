@@ -173,8 +173,12 @@ test('without a publication AND with pending results, public page shows no top s
     expect($q1['topScorers']['6_8']['distinction'])->toBe([]);
 });
 
-test('without a publication BUT with prize draw run AND no pending, live-calc surfaces winners', function () {
-    // Legacy path — pre-snapshot quarters that already had a prize draw.
+test('without a publication, public top scorers stay hidden even with prize draw run AND no pending', function () {
+    // Used to be a live-calc fallback path (publication absent + draw
+    // run + no pending → surface winners). Removed 7 May 2026 — Paul
+    // wanted publishing to be an explicit one-button decision per
+    // quarter, not an implicit consequence of running a draw early.
+    // This test guards against the live-calc fallback creeping back in.
     tspEntry(['candidate_name' => 'Anna Martin', 'grade' => '1', 'score' => 92, 'result' => 'Distinction']);
     tspEntry(['candidate_name' => 'Maya Parkinson', 'grade' => '1', 'score' => 83, 'result' => 'Merit']);
 
@@ -190,8 +194,10 @@ test('without a publication BUT with prize draw run AND no pending, live-calc su
     $payload = $this->get('/recognition')->viewData('page')['props'];
     $q1 = collect($payload['allQuartersData'])->firstWhere('quarter', 1);
 
-    expect($q1['topScorers']['initial_5']['distinction'])->toHaveCount(1);
-    expect($q1['topScorers']['initial_5']['merit'])->toHaveCount(1);
+    expect($q1['topScorers']['initial_5']['distinction'])->toBe([]);
+    expect($q1['topScorers']['initial_5']['merit'])->toBe([]);
+    expect($q1['topScorers']['6_8']['distinction'])->toBe([]);
+    expect($q1['topScorers']['6_8']['merit'])->toBe([]);
 });
 
 test('snapshot respects show_full_name — public name stays shortened by default', function () {
