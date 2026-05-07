@@ -60,6 +60,19 @@ class QuarterEndController extends Controller
             ->get()
             ->keyBy(fn ($c) => strtolower(trim($c->name)));
 
+        // Separate lookup for teacher contacts so the Copy Email / Open
+        // Gmail buttons can route to the *teacher's* email — not Paul's
+        // applicant_email on the order. The previous fallback chain
+        // (parent_or_self → order.applicant_email) sent every teacher-
+        // booked email back to the operator who submitted the booking
+        // to Trinity, because applicant_email captures Paul as the
+        // booker even when teacher_name correctly identifies the
+        // teacher. This lookup gets us the teacher's actual email.
+        $teacherLookup = ExamContact::with('emails')
+            ->withType(['teacher', 'school_admin'])
+            ->get()
+            ->keyBy(fn ($c) => strtolower(trim($c->name)));
+
         // Group by teacher/parent name — each individual parent becomes their
         // own row (not lumped), so Paul can email each directly. Rows with no
         // teacher_name at all stay in the catch-all bucket.
@@ -199,18 +212,43 @@ class QuarterEndController extends Controller
             // fields drive the per-winner "Copy Top Scorer Email" button —
             // they need to know who to email and whether it's a parent-
             // direct booking (different template tone).
-            $shapeWinner = function ($e) use ($parentOrSelfLookup) {
+            $shapeWinner = function ($e) use ($parentOrSelfLookup, $teacherLookup) {
                 $teacherName = $e->teacher_name;
-                $parentContact = $teacherName
-                    ? $parentOrSelfLookup->get(strtolower(trim($teacherName)))
+                $teacherKey = $teacherName ? strtolower(trim($teacherName)) : null;
+                $parentContact = $teacherKey
+                    ? $parentOrSelfLookup->get($teacherKey)
                     : null;
+
+                // Resolve the teacher contact: prefer the explicit FK
+                // (exam_entries.teacher_contact_id) so we tolerate any
+                // teacher_name string drift, then fall back to a name
+                // lookup for older rows that pre-date the FK.
+                $teacherContact = null;
+                if ($e->teacher_contact_id) {
+                    $teacherContact = ExamContact::with('emails')->find($e->teacher_contact_id);
+                }
+                if (! $teacherContact && $teacherKey) {
+                    $teacherContact = $teacherLookup->get($teacherKey);
+                }
+
                 $bookingRole = match (true) {
                     $parentContact === null => null,
                     $parentContact->isParent() => 'parent',
                     $parentContact->isCandidate() => 'self',
                     default => null,
                 };
+                // Recipient priority:
+                //   1. Parent / self-applicant's email (when teacher_name
+                //      is actually a parent/candidate — booking voice).
+                //   2. Real teacher contact's email — pulled from the FK
+                //      teacher_contact_id when set, so F2F entries with
+                //      Paul as order applicant_name still route to the
+                //      teacher (Rachel Jones, Clare Keeling, etc.).
+                //   3. Order applicant_email (last resort — usually
+                //      Paul's address as centre operator).
                 $teacherEmail = $parentContact?->emails->first()?->email
+                    ?? $teacherContact?->emails->first()?->email
+                    ?? $teacherContact?->email
                     ?? $e->order?->applicant_email;
 
                 return [
