@@ -239,6 +239,31 @@ test('mixed quarter: every group/band has a winner', function () {
 
 // ── Legacy compatibility ──────────────────────────────────────────────────
 
+test('showstopper trophy returns ALL tied winners when more than one candidate scored the top', function () {
+    // Bug previously: trophy stat tile silently picked the first
+    // alphabetical winner when two candidates tied at the absolute top
+    // distinction. Should expose every tied winner in the `winners[]`
+    // array so the Vue tile can list each name.
+    tsEntry(['candidate_name' => 'Seth Barraclough', 'grade' => '8', 'score' => 93, 'result' => 'Distinction']);
+    tsEntry(['candidate_name' => 'James Jones',      'grade' => '7', 'score' => 93, 'result' => 'Distinction']);
+    tsEntry(['candidate_name' => 'Lower One',        'grade' => '6', 'score' => 90, 'result' => 'Distinction']);
+
+    $this->actingAs($this->admin)->get(TS_URL)->assertInertia(fn ($p) => $p
+        ->where('summary.showstopper.score', 93)
+        ->has('summary.showstopper.winners', 2)
+        ->where('summary.showstopper.winners.0.full_name', 'Seth Barraclough')
+        ->where('summary.showstopper.winners.1.full_name', 'James Jones'));
+});
+
+test('showstopper.winners has exactly one entry when there is no tie', function () {
+    tsEntry(['candidate_name' => 'Sole Winner', 'grade' => '8', 'score' => 95, 'result' => 'Distinction']);
+    tsEntry(['candidate_name' => 'Lower',       'grade' => '7', 'score' => 90, 'result' => 'Distinction']);
+
+    $this->actingAs($this->admin)->get(TS_URL)->assertInertia(fn ($p) => $p
+        ->has('summary.showstopper.winners', 1)
+        ->where('summary.showstopper.winners.0.full_name', 'Sole Winner'));
+});
+
 test('legacy showstopper/centre_stage still point to the overall single top across both groups', function () {
     // 6-8 wins the absolute top Distinction (95 > 92), so showstopper picks
     // up the 6-8 winner — legacy field is the OVERALL top, not per group.

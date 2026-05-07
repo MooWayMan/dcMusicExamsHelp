@@ -66,7 +66,8 @@ interface Summary {
   has_pending: boolean
   // Legacy single-winner fields — overall top across both groups.
   // Kept for the summary stat card; per-group winners live in top_scorers.
-  showstopper: { name: string; full_name: string; score: number; instrument: string } | null
+  showstopper: { name: string; full_name: string; score: number; instrument: string; winners?: { name: string; full_name: string; instrument: string; grade: string }[] } | null
+  centre_stage?: { name: string; full_name: string; score: number; instrument: string; winners?: { name: string; full_name: string; instrument: string; grade: string }[] } | null
   centre_stage: { name: string; full_name: string; score: number; instrument: string } | null
   // Awards split by grade group (matches the public Awards banner):
   //   • Initial–5  (Initial, Grades 1–5)
@@ -968,7 +969,23 @@ const teacherWinner = computed(() => {
           <p class="text-2xl font-bold text-brand-text" v-else-if="summary.showstopper">{{ summary.showstopper.score }}</p>
           <p class="text-2xl font-bold text-brand-text" v-else>—</p>
           <p class="text-xs text-brand-text-soft" v-if="summary.has_pending">Results pending</p>
-          <p class="text-xs text-brand-text-soft" v-else-if="summary.showstopper">Showstopper: {{ summary.showstopper.name }}</p>
+          <p
+            v-else-if="summary.showstopper"
+            class="text-xs text-brand-text-soft"
+          >
+            Showstopper:
+            <!-- Single winner — keep the existing one-line layout. -->
+            <span v-if="(summary.showstopper.winners?.length ?? 1) <= 1">
+              {{ summary.showstopper.name }}
+            </span>
+            <!-- Tied at the top score — list every name, comma-separated. -->
+            <span v-else class="block">
+              {{ summary.showstopper.winners!.map(w => w.name).join(' &amp; ') }}
+              <span class="block text-[11px] text-brand-text-soft/80">
+                ({{ summary.showstopper.winners!.length }}-way tie)
+              </span>
+            </span>
+          </p>
           <p class="text-xs text-brand-text-soft" v-else>Top Scorers</p>
         </div>
       </div>

@@ -228,10 +228,25 @@ class QuarterEndController extends Controller
 
             $topScorers = TopScorers::calculate($withScores, $shapeWinner);
 
-            // Legacy fields — overall single top Distinction / Merit across
-            // both groups. Used by the summary stat card and any old consumer.
-            $topDistinction = $withScores->filter(fn ($e) => $e->score >= 87)->sortByDesc('score')->first();
-            $topMerit = $withScores->filter(fn ($e) => $e->score >= 75 && $e->score < 87)->sortByDesc('score')->first();
+            // Overall top Distinction / Merit across both groups, returning
+            // ALL candidates tied at the top score. Drives the trophy stat
+            // tile — when more than one candidate scored e.g. 93, the tile
+            // needs to list all the names, not silently pick the first one
+            // alphabetically.
+            $distinctions = $withScores->filter(fn ($e) => $e->score >= 87)->sortByDesc('score');
+            $topDistinctionScore = $distinctions->first()?->score;
+            $topDistinctionWinners = $topDistinctionScore !== null
+                ? $distinctions->filter(fn ($e) => $e->score === $topDistinctionScore)->values()
+                : collect();
+
+            $merits = $withScores->filter(fn ($e) => $e->score >= 75 && $e->score < 87)->sortByDesc('score');
+            $topMeritScore = $merits->first()?->score;
+            $topMeritWinners = $topMeritScore !== null
+                ? $merits->filter(fn ($e) => $e->score === $topMeritScore)->values()
+                : collect();
+        } else {
+            $topDistinctionWinners = collect();
+            $topMeritWinners = collect();
         }
 
         // --- PRIZE DRAW DATA ---
@@ -403,17 +418,34 @@ class QuarterEndController extends Controller
                 'total_fees' => number_format($totalFees, 2),
                 'teacher_count' => $teacherGroups->count(),
                 'has_pending' => $hasPending,
-                'showstopper' => $topDistinction ? [
-                    'name' => $this->shortName($topDistinction->candidate_name),
-                    'full_name' => $topDistinction->candidate_name,
-                    'score' => $topDistinction->score,
-                    'instrument' => $topDistinction->instrument?->name,
+                // showstopper / centre_stage now return ALL candidates tied
+                // at the top score so the stat tile can list every name
+                // when there's a tie. The legacy single-row fields kept
+                // their shape for the FIRST winner (back-compat) — Vue
+                // checks `winners` length to decide rendering.
+                'showstopper' => $topDistinctionWinners->isNotEmpty() ? [
+                    'name' => $this->shortName($topDistinctionWinners->first()->candidate_name),
+                    'full_name' => $topDistinctionWinners->first()->candidate_name,
+                    'score' => $topDistinctionWinners->first()->score,
+                    'instrument' => $topDistinctionWinners->first()->instrument?->name,
+                    'winners' => $topDistinctionWinners->map(fn ($e) => [
+                        'name' => $this->shortName($e->candidate_name),
+                        'full_name' => $e->candidate_name,
+                        'instrument' => $e->instrument?->name,
+                        'grade' => $e->grade,
+                    ])->all(),
                 ] : null,
-                'centre_stage' => $topMerit ? [
-                    'name' => $this->shortName($topMerit->candidate_name),
-                    'full_name' => $topMerit->candidate_name,
-                    'score' => $topMerit->score,
-                    'instrument' => $topMerit->instrument?->name,
+                'centre_stage' => $topMeritWinners->isNotEmpty() ? [
+                    'name' => $this->shortName($topMeritWinners->first()->candidate_name),
+                    'full_name' => $topMeritWinners->first()->candidate_name,
+                    'score' => $topMeritWinners->first()->score,
+                    'instrument' => $topMeritWinners->first()->instrument?->name,
+                    'winners' => $topMeritWinners->map(fn ($e) => [
+                        'name' => $this->shortName($e->candidate_name),
+                        'full_name' => $e->candidate_name,
+                        'instrument' => $e->instrument?->name,
+                        'grade' => $e->grade,
+                    ])->all(),
                 ] : null,
                 // Per-group winners (Initial-5 vs 6-8) — matches the Awards
                 // banner on the public site. Each leaf is an array of tied
