@@ -49,7 +49,7 @@ const studentTiers = [
     icon: Trophy,
     title: 'Top Scorers',
     subtitle: 'Quarterly — the very best',
-    detail: 'The highest Distinction each quarter earns a <strong>Showstopper Certificate</strong>. The highest Merit earns a <strong>Centre Stage Certificate</strong>. Both earn the top spot on the Hall of Fame — plus a gift token (£20, or divided equally if there is a tie — minimum £5 each).',
+    detail: 'The highest Distinction in each grade group — Initial–5 and 6–8 — earns a <strong>Showstopper Certificate</strong> each quarter. The highest Merit in each group earns a <strong>Centre Stage Certificate</strong>. Winners take the top spot on the Hall of Fame — plus a gift token (£20, or divided equally if there is a tie — minimum £5 each).',
     link: '/recognition?from=incentives',
     linkText: 'See the Hall of Fame',
   },
@@ -101,7 +101,7 @@ const faqs = [
   {
     id: 2,
     question: 'What are the certificates?',
-    answer: 'Every student entered through centre 120 receives at least a Bravo Certificate. Score a Merit and you receive a Take a Bow Certificate instead. Score a Distinction and you receive a Standing Ovation Certificate instead. The highest scorers each quarter earn the top awards — a Showstopper Certificate for the highest Distinction and a Centre Stage Certificate for the highest Merit. These are digital certificates you can print at home, display on a tablet or iPad for photos, or share straight to social media. No colour printer needed — just hold it up on the screen and snap a photo. These are in addition to the official Trinity certificate that every Pass, Merit and Distinction receives.',
+    answer: 'Every student entered through centre 120 receives at least a Bravo Certificate. Score a Merit and you receive a Take a Bow Certificate instead. Score a Distinction and you receive a Standing Ovation Certificate instead. The highest scorers each quarter earn the top awards in two grade groups (Initial–5 and 6–8) — a Showstopper Certificate for the highest Distinction in each group and a Centre Stage Certificate for the highest Merit in each group. These are digital certificates you can print at home, display on a tablet or iPad for photos, or share straight to social media. No colour printer needed — just hold it up on the screen and snap a photo. These are in addition to the official Trinity certificate that every Pass, Merit and Distinction receives.',
   },
   {
     id: 3,

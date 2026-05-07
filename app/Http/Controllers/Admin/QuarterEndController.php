@@ -7,6 +7,8 @@ use App\Models\ExamContact;
 use App\Models\ExamEntry;
 use App\Models\Order;
 use App\Models\PrizeDraw;
+use App\Models\TopScorerPublication;
+use App\Support\TopScorers;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -154,18 +156,69 @@ class QuarterEndController extends Controller
         $totalPending = $allEntries->filter(fn ($e) => $e->score === null)->count();
         $totalFees = $allEntries->sum('fee');
 
-        // Top scorers — only calculated when NO results are pending
+        // Top scorers — normally only calculated when NO results are pending,
+        // but Paul can override this with `?finalise=1` to lock in the awards
+        // based on whatever scores ARE in (used when the last few stragglers
+        // are very unlikely to top the current leaders, and Paul's happy to
+        // honour any after-the-fact tie by topping up the gift token).
+        //
+        // Banner promises FOUR awards each quarter:
+        //   • Highest Distinction — Initial-5
+        //   • Highest Distinction — 6-8
+        //   • Highest Merit       — Initial-5
+        //   • Highest Merit       — 6-8
+        //
+        // Ties are split (Paul's rule: £20 / 2 = £10 each, £20 / 3+ = £5 each).
+        // We return ALL candidates tied at the top score per (group, band) so
+        // the front-end can show every winner.
         $hasPending = $allEntries->contains(fn ($e) => $e->score === null);
-        $topDistinction = null;
-        $topMerit = null;
+        $finalise = $request->boolean('finalise');
+        $topDistinction = null;   // legacy single-winner field — overall top Distinction
+        $topMerit = null;         // legacy single-winner field — overall top Merit
+        $topScorers = [
+            'initial_5' => ['distinction' => [], 'merit' => []],
+            '6_8'       => ['distinction' => [], 'merit' => []],
+        ];
 
-        if (! $hasPending) {
+        if (! $hasPending || $finalise) {
             $withScores = $allEntries->filter(fn ($e) => $e->score !== null);
 
-            // Showstopper — highest Distinction (87+)
-            $topDistinction = $withScores->filter(fn ($e) => $e->score >= 87)->sortByDesc('score')->first();
+            // Map each candidate into a normalised winner row. The teacher_*
+            // fields drive the per-winner "Copy Top Scorer Email" button —
+            // they need to know who to email and whether it's a parent-
+            // direct booking (different template tone).
+            $shapeWinner = function ($e) use ($parentOrSelfLookup) {
+                $teacherName = $e->teacher_name;
+                $parentContact = $teacherName
+                    ? $parentOrSelfLookup->get(strtolower(trim($teacherName)))
+                    : null;
+                $bookingRole = match (true) {
+                    $parentContact === null => null,
+                    $parentContact->isParent() => 'parent',
+                    $parentContact->isCandidate() => 'self',
+                    default => null,
+                };
+                $teacherEmail = $parentContact?->emails->first()?->email
+                    ?? $e->order?->applicant_email;
 
-            // Centre Stage — highest Merit (75–86)
+                return [
+                    'name'              => $this->shortName($e->candidate_name),
+                    'full_name'         => $e->candidate_name,
+                    'score'             => $e->score,
+                    'instrument'        => $e->instrument?->name,
+                    'grade'             => $e->grade,
+                    'teacher_name'      => $teacherName,
+                    'teacher_email'     => $teacherEmail,
+                    'is_parent_booking' => $parentContact !== null,
+                    'booking_role'      => $bookingRole,
+                ];
+            };
+
+            $topScorers = TopScorers::calculate($withScores, $shapeWinner);
+
+            // Legacy fields — overall single top Distinction / Merit across
+            // both groups. Used by the summary stat card and any old consumer.
+            $topDistinction = $withScores->filter(fn ($e) => $e->score >= 87)->sortByDesc('score')->first();
             $topMerit = $withScores->filter(fn ($e) => $e->score >= 75 && $e->score < 87)->sortByDesc('score')->first();
         }
 
@@ -331,6 +384,22 @@ class QuarterEndController extends Controller
                     'score' => $topMerit->score,
                     'instrument' => $topMerit->instrument?->name,
                 ] : null,
+                // Per-group winners (Initial-5 vs 6-8) — matches the Awards
+                // banner on the public site. Each leaf is an array of tied
+                // winners (empty array when nobody hit that band in that group).
+                'top_scorers' => $topScorers,
+                // True when the awards have been computed despite pending
+                // results (i.e. Paul clicked "Preview leaders so far").
+                // Drives the provisional banner in Step 3.
+                'finalised_with_pending' => $finalise && $hasPending,
+                // Snapshot of an existing publication, if any. Drives the
+                // "Already published on X" indicator + disables the Publish
+                // button to prevent accidental double-publish.
+                'publication' => TopScorerPublication::forQuarter($quarter, $year)?->only([
+                    'published_at',
+                    'finalised_with_pending',
+                    'pending_count',
+                ]),
             ],
             'prizeDraw' => [
                 'student_tickets' => $studentTickets,
@@ -514,6 +583,95 @@ class QuarterEndController extends Controller
                 'is_registered' => $isRegistered,
             ],
             'total_tickets' => count($tickets),
+        ]);
+    }
+
+    /**
+     * Publish the four top-scorer awards for a quarter.
+     *
+     * Snapshots the current winners into `top_scorer_publications` so the
+     * public Recognition page can display them. Once published, the
+     * snapshot is stable — a late-arriving higher score won't shuffle the
+     * leaderboard. Paul can re-publish to refresh, which overwrites the
+     * snapshot.
+     *
+     * Bypasses the "all results in" gate by design — Paul presses this
+     * when he's accepted that any pending results either won't change the
+     * outcome or will be honoured by topping up the gift token.
+     */
+    public function publishTopScorers(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'quarter' => 'required|integer|min:1|max:4',
+            'year' => 'required|integer|min:2025|max:2030',
+        ]);
+
+        $quarter = $validated['quarter'];
+        $year = $validated['year'];
+
+        // Re-run the same calculation the index() page uses so the
+        // snapshot matches what Paul saw when he clicked Publish.
+        $startMonth = (($quarter - 1) * 3) + 1;
+        $startDate = Carbon::create($year, $startMonth, 1)->startOfDay();
+        $endDate = $startDate->copy()->addMonths(3)->subDay()->endOfDay();
+
+        $allEntries = ExamEntry::with([
+                'instrument:id,name',
+                'order:id,requested_start_date,delivery_method,applicant_name,applicant_email',
+                'student:id,first_name,last_name',
+            ])
+            ->where(function ($q) {
+                $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
+            })
+            ->get()
+            ->filter(function ($entry) use ($startDate, $endDate) {
+                $date = $entry->exam_date ?? $entry->order?->requested_start_date;
+                return $date && $date->between($startDate, $endDate);
+            });
+
+        $pendingCount = $allEntries->filter(fn ($e) => $e->score === null)->count();
+        $withScores = $allEntries->filter(fn ($e) => $e->score !== null);
+
+        $parentOrSelfLookup = ExamContact::with('emails')
+            ->withType(['parent', 'candidate'])
+            ->get()
+            ->keyBy(fn ($c) => strtolower(trim($c->name)));
+
+        $shapeWinner = function ($e) use ($parentOrSelfLookup) {
+            $teacherName = $e->teacher_name;
+            $parentContact = $teacherName
+                ? $parentOrSelfLookup->get(strtolower(trim($teacherName)))
+                : null;
+            return [
+                'name'              => $this->shortName($e->candidate_name),
+                'full_name'         => $e->candidate_name,
+                'show_full_name'    => (bool) $e->show_full_name, // GDPR — public display
+                'score'             => $e->score,
+                'instrument'        => $e->instrument?->name,
+                'grade'             => $e->grade,
+                'teacher_name'      => $teacherName,
+                'is_parent_booking' => $parentContact !== null,
+            ];
+        };
+
+        $winners = TopScorers::calculate($withScores, $shapeWinner);
+
+        $publication = TopScorerPublication::updateOrCreate(
+            ['quarter' => $quarter, 'year' => $year],
+            [
+                'winners'                => $winners,
+                'finalised_with_pending' => $pendingCount > 0,
+                'pending_count'          => $pendingCount,
+                'published_by'           => $request->user()->id,
+                'published_at'           => now(),
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'published_at' => $publication->published_at->toIso8601String(),
+            'pending_count' => $pendingCount,
+            'winner_count' => count(TopScorers::flatten($winners)),
         ]);
     }
 

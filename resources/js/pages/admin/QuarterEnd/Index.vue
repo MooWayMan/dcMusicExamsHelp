@@ -37,6 +37,26 @@ interface Teacher {
   students: Student[]
 }
 
+interface AwardWinner {
+  name: string
+  full_name: string
+  score: number
+  instrument: string
+  grade: string
+  // Teacher routing — drives the "Copy Top Scorer Email" button. Email
+  // can be null if neither the order applicant nor any linked contact
+  // has a stored email (rare, but the UI handles it gracefully).
+  teacher_name: string | null
+  teacher_email: string | null
+  is_parent_booking: boolean
+  booking_role: 'parent' | 'self' | null
+}
+
+interface GroupAwards {
+  distinction: AwardWinner[]
+  merit: AwardWinner[]
+}
+
 interface Summary {
   total_entries: number
   with_results: number
@@ -44,8 +64,29 @@ interface Summary {
   total_fees: string
   teacher_count: number
   has_pending: boolean
+  // Legacy single-winner fields — overall top across both groups.
+  // Kept for the summary stat card; per-group winners live in top_scorers.
   showstopper: { name: string; full_name: string; score: number; instrument: string } | null
   centre_stage: { name: string; full_name: string; score: number; instrument: string } | null
+  // Awards split by grade group (matches the public Awards banner):
+  //   • Initial–5  (Initial, Grades 1–5)
+  //   • 6–8        (Grades 6–8)
+  // Each leaf is an array of tied winners (empty when no winner in that band).
+  top_scorers: {
+    initial_5: GroupAwards
+    '6_8': GroupAwards
+  }
+  // True when Paul has overridden the pending-gate via ?finalise=1.
+  // Drives a "Preview only — N pending" warning banner in Step 3.
+  finalised_with_pending: boolean
+  // Snapshot of an existing publication for this quarter, if any. Once
+  // published, the Publish button switches to "Already published" and
+  // the per-winner email buttons remain available for re-sending.
+  publication: {
+    published_at: string
+    finalised_with_pending: boolean
+    pending_count: number
+  } | null
 }
 
 interface EligibleTeacher {
@@ -97,6 +138,301 @@ const batchResult = computed(() =>
     ?? (page.props as any).persistedBatchResult
     ?? null
 )
+
+// Per-group award winners — pulled from the new top_scorers payload, with
+// safe fallbacks so the page still renders if the controller returns the
+// legacy summary shape (e.g. an old cached response).
+const initial5 = computed<GroupAwards>(() => props.summary.top_scorers?.initial_5 ?? { distinction: [], merit: [] })
+const grades68 = computed<GroupAwards>(() => props.summary.top_scorers?.['6_8'] ?? { distinction: [], merit: [] })
+const hasAnyAward = computed(() =>
+  initial5.value.distinction.length > 0
+  || initial5.value.merit.length > 0
+  || grades68.value.distinction.length > 0
+  || grades68.value.merit.length > 0
+)
+
+// Production data stores grades as either "Grade 1" or bare "1" or "Initial"
+// — normalise to a single human-readable form. "Initial" never gets a
+// "Grade" prefix per Trinity convention.
+const formatGrade = (g: unknown): string => {
+  if (g === null || g === undefined || g === '') return ''
+  const trimmed = String(g).trim()
+  const normalised = trimmed.replace(/^grade\s+/i, '')
+  if (normalised === 'Initial') return 'Initial'
+  return `Grade ${normalised}`
+}
+
+// "Preview leaders so far" — reloads with ?finalise=1 (param name kept for
+// backend compatibility, but it's a preview, not a commitment). Backend
+// recalculates awards from whatever scores ARE in. Nothing is published,
+// no certificates are generated, no emails are sent. Refreshing the page
+// without the param re-hides the awards.
+function finaliseNow() {
+  router.get('/admin/quarter-end', {
+    quarter: props.quarter,
+    year: props.year,
+    finalise: 1,
+    step: 3, // bring user back to Step 3 (Prize Draws & Top Scorers)
+  }, { preserveState: true, preserveScroll: true })
+}
+
+const publishing = ref(false)
+const generatingCerts = ref(false)
+// After "Generate top-scorer certs" runs, we hold the manifest in memory so
+// the per-winner Download Cert links work without a page reload. Keyed by
+// candidate full_name → standalone_path so we can match against the winner
+// rows in the four award panels.
+const topScorerCertPaths = ref<Record<string, string>>({})
+
+// "Generate top-scorer certs" — produces ONLY the 4 (+ ties) Showstopper /
+// Centre Stage PDFs in storage/app/certificates/{year}-Q{q}/top-scorers/.
+// Doesn't touch the per-student certs or ZIPs, so it's much faster than
+// re-running the full batch.
+async function generateTopScorerCerts() {
+  generatingCerts.value = true
+  try {
+    const res = await fetch('/admin/certificates/top-scorers', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-XSRF-TOKEN': getXsrfToken(),
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({ quarter: props.quarter, year: props.year }),
+    })
+
+    if (! res.ok) {
+      const data = await res.json().catch(() => ({}))
+      throw new Error(data.error ?? `HTTP ${res.status}`)
+    }
+    const data = await res.json()
+
+    // Index by full name so the Vue lookup-by-winner works.
+    const map: Record<string, string> = {}
+    for (const c of data.certs ?? []) {
+      map[c.name] = c.download_url
+    }
+    topScorerCertPaths.value = map
+    alert(`Generated ${data.count} top-scorer certificate${data.count === 1 ? '' : 's'}. Use the "Download Cert" button next to each winner to grab the PDF.`)
+  } catch (e: any) {
+    alert(`Cert generation failed: ${e.message ?? 'unknown error'}`)
+    console.error(e)
+  } finally {
+    generatingCerts.value = false
+  }
+}
+
+// "Publish top-scorer awards" — POSTs to the snapshot endpoint. The public
+// Recognition page reads from the snapshot, so this is the moment the four
+// winners go live. Idempotent: re-clicking refreshes the snapshot.
+async function publishTopScorers() {
+  const alreadyPublished = !!props.summary.publication
+  const confirmMessage = alreadyPublished
+    ? `This quarter's top scorers were already published on ${new Date(props.summary.publication!.published_at).toLocaleDateString('en-GB')}.\n\nRe-publishing will overwrite the snapshot with the current leaders. Continue?`
+    : `Publish top-scorer awards for ${props.quarterLabel} now?\n\n• The four winners will appear on the public Recognition page immediately.\n• ${props.summary.pending} result${props.summary.pending === 1 ? '' : 's'} still pending — those won't change the published list. If a late score later beats a leader, top up the gift token manually.\n\nContinue?`
+
+  if (! window.confirm(confirmMessage)) return
+
+  publishing.value = true
+  try {
+    const res = await fetch('/admin/quarter-end/publish-top-scorers', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-XSRF-TOKEN': getXsrfToken(),
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({ quarter: props.quarter, year: props.year }),
+    })
+
+    if (! res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+    alert(`Published! ${data.winner_count} winner${data.winner_count === 1 ? '' : 's'} are now live on the public Recognition page.`)
+    // Reload so the page reflects the new publication state. step=3 keeps
+    // us on the Prize Draws / Top Scorers tab.
+    router.get('/admin/quarter-end', {
+      quarter: props.quarter,
+      year: props.year,
+      finalise: 1,
+      step: 3,
+    }, { preserveState: true, preserveScroll: true })
+  } catch (e) {
+    alert('Publish failed. Check the network tab and try again, or message me with the error.')
+    console.error(e)
+  } finally {
+    publishing.value = false
+  }
+}
+
+// ── Top-scorer award helpers ──────────────────────────────────────────────
+//
+// Gift token split. Paul's rule (matches public Recognition page wording):
+//   1 winner  → £20
+//   2 winners → £10 each
+//   3+        → £5 each (minimum £5)
+function tokenSplit(n: number): number {
+  if (n <= 0) return 0
+  if (n === 1) return 20
+  if (n === 2) return 10
+  return 5
+}
+
+type AwardKey = 'initial_5_distinction' | 'initial_5_merit' | '6_8_distinction' | '6_8_merit'
+
+interface AwardMeta {
+  certificate: 'Showstopper' | 'Centre Stage'
+  groupLabel: 'Initial–5' | 'Grades 6–8'
+  bandLabel: 'Highest Distinction' | 'Highest Merit'
+}
+
+const AWARD_META: Record<AwardKey, AwardMeta> = {
+  initial_5_distinction: { certificate: 'Showstopper',  groupLabel: 'Initial–5',   bandLabel: 'Highest Distinction' },
+  initial_5_merit:       { certificate: 'Centre Stage', groupLabel: 'Initial–5',   bandLabel: 'Highest Merit'       },
+  '6_8_distinction':     { certificate: 'Showstopper',  groupLabel: 'Grades 6–8',  bandLabel: 'Highest Distinction' },
+  '6_8_merit':           { certificate: 'Centre Stage', groupLabel: 'Grades 6–8',  bandLabel: 'Highest Merit'       },
+}
+
+// Greeting name resolver. Two cases Paul wants distinct:
+//   • "Mrs Fakerson" → "Mrs Fakerson"  (keep title + surname)
+//   • "Sarah Mitchell" → "Sarah"        (drop surname, just first name)
+// Detects titles case-insensitively and tolerates trailing dots
+// ("Mr." / "Dr.") which appear on some imported teacher names.
+function recipientGreetingName(teacherName: string | null | undefined): string {
+  if (! teacherName) return 'there'
+  const parts = teacherName.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return 'there'
+
+  const titles = ['mr', 'mrs', 'ms', 'miss', 'mx', 'dr', 'rev', 'sir', 'dame', 'prof']
+  const firstNorm = parts[0].toLowerCase().replace(/\.$/, '')
+
+  if (titles.includes(firstNorm)) {
+    // Title-prefixed name → "Mrs Fakerson" (title + surname). If there's
+    // only the title and nothing else, fall through to using it on its
+    // own (rare edge case — better than greeting "there").
+    if (parts.length < 2) return parts[0]
+    return `${parts[0]} ${parts[parts.length - 1]}`
+  }
+
+  // No title — first name only.
+  return parts[0]
+}
+
+function copyTopScorerEmail(winner: AwardWinner, awardKey: AwardKey, tieCount: number) {
+  const meta = AWARD_META[awardKey]
+  const split = tokenSplit(tieCount)
+  const recipientFirstName = recipientGreetingName(winner.teacher_name)
+  const winnerInitial = winner.name // already first-name-and-initial from controller
+
+  // Tie sentence — three cases:
+  //   • Sole winner       → full £20.
+  //   • 2-way tie         → £20 split equally (£10 each).
+  //   • 3+ way tie        → each winner gets £5 (the minimum-£5 rule kicks
+  //                         in, so it's NOT a clean split of £20 — Paul
+  //                         pays £15 for a 3-way, £20 for a 4-way, more
+  //                         than £20 for 5+).
+  let tieSentence: string
+  if (tieCount === 1) {
+    tieSentence = `As the sole top scorer in this category, ${winnerInitial} receives the full £${split} gift token.`
+  } else if (tieCount === 2) {
+    tieSentence = `It was a 2-way tie at the top score, so the £20 gift token is split equally — ${winnerInitial}'s share is £${split}.`
+  } else {
+    tieSentence = `It was a ${tieCount}-way tie at the top score, so each winner receives a £${split} gift token — ${winnerInitial}'s share is £${split}.`
+  }
+
+  // Two voices — teacher (third-person about the candidate) vs parent
+  // (second-person about your child / the candidate). Self-applicants get
+  // a 'you-won-it' tone.
+  let body: string
+  if (winner.booking_role === 'self') {
+    body = `Hi ${recipientFirstName},
+
+Wonderful news — you've been awarded the **${meta.bandLabel} (${meta.groupLabel})** for ${props.quarterLabel}!
+
+You scored ${winner.score} marks in ${winner.instrument} Grade ${winner.grade} — a brilliant achievement.
+
+${tieSentence.replace(`${winnerInitial}'s share`, 'your share').replace(`${winnerInitial} receives`, 'you receive')}
+
+Your personalised ${meta.certificate} Certificate is attached to this email — print it, display it on a tablet for photos, or share it on social media.
+
+Here's the Amazon gift card code:
+
+[PASTE GIFT CARD CODE HERE]
+
+You can add this to any Amazon account — it's not tied to a name or email.
+
+You'll also appear on the Recognition page at https://musicexams.help/recognition.
+
+Huge congratulations — and thank you for choosing centre 120.
+
+Best wishes,
+Paul Sheridan`
+  } else if (winner.is_parent_booking) {
+    body = `Hi ${recipientFirstName},
+
+Wonderful news — ${winnerInitial} has been awarded the **${meta.bandLabel} (${meta.groupLabel})** for ${props.quarterLabel}!
+
+They scored ${winner.score} marks in ${winner.instrument} Grade ${winner.grade} — a brilliant achievement.
+
+${tieSentence}
+
+${winnerInitial}'s personalised ${meta.certificate} Certificate is attached to this email — print it, display it on a tablet for photos, or share it on social media.
+
+Here's the Amazon gift card code:
+
+[PASTE GIFT CARD CODE HERE]
+
+You can add this to any Amazon account — it's not tied to a name or email.
+
+${winnerInitial} will also appear on the Recognition page at https://musicexams.help/recognition.
+
+Huge congratulations to ${winnerInitial} — and thank you for choosing centre 120.
+
+Best wishes,
+Paul Sheridan`
+  } else {
+    body = `Hi ${recipientFirstName},
+
+Wonderful news — one of your students, ${winnerInitial}, has been awarded the **${meta.bandLabel} (${meta.groupLabel})** for ${props.quarterLabel}!
+
+They scored ${winner.score} marks in ${winner.instrument} Grade ${winner.grade} — a brilliant achievement.
+
+${tieSentence}
+
+${winnerInitial}'s personalised ${meta.certificate} Certificate is attached to this email — please pass it on to them along with the gift card code below.
+
+Here's the Amazon gift card code for you to pass on to ${winnerInitial}'s parent/guardian:
+
+[PASTE GIFT CARD CODE HERE]
+
+It can be added to any Amazon account — it's not tied to a name or email.
+
+${winnerInitial} will also appear on the Recognition page at https://musicexams.help/recognition.
+
+Congratulations to them — and well done to you for entering them through centre 120!
+
+Best wishes,
+Paul
+
+---
+
+P.S. Here's a suggested message you can copy and paste when you forward this on to ${winnerInitial}'s parent/guardian — feel free to tweak or skip:
+
+"Hi [Parent Name], wonderful news — musicExams.help (centre 120) have just awarded ${winnerInitial} the ${meta.bandLabel} (${meta.groupLabel}) for ${props.quarterLabel} for their brilliant ${winner.score}-mark performance in ${winner.instrument} Grade ${winner.grade}. Their personalised ${meta.certificate} Certificate is attached, along with an Amazon gift card to celebrate. They'll also appear on the Recognition page at https://musicexams.help/recognition (first name and surname initial only — let me know if you'd like the full name shown). Huge congratulations to ${winnerInitial}! — [Your Name]"`
+  }
+
+  navigator.clipboard.writeText(body)
+  const recipientNote = winner.teacher_email
+    ? `Now click "Open in Gmail" to compose to ${winner.teacher_email}, attach ${winner.full_name}'s ${meta.certificate} Certificate PDF, and send.`
+    : 'No email is on file for this recipient — you\'ll need to look it up. The template is on your clipboard.'
+  alert(`Top-scorer email copied to clipboard.\n\n${recipientNote}`)
+}
+
+function openGmailComposeForWinner(winner: AwardWinner, awardKey: AwardKey) {
+  const meta = AWARD_META[awardKey]
+  const subject = encodeURIComponent(`Top Scorer Award — ${meta.certificate} Certificate — ${winner.name}`)
+  const to = encodeURIComponent(winner.teacher_email ?? '')
+  window.open(`https://mail.google.com/mail/?view=cm&to=${to}&su=${subject}`, '_blank')
+}
 
 // Track which teachers have been "done" — initialise from database
 const completedTeachers = ref<Record<string, boolean>>(
@@ -152,7 +488,16 @@ const remainingCertsToSend = computed(() =>
 // Step tracking — only auto-advance to step 2 when the batch has JUST run
 // (flash data exists). Loading the page on a later visit should start on
 // step 1 so download links are visible, even though files exist on disk.
-const currentStep = ref((page.props as any).flash?.batch_result ? 2 : 1)
+// Preserve the step across Inertia navigations triggered by Preview /
+// Publish (which both do `router.get(...)` and would otherwise drop us
+// back on Step 1). We read `?step=N` from the URL on mount, and our
+// reload calls pass `step: 3` so the user lands back where they were.
+const currentStep = ref<number>((() => {
+  const params = new URLSearchParams(window.location.search)
+  const stepParam = parseInt(params.get('step') ?? '', 10)
+  if (stepParam >= 1 && stepParam <= 3) return stepParam
+  return (page.props as any).flash?.batch_result ? 2 : 1
+})())
 
 // Batch generate
 const batchGenerating = ref(false)
@@ -192,16 +537,27 @@ function copyEmailTemplate(teacher: Teacher) {
     ? `\n\nI'm also pleased to award you a ${teacher.badge_tier} Certificate of Appreciation for entering ${teacher.total_entries}+ candidates through centre 120 this quarter. Thank you for your continued support!\n`
     : ''
 
-  // Top scorer mentions (Showstopper + Centre Stage)
-  const showstopperText = props.summary.showstopper
-    ? `Showstopper (highest Distinction): ${props.summary.showstopper.name} with ${props.summary.showstopper.score} marks on ${props.summary.showstopper.instrument}`
-    : ''
-  const centreStageText = props.summary.centre_stage
-    ? `Centre Stage (highest Merit): ${props.summary.centre_stage.name} with ${props.summary.centre_stage.score} marks on ${props.summary.centre_stage.instrument}`
-    : ''
-  const topScorerParts = [showstopperText, centreStageText].filter(Boolean)
-  const topScorerText = topScorerParts.length
-    ? `\n\nQuarterly award winners:\n  • ${topScorerParts.join('\n  • ')}\nBoth receive a gift token and a personalised certificate.\n`
+  // Top scorer mentions — four awards per quarter (matches public Awards
+  // banner): Highest Distinction & Highest Merit in each of two groups
+  // (Initial–5 and 6–8). Ties are listed together (gift token is split).
+  const formatWinners = (winners: AwardWinner[]) =>
+    winners
+      .map(w => `${w.name} — ${w.instrument} Grade ${w.grade} — ${w.score} marks`)
+      .join(' & ')
+
+  const buildAwardLine = (label: string, winners: AwardWinner[]) =>
+    winners.length ? `${label}: ${formatWinners(winners)}` : ''
+
+  const top = props.summary.top_scorers
+  const awardLines = [
+    buildAwardLine('Highest Distinction (Initial–5)', top?.initial_5?.distinction ?? []),
+    buildAwardLine('Highest Merit (Initial–5)',       top?.initial_5?.merit       ?? []),
+    buildAwardLine('Highest Distinction (Grades 6–8)', top?.['6_8']?.distinction  ?? []),
+    buildAwardLine('Highest Merit (Grades 6–8)',       top?.['6_8']?.merit        ?? []),
+  ].filter(Boolean)
+
+  const topScorerText = awardLines.length
+    ? `\n\nQuarterly award winners:\n  • ${awardLines.join('\n  • ')}\nWinners receive a gift token (split equally if tied) and a personalised certificate.\n`
     : ''
 
   // Student prize draw winner — teacher needs to pass the gift token on
@@ -215,7 +571,7 @@ function copyEmailTemplate(teacher: Teacher) {
     ? `\n\nStudent Prize Draw\nThe winner of the £50 gift token this quarter is ${winnerShortName} (${studentWinner.value.instrument} Grade ${studentWinner.value.grade}) — congratulations! Every student entered through centre 120 was in the draw.${studentWinner.value.teacher === teacher.teacher_name ? ' As their teacher, I\'ll be in touch with you separately about getting the prize to them.' : ''}\n`
     : ''
 
-  const firstName = teacher.teacher_name.split(' ')[0]
+  const firstName = recipientGreetingName(teacher.teacher_name)
 
   const template = `Hi ${firstName},
 
@@ -287,7 +643,7 @@ P.S. Here's a message you can send to parents with their child's certificate:
  * No teacher-prize-draw talk, no Faber pitch, short and warm.
  */
 function copyParentDirectTemplate(teacher: Teacher) {
-  const firstName = teacher.teacher_name.split(' ')[0]
+  const firstName = recipientGreetingName(teacher.teacher_name)
   const count = teacher.students.length
 
   // Use candidates' first names in prose instead of assuming the applicant
@@ -333,7 +689,7 @@ Paul Sheridan`
  * whole voice is second-person.
  */
 function copySelfApplicantTemplate(teacher: Teacher) {
-  const firstName = teacher.teacher_name.split(' ')[0]
+  const firstName = recipientGreetingName(teacher.teacher_name)
   const count = teacher.students.length
   const certWord = count === 1 ? 'certificate is attached below' : 'certificates are attached below'
   const examWord = count === 1 ? 'Trinity exam' : 'Trinity exams'
@@ -381,7 +737,7 @@ function openGmailCompose(teacher: Teacher) {
 
 // Copy prize winner email (to send to the winning student's teacher)
 function copyWinnerEmail(teacher: Teacher) {
-  const firstName = teacher.teacher_name.split(' ')[0]
+  const firstName = recipientGreetingName(teacher.teacher_name)
   const winner = studentWinner.value
   if (!winner) return
 
@@ -410,7 +766,7 @@ Congratulations to them — and well done to you for entering them through centr
 
 // Copy heads-up email (to send from OLD email address)
 function copyHeadsUpEmail(teacher: Teacher) {
-  const firstName = teacher.teacher_name.split(' ')[0]
+  const firstName = recipientGreetingName(teacher.teacher_name)
 
   const template = `Hi ${firstName},
 
@@ -877,34 +1233,234 @@ const teacherWinner = computed(() => {
 
           <div class="space-y-6">
 
-            <!-- Top Scorers — only shown when all results are in -->
-            <div v-if="summary.has_pending" class="rounded-lg border border-brand-border bg-brand-surface-soft p-4">
-              <div class="flex items-center gap-2">
-                <Clock class="h-5 w-5 text-brand-text-soft" />
-                <span class="font-semibold text-brand-text-soft">Top scorer awards will appear once all results are in ({{ summary.pending }} still pending)</span>
+            <!-- Top Scorers — the public Recognition page only shows
+                 awards once (a) the prize draw has been run AND (b) no
+                 pending results, so this Step-3 panel is admin-only.
+                 The "Preview leaders so far" button just bypasses the
+                 pending gate on this page — it doesn't publish, generate
+                 certs, or send emails. Pure peek. -->
+            <div v-if="summary.has_pending && !summary.finalised_with_pending" class="rounded-lg border border-brand-border bg-brand-surface-soft p-4">
+              <div class="flex items-start gap-3">
+                <Clock class="h-5 w-5 shrink-0 text-brand-text-soft mt-0.5" />
+                <div class="flex-1">
+                  <p class="font-semibold text-brand-text-soft">Top scorer awards will appear once all results are in ({{ summary.pending }} still pending)</p>
+                  <p class="mt-1 text-sm text-brand-text-soft">Want a sneak peek? You can preview who's leading right now. Nothing gets published, no certificates are generated, no emails are sent — it's just for your eyes.</p>
+                  <button
+                    class="mt-3 inline-flex items-center gap-2 rounded-lg border border-brand-accent bg-brand-accent/10 px-3 py-2 text-sm font-semibold text-brand-accent hover:bg-brand-accent hover:text-white transition"
+                    @click="finaliseNow"
+                  >
+                    <Sparkles class="h-4 w-4" /> Preview leaders so far
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div v-else-if="summary.showstopper || summary.centre_stage" class="space-y-3">
-              <div v-if="summary.showstopper" class="rounded-lg border border-yellow-300 bg-yellow-50 p-4">
-                <div class="flex items-center gap-2 mb-1">
-                  <Star class="h-5 w-5 text-yellow-600" />
-                  <span class="font-bold text-yellow-800">Showstopper — Highest Distinction — {{ quarterLabel }}</span>
+            <!-- Preview banner shown when awards are revealed despite
+                 pending results. Makes it visually distinct so it's
+                 obviously a peek, not the final published list. -->
+            <div v-if="summary.finalised_with_pending" class="rounded-lg border-2 border-amber-400 bg-amber-50 p-4">
+              <div class="flex items-start gap-3">
+                <Sparkles class="h-5 w-5 shrink-0 text-amber-600 mt-0.5" />
+                <div>
+                  <p class="font-bold text-amber-900">Preview only — {{ summary.pending }} result{{ summary.pending === 1 ? '' : 's' }} still pending</p>
+                  <p class="mt-1 text-sm text-amber-800">These are the current leaders based on the scores in so far. <strong>Nothing is published</strong> — the public Recognition page won't show top-scorer awards until the quarter is fully finalised (all results in + prize draw run). Click around, copy emails to test, or just see who's winning. Refresh without the preview link to re-hide.</p>
                 </div>
-                <p class="text-sm text-yellow-700">
-                  {{ summary.showstopper.name }} — {{ summary.showstopper.instrument }} — {{ summary.showstopper.score }} marks
-                </p>
-                <p class="mt-1 text-xs text-yellow-600">Full name (admin only): {{ summary.showstopper.full_name }}</p>
               </div>
-              <div v-if="summary.centre_stage" class="rounded-lg border border-brand-accent/30 bg-brand-accent/5 p-4">
-                <div class="flex items-center gap-2 mb-1">
-                  <Trophy class="h-5 w-5 text-brand-accent" />
-                  <span class="font-bold text-brand-text">Centre Stage — Highest Merit — {{ quarterLabel }}</span>
+            </div>
+
+            <!-- Empty-state when the awards block would otherwise be hidden.
+                 Happens for quarters with no scored Distinctions or Merits
+                 yet (e.g. early in a quarter). Explains WHY the cert-gen
+                 and Publish buttons aren't here. -->
+            <div v-if="(summary.finalised_with_pending || !summary.has_pending) && !hasAnyAward" class="rounded-lg border border-brand-border bg-brand-surface-soft p-4">
+              <div class="flex items-start gap-3">
+                <Trophy class="h-5 w-5 shrink-0 text-brand-text-soft mt-0.5" />
+                <div>
+                  <p class="font-semibold text-brand-text">No top-scorer awards in this quarter yet</p>
+                  <p class="mt-1 text-sm text-brand-text-soft">No candidates have been awarded a Merit or Distinction in {{ quarterLabel }} so far. The four winners (Initial–5 + 6–8 × Distinction + Merit) will appear here once results come in. The <strong>Generate top-scorer certs</strong> and <strong>Publish</strong> buttons will follow.</p>
                 </div>
-                <p class="text-sm text-brand-text-soft">
-                  {{ summary.centre_stage.name }} — {{ summary.centre_stage.instrument }} — {{ summary.centre_stage.score }} marks
-                </p>
-                <p class="mt-1 text-xs text-brand-text-soft">Full name (admin only): {{ summary.centre_stage.full_name }}</p>
+              </div>
+            </div>
+
+            <div v-if="hasAnyAward" class="space-y-4">
+              <!-- "Generate top-scorer certs" — fast standalone, just the
+                   4 PDFs (plus any ties), without re-running the full
+                   batch. After it runs, each winner row gets a download
+                   link below. -->
+              <div class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-brand-border bg-brand-surface-soft p-3">
+                <div class="flex-1">
+                  <p class="text-sm font-semibold text-brand-text">Top-scorer certificates</p>
+                  <p class="text-xs text-brand-text-soft">Generate just the 4 (+ ties) Showstopper / Centre Stage PDFs — much faster than re-running the full batch.</p>
+                </div>
+                <button
+                  class="inline-flex items-center gap-2 rounded-lg bg-brand-accent px-3 py-2 text-sm font-semibold text-white hover:opacity-90 transition disabled:opacity-50"
+                  :disabled="generatingCerts"
+                  @click="generateTopScorerCerts"
+                >
+                  <Sparkles class="h-4 w-4" />
+                  {{ generatingCerts ? 'Generating…' : 'Generate top-scorer certs' }}
+                </button>
+              </div>
+
+              <!-- Initial–5 group -->
+              <div>
+                <h4 class="mb-2 text-sm font-bold uppercase tracking-wide text-brand-text-soft">Initial–Grade 5</h4>
+                <div class="space-y-3">
+                  <div v-if="initial5.distinction.length" class="rounded-lg border border-yellow-300 bg-yellow-50 p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                      <Star class="h-5 w-5 text-yellow-600" />
+                      <span class="font-bold text-yellow-800">
+                        Showstopper — Highest Distinction (Initial–5) — {{ quarterLabel }}
+                        <span v-if="initial5.distinction.length > 1" class="ml-1 text-xs font-normal">— {{ initial5.distinction.length }}-way tie · £{{ tokenSplit(initial5.distinction.length) }} each</span>
+                      </span>
+                    </div>
+                    <div v-for="w in initial5.distinction" :key="`i5d-${w.full_name}`" class="mt-2 flex flex-wrap items-center gap-2">
+                      <p class="flex-1 text-sm text-yellow-800">
+                        {{ w.name }} — {{ w.instrument }} {{ formatGrade(w.grade) }} — {{ w.score }} marks
+                        <span class="ml-1 text-xs text-yellow-700">(admin: {{ w.full_name }} · teacher: {{ w.teacher_name ?? '—' }})</span>
+                      </p>
+                      <a v-if="topScorerCertPaths[w.full_name]" :href="topScorerCertPaths[w.full_name]" target="_blank" class="inline-flex items-center gap-1 rounded-md border border-yellow-700 bg-white px-2.5 py-1 text-xs font-semibold text-yellow-800 hover:bg-yellow-700 hover:text-white transition">
+                        <Download class="h-3 w-3" /> Download Cert
+                      </a>
+                      <button class="inline-flex items-center gap-1 rounded-md border border-yellow-700 bg-white px-2.5 py-1 text-xs font-semibold text-yellow-800 hover:bg-yellow-700 hover:text-white transition" @click="copyTopScorerEmail(w, 'initial_5_distinction', initial5.distinction.length)">
+                        <Copy class="h-3 w-3" /> Copy Email
+                      </button>
+                      <button v-if="w.teacher_email" class="inline-flex items-center gap-1 rounded-md border border-yellow-700 bg-yellow-700 px-2.5 py-1 text-xs font-semibold text-white hover:opacity-90 transition" @click="openGmailComposeForWinner(w, 'initial_5_distinction')">
+                        <ExternalLink class="h-3 w-3" /> Open Gmail
+                      </button>
+                    </div>
+                  </div>
+                  <div v-if="initial5.merit.length" class="rounded-lg border border-brand-accent/30 bg-brand-accent/5 p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                      <Trophy class="h-5 w-5 text-brand-accent" />
+                      <span class="font-bold text-brand-text">
+                        Centre Stage — Highest Merit (Initial–5) — {{ quarterLabel }}
+                        <span v-if="initial5.merit.length > 1" class="ml-1 text-xs font-normal">— {{ initial5.merit.length }}-way tie · £{{ tokenSplit(initial5.merit.length) }} each</span>
+                      </span>
+                    </div>
+                    <div v-for="w in initial5.merit" :key="`i5m-${w.full_name}`" class="mt-2 flex flex-wrap items-center gap-2">
+                      <p class="flex-1 text-sm text-brand-text">
+                        {{ w.name }} — {{ w.instrument }} {{ formatGrade(w.grade) }} — {{ w.score }} marks
+                        <span class="ml-1 text-xs text-brand-text-soft">(admin: {{ w.full_name }} · teacher: {{ w.teacher_name ?? '—' }})</span>
+                      </p>
+                      <a v-if="topScorerCertPaths[w.full_name]" :href="topScorerCertPaths[w.full_name]" target="_blank" class="inline-flex items-center gap-1 rounded-md border border-brand-accent bg-white px-2.5 py-1 text-xs font-semibold text-brand-accent hover:bg-brand-accent hover:text-white transition">
+                        <Download class="h-3 w-3" /> Download Cert
+                      </a>
+                      <button class="inline-flex items-center gap-1 rounded-md border border-brand-accent bg-white px-2.5 py-1 text-xs font-semibold text-brand-accent hover:bg-brand-accent hover:text-white transition" @click="copyTopScorerEmail(w, 'initial_5_merit', initial5.merit.length)">
+                        <Copy class="h-3 w-3" /> Copy Email
+                      </button>
+                      <button v-if="w.teacher_email" class="inline-flex items-center gap-1 rounded-md border border-brand-accent bg-brand-accent px-2.5 py-1 text-xs font-semibold text-white hover:opacity-90 transition" @click="openGmailComposeForWinner(w, 'initial_5_merit')">
+                        <ExternalLink class="h-3 w-3" /> Open Gmail
+                      </button>
+                    </div>
+                  </div>
+                  <p v-if="!initial5.distinction.length && !initial5.merit.length" class="text-sm italic text-brand-text-soft">
+                    No Distinction or Merit results in the Initial–5 group this quarter.
+                  </p>
+                </div>
+              </div>
+
+              <!-- 6-8 group -->
+              <div>
+                <h4 class="mb-2 text-sm font-bold uppercase tracking-wide text-brand-text-soft">Grades 6–8</h4>
+                <div class="space-y-3">
+                  <div v-if="grades68.distinction.length" class="rounded-lg border border-yellow-300 bg-yellow-50 p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                      <Star class="h-5 w-5 text-yellow-600" />
+                      <span class="font-bold text-yellow-800">
+                        Showstopper — Highest Distinction (6–8) — {{ quarterLabel }}
+                        <span v-if="grades68.distinction.length > 1" class="ml-1 text-xs font-normal">— {{ grades68.distinction.length }}-way tie · £{{ tokenSplit(grades68.distinction.length) }} each</span>
+                      </span>
+                    </div>
+                    <div v-for="w in grades68.distinction" :key="`g68d-${w.full_name}`" class="mt-2 flex flex-wrap items-center gap-2">
+                      <p class="flex-1 text-sm text-yellow-800">
+                        {{ w.name }} — {{ w.instrument }} {{ formatGrade(w.grade) }} — {{ w.score }} marks
+                        <span class="ml-1 text-xs text-yellow-700">(admin: {{ w.full_name }} · teacher: {{ w.teacher_name ?? '—' }})</span>
+                      </p>
+                      <a v-if="topScorerCertPaths[w.full_name]" :href="topScorerCertPaths[w.full_name]" target="_blank" class="inline-flex items-center gap-1 rounded-md border border-yellow-700 bg-white px-2.5 py-1 text-xs font-semibold text-yellow-800 hover:bg-yellow-700 hover:text-white transition">
+                        <Download class="h-3 w-3" /> Download Cert
+                      </a>
+                      <button class="inline-flex items-center gap-1 rounded-md border border-yellow-700 bg-white px-2.5 py-1 text-xs font-semibold text-yellow-800 hover:bg-yellow-700 hover:text-white transition" @click="copyTopScorerEmail(w, '6_8_distinction', grades68.distinction.length)">
+                        <Copy class="h-3 w-3" /> Copy Email
+                      </button>
+                      <button v-if="w.teacher_email" class="inline-flex items-center gap-1 rounded-md border border-yellow-700 bg-yellow-700 px-2.5 py-1 text-xs font-semibold text-white hover:opacity-90 transition" @click="openGmailComposeForWinner(w, '6_8_distinction')">
+                        <ExternalLink class="h-3 w-3" /> Open Gmail
+                      </button>
+                    </div>
+                  </div>
+                  <div v-if="grades68.merit.length" class="rounded-lg border border-brand-accent/30 bg-brand-accent/5 p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                      <Trophy class="h-5 w-5 text-brand-accent" />
+                      <span class="font-bold text-brand-text">
+                        Centre Stage — Highest Merit (6–8) — {{ quarterLabel }}
+                        <span v-if="grades68.merit.length > 1" class="ml-1 text-xs font-normal">— {{ grades68.merit.length }}-way tie · £{{ tokenSplit(grades68.merit.length) }} each</span>
+                      </span>
+                    </div>
+                    <div v-for="w in grades68.merit" :key="`g68m-${w.full_name}`" class="mt-2 flex flex-wrap items-center gap-2">
+                      <p class="flex-1 text-sm text-brand-text">
+                        {{ w.name }} — {{ w.instrument }} {{ formatGrade(w.grade) }} — {{ w.score }} marks
+                        <span class="ml-1 text-xs text-brand-text-soft">(admin: {{ w.full_name }} · teacher: {{ w.teacher_name ?? '—' }})</span>
+                      </p>
+                      <a v-if="topScorerCertPaths[w.full_name]" :href="topScorerCertPaths[w.full_name]" target="_blank" class="inline-flex items-center gap-1 rounded-md border border-brand-accent bg-white px-2.5 py-1 text-xs font-semibold text-brand-accent hover:bg-brand-accent hover:text-white transition">
+                        <Download class="h-3 w-3" /> Download Cert
+                      </a>
+                      <button class="inline-flex items-center gap-1 rounded-md border border-brand-accent bg-white px-2.5 py-1 text-xs font-semibold text-brand-accent hover:bg-brand-accent hover:text-white transition" @click="copyTopScorerEmail(w, '6_8_merit', grades68.merit.length)">
+                        <Copy class="h-3 w-3" /> Copy Email
+                      </button>
+                      <button v-if="w.teacher_email" class="inline-flex items-center gap-1 rounded-md border border-brand-accent bg-brand-accent px-2.5 py-1 text-xs font-semibold text-white hover:opacity-90 transition" @click="openGmailComposeForWinner(w, '6_8_merit')">
+                        <ExternalLink class="h-3 w-3" /> Open Gmail
+                      </button>
+                    </div>
+                  </div>
+                  <p v-if="!grades68.distinction.length && !grades68.merit.length" class="text-sm italic text-brand-text-soft">
+                    No Distinction or Merit results in the 6–8 group this quarter.
+                  </p>
+                </div>
+              </div>
+
+              <!-- PUBLISH — pushes the snapshot live to the public
+                   Recognition page. Idempotent: re-pressing refreshes
+                   the snapshot. Disabled state once published. -->
+              <div class="rounded-lg border-2 border-brand-success/40 bg-brand-success/5 p-4">
+                <div class="flex items-start gap-3">
+                  <Trophy class="h-5 w-5 shrink-0 text-brand-success mt-0.5" />
+                  <div class="flex-1">
+                    <p v-if="summary.publication" class="font-bold text-brand-text">
+                      Already published on {{ new Date(summary.publication.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) }}
+                    </p>
+                    <p v-else class="font-bold text-brand-text">Ready to publish?</p>
+
+                    <p v-if="summary.publication" class="mt-1 text-sm text-brand-text-soft">
+                      The four winners are live on the
+                      <a href="/recognition" target="_blank" class="font-semibold text-brand-accent underline">Recognition page</a>.
+                      Re-publish to refresh the snapshot if anything has changed (e.g. a delayed score has come in).
+                    </p>
+                    <p v-else class="mt-1 text-sm text-brand-text-soft">
+                      One click puts the four top-scorer awards live on the public
+                      <a href="/recognition" target="_blank" class="font-semibold text-brand-accent underline">Recognition page</a>.
+                      The snapshot is locked in — late-arriving scores won't shuffle the list. If a delayed result later beats a leader, top up the gift token manually.
+                    </p>
+
+                    <button
+                      class="mt-3 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition disabled:opacity-50"
+                      :class="summary.publication
+                        ? 'border border-brand-success bg-white text-brand-success hover:bg-brand-success hover:text-white'
+                        : 'bg-brand-success text-white hover:opacity-90'"
+                      :disabled="publishing || !hasAnyAward"
+                      @click="publishTopScorers"
+                    >
+                      <Sparkles class="h-4 w-4" />
+                      {{ publishing
+                        ? 'Publishing…'
+                        : summary.publication
+                          ? 'Re-publish (refresh snapshot)'
+                          : 'Publish top-scorer awards' }}
+                    </button>
+                    <p v-if="!hasAnyAward" class="mt-2 text-xs text-brand-text-soft italic">
+                      Nothing to publish yet — no Distinctions or Merits have been recorded in this quarter.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -925,7 +1481,7 @@ const teacherWinner = computed(() => {
                   <span class="font-bold text-brand-text">Official Winner (recorded)</span>
                 </div>
                 <p class="text-lg font-bold text-brand-text">{{ studentRealWinner.winner_name }}</p>
-                <p class="text-sm text-brand-text-soft">{{ studentRealWinner.winner_instrument }} Grade {{ studentRealWinner.winner_grade }} — Teacher: {{ studentRealWinner.winner_teacher }}</p>
+                <p class="text-sm text-brand-text-soft">{{ studentRealWinner.winner_instrument }} {{ formatGrade(studentRealWinner.winner_grade) }} — Teacher: {{ studentRealWinner.winner_teacher }}</p>
                 <p class="mt-2 text-xs text-brand-text-soft">Drawn from {{ studentRealWinner.total_tickets }} tickets. This result is permanently recorded.</p>
               </div>
 
@@ -938,7 +1494,7 @@ const teacherWinner = computed(() => {
                     <span class="text-sm font-semibold text-brand-accent">Practice Draw #{{ testDrawCount.student }}</span>
                   </div>
                   <p class="font-bold text-brand-text">{{ studentTestWinner.name }}</p>
-                  <p class="text-xs text-brand-text-soft">{{ studentTestWinner.instrument }} Grade {{ studentTestWinner.grade }} — Teacher: {{ studentTestWinner.teacher }}</p>
+                  <p class="text-xs text-brand-text-soft">{{ studentTestWinner.instrument }} {{ formatGrade(studentTestWinner.grade) }} — Teacher: {{ studentTestWinner.teacher }}</p>
                   <p class="mt-1 text-xs text-brand-text-soft italic">This is just a practice — not recorded.</p>
                 </div>
 

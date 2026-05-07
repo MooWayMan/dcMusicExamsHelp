@@ -86,12 +86,14 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
         Route::get('quarter-end', [QuarterEndController::class, 'index'])->name('quarter-end.index');
         Route::post('quarter-end/draw', [QuarterEndController::class, 'runDraw'])->name('quarter-end.draw');
         Route::post('quarter-end/mark-sent', [QuarterEndController::class, 'markSent'])->name('quarter-end.mark-sent');
+        Route::post('quarter-end/publish-top-scorers', [QuarterEndController::class, 'publishTopScorers'])->name('quarter-end.publish-top-scorers');
 
         // Certificates — generate personalised certificates
         Route::get('certificates', [CertificateController::class, 'index'])->name('certificates.index');
         Route::post('certificates/student', [CertificateController::class, 'generateStudent'])->name('certificates.generate-student');
         Route::post('certificates/teacher', [CertificateController::class, 'generateTeacher'])->name('certificates.generate-teacher');
         Route::post('certificates/batch', [CertificateController::class, 'batchGenerate'])->name('certificates.batch');
+        Route::post('certificates/top-scorers', [CertificateController::class, 'generateTopScorers'])->name('certificates.top-scorers');
         Route::get('certificates/download/{filename}', [CertificateController::class, 'downloadZip'])
             ->name('certificates.download')
             ->where('filename', '.*');
