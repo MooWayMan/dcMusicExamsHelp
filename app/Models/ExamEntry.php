@@ -58,6 +58,7 @@ class ExamEntry extends Model
         'candidate_number',
         'candidate_name',
         'teacher_name',
+        'booking_role',
         'school_name',
         'show_full_name',
         'show_on_thank_you',

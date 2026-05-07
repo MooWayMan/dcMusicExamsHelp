@@ -468,3 +468,50 @@ test('winner with a parent-booking teacher_name is flagged is_parent_booking', f
         ->where('summary.top_scorers.6_8.distinction.0.is_parent_booking', true)
         ->where('summary.top_scorers.6_8.distinction.0.booking_role', 'parent'));
 });
+
+test('multi-type contact (teacher + parent) defaults to parent voice when no per-entry override', function () {
+    // Backwards-compatible default: if exam_entries.booking_role is NULL,
+    // the controller still falls back to contact-type inference. A multi-
+    // type contact whose first matched type is parent will resolve to a
+    // parent booking. This is the legacy behaviour — fixed in production
+    // by setting the per-entry booking_role override (see next test).
+    $bibby = \App\Models\ExamContact::create(['name' => 'Alexandra Bibby']);
+    $bibby->addType('teacher');
+    $bibby->addType('parent');
+
+    tsEntry([
+        'candidate_name' => 'Sam Williamson',
+        'grade' => '2',
+        'score' => 92,
+        'result' => 'Distinction',
+        'teacher_name' => 'Alexandra Bibby',
+        // booking_role intentionally NULL — fall back to inference.
+    ]);
+
+    $this->actingAs($this->admin)->get(TS_URL)->assertInertia(fn ($p) => $p
+        ->where('summary.top_scorers.initial_5.distinction.0.is_parent_booking', true)
+        ->where('summary.top_scorers.initial_5.distinction.0.booking_role', 'parent'));
+});
+
+test('per-entry booking_role override wins over contact-type inference', function () {
+    // Real-world fact: Alexandra Bibby is multi-type (teacher + parent
+    // legacy) but Sam Williamson is her STUDENT, not her son. Setting
+    // exam_entries.booking_role = "teacher" on Sam's entry routes the
+    // prize email through the teacher voice and uses her teacher email.
+    $bibby = \App\Models\ExamContact::create(['name' => 'Alexandra Bibby']);
+    $bibby->addType('teacher');
+    $bibby->addType('parent');
+
+    tsEntry([
+        'candidate_name' => 'Sam Williamson',
+        'grade' => '2',
+        'score' => 92,
+        'result' => 'Distinction',
+        'teacher_name' => 'Alexandra Bibby',
+        'booking_role' => 'teacher',  // ← explicit override
+    ]);
+
+    $this->actingAs($this->admin)->get(TS_URL)->assertInertia(fn ($p) => $p
+        ->where('summary.top_scorers.initial_5.distinction.0.is_parent_booking', false)
+        ->where('summary.top_scorers.initial_5.distinction.0.booking_role', 'teacher'));
+});

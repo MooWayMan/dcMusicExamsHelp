@@ -75,8 +75,13 @@ class QuarterEndController extends Controller
 
         // Group by teacher/parent name — each individual parent becomes their
         // own row (not lumped), so Paul can email each directly. Rows with no
-        // teacher_name at all stay in the catch-all bucket.
-        $teacherGroups = $allEntries->groupBy(fn ($e) => $e->teacher_name ?? 'Parent Bookings (no teacher assigned)');
+        // teacher_name at all (NULL or empty/whitespace string) stay in the
+        // catch-all bucket — empty strings used to slip through and create
+        // a phantom blank-name card with Paul's applicant_email attached.
+        $teacherGroups = $allEntries->groupBy(function ($e) {
+            $name = trim((string) ($e->teacher_name ?? ''));
+            return $name === '' ? 'Parent Bookings (no teacher assigned)' : $e->teacher_name;
+        });
 
         $teachers = $teacherGroups->map(function ($entries, $teacherName) use ($parentOrSelfLookup) {
             $withScores = $entries->filter(fn ($e) => $e->score !== null && $e->score >= 60);
@@ -90,17 +95,26 @@ class QuarterEndController extends Controller
             );
 
             // Is this row a parent/self booking?
+            //
+            // Per-entry override wins. exam_entries.booking_role is set
+            // per-row when the system needs to reflect a fact that the
+            // contact-type lookup can't infer — e.g. multi-type contacts
+            // like Alexandra Bibby (teacher + parent), where Sam Williamson
+            // is her STUDENT not her son. Set booking_role = 'teacher' on
+            // his entry and we use the teacher voice; if she enters her
+            // own kid, set 'parent' on that entry. Default NULL means
+            // "use contact-type inference" — works for the typical case.
             $parentContact = $parentOrSelfLookup->get(strtolower(trim($teacherName)));
-            $isParentBooking = $parentContact !== null;
-            // Map back to the legacy two-string label the rest of the page expects.
-            // 'self' is preserved as a label even though candidates are the new
-            // umbrella type — Vue templates branch on 'parent' vs 'self'.
-            $bookingRole = match (true) {
+            $entryRoles = $entries->pluck('booking_role')->filter()->unique();
+            $explicitRole = $entryRoles->count() === 1 ? $entryRoles->first() : null;
+            $contactInferredRole = match (true) {
                 $parentContact === null => null,
                 $parentContact->isParent() => 'parent',
                 $parentContact->isCandidate() => 'self',
                 default => null,
             };
+            $bookingRole = $explicitRole ?? $contactInferredRole;
+            $isParentBooking = $bookingRole === 'parent' || $bookingRole === 'self';
 
             // Get email — different strategy for parents vs teachers.
             $firstOrder = $entries->first()?->order;
@@ -231,22 +245,27 @@ class QuarterEndController extends Controller
                     $teacherContact = $teacherLookup->get($teacherKey);
                 }
 
-                $bookingRole = match (true) {
+                // Per-entry override wins (see index() for full reasoning):
+                // exam_entries.booking_role lets a row explicitly declare
+                // teacher / parent / self for cases where the contact-type
+                // lookup can't infer correctly (multi-type contacts).
+                $contactInferredRole = match (true) {
                     $parentContact === null => null,
                     $parentContact->isParent() => 'parent',
                     $parentContact->isCandidate() => 'self',
                     default => null,
                 };
-                // Recipient priority:
-                //   1. Parent / self-applicant's email (when teacher_name
-                //      is actually a parent/candidate — booking voice).
-                //   2. Real teacher contact's email — pulled from the FK
-                //      teacher_contact_id when set, so F2F entries with
-                //      Paul as order applicant_name still route to the
-                //      teacher (Rachel Jones, Clare Keeling, etc.).
-                //   3. Order applicant_email (last resort — usually
-                //      Paul's address as centre operator).
-                $teacherEmail = $parentContact?->emails->first()?->email
+                $bookingRole = $e->booking_role ?: $contactInferredRole;
+                $useParentEmail = $bookingRole === 'parent' || $bookingRole === 'self';
+                // Recipient priority depends on the resolved booking role:
+                //   - Parent/self voice → parent contact's email.
+                //   - Teacher voice    → teacher contact's email (looked
+                //                         up via teacher_contact_id FK
+                //                         first, then by name fallback).
+                //   - Last resort      → order.applicant_email (usually
+                //                         Paul as centre operator on F2F).
+                $teacherEmail = ($useParentEmail ? $parentContact?->emails->first()?->email : null)
+                    ?? ($useParentEmail ? $parentContact?->email : null)
                     ?? $teacherContact?->emails->first()?->email
                     ?? $teacherContact?->email
                     ?? $e->order?->applicant_email;
@@ -259,7 +278,7 @@ class QuarterEndController extends Controller
                     'grade'             => $e->grade,
                     'teacher_name'      => $teacherName,
                     'teacher_email'     => $teacherEmail,
-                    'is_parent_booking' => $parentContact !== null,
+                    'is_parent_booking' => $useParentEmail,
                     'booking_role'      => $bookingRole,
                 ];
             };
