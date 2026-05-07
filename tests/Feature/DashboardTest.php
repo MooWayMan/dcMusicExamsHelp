@@ -117,6 +117,58 @@ test('current quarter is always present even when no draw exists yet', function 
         ->where('teacherPrizeDraw.quarters.0.drawn_at', null));
 });
 
+test('NO_SHOW entries do not count toward the teacher dashboard ticket count', function () {
+    // NO_SHOW is excluded from the dashboard ticket count alongside CANCELLED
+    // — both signal "no exam was actually taken", so neither earns a draw
+    // ticket. (The teacher's volume tally — Bronze/Silver/Gold badge —
+    // still counts NO_SHOW; that's tested separately via the QuarterEnd
+    // controller flow.)
+    $teacherEmail = 'helen@example.com';
+    $contact = ExamContact::create([
+        'name' => 'Helen Hodgkiss',
+        'email' => $teacherEmail,
+    ]);
+    $contact->addType('teacher');
+
+    $user = User::factory()->create(['email' => $teacherEmail]);
+
+    $piano = Instrument::firstOrCreate(['name' => 'Piano']);
+    $thisQuarter = Carbon::create(2026, 4, 15);
+
+    $entry = function (Carbon $date, ?string $notes = null) use ($piano) {
+        $order = Order::create([
+            'trinity_order_number' => '1-T-'.uniqid('', true),
+            'delivery_method' => 'F2F',
+            'subject_area' => 'Music',
+            'candidates' => 1,
+            'order_status' => 'Delivered',
+            'requested_start_date' => $date,
+        ]);
+        return ExamEntry::create([
+            'order_id' => $order->id,
+            'candidate_name' => 'Test Student',
+            'instrument_id' => $piano->id,
+            'grade' => '1',
+            'subject_area' => 'Piano',
+            'delivery_method' => 'F2F',
+            'exam_date' => $date,
+            'result' => 'Pass',
+            'score' => 70,
+            'teacher_name' => 'Helen Hodgkiss',
+            'notes' => $notes,
+        ]);
+    };
+
+    // Three entries — one each of: in-good-standing, CANCELLED, NO_SHOW.
+    // Only the first should count.
+    $entry($thisQuarter);
+    $entry($thisQuarter, \App\Models\ExamEntry::NOTE_CANCELLED);
+    $entry($thisQuarter, \App\Models\ExamEntry::NOTE_NO_SHOW);
+
+    $this->actingAs($user)->get(route('dashboard'))->assertInertia(fn ($p) => $p
+        ->where('teacherPrizeDraw.my_current_quarter_tickets', 1));
+});
+
 test('signed-in teachers ticket count reflects their non-cancelled entries this quarter', function () {
     // The signed-in user's email matches an exam_contacts row whose name is
     // used in exam_entries.teacher_name (the existing string-link pattern).

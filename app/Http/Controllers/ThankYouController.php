@@ -65,9 +65,7 @@ class ThankYouController extends Controller
         // Get ALL entries for this quarter (with and without scores)
         $entries = ExamEntry::with(['instrument', 'order:id,requested_start_date'])
             ->where('show_on_thank_you', true)
-            ->where(function ($q) {
-                $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
-            })
+            ->whereResultPossible()
             ->get()
             ->filter(function ($entry) use ($start, $end) {
                 $date = $entry->exam_date ?? $entry->order?->requested_start_date;
@@ -234,9 +232,7 @@ class ThankYouController extends Controller
         // the dropdown reads newest-on-top and scales cleanly as years accumulate.
         $quartersWithData = ExamEntry::with('order:id,requested_start_date')
             ->where('show_on_thank_you', true)
-            ->where(function ($q) {
-                $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
-            })
+            ->whereResultPossible()
             ->get()
             ->map(function ($entry) {
                 $date = $entry->exam_date ?? $entry->order?->requested_start_date;

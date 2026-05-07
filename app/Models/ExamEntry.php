@@ -10,6 +10,47 @@ class ExamEntry extends Model
 {
     use HasFactory;
 
+    // ──────────────────────────────────────────
+    // Notes-flag semantics
+    // ──────────────────────────────────────────
+    // CANCELLED — true cancellation: refund issued, no fee paid, no
+    // commission earned. Excluded from EVERYTHING: Recognition page,
+    // top-scorer awards, prize draw, certificates, AND teacher volume
+    // metrics (Bronze/Silver/Gold/Top Award badges).
+    //
+    // NO_SHOW — booked, paid, no submission within the 28-day window.
+    // Trinity charged the fee, Paul earned commission. Excluded from
+    // result-based things (no score, no certificate, can't appear on
+    // Recognition or in the prize draw) but DOES count for teacher
+    // volume tallies — the booking was made, the entry happened from
+    // the teacher's perspective.
+    public const NOTE_CANCELLED = 'CANCELLED';
+    public const NOTE_NO_SHOW = 'NO_SHOW';
+
+    /**
+     * Notes values meaning no exam outcome will exist. Used by every
+     * result-based filter (Recognition page, top scorers, prize draw
+     * eligibility, pending-results queue, certificate generation).
+     */
+    public const NOTES_NO_RESULT = [self::NOTE_CANCELLED, self::NOTE_NO_SHOW];
+
+    /**
+     * Scope: limit to entries that are still result-possible — exclude
+     * both CANCELLED and NO_SHOW. Use anywhere a downstream consumer
+     * needs a real exam outcome (score, certificate, draw ticket).
+     *
+     * Teacher VOLUME tallies should NOT use this scope — they want the
+     * narrower CANCELLED-only filter so a NO_SHOW still counts toward
+     * the teacher's quarterly entry count.
+     */
+    public function scopeWhereResultPossible($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('notes')
+                ->orWhereNotIn('notes', self::NOTES_NO_RESULT);
+        });
+    }
+
     protected $fillable = [
         'order_id',
         'student_id',

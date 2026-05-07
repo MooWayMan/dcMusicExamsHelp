@@ -253,9 +253,17 @@ class QuarterEndController extends Controller
             ->map(fn ($n) => strtolower(trim($n)))
             ->toArray();
 
-        // Build teacher eligibility from teacher_name
+        // Build teacher eligibility from teacher_name. Two filter layers
+        // beyond `teacher_name !== null`:
+        //   - Reject empty/whitespace-only names (otherwise they group
+        //     under a blank key and surface as a "blank applicant" row).
+        //   - Drop NO_SHOW entries — the candidate didn't take the exam,
+        //     so no draw ticket. (NO_SHOW still flows into $allEntries
+        //     because line 44 only filters CANCELLED — that's deliberate
+        //     so teacher VOLUME tallies still count NO_SHOW.)
         $applicantEntries = $allEntries
-            ->filter(fn ($e) => $e->teacher_name !== null)
+            ->filter(fn ($e) => $e->teacher_name !== null && trim($e->teacher_name) !== '')
+            ->reject(fn ($e) => $e->notes === ExamEntry::NOTE_NO_SHOW)
             ->groupBy(fn ($e) => $e->teacher_name);
 
         $teacherTickets = [];
@@ -448,10 +456,12 @@ class QuarterEndController extends Controller
         $startDate = Carbon::create($year, $startMonth, 1)->startOfDay();
         $endDate = $startDate->copy()->addMonths(3)->subDay()->endOfDay();
 
+        // Strict filter for the prize draw pool — NO_SHOW entries don't
+        // earn a ticket. The candidate didn't take the exam; the teacher's
+        // VOLUME tally still credits them elsewhere, but draw eligibility
+        // is per-exam-actually-taken.
         $allEntries = ExamEntry::with(['instrument:id,name', 'order:id,requested_start_date,applicant_name', 'student:id,first_name,last_name'])
-            ->where(function ($q) {
-                $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
-            })
+            ->whereResultPossible()
             ->get()
             ->filter(function ($entry) use ($startDate, $endDate) {
                 $date = $entry->exam_date ?? $entry->order?->requested_start_date;
@@ -524,7 +534,7 @@ class QuarterEndController extends Controller
             ->all();
 
         $applicantEntries = $allEntries
-            ->filter(fn ($e) => $e->teacher_name !== null)
+            ->filter(fn ($e) => $e->teacher_name !== null && trim($e->teacher_name) !== '')
             ->filter(fn ($e) => ! in_array($e->teacher_contact_id, $excludedContactIds, true))
             ->filter(fn ($e) => ! in_array(strtolower(trim($e->teacher_name)), $excludedNamesLower, true))
             ->groupBy(fn ($e) => $e->teacher_name);
