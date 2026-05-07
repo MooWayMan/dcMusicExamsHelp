@@ -52,6 +52,51 @@ test('admin can change a contact type from parent to teacher', function () {
     expect($contact->fresh()->isParent())->toBeFalse();
 });
 
+test('admin can toggle excluded_from_prize_draw via the edit form', function () {
+    // Operator self-exclusion: Paul Sheridan (centre operator) shouldn't
+    // win his own quarterly draw. Admin Edit page exposes a toggle so it
+    // can be flipped without dropping into TablePlus.
+    $contact = makeContact(['name' => 'Paul Sheridan']);
+    $contact->addType('teacher');
+
+    $response = $this->actingAs($this->admin)
+        ->put("/admin/contacts/{$contact->id}", [
+            'name' => $contact->name,
+            'email' => $contact->email,
+            'phone' => '',
+            'types' => ['teacher'],
+            'notes' => '',
+            'excluded_from_prize_draw' => true,
+        ]);
+
+    $response->assertRedirect("/admin/contacts/{$contact->id}");
+    expect($contact->fresh()->excluded_from_prize_draw)->toBeTrue();
+
+    // Toggling it back off works the same way.
+    $this->actingAs($this->admin)
+        ->put("/admin/contacts/{$contact->id}", [
+            'name' => $contact->name,
+            'types' => ['teacher'],
+            'excluded_from_prize_draw' => false,
+        ]);
+    expect($contact->fresh()->excluded_from_prize_draw)->toBeFalse();
+});
+
+test('admin can toggle show_full_name via the edit form', function () {
+    // Mirror behaviour on the candidate side — opt-in flag for displaying
+    // a contact's full name on the dashboard prize-draw widget.
+    $contact = makeContact();
+    $contact->addType('teacher');
+
+    $this->actingAs($this->admin)
+        ->put("/admin/contacts/{$contact->id}", [
+            'name' => $contact->name,
+            'types' => ['teacher'],
+            'show_full_name' => true,
+        ]);
+    expect($contact->fresh()->show_full_name)->toBeTrue();
+});
+
 test('contact update rejects an unknown type value', function () {
     $contact = makeContact();
     $contact->addType('parent');

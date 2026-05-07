@@ -12,6 +12,8 @@ interface ContactData {
     types: string[]
     source: string | null
     notes: string | null
+    show_full_name: boolean
+    excluded_from_prize_draw: boolean
 }
 
 const props = defineProps<{
@@ -25,6 +27,8 @@ const form = useForm({
     phone: props.contact.phone ?? '',
     types: [...(props.contact.types ?? [])],
     notes: props.contact.notes ?? '',
+    show_full_name: !!props.contact.show_full_name,
+    excluded_from_prize_draw: !!props.contact.excluded_from_prize_draw,
 })
 
 function submit() {
@@ -123,6 +127,39 @@ function goBack() { window.history.back() }
                 <textarea id="notes" v-model="form.notes" rows="4"
                     class="mt-2 w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-base text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent" />
                 <p v-if="form.errors.notes" class="mt-1 text-sm text-brand-danger">{{ form.errors.notes }}</p>
+            </div>
+
+            <!-- Privacy / draw flags -->
+            <div class="space-y-3 rounded-lg border border-brand-border bg-brand-surface-soft p-4">
+                <p class="text-sm font-semibold uppercase tracking-wider text-brand-text-soft">Display &amp; draw flags</p>
+
+                <label class="flex cursor-pointer items-start gap-3">
+                    <input
+                        v-model="form.show_full_name"
+                        type="checkbox"
+                        class="mt-1 h-4 w-4 cursor-pointer rounded border-brand-border text-brand-accent focus:ring-brand-accent"
+                    />
+                    <span class="text-sm text-brand-text">
+                        <span class="block font-medium">Show full name on dashboard prize-draw widget</span>
+                        <span class="block text-brand-text-soft">
+                            Default off — contact appears as "First L". Tick once they explicitly consent (typically by replying to your gift-token email).
+                        </span>
+                    </span>
+                </label>
+
+                <label class="flex cursor-pointer items-start gap-3">
+                    <input
+                        v-model="form.excluded_from_prize_draw"
+                        type="checkbox"
+                        class="mt-1 h-4 w-4 cursor-pointer rounded border-brand-border text-brand-accent focus:ring-brand-accent"
+                    />
+                    <span class="text-sm text-brand-text">
+                        <span class="block font-medium">Exclude from prize draws</span>
+                        <span class="block text-brand-text-soft">
+                            Tick if this contact runs the centre / shouldn't be eligible to win their own draw.
+                        </span>
+                    </span>
+                </label>
             </div>
 
             <!-- Actions -->

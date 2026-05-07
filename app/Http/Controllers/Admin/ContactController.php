@@ -272,6 +272,8 @@ class ContactController extends Controller
                 'types' => $contact->types,
                 'source' => $contact->source,
                 'notes' => $contact->notes,
+                'show_full_name' => (bool) $contact->show_full_name,
+                'excluded_from_prize_draw' => (bool) $contact->excluded_from_prize_draw,
             ],
             'allTypes' => ExamContact::TYPES,
         ]);
@@ -286,6 +288,8 @@ class ContactController extends Controller
             'types' => ['array'],
             'types.*' => ['string', 'in:' . implode(',', ExamContact::TYPES)],
             'notes' => ['nullable', 'string'],
+            'show_full_name' => ['boolean'],
+            'excluded_from_prize_draw' => ['boolean'],
         ]);
 
         DB::transaction(function () use ($contact, $validated): void {
@@ -296,6 +300,8 @@ class ContactController extends Controller
                 'email' => $validated['email'] ?? null,
                 'phone' => $validated['phone'] ?? null,
                 'notes' => $validated['notes'] ?? null,
+                'show_full_name' => (bool) ($validated['show_full_name'] ?? false),
+                'excluded_from_prize_draw' => (bool) ($validated['excluded_from_prize_draw'] ?? false),
             ]);
             $this->syncPrimaryEmail($contact, $validated['email'] ?? null);
             $this->syncTypes($contact, $validated['types'] ?? []);
