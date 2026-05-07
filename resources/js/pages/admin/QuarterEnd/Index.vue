@@ -416,6 +416,8 @@ ${winnerName} will also appear on the Recognition page at https://musicexams.hel
 
 Congratulations to them — and well done to you for entering them through centre 120!
 
+Quick tip — if you'd like to see all your students' results, certificates and awards in one place (and get notified the moment new scores come in), you can create a free teacher account at https://musicexams.help/register.
+
 Best wishes,
 Paul
 
@@ -619,6 +621,7 @@ Introducing musicExams.help
 I've recently launched musicExams.help — a free resource for teachers, parents and students booking Trinity exams through centre 120. If parents ever ask things like "what's the difference between digital and face-to-face?" — point them straight to the site.
 
 Highlights:
+  • NEW — your own teacher dashboard: track all your students' bookings, results, certificates and awards in one place (free, sign up at https://musicexams.help/register)
   • Student recognition — Hall of Fame, certificates and quarterly prize draws
   • Teacher awards — Bronze, Silver, Gold and Top Award badges
   • Faber music book discounts for teachers
@@ -764,7 +767,9 @@ They can add this to any Amazon account — it's not tied to a name or email.
 
 Their name will appear on the musicExams.help Recognition page as "${winnerInitial}". If they or their parent would like us to display their full name instead, just let me know and I'll update it.
 
-Congratulations to them — and well done to you for entering them through centre 120!`
+Congratulations to them — and well done to you for entering them through centre 120!
+
+PS — if you don't already, you can track all your students' results and awards in one place at https://musicexams.help/register (free teacher account).`
 
   navigator.clipboard.writeText(template)
   alert('Winner email copied to clipboard!')

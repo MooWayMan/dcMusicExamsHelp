@@ -71,6 +71,17 @@ test('marketing_consent=false leaves marketing_consent_at null', function () {
     expect($sub->marketing_consent_at)->toBeNull();
 });
 
+test('lead magnet email body links the free teacher account signup', function () {
+    // Lead-magnet recipients are unauthenticated subscribers — the perfect
+    // moment to put a free-teacher-account link in front of music teachers
+    // who've just shown high intent. Render the Mailable directly and
+    // assert the /register CTA is present.
+    $rendered = (new LeadMagnetDelivery('Tina Teacher'))->render();
+
+    expect($rendered)->toContain('/register');
+    expect($rendered)->toContain('teacher account');
+});
+
 test('lead magnet subscription requires name + email', function () {
     Mail::fake();
 
