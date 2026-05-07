@@ -705,9 +705,9 @@ class QuarterEndController extends Controller
     }
 
     /**
-     * Convert full name to "First L" format (e.g. "Seth James Barraclough" → "James B").
-     * Uses the second name if available (first name is often a formal/unused name),
-     * otherwise falls back to the first name.
+     * Convert full name to "First L" format (e.g. "Alice Jun Mei Khoo" → "Alice K").
+     * Mirrors ThankYouController::displayName() so the admin UI and the public
+     * Recognition page never disagree on a candidate's display label.
      */
     private function shortName(string $fullName): string
     {
@@ -717,11 +717,11 @@ class QuarterEndController extends Controller
             return $fullName;
         }
 
-        $surname = array_pop($parts);
-        // Use the last "first name" — often the name they actually go by
-        $firstName = end($parts);
+        $firstName = $parts[0];
+        $surname = end($parts);
+        $lastInitial = mb_strtoupper(mb_substr($surname, 0, 1));
 
-        return $firstName.' '.strtoupper($surname[0]);
+        return "{$firstName} {$lastInitial}";
     }
 
     /**

@@ -136,6 +136,8 @@ class RoadmapController extends Controller
                     ['title' => 'Jazz exams content area', 'done' => false],
                     ['title' => 'Diploma exams marketing push', 'done' => false],
                     ['title' => 'Restyle auth pages with brand constructors', 'done' => true, 'description' => 'Sync restyled pages to template repo too'],
+                    ['title' => 'Admin Exam Entries — edit row', 'done' => false, 'description' => 'Pencil icon on each row in /admin/exam-entries opens a modal to edit candidate_name, teacher_name, result, score, notes, show_full_name. Replaces the current "go to TablePlus" workaround for fixing wrong names (e.g. "Mei Khoo" → "Alice Jun Mei Khoo"), wrong teacher attributions (parent name in teacher field), or correcting a result/score Trinity reported wrong. Audit-logged. Pest tests covering each editable field.'],
+                    ['title' => 'Admin Exam Entries — mark as no-show / cancelled', 'done' => false, 'description' => 'Single-click button on each row that sets notes = \'CANCELLED\' (the existing flag the Quarter End controller already filters on). Replaces the current TablePlus UPDATE workaround used when Trinity confirms a candidate didn\'t submit a video within the 28-day window. Excludes the entry from quarter-end totals, top-scorer awards, prize draws and certificate generation. Pest tests + a confirm modal so it can\'t be clicked accidentally.'],
                 ],
             ],
             [
