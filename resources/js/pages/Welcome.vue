@@ -604,6 +604,10 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
               <p class="mt-2 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
                 Our Wirral venue features a Steinway &amp; Sons grand piano — offering candidates the experience of performing on a world-class instrument.
               </p>
+              <p class="mt-3 text-sm leading-snug text-brand-text-soft/80 sm:text-sm md:text-base">
+                <span class="font-semibold text-brand-primary">Tafelmusik / Wirral School of Music</span><br>
+                43 Shrewsbury Road, Oxton, Wirral CH43 2JB
+              </p>
             </div>
           </div>
 
@@ -622,6 +626,10 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
               </MyTextConstructor>
               <p class="mt-2 text-base leading-snug text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
                 A brand new Kawai upright piano in a purpose-set teaching and exam room — a warm, professional space designed to help candidates feel at ease.
+              </p>
+              <p class="mt-3 text-sm leading-snug text-brand-text-soft/80 sm:text-sm md:text-base">
+                <span class="font-semibold text-brand-primary">Learn Music Ltd</span><br>
+                97 Bankfield Road, Stoneycroft, Liverpool L13 0BD
               </p>
             </div>
           </div>
