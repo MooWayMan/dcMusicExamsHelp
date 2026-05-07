@@ -964,6 +964,33 @@ const teacherWinner = computed(() => {
   }
   return null
 })
+
+// Trophy stat tile — total winners across the four top-scorer buckets
+// (Showstopper Initial-5, Showstopper 6-8, Centre Stage Initial-5,
+// Centre Stage 6-8). Counts EVERY tied winner separately so a 3-way
+// tie contributes 3 to the total. Also counts how many of the four
+// award slots actually have winners (an empty band where nobody hit
+// Merit, for example, contributes 0 winners and 0 awards).
+const totalTopScorers = computed(() => {
+  const ts = props.summary?.top_scorers
+  if (!ts) return 0
+  return (
+    (ts.initial_5?.distinction?.length ?? 0) +
+    (ts.initial_5?.merit?.length ?? 0) +
+    (ts['6_8']?.distinction?.length ?? 0) +
+    (ts['6_8']?.merit?.length ?? 0)
+  )
+})
+const topScorerAwardCount = computed(() => {
+  const ts = props.summary?.top_scorers
+  if (!ts) return 0
+  return [
+    (ts.initial_5?.distinction?.length ?? 0) > 0,
+    (ts.initial_5?.merit?.length ?? 0) > 0,
+    (ts['6_8']?.distinction?.length ?? 0) > 0,
+    (ts['6_8']?.merit?.length ?? 0) > 0,
+  ].filter(Boolean).length
+})
 </script>
 
 <template>
@@ -1019,28 +1046,19 @@ const teacherWinner = computed(() => {
         </div>
         <div class="rounded-xl border border-brand-border bg-brand-surface p-4 text-center">
           <Trophy class="mx-auto mb-2 h-6 w-6 text-yellow-500" />
+          <!-- Total top-scorer winners across all four awards (Showstopper
+               x2 + Centre Stage x2), counting every tied winner. Shows 0
+               when there's nobody hitting Distinction or Merit yet, dash
+               when results are still pending. -->
           <p class="text-2xl font-bold text-brand-text" v-if="summary.has_pending">—</p>
-          <p class="text-2xl font-bold text-brand-text" v-else-if="summary.showstopper">{{ summary.showstopper.score }}</p>
-          <p class="text-2xl font-bold text-brand-text" v-else>—</p>
+          <p class="text-2xl font-bold text-brand-text" v-else>{{ totalTopScorers }}</p>
           <p class="text-xs text-brand-text-soft" v-if="summary.has_pending">Results pending</p>
-          <p
-            v-else-if="summary.showstopper"
-            class="text-xs text-brand-text-soft"
-          >
-            Showstopper:
-            <!-- Single winner — keep the existing one-line layout. -->
-            <span v-if="(summary.showstopper.winners?.length ?? 1) <= 1">
-              {{ summary.showstopper.name }}
-            </span>
-            <!-- Tied at the top score — list every name, comma-separated. -->
-            <span v-else class="block">
-              {{ summary.showstopper.winners!.map(w => w.name).join(' &amp; ') }}
-              <span class="block text-[11px] text-brand-text-soft/80">
-                ({{ summary.showstopper.winners!.length }}-way tie)
-              </span>
+          <p class="text-xs text-brand-text-soft" v-else>
+            {{ totalTopScorers === 1 ? 'Top Scorer' : 'Top Scorers' }}
+            <span v-if="totalTopScorers > 0" class="block text-[11px] text-brand-text-soft/80">
+              across {{ topScorerAwardCount }} {{ topScorerAwardCount === 1 ? 'award' : 'awards' }}
             </span>
           </p>
-          <p class="text-xs text-brand-text-soft" v-else>Top Scorers</p>
         </div>
       </div>
 
