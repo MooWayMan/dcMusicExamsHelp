@@ -163,6 +163,37 @@ test('NO_SHOW entries do not earn the teacher a prize-draw ticket', function () 
     expect($response->json('total_tickets'))->toBe(1);
 });
 
+test('NO_SHOW entries do not count toward the QuarterEnd pending banner', function () {
+    // Bug previously: marking Otis NO_SHOW (no result will ever land) still
+    // showed "1 results pending" + "Preview only — 1 result still pending"
+    // banner, because the index summary used a naive score===null check.
+    // After fix: pending counts only TRUE pending entries (score null AND
+    // not flagged CANCELLED/NO_SHOW).
+    $admin = User::factory()->create(['role' => 'admin']);
+
+    nsEntry(['candidate_name' => 'Has Score',  'score' => 88, 'result' => 'Distinction']);
+    nsEntry(['candidate_name' => 'No Show',    'score' => null, 'result' => null,
+             'notes' => ExamEntry::NOTE_NO_SHOW]);
+    nsEntry(['candidate_name' => 'Cancelled',  'score' => null, 'result' => null,
+             'notes' => ExamEntry::NOTE_CANCELLED]);
+
+    $this->actingAs($admin)->get('/admin/quarter-end?quarter=1&year=2026')
+        ->assertInertia(fn ($p) => $p
+            ->where('summary.pending', 0)
+            ->where('summary.has_pending', false));
+});
+
+test('a genuinely-unscored entry IS counted as pending', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+
+    nsEntry(['candidate_name' => 'Waiting', 'score' => null, 'result' => null]);
+
+    $this->actingAs($admin)->get('/admin/quarter-end?quarter=1&year=2026')
+        ->assertInertia(fn ($p) => $p
+            ->where('summary.pending', 1)
+            ->where('summary.has_pending', true));
+});
+
 test('contacts flagged excluded_from_prize_draw never appear in the teacher eligibility list', function () {
     $admin = User::factory()->create(['role' => 'admin']);
 

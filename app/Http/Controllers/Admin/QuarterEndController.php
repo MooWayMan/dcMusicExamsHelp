@@ -67,7 +67,14 @@ class QuarterEndController extends Controller
 
         $teachers = $teacherGroups->map(function ($entries, $teacherName) use ($parentOrSelfLookup) {
             $withScores = $entries->filter(fn ($e) => $e->score !== null && $e->score >= 60);
-            $pending = $entries->filter(fn ($e) => $e->score === null);
+            // "Pending" = unscored entries we're still waiting on. NO_SHOW
+            // entries also have a null score but are NOT pending — Trinity
+            // won't issue a result for them. They stay in $entries (so they
+            // still count toward the teacher's volume tally) but get
+            // excluded here so the "X results pending" banner is accurate.
+            $pending = $entries->filter(
+                fn ($e) => $e->score === null && ! in_array($e->notes, ExamEntry::NOTES_NO_RESULT, true)
+            );
 
             // Is this row a parent/self booking?
             $parentContact = $parentOrSelfLookup->get(strtolower(trim($teacherName)));
@@ -150,10 +157,15 @@ class QuarterEndController extends Controller
             ];
         })->sortByDesc('total_entries')->values()->toArray();
 
-        // Summary stats
+        // Summary stats. "Pending" excludes NO_SHOW + CANCELLED — Trinity
+        // won't issue a result for those, so they're not a straggler we
+        // need to wait on. They DO still count in $totalEntries / volume.
+        $isStillPending = fn ($e) => $e->score === null
+            && ! in_array($e->notes, ExamEntry::NOTES_NO_RESULT, true);
+
         $totalEntries = $allEntries->count();
         $totalWithResults = $allEntries->filter(fn ($e) => $e->score !== null && $e->score >= 60)->count();
-        $totalPending = $allEntries->filter(fn ($e) => $e->score === null)->count();
+        $totalPending = $allEntries->filter($isStillPending)->count();
         $totalFees = $allEntries->sum('fee');
 
         // Top scorers — normally only calculated when NO results are pending,
@@ -171,7 +183,7 @@ class QuarterEndController extends Controller
         // Ties are split (Paul's rule: £20 / 2 = £10 each, £20 / 3+ = £5 each).
         // We return ALL candidates tied at the top score per (group, band) so
         // the front-end can show every winner.
-        $hasPending = $allEntries->contains(fn ($e) => $e->score === null);
+        $hasPending = $allEntries->contains($isStillPending);
         $finalise = $request->boolean('finalise');
         $topDistinction = null;   // legacy single-winner field — overall top Distinction
         $topMerit = null;         // legacy single-winner field — overall top Merit
@@ -660,7 +672,15 @@ class QuarterEndController extends Controller
                 return $date && $date->between($startDate, $endDate);
             });
 
-        $pendingCount = $allEntries->filter(fn ($e) => $e->score === null)->count();
+        // "Pending" = unscored entries we're still waiting on. Mirrors the
+        // index() rule: NO_SHOW + CANCELLED are excluded — they've taken
+        // themselves out of the picture even though score is null. Used
+        // here so the publish snapshot's `finalised_with_pending` flag
+        // is accurate (won't say "published despite stragglers" when the
+        // remaining nulls are just NO_SHOWs).
+        $pendingCount = $allEntries->filter(
+            fn ($e) => $e->score === null && ! in_array($e->notes, ExamEntry::NOTES_NO_RESULT, true)
+        )->count();
         $withScores = $allEntries->filter(fn ($e) => $e->score !== null);
 
         $parentOrSelfLookup = ExamContact::with('emails')
