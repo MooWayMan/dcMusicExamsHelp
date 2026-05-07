@@ -76,26 +76,18 @@ class ThankYouController extends Controller
         // Scored entries only (for top scorers + summary counts)
         $scoredEntries = $entries->filter(fn ($e) => $e->score !== null);
 
-        // Top scorers — TWO data sources, in this order of preference:
-        //
-        //   1. A TopScorerPublication snapshot (from /admin/quarter-end's
-        //      "Publish top-scorer awards" button). This is the canonical
-        //      published list — stable, doesn't shuffle when late scores
-        //      come in.
-        //
-        //   2. Live calculation from this quarter's entries — only used
-        //      when no snapshot exists AND the quarter is "naturally"
-        //      finalised (prize draw run + no pending). Bands match
-        //      ShowHallOfFame: Distinction ≥ 87, Merit 75-86.
+        // Top scorers — ONE data source: the TopScorerPublication snapshot
+        // written by the admin "Publish top-scorer awards" button on Step 3
+        // of /admin/quarter-end. Explicit click required — no live-calc
+        // fallback, no auto-publish based on "all results in + draw run"
+        // gates. Paul has to actively decide a quarter's awards are ready
+        // before the public page surfaces them. (Removed 7 May 2026 after
+        // the auto-publish-on-CANCELLED-flip near-miss in Q1.)
         //
         // Returns the four-award structure: { initial_5, '6_8' } each with
         // { distinction[], merit[] }, where each leaf is an array of tied
-        // winners. Empty arrays mean nobody hit that band in that group.
-        $hasPending = $entries->contains(fn ($e) => $e->score === null);
-        $quarterFinalised = PrizeDraw::where('quarter', $quarter)
-            ->where('year', $year)
-            ->exists();
-
+        // winners. Empty arrays mean either nobody hit that band in that
+        // group, OR the quarter hasn't been published yet.
         $publication = TopScorerPublication::forQuarter($quarter, $year);
         $topScorers = [
             'initial_5' => ['distinction' => [], 'merit' => []],
@@ -125,27 +117,6 @@ class ThankYouController extends Controller
                         ->toArray();
                 }
             }
-            $hallOfFameEntries = collect(\App\Support\TopScorers::flatten($topScorers))
-                ->map(fn ($award) => [
-                    'name'        => $award['winner']['name'],
-                    'instrument'  => $award['winner']['instrument'] ?? '—',
-                    'grade'       => $award['winner']['grade'],
-                    'score'       => $award['winner']['score'],
-                    'result'      => $award['band'] === 'distinction' ? 'Distinction' : 'Merit',
-                    'award'       => $award['certificate'],
-                    'certificate' => "{$award['certificate']} Certificate + Gift Token",
-                ]);
-        } elseif ($quarterFinalised && ! $hasPending) {
-            // No publication, but quarter is naturally finalised — live calc.
-            $shapeWinner = fn (ExamEntry $e) => [
-                'name'           => $this->displayName($e),
-                'full_name'      => $e->show_full_name ? $e->candidate_name : null,
-                'show_full_name' => (bool) $e->show_full_name,
-                'score'          => $e->score,
-                'instrument'     => $e->instrument?->name,
-                'grade'          => $e->grade,
-            ];
-            $topScorers = \App\Support\TopScorers::calculate($scoredEntries, $shapeWinner);
             $hallOfFameEntries = collect(\App\Support\TopScorers::flatten($topScorers))
                 ->map(fn ($award) => [
                     'name'        => $award['winner']['name'],

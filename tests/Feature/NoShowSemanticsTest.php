@@ -113,6 +113,51 @@ test('Recognition page hides NO_SHOW entries from the public table', function ()
         );
 });
 
+test('public Recognition page does NOT auto-show top scorers without an explicit publication', function () {
+    // Removed live-calc fallback (7 May 2026). Even when every result is
+    // in AND a prize draw exists for the quarter, the public page only
+    // surfaces the four top-scorer cards once an admin clicks "Publish
+    // top-scorer awards" on /admin/quarter-end Step 3 (which writes a
+    // TopScorerPublication snapshot row). One explicit decision per
+    // quarter, no surprise auto-promotion.
+    $admin = \App\Models\User::factory()->create(['role' => 'admin']);
+
+    // Two scored entries — would otherwise be top scorers in their bands.
+    nsEntry(['candidate_name' => 'Anna Distinction', 'grade' => '1', 'score' => 92, 'result' => 'Distinction']);
+    nsEntry(['candidate_name' => 'Bob Merit',        'grade' => '7', 'score' => 80, 'result' => 'Merit']);
+
+    // Run a real student prize draw — used to trigger live-calc.
+    \App\Models\PrizeDraw::create([
+        'type' => 'student',
+        'quarter' => 1,
+        'year' => 2026,
+        'winner_name' => 'Anna Distinction',
+        'winner_entries' => 1,
+        'total_tickets' => 2,
+        'all_eligible' => [],
+        'drawn_by' => $admin->id,
+    ]);
+
+    $this->get('/recognition')->assertOk()->assertInertia(fn ($p) => $p
+        ->component('ThankYou')
+        ->where('allQuartersData', function ($quarters) {
+            // For each quarter, every award bucket should be empty —
+            // no publication snapshot exists, so nothing surfaces.
+            foreach ($quarters as $q) {
+                $ts = $q['topScorers'] ?? null;
+                if (! $ts) continue;
+                foreach (['initial_5', '6_8'] as $g) {
+                    foreach (['distinction', 'merit'] as $b) {
+                        if (! empty($ts[$g][$b] ?? [])) {
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        }));
+});
+
 // ── Pending Results admin page ────────────────────────────────────────────
 
 test('Pending Results page hides NO_SHOW entries (they will never get a score)', function () {
