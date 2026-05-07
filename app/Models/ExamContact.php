@@ -26,12 +26,14 @@ class ExamContact extends Model
         'met_face_to_face',
         'spoken_on_phone',
         'contacted_by_email',
+        'show_full_name',
     ];
 
     protected $casts = [
         'met_face_to_face' => 'boolean',
         'spoken_on_phone' => 'boolean',
         'contacted_by_email' => 'boolean',
+        'show_full_name' => 'boolean',
     ];
 
     /**
@@ -173,6 +175,45 @@ class ExamContact extends Model
     public function isSchoolAdmin(): bool
     {
         return $this->hasType('school_admin');
+    }
+
+    /**
+     * Display name to show on the authenticated teacher dashboard
+     * (specifically the prize-draw winner widget).
+     *
+     * Priority order:
+     *   1. School admin with at least one linked school → school name
+     *      (Daniel Rogers / Pulse Music School). Removes the personal
+     *      name from view entirely and is more flattering for the school.
+     *   2. Contact has opted in via `show_full_name = true` → full name.
+     *   3. Otherwise → "First L" (e.g. "Helen H"). GDPR-safe default.
+     *
+     * Mirrors the same logic used by ThankYouController for candidate
+     * names on the public Recognition page.
+     */
+    public function displayName(): string
+    {
+        if ($this->isSchoolAdmin()) {
+            $school = $this->schools()->first();
+            if ($school?->name) {
+                return $school->name;
+            }
+        }
+
+        if ($this->show_full_name) {
+            return $this->name;
+        }
+
+        $parts = preg_split('/\s+/', trim((string) $this->name));
+        if (count($parts) < 2) {
+            return (string) $this->name;
+        }
+
+        $firstName = $parts[0];
+        $surname = end($parts);
+        $lastInitial = mb_strtoupper(mb_substr($surname, 0, 1));
+
+        return "{$firstName} {$lastInitial}";
     }
 
     public function isTrinityAdmin(): bool

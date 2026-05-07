@@ -10,7 +10,9 @@ use App\Mail\LinkRequestConfirmed;
 use App\Mail\LinkRequestSubmitted;
 use App\Models\ExamContact;
 use App\Models\ExamEntry;
+use App\Models\PrizeDraw;
 use App\Models\Task;
+use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -120,7 +122,146 @@ class DashboardController extends Controller
         return Inertia::render('Dashboard', [
             'examEntries' => $entries,
             'hasLinkedContact' => $contact !== null || $entries->isNotEmpty(),
+            'teacherPrizeDraw' => $this->buildTeacherPrizeDrawPayload($contact),
         ]);
+    }
+
+    /**
+     * Payload for the "Quarterly Teacher Prize Draw" card on the teacher
+     * dashboard. Returns:
+     *
+     *   - quarters: one row per quarter that has either a real teacher
+     *     PrizeDraw or is the current quarter (so we always at least show
+     *     the current quarter as "not yet drawn"). Sorted newest first.
+     *   - my_current_quarter_tickets: live count of the signed-in user's
+     *     non-CANCELLED entries in the current quarter — climbs week by
+     *     week as they enter more candidates, before any draw runs.
+     *
+     * Display rules for winner names follow ExamContact::displayName():
+     *   school admin → school name; opted-in teacher → full name;
+     *   otherwise → "First L".
+     */
+    private function buildTeacherPrizeDrawPayload(?ExamContact $contact): array
+    {
+        $now = Carbon::now();
+        $currentYear = (int) $now->year;
+        $currentQuarter = (int) ceil($now->month / 3);
+
+        // 1. All teacher draws ever run, newest first.
+        $draws = PrizeDraw::query()
+            ->where('type', 'teacher')
+            ->orderByDesc('year')
+            ->orderByDesc('quarter')
+            ->get();
+
+        // 2. Build keyed map so we can interleave the "current quarter,
+        // not yet drawn" placeholder cleanly.
+        $rows = [];
+        $seen = [];
+
+        foreach ($draws as $draw) {
+            $key = "{$draw->year}-{$draw->quarter}";
+            $seen[$key] = true;
+
+            $winnerContact = $draw->winner_name
+                ? ExamContact::query()
+                    ->whereRaw('LOWER(TRIM(name)) = ?', [strtolower(trim($draw->winner_name))])
+                    ->first()
+                : null;
+
+            $rows[] = [
+                'quarter' => (int) $draw->quarter,
+                'year' => (int) $draw->year,
+                'label' => "Q{$draw->quarter} {$draw->year}",
+                'drawn_at' => $draw->created_at?->format('d M Y'),
+                'has_winner' => true,
+                'winner_display_name' => $winnerContact
+                    ? $winnerContact->displayName()
+                    : $this->fallbackShortName((string) $draw->winner_name),
+                'winner_entries' => (int) ($draw->winner_entries ?? 0),
+                'total_tickets' => (int) ($draw->total_tickets ?? 0),
+            ];
+        }
+
+        // 3. Always surface the current quarter even if no draw has
+        // happened yet — gives signed-in teachers something live to
+        // engage with ("not yet drawn — you have 4 tickets so far").
+        $currentKey = "{$currentYear}-{$currentQuarter}";
+        if (! isset($seen[$currentKey])) {
+            array_unshift($rows, [
+                'quarter' => $currentQuarter,
+                'year' => $currentYear,
+                'label' => "Q{$currentQuarter} {$currentYear}",
+                'drawn_at' => null,
+                'has_winner' => false,
+                'winner_display_name' => null,
+                'winner_entries' => 0,
+                'total_tickets' => 0,
+            ]);
+        }
+
+        // 4. Live ticket count for the signed-in user — only meaningful
+        // before a draw is run for the current quarter.
+        $myTickets = $this->countUserTicketsInCurrentQuarter(
+            $contact,
+            $currentYear,
+            $currentQuarter,
+        );
+
+        return [
+            'quarters' => $rows,
+            'my_current_quarter_tickets' => $myTickets,
+            'current_quarter_label' => "Q{$currentQuarter} {$currentYear}",
+        ];
+    }
+
+    /**
+     * Count the user's non-CANCELLED exam entries in the given quarter,
+     * matched by `exam_entries.teacher_name = $contact->name` (the same
+     * string-name pattern QuarterEndController uses to build draw tickets).
+     */
+    private function countUserTicketsInCurrentQuarter(
+        ?ExamContact $contact,
+        int $year,
+        int $quarter,
+    ): int {
+        if (! $contact) {
+            return 0;
+        }
+
+        $startMonth = ($quarter - 1) * 3 + 1;
+        $start = Carbon::create($year, $startMonth, 1)->startOfDay();
+        $end = $start->copy()->addMonths(3)->subDay()->endOfDay();
+
+        return ExamEntry::query()
+            ->with('order:id,requested_start_date')
+            ->whereRaw('LOWER(TRIM(teacher_name)) = ?', [strtolower(trim((string) $contact->name))])
+            ->where(function ($q) {
+                $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
+            })
+            ->get()
+            ->filter(function (ExamEntry $e) use ($start, $end) {
+                $date = $e->exam_date ?? $e->order?->requested_start_date;
+                return $date && Carbon::parse($date)->between($start, $end);
+            })
+            ->count();
+    }
+
+    /**
+     * "First L" fallback for the rare case the winner_name on a PrizeDraw
+     * row doesn't match any current ExamContact (legacy or hand-typed
+     * draws). Mirrors ExamContact::displayName()'s short-name branch.
+     */
+    private function fallbackShortName(string $name): string
+    {
+        $parts = preg_split('/\s+/', trim($name));
+        if (count($parts) < 2) {
+            return $name;
+        }
+        $firstName = $parts[0];
+        $surname = end($parts);
+        $lastInitial = mb_strtoupper(mb_substr($surname, 0, 1));
+        return "{$firstName} {$lastInitial}";
     }
 
     /**

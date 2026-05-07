@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, Form, router, usePage } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
-import { LayoutDashboard, ClipboardList, Users, GraduationCap, CheckSquare, Award, AlertCircle, Home, LogOut, Mail, MessageCircle, Info, ChevronDown, ChevronRight } from 'lucide-vue-next'
+import { LayoutDashboard, ClipboardList, Users, GraduationCap, CheckSquare, Award, AlertCircle, Home, LogOut, Mail, MessageCircle, Info, ChevronDown, ChevronRight, Gift, Ticket } from 'lucide-vue-next'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyInputConstructor from '@/components/reusables/MyInputConstructor.vue'
@@ -24,9 +24,27 @@ interface ExamEntryRow {
     pending_correction: { submitted_at: string | null; note: string } | null
 }
 
+interface PrizeDrawQuarter {
+    quarter: number
+    year: number
+    label: string
+    drawn_at: string | null
+    has_winner: boolean
+    winner_display_name: string | null
+    winner_entries: number
+    total_tickets: number
+}
+
+interface TeacherPrizeDrawPayload {
+    quarters: PrizeDrawQuarter[]
+    my_current_quarter_tickets: number
+    current_quarter_label: string
+}
+
 const props = defineProps<{
     examEntries?: ExamEntryRow[]
     hasLinkedContact?: boolean
+    teacherPrizeDraw?: TeacherPrizeDrawPayload
 }>()
 
 const handleLogout = () => {
@@ -41,6 +59,29 @@ const flashSuccess = computed(() => (page.props.flash as any)?.success)
 const showLinkForm = ref(false)
 const entries = computed<ExamEntryRow[]>(() => props.examEntries ?? [])
 const hasEntries = computed(() => entries.value.length > 0)
+
+// ─── Teacher prize draw card ──────────────────────────────────────────────
+// Defaults to the most recent quarter (quarters[] is sorted newest-first by
+// the controller, including a "current quarter, not yet drawn" placeholder
+// when there's no draw row yet — that placeholder always sits at index 0).
+const prizeDraw = computed<TeacherPrizeDrawPayload | null>(() => props.teacherPrizeDraw ?? null)
+const hasPrizeDraw = computed(() => (prizeDraw.value?.quarters?.length ?? 0) > 0)
+const selectedQuarterKey = ref<string>(
+    prizeDraw.value?.quarters?.[0]
+        ? `${prizeDraw.value.quarters[0].year}-${prizeDraw.value.quarters[0].quarter}`
+        : '',
+)
+const selectedQuarter = computed<PrizeDrawQuarter | null>(() => {
+    const list = prizeDraw.value?.quarters ?? []
+    return list.find(q => `${q.year}-${q.quarter}` === selectedQuarterKey.value) ?? list[0] ?? null
+})
+// The "you have N tickets" line only shows for an undrawn quarter (the
+// controller flags those with has_winner=false, drawn_at=null). Once the
+// draw is run, we show the snapshotted winner_entries instead.
+const showLiveTicketCount = computed(() =>
+    selectedQuarter.value !== null && selectedQuarter.value.has_winner === false
+)
+
 const correctionFormFor = ref<number | null>(null)
 // Modal state: which entry's already-submitted correction we're viewing.
 const viewingCorrectionFor = ref<number | null>(null)
@@ -285,6 +326,83 @@ defineOptions({
                     <p class="mt-0.5 text-brand-text-soft">
                         We&rsquo;re building a <span class="font-medium text-brand-text">piece tracker</span> so you can plan and follow your students&rsquo; next exam pieces &mdash; with Trinity syllabus dropdowns where available. Look out for it in the next couple of weeks.
                     </p>
+                </div>
+            </div>
+
+            <!-- Quarterly Teacher Prize Draw — visible only to authenticated
+                 teachers, never on the public marketing site. School admins
+                 (Daniel Rogers / Pulse Music etc.) display by their school
+                 name. Individual teachers default to "First L" until they
+                 opt in to full-name display via show_full_name on their
+                 exam_contacts row (set when Paul confirms by email). -->
+            <div v-if="hasPrizeDraw" class="mb-6 rounded-xl border border-brand-border bg-brand-surface">
+                <div class="flex flex-wrap items-start justify-between gap-3 border-b border-brand-border px-5 py-4">
+                    <div class="flex items-center gap-2.5">
+                        <Gift class="h-5 w-5 text-brand-accent" />
+                        <div>
+                            <h2 class="text-xl font-semibold text-brand-text">Quarterly Teacher Prize Draw</h2>
+                            <p class="text-sm text-brand-text-soft">
+                                £50 gift token to invest back into your teaching. Every non-cancelled student entry through centre 120 = one ticket.
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Quarter dropdown — current at top, then descending. -->
+                    <label class="flex items-center gap-2 text-sm">
+                        <span class="font-medium text-brand-text-soft">Quarter</span>
+                        <select
+                            v-model="selectedQuarterKey"
+                            class="rounded-lg border border-brand-border bg-brand-surface px-3 py-1.5 text-sm font-medium text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                        >
+                            <option
+                                v-for="q in prizeDraw?.quarters ?? []"
+                                :key="`${q.year}-${q.quarter}`"
+                                :value="`${q.year}-${q.quarter}`"
+                            >
+                                {{ q.label }}{{ q.has_winner ? '' : ' — not yet drawn' }}
+                            </option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="px-5 py-4">
+                    <!-- Drawn quarter — show the winner card. -->
+                    <div v-if="selectedQuarter && selectedQuarter.has_winner" class="rounded-lg border border-brand-accent/30 bg-brand-accent/5 px-4 py-4">
+                        <p class="text-xs font-semibold uppercase tracking-wide text-brand-accent">
+                            Winner — {{ selectedQuarter.label }}
+                        </p>
+                        <p class="mt-1.5 text-2xl font-bold text-brand-text">
+                            {{ selectedQuarter.winner_display_name }}
+                        </p>
+                        <p class="mt-1 text-sm text-brand-text-soft">
+                            Drew {{ selectedQuarter.winner_entries }} {{ selectedQuarter.winner_entries === 1 ? 'ticket' : 'tickets' }}
+                            of {{ selectedQuarter.total_tickets }} in the pool · drawn {{ selectedQuarter.drawn_at }}
+                        </p>
+                    </div>
+
+                    <!-- Undrawn quarter — banner + live ticket count for the user. -->
+                    <div v-else-if="selectedQuarter" class="rounded-lg border border-brand-border bg-brand-surface-soft px-4 py-4">
+                        <p class="text-xs font-semibold uppercase tracking-wide text-brand-text-soft">
+                            {{ selectedQuarter.label }}
+                        </p>
+                        <p class="mt-1.5 text-lg font-semibold text-brand-text">
+                            Not yet drawn
+                        </p>
+                        <p class="mt-1 text-sm text-brand-text-soft">
+                            The teacher prize draw runs after the quarter ends and all results are in.
+                        </p>
+                    </div>
+
+                    <!-- "You have N tickets" — only on the current undrawn quarter. -->
+                    <div
+                        v-if="showLiveTicketCount && prizeDraw"
+                        class="mt-3 flex items-center gap-2.5 rounded-lg bg-brand-accent/5 px-4 py-3 text-sm text-brand-text"
+                    >
+                        <Ticket class="h-4 w-4 shrink-0 text-brand-accent" />
+                        <span>
+                            <span class="font-semibold">You have {{ prizeDraw.my_current_quarter_tickets }} {{ prizeDraw.my_current_quarter_tickets === 1 ? 'ticket' : 'tickets' }}</span>
+                            in the {{ prizeDraw.current_quarter_label }} draw so far. Each non-cancelled entry adds one more.
+                        </span>
+                    </div>
                 </div>
             </div>
 
