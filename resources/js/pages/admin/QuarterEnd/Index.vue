@@ -321,7 +321,13 @@ function copyTopScorerEmail(winner: AwardWinner, awardKey: AwardKey, tieCount: n
   const meta = AWARD_META[awardKey]
   const split = tokenSplit(tieCount)
   const recipientFirstName = recipientGreetingName(winner.teacher_name)
-  const winnerInitial = winner.name // already first-name-and-initial from controller
+  // Use the candidate's real first name in the email body. The GDPR
+  // initial-only rule applies to public pages and emails to people outside
+  // the family — not to a private email *to* the parent or teacher about
+  // their own child / student. Falls back to the short name only if for
+  // some reason full_name isn't on the payload.
+  const fullName = (winner.full_name ?? winner.name).trim()
+  const winnerName = fullName.split(/\s+/)[0] || winner.name
 
   // Tie sentence — three cases:
   //   • Sole winner       → full £20.
@@ -332,11 +338,11 @@ function copyTopScorerEmail(winner: AwardWinner, awardKey: AwardKey, tieCount: n
   //                         than £20 for 5+).
   let tieSentence: string
   if (tieCount === 1) {
-    tieSentence = `As the sole top scorer in this category, ${winnerInitial} receives the full £${split} gift token.`
+    tieSentence = `As the sole top scorer in this category, ${winnerName} receives the full £${split} gift token.`
   } else if (tieCount === 2) {
-    tieSentence = `It was a 2-way tie at the top score, so the £20 gift token is split equally — ${winnerInitial}'s share is £${split}.`
+    tieSentence = `It was a 2-way tie at the top score, so the £20 gift token is split equally — ${winnerName}'s share is £${split}.`
   } else {
-    tieSentence = `It was a ${tieCount}-way tie at the top score, so each winner receives a £${split} gift token — ${winnerInitial}'s share is £${split}.`
+    tieSentence = `It was a ${tieCount}-way tie at the top score, so each winner receives a £${split} gift token — ${winnerName}'s share is £${split}.`
   }
 
   // Two voices — teacher (third-person about the candidate) vs parent
@@ -350,7 +356,7 @@ Wonderful news — you've been awarded the **${meta.bandLabel} (${meta.groupLabe
 
 You scored ${winner.score} marks in ${winner.instrument} Grade ${winner.grade} — a brilliant achievement.
 
-${tieSentence.replace(`${winnerInitial}'s share`, 'your share').replace(`${winnerInitial} receives`, 'you receive')}
+${tieSentence.replace(`${winnerName}'s share`, 'your share').replace(`${winnerName} receives`, 'you receive')}
 
 Your personalised ${meta.certificate} Certificate is attached to this email — print it, display it on a tablet for photos, or share it on social media.
 
@@ -369,13 +375,13 @@ Paul Sheridan`
   } else if (winner.is_parent_booking) {
     body = `Hi ${recipientFirstName},
 
-Wonderful news — ${winnerInitial} has been awarded the **${meta.bandLabel} (${meta.groupLabel})** for ${props.quarterLabel}!
+Wonderful news — ${winnerName} has been awarded the **${meta.bandLabel} (${meta.groupLabel})** for ${props.quarterLabel}!
 
 They scored ${winner.score} marks in ${winner.instrument} Grade ${winner.grade} — a brilliant achievement.
 
 ${tieSentence}
 
-${winnerInitial}'s personalised ${meta.certificate} Certificate is attached to this email — print it, display it on a tablet for photos, or share it on social media.
+${winnerName}'s personalised ${meta.certificate} Certificate is attached to this email — print it, display it on a tablet for photos, or share it on social media.
 
 Here's the Amazon gift card code:
 
@@ -383,30 +389,30 @@ Here's the Amazon gift card code:
 
 You can add this to any Amazon account — it's not tied to a name or email.
 
-${winnerInitial} will also appear on the Recognition page at https://musicexams.help/recognition.
+${winnerName} will also appear on the Recognition page at https://musicexams.help/recognition.
 
-Huge congratulations to ${winnerInitial} — and thank you for choosing centre 120.
+Huge congratulations to ${winnerName} — and thank you for choosing centre 120.
 
 Best wishes,
 Paul Sheridan`
   } else {
     body = `Hi ${recipientFirstName},
 
-Wonderful news — one of your students, ${winnerInitial}, has been awarded the **${meta.bandLabel} (${meta.groupLabel})** for ${props.quarterLabel}!
+Wonderful news — one of your students, ${winnerName}, has been awarded the **${meta.bandLabel} (${meta.groupLabel})** for ${props.quarterLabel}!
 
 They scored ${winner.score} marks in ${winner.instrument} Grade ${winner.grade} — a brilliant achievement.
 
 ${tieSentence}
 
-${winnerInitial}'s personalised ${meta.certificate} Certificate is attached to this email — please pass it on to them along with the gift card code below.
+${winnerName}'s personalised ${meta.certificate} Certificate is attached to this email — please pass it on to them along with the gift card code below.
 
-Here's the Amazon gift card code for you to pass on to ${winnerInitial}'s parent/guardian:
+Here's the Amazon gift card code for you to pass on to ${winnerName}'s parent/guardian:
 
 [PASTE GIFT CARD CODE HERE]
 
 It can be added to any Amazon account — it's not tied to a name or email.
 
-${winnerInitial} will also appear on the Recognition page at https://musicexams.help/recognition.
+${winnerName} will also appear on the Recognition page at https://musicexams.help/recognition.
 
 Congratulations to them — and well done to you for entering them through centre 120!
 
@@ -415,9 +421,9 @@ Paul
 
 ---
 
-P.S. Here's a suggested message you can copy and paste when you forward this on to ${winnerInitial}'s parent/guardian — feel free to tweak or skip:
+P.S. Here's a suggested message you can copy and paste when you forward this on to ${winnerName}'s parent/guardian — feel free to tweak or skip:
 
-"Hi [Parent Name], wonderful news — musicExams.help (centre 120) have just awarded ${winnerInitial} the ${meta.bandLabel} (${meta.groupLabel}) for ${props.quarterLabel} for their brilliant ${winner.score}-mark performance in ${winner.instrument} Grade ${winner.grade}. Their personalised ${meta.certificate} Certificate is attached, along with an Amazon gift card to celebrate. They'll also appear on the Recognition page at https://musicexams.help/recognition (first name and surname initial only — let me know if you'd like the full name shown). Huge congratulations to ${winnerInitial}! — [Your Name]"`
+"Hi [Parent Name], wonderful news — musicExams.help (centre 120) have just awarded ${winnerName} the ${meta.bandLabel} (${meta.groupLabel}) for ${props.quarterLabel} for their brilliant ${winner.score}-mark performance in ${winner.instrument} Grade ${winner.grade}. Their personalised ${meta.certificate} Certificate is attached, along with an Amazon gift card to celebrate. They'll also appear on the Recognition page at https://musicexams.help/recognition (first name and surname initial only — let me know if you'd like the full name shown). Huge congratulations to ${winnerName}! — [Your Name]"`
   }
 
   navigator.clipboard.writeText(body)

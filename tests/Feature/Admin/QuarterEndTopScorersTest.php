@@ -372,6 +372,60 @@ test('each winner row includes teacher_name and teacher_email so the email butto
         ->where('summary.top_scorers.initial_5.distinction.0.booking_role', null));
 });
 
+test('shortName uses the first given name + surname initial (matches public Recognition page)', function () {
+    // Regression: shortName previously took the LAST given name before the
+    // surname as the "name they go by" (so "Alice Jun Mei Khoo" → "Mei K").
+    // That misfires for anyone who actually goes by their first given name —
+    // most candidates — and silently disagreed with ThankYouController which
+    // always uses the first given name. Both should produce "Alice K" now.
+    tsEntry([
+        'candidate_name' => 'Alice Jun Mei Khoo',
+        'grade' => '6',
+        'score' => 81,
+        'result' => 'Merit',
+    ]);
+
+    $this->actingAs($this->admin)->get(TS_URL)->assertInertia(fn ($p) => $p
+        ->where('summary.top_scorers.6_8.merit.0.full_name', 'Alice Jun Mei Khoo')
+        ->where('summary.top_scorers.6_8.merit.0.name', 'Alice K'));
+});
+
+test('shortName handles two-part names correctly', function () {
+    tsEntry([
+        'candidate_name' => 'Anna Martin',
+        'grade' => '1',
+        'score' => 92,
+        'result' => 'Distinction',
+    ]);
+
+    $this->actingAs($this->admin)->get(TS_URL)->assertInertia(fn ($p) => $p
+        ->where('summary.top_scorers.initial_5.distinction.0.name', 'Anna M'));
+});
+
+test('shortName falls back to the full name if it is a single word', function () {
+    tsEntry([
+        'candidate_name' => 'Madonna',
+        'grade' => '3',
+        'score' => 90,
+        'result' => 'Distinction',
+    ]);
+
+    $this->actingAs($this->admin)->get(TS_URL)->assertInertia(fn ($p) => $p
+        ->where('summary.top_scorers.initial_5.distinction.0.name', 'Madonna'));
+});
+
+test('shortName uppercases a lowercase surname initial', function () {
+    tsEntry([
+        'candidate_name' => 'James van der Berg',
+        'grade' => '7',
+        'score' => 90,
+        'result' => 'Distinction',
+    ]);
+
+    $this->actingAs($this->admin)->get(TS_URL)->assertInertia(fn ($p) => $p
+        ->where('summary.top_scorers.6_8.distinction.0.name', 'James B'));
+});
+
 test('winner with a parent-booking teacher_name is flagged is_parent_booking', function () {
     $parent = \App\Models\ExamContact::create(['name' => 'Mrs Khoo']);
     $parent->addType('parent');
