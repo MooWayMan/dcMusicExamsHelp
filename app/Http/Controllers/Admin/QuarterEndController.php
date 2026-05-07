@@ -253,9 +253,28 @@ class QuarterEndController extends Controller
             ->map(fn ($n) => strtolower(trim($n)))
             ->toArray();
 
-        // Build teacher eligibility from teacher_name
+        // Operator-self-exclusion: any contact flagged with
+        // excluded_from_prize_draw is suppressed from BOTH draws (student
+        // ticket pool and teacher eligibility list). Used so the centre
+        // operator (Paul Sheridan) doesn't win their own draw.
+        $selfExcludedNames = ExamContact::query()
+            ->where('excluded_from_prize_draw', true)
+            ->pluck('name')
+            ->map(fn ($n) => strtolower(trim($n)))
+            ->toArray();
+
+        // Build teacher eligibility from teacher_name. Two filter layers
+        // beyond `teacher_name !== null`:
+        //   - Reject empty/whitespace-only names (otherwise they group
+        //     under a blank key and surface as a "blank applicant" row).
+        //   - Drop NO_SHOW entries — the candidate didn't take the exam,
+        //     so no draw ticket. (NO_SHOW still flows into $allEntries
+        //     because line 44 only filters CANCELLED — that's deliberate
+        //     so teacher VOLUME tallies still count NO_SHOW.)
         $applicantEntries = $allEntries
-            ->filter(fn ($e) => $e->teacher_name !== null)
+            ->filter(fn ($e) => $e->teacher_name !== null && trim($e->teacher_name) !== '')
+            ->reject(fn ($e) => $e->notes === ExamEntry::NOTE_NO_SHOW)
+            ->reject(fn ($e) => in_array(strtolower(trim($e->teacher_name)), $selfExcludedNames, true))
             ->groupBy(fn ($e) => $e->teacher_name);
 
         $teacherTickets = [];
@@ -448,10 +467,12 @@ class QuarterEndController extends Controller
         $startDate = Carbon::create($year, $startMonth, 1)->startOfDay();
         $endDate = $startDate->copy()->addMonths(3)->subDay()->endOfDay();
 
+        // Strict filter for the prize draw pool — NO_SHOW entries don't
+        // earn a ticket. The candidate didn't take the exam; the teacher's
+        // VOLUME tally still credits them elsewhere, but draw eligibility
+        // is per-exam-actually-taken.
         $allEntries = ExamEntry::with(['instrument:id,name', 'order:id,requested_start_date,applicant_name', 'student:id,first_name,last_name'])
-            ->where(function ($q) {
-                $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
-            })
+            ->whereResultPossible()
             ->get()
             ->filter(function ($entry) use ($startDate, $endDate) {
                 $date = $entry->exam_date ?? $entry->order?->requested_start_date;
@@ -523,10 +544,20 @@ class QuarterEndController extends Controller
             ->unique()
             ->all();
 
+        // Operator-self-exclusion: the centre operator (Paul Sheridan)
+        // doesn't enter their own draws even if they have students entered
+        // through centre 120. Toggled per-contact via excluded_from_prize_draw.
+        $selfExcludedNames = ExamContact::query()
+            ->where('excluded_from_prize_draw', true)
+            ->pluck('name')
+            ->map(fn ($n) => strtolower(trim($n)))
+            ->toArray();
+
         $applicantEntries = $allEntries
-            ->filter(fn ($e) => $e->teacher_name !== null)
+            ->filter(fn ($e) => $e->teacher_name !== null && trim($e->teacher_name) !== '')
             ->filter(fn ($e) => ! in_array($e->teacher_contact_id, $excludedContactIds, true))
             ->filter(fn ($e) => ! in_array(strtolower(trim($e->teacher_name)), $excludedNamesLower, true))
+            ->reject(fn ($e) => in_array(strtolower(trim($e->teacher_name)), $selfExcludedNames, true))
             ->groupBy(fn ($e) => $e->teacher_name);
 
         $tickets = [];

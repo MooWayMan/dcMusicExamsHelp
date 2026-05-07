@@ -236,9 +236,7 @@ class DashboardController extends Controller
         return ExamEntry::query()
             ->with('order:id,requested_start_date')
             ->whereRaw('LOWER(TRIM(teacher_name)) = ?', [strtolower(trim((string) $contact->name))])
-            ->where(function ($q) {
-                $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
-            })
+            ->whereResultPossible()
             ->get()
             ->filter(function (ExamEntry $e) use ($start, $end) {
                 $date = $e->exam_date ?? $e->order?->requested_start_date;

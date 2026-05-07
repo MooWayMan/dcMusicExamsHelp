@@ -27,6 +27,7 @@ class ExamContact extends Model
         'spoken_on_phone',
         'contacted_by_email',
         'show_full_name',
+        'excluded_from_prize_draw',
     ];
 
     protected $casts = [
@@ -34,6 +35,7 @@ class ExamContact extends Model
         'spoken_on_phone' => 'boolean',
         'contacted_by_email' => 'boolean',
         'show_full_name' => 'boolean',
+        'excluded_from_prize_draw' => 'boolean',
     ];
 
     /**

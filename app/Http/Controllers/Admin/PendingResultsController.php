@@ -62,9 +62,7 @@ class PendingResultsController extends Controller
                 'student:id,first_name,last_name',
             ])
             ->whereNull('score')
-            ->where(function ($q): void {
-                $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
-            });
+            ->whereResultPossible();
 
         if ($search = $request->input('search')) {
             $candidates->where(function ($q) use ($search): void {
@@ -118,12 +116,8 @@ class PendingResultsController extends Controller
         // Summary — scoped to the selected quarter, mirroring QuarterEnd. The
         // 'with_results' and 'total' counts use the same date window so the
         // three numbers always describe the same population.
-        $excludeCancelled = function ($q): void {
-            $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
-        };
-
         $quarterScoped = ExamEntry::with('order:id,requested_start_date')
-            ->where($excludeCancelled)
+            ->whereResultPossible()
             ->get()
             ->filter(function (ExamEntry $entry) use ($startDate, $endDate): bool {
                 $effectiveDate = $entry->exam_date ?? $entry->order?->requested_start_date;
