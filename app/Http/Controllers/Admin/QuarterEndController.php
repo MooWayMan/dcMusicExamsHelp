@@ -253,6 +253,16 @@ class QuarterEndController extends Controller
             ->map(fn ($n) => strtolower(trim($n)))
             ->toArray();
 
+        // Operator-self-exclusion: any contact flagged with
+        // excluded_from_prize_draw is suppressed from BOTH draws (student
+        // ticket pool and teacher eligibility list). Used so the centre
+        // operator (Paul Sheridan) doesn't win their own draw.
+        $selfExcludedNames = ExamContact::query()
+            ->where('excluded_from_prize_draw', true)
+            ->pluck('name')
+            ->map(fn ($n) => strtolower(trim($n)))
+            ->toArray();
+
         // Build teacher eligibility from teacher_name. Two filter layers
         // beyond `teacher_name !== null`:
         //   - Reject empty/whitespace-only names (otherwise they group
@@ -264,6 +274,7 @@ class QuarterEndController extends Controller
         $applicantEntries = $allEntries
             ->filter(fn ($e) => $e->teacher_name !== null && trim($e->teacher_name) !== '')
             ->reject(fn ($e) => $e->notes === ExamEntry::NOTE_NO_SHOW)
+            ->reject(fn ($e) => in_array(strtolower(trim($e->teacher_name)), $selfExcludedNames, true))
             ->groupBy(fn ($e) => $e->teacher_name);
 
         $teacherTickets = [];
@@ -533,10 +544,20 @@ class QuarterEndController extends Controller
             ->unique()
             ->all();
 
+        // Operator-self-exclusion: the centre operator (Paul Sheridan)
+        // doesn't enter their own draws even if they have students entered
+        // through centre 120. Toggled per-contact via excluded_from_prize_draw.
+        $selfExcludedNames = ExamContact::query()
+            ->where('excluded_from_prize_draw', true)
+            ->pluck('name')
+            ->map(fn ($n) => strtolower(trim($n)))
+            ->toArray();
+
         $applicantEntries = $allEntries
             ->filter(fn ($e) => $e->teacher_name !== null && trim($e->teacher_name) !== '')
             ->filter(fn ($e) => ! in_array($e->teacher_contact_id, $excludedContactIds, true))
             ->filter(fn ($e) => ! in_array(strtolower(trim($e->teacher_name)), $excludedNamesLower, true))
+            ->reject(fn ($e) => in_array(strtolower(trim($e->teacher_name)), $selfExcludedNames, true))
             ->groupBy(fn ($e) => $e->teacher_name);
 
         $tickets = [];

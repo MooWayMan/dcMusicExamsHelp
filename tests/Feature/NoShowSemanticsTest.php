@@ -93,8 +93,11 @@ test('whereResultPossible keeps entries with non-empty unrelated notes', functio
 // ── Recognition page (ThankYouController) ────────────────────────────────
 
 test('Recognition page hides NO_SHOW entries from the public table', function () {
-    nsEntry(['candidate_name' => 'Visible Pass',   'score' => 88, 'result' => 'Distinction']);
-    nsEntry(['candidate_name' => 'No-show Hidden', 'score' => null, 'result' => null,
+    // ThankYouController applies the GDPR short-name rule to candidate
+    // names ("Alice Khoo" → "Alice K"), so we assert on the displayed
+    // form rather than the raw candidate_name.
+    nsEntry(['candidate_name' => 'Alice Visible',   'score' => 88, 'result' => 'Distinction']);
+    nsEntry(['candidate_name' => 'Bob Hidden',      'score' => null, 'result' => null,
              'notes' => ExamEntry::NOTE_NO_SHOW]);
 
     $this->get('/recognition')->assertOk()
@@ -104,8 +107,8 @@ test('Recognition page hides NO_SHOW entries from the public table', function ()
                 $names = collect($quarters)
                     ->flatMap(fn ($q) => collect($q['thankYouEntries'])->pluck('name'))
                     ->all();
-                return in_array('Visible Pass', $names, true)
-                    && ! collect($names)->contains(fn ($n) => str_contains($n ?? '', 'No-show'));
+                return in_array('Alice V', $names, true)
+                    && ! in_array('Bob H', $names, true);
             })
         );
 });
@@ -160,6 +163,47 @@ test('NO_SHOW entries do not earn the teacher a prize-draw ticket', function () 
     expect($response->json('total_tickets'))->toBe(1);
 });
 
+test('contacts flagged excluded_from_prize_draw never appear in the teacher eligibility list', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+
+    // Paul Sheridan is a registered teacher and has students entered
+    // through centre 120 (he teaches), but flips excluded_from_prize_draw
+    // on his own contact so he doesn't win his own draw.
+    $paul = ExamContact::create([
+        'name' => 'Paul Sheridan',
+        'excluded_from_prize_draw' => true,
+    ]);
+    $paul->addType('teacher');
+
+    // Helen is a normal teacher and should stay in the pool.
+    $helen = ExamContact::create(['name' => 'Helen Hodgkiss']);
+    $helen->addType('teacher');
+
+    nsEntry(['teacher_name' => 'Paul Sheridan']);
+    nsEntry(['teacher_name' => 'Paul Sheridan']);
+    nsEntry(['teacher_name' => 'Helen Hodgkiss']);
+
+    $this->actingAs($admin)->get('/admin/quarter-end?quarter=1&year=2026')
+        ->assertInertia(fn ($p) => $p
+            ->where('prizeDraw.teacher_tickets', function ($tickets) {
+                $names = collect($tickets)->pluck('name')->all();
+                return in_array('Helen Hodgkiss', $names, true)
+                    && ! in_array('Paul Sheridan', $names, true);
+            })
+        );
+
+    $response = $this->actingAs($admin)->postJson('/admin/quarter-end/draw', [
+        'type' => 'teacher',
+        'quarter' => 1,
+        'year' => 2026,
+        'mode' => 'test',
+    ]);
+
+    $response->assertOk();
+    expect($response->json('winner.name'))->toBe('Helen Hodgkiss')
+        ->and($response->json('total_tickets'))->toBe(1);
+});
+
 test('blank teacher_name does not create a phantom applicant row', function () {
     $admin = User::factory()->create(['role' => 'admin']);
 
@@ -177,8 +221,8 @@ test('blank teacher_name does not create a phantom applicant row', function () {
     $this->actingAs($admin)->get('/admin/quarter-end?quarter=1&year=2026')
         ->assertInertia(fn ($p) => $p
             ->component('admin/QuarterEnd/Index')
-            ->where('teacherTickets', function ($tickets) {
-                $names = collect($tickets)->pluck('applicant_name')->all();
+            ->where('prizeDraw.teacher_tickets', function ($tickets) {
+                $names = collect($tickets)->pluck('name')->all();
                 return in_array('Helen Hodgkiss', $names, true)
                     && ! in_array('', $names, true)
                     && ! in_array('   ', $names, true);
