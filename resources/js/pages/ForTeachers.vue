@@ -1,5 +1,7 @@
 <!-- resources/js/pages/ForTeachers.vue -->
 <script setup lang="ts">
+import { computed } from 'vue'
+import { Link, usePage } from '@inertiajs/vue3'
 import { usePageAnimation } from '@/composables/usePageAnimation'
 import { useBookingModal } from '@/composables/useBookingModal'
 import Head from '@/components/layouts/Head.vue'
@@ -16,6 +18,10 @@ import { Award, ArrowRight, BookOpen, Gift, GraduationCap, CheckCircle, ChevronR
 
 const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
+
+// Hide the "Create teacher account" CTA from teachers who are already signed in.
+const page = usePage()
+const user = computed(() => (page.props.auth as any)?.user)
 
 const pageMeta = {
   title: 'For Teachers — musicExams.help',
@@ -171,6 +177,22 @@ const faqs = [
             </div>
             <ChevronRight class="h-5 w-5 shrink-0 text-white/60" />
           </a>
+
+          <!-- Teacher account CTA — hidden once they're signed in. -->
+          <Link
+            v-if="!user"
+            href="/register"
+            class="flex items-center justify-between rounded-xl border border-brand-accent/30 bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary px-5 py-3 text-white shadow-lg transition hover:scale-[1.01] hover:shadow-xl sm:px-6 sm:py-4"
+          >
+            <div class="flex items-center gap-3">
+              <GraduationCap class="h-5 w-5 shrink-0 text-white/80 sm:h-6 sm:w-6" />
+              <div>
+                <span class="text-sm font-semibold sm:text-base lg:text-lg">Create your free teacher account</span>
+                <span class="ml-2 text-xs text-white/70 sm:text-sm">Track every student's bookings, results &amp; awards in one dashboard</span>
+              </div>
+            </div>
+            <ChevronRight class="h-5 w-5 shrink-0 text-white/60" />
+          </Link>
 
         </div>
       </div>

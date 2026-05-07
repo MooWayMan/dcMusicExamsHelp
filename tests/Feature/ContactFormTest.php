@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Mail;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+use App\Mail\ContactAutoReply;
 use App\Mail\ContactFormSubmission;
 
 // ──────────────────────────────────────────
@@ -25,6 +26,18 @@ test('contact form sends email with valid data', function () {
     Mail::assertSent(ContactFormSubmission::class, function ($mail) {
         return $mail->hasTo('musicexams@musicexams.help');
     });
+});
+
+test('contact auto-reply body links the free teacher account signup', function () {
+    // The auto-reply lands in the inbox of anyone who uses the public
+    // contact form — many of them music teachers reaching out to ask
+    // about exam booking. Surface the dashboard signup right alongside
+    // the existing quick-links so they can act on it without bouncing
+    // back to the marketing site.
+    $rendered = (new ContactAutoReply('Sarah Connor', 'Exam enquiry'))->render();
+
+    expect($rendered)->toContain('/register');
+    expect($rendered)->toContain('Free teacher account');
 });
 
 test('contact form requires name', function () {

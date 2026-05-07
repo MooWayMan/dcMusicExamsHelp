@@ -67,9 +67,15 @@
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td>
+                                                <td style="padding-bottom: 10px;">
                                                     <a href="https://musicexams.help/faq" style="color: #3B82F6; font-size: 15px; text-decoration: none; font-weight: bold;">&#x2753; FAQ</a>
                                                     <span style="color: #6b7280; font-size: 14px;"> — Common questions answered</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <a href="https://musicexams.help/register" style="color: #3B82F6; font-size: 15px; text-decoration: none; font-weight: bold;">&#x1F3AB; Free teacher account</a>
+                                                    <span style="color: #6b7280; font-size: 14px;"> — Track student bookings &amp; results in one dashboard</span>
                                                 </td>
                                             </tr>
                                         </table>
