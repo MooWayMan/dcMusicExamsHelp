@@ -776,6 +776,60 @@ PS — if you don't already, you can track all your students' results and awards
   alert('Winner email copied to clipboard!')
 }
 
+// Copy / open the teacher prize-draw winner email. Resolves the recipient
+// email by matching the winner_name against the teachers[] array from the
+// page payload (which already has the right contact email looked up via
+// teacher_contact_id). Falls back to a clipboard-only flow if no match.
+function findTeacherWinnerRow(): Teacher | null {
+  if (! teacherRealWinner.value) return null
+  const target = teacherRealWinner.value.winner_name.trim().toLowerCase()
+  return (props.teachers || []).find(
+    t => (t.teacher_name ?? '').trim().toLowerCase() === target
+  ) ?? null
+}
+
+function copyTeacherDrawWinnerEmail() {
+  if (! teacherRealWinner.value) return
+  const winnerRow = findTeacherWinnerRow()
+  const winnerName = teacherRealWinner.value.winner_name
+  const firstName = recipientGreetingName(winnerName)
+  const entries = teacherRealWinner.value.winner_entries
+  const totalTickets = teacherRealWinner.value.total_tickets
+
+  const body = `Hi ${firstName},
+
+Wonderful news — you've won the ${props.quarterLabel} musicExams.help teacher prize draw!
+
+Out of ${totalTickets} tickets in the pool (one for every non-cancelled student entry through centre 120), ${entries === 1 ? 'your one ticket' : `your ${entries} tickets`} came up.
+
+The prize is a £50 gift token to invest back into your teaching — new resources, an instrument top-up, sheet music, whatever helps you and your students. Here's the Amazon gift card code:
+
+[PASTE GIFT CARD CODE HERE]
+
+You can add this to any Amazon account — it's not tied to a name or email.
+
+The teacher draw isn't published on the public site (no competition between teachers), but you'll see your win on your dashboard at https://musicexams.help/dashboard when you log in. You're welcome to share on your own channels if you'd like.
+
+Huge congratulations — and thank you for entering ${entries} ${entries === 1 ? 'student' : 'students'} through centre 120 this quarter.
+
+Best wishes,
+Paul Sheridan`
+
+  navigator.clipboard.writeText(body)
+  const recipientNote = winnerRow?.applicant_email
+    ? `Now click "Open in Gmail" to compose to ${winnerRow.applicant_email}.`
+    : `No email is on file for ${winnerName} — you'll need to look it up. The template is on your clipboard.`
+  alert(`Teacher prize-draw winner email copied to clipboard.\n\n${recipientNote}`)
+}
+
+function openGmailForTeacherDrawWinner() {
+  if (! teacherRealWinner.value) return
+  const winnerRow = findTeacherWinnerRow()
+  const subject = encodeURIComponent(`musicExams.help Teacher Prize Draw Winner — ${props.quarterLabel}`)
+  const to = encodeURIComponent(winnerRow?.applicant_email ?? '')
+  window.open(`https://mail.google.com/mail/?view=cm&to=${to}&su=${subject}`, '_blank')
+}
+
 // Copy heads-up email (to send from OLD email address)
 function copyHeadsUpEmail(teacher: Teacher) {
   const firstName = recipientGreetingName(teacher.teacher_name)
@@ -1595,6 +1649,15 @@ const teacherWinner = computed(() => {
                 <p class="text-lg font-bold text-brand-text">{{ teacherRealWinner.winner_name }}</p>
                 <p class="text-sm text-brand-text-soft">{{ teacherRealWinner.winner_entries }} entries this quarter — from {{ teacherRealWinner.total_tickets }} tickets</p>
                 <p class="mt-2 text-xs text-brand-text-soft">This result is permanently recorded.</p>
+
+                <div class="mt-3 flex flex-wrap gap-2">
+                  <MyButtonConstructor size="small" variant="outline" :icon="Copy" @click="copyTeacherDrawWinnerEmail">
+                    Copy Email
+                  </MyButtonConstructor>
+                  <MyButtonConstructor size="small" variant="outline" :icon="ExternalLink" @click="openGmailForTeacherDrawWinner">
+                    Open in Gmail
+                  </MyButtonConstructor>
+                </div>
               </div>
 
               <!-- Not yet drawn -->
