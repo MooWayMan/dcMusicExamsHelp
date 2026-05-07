@@ -178,8 +178,6 @@ function isExpanded(key: string): boolean {
     return expandedCandidates.value.has(key)
 }
 
-const logo = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/musicexamshelp_logo2.png'
-
 const quickLinks = [
     { title: 'Admin Dashboard', subtitle: 'Stats, orders & contacts', href: '/admin', icon: LayoutDashboard },
     { title: 'Orders', subtitle: 'View all exam orders', href: '/admin/orders', icon: ClipboardList },
@@ -228,13 +226,9 @@ defineOptions({
             </Link>
         </div>
 
-        <!-- Logo and welcome -->
+        <!-- Welcome — layout already shows the musicExams.help logo at the
+             top, so we don't repeat it here (was visually doubling up). -->
         <div class="mt-4 flex flex-col items-center gap-5 sm:mt-8">
-            <img
-                :src="logo"
-                alt="musicExams.help"
-                class="h-16 w-auto sm:h-20"
-            />
             <MyTextConstructor variant="heading" alignment="center" spacing="none">
                 <template #myTitle>Welcome back, {{ user?.name?.split(' ')[0] }}</template>
             </MyTextConstructor>
