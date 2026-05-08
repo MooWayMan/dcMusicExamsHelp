@@ -191,6 +191,9 @@ class TrinityCsvImporter
             'R&P Vocals' => 'Singing (Rock/Pop)',
             'R&P Guitar' => 'Guitar (Rock/Pop)',
             'R&P Drums' => 'Drum Kit',
+            // Trinity also exports just 'Vocals' for R&P singing entries.
+            'Vocals' => 'Singing (Rock/Pop)',
+            'Voice' => 'Singing (Classical)',
 
             // Classical names
             'Piano' => 'Piano',
@@ -544,8 +547,10 @@ class TrinityCsvImporter
             $warnings[] = "Could not parse grade from Examination: '{$enrol['examination']}'.";
         }
 
+        // Case-insensitive lookup so 'Vocals' / 'vocals' / 'VOCALS' all map.
         $instrumentMap = self::instrumentMap();
-        $mappedInstrumentName = $instrumentMap[$enrol['subject']] ?? null;
+        $caseInsensitive = array_change_key_case($instrumentMap, CASE_LOWER);
+        $mappedInstrumentName = $caseInsensitive[strtolower(trim($enrol['subject']))] ?? null;
         $instrument = $mappedInstrumentName
             ? Instrument::where('name', $mappedInstrumentName)->first()
             : null;
