@@ -126,9 +126,15 @@ class ExamEntryController extends Controller
             'distinctions' => $summaryBase()->where('exam_entries.result', 'Distinction')->count('exam_entries.id'),
             'merits' => $summaryBase()->where('exam_entries.result', 'Merit')->count('exam_entries.id'),
             // Awaiting = no result AND not CANCELLED / NO_SHOW (those will never produce one).
+            // Inline the filter (instead of the whereResultPossible scope) and qualify the
+            // column explicitly because the query is joined with `orders`, which also has a
+            // `notes` column — would otherwise throw "ambiguous column" on Postgres.
             'awaiting' => $summaryBase()
                 ->whereNull('exam_entries.result')
-                ->whereResultPossible()
+                ->where(function ($q) {
+                    $q->whereNull('exam_entries.notes')
+                        ->orWhereNotIn('exam_entries.notes', \App\Models\ExamEntry::NOTES_NO_RESULT);
+                })
                 ->count('exam_entries.id'),
         ];
 
