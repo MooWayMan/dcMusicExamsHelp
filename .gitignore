@@ -36,5 +36,7 @@ CLAUDE.md
 *.sqlite*
 # CSV imports (temporary data files)
 *.csv
-# Import files (temporary Trinity exports)
-imports/
+# Import files (temporary Trinity exports — narrow to the storage path
+# only, otherwise this matches resources/js/pages/admin/Imports/ on
+# case-insensitive filesystems like macOS APFS).
+/storage/app/imports/

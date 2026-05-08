@@ -174,20 +174,30 @@ test('guest cannot access quick replies', function () {
         ->assertRedirect('/login');
 });
 
-test('admin can access quick replies and sees the four templates', function () {
+test('admin can access quick replies and sees the canonical templates', function () {
     $admin = User::factory()->create(['role' => 'admin']);
 
-    $this->actingAs($admin)
+    // Templates have grown beyond the original four — assert presence, not
+    // position, so adding a new template no longer breaks this test.
+    $expectedIds = ['parent-enquiry', 'teacher-enquiry', 'old-address-nudge', 'who-books'];
+
+    $response = $this->actingAs($admin)
         ->get('/admin/quick-replies')
-        ->assertStatus(200)
-        ->assertInertia(fn ($page) => $page
-            ->component('admin/QuickReplies/Index')
-            ->has('templates', 4)
-            ->where('templates.0.id', 'parent-enquiry')
-            ->where('templates.1.id', 'teacher-enquiry')
-            ->where('templates.2.id', 'old-address-nudge')
-            ->where('templates.3.id', 'who-books')
-        );
+        ->assertStatus(200);
+
+    $response->assertInertia(fn ($page) => $page
+        ->component('admin/QuickReplies/Index')
+        ->has('templates')
+        ->where('templates', function ($templates) use ($expectedIds) {
+            $ids = collect($templates)->pluck('id')->all();
+            foreach ($expectedIds as $expected) {
+                if (! in_array($expected, $ids, true)) {
+                    return false;
+                }
+            }
+            return true;
+        })
+    );
 });
 
 test('quick replies template content includes the canonical site references', function () {

@@ -190,3 +190,14 @@ test('GET /exam-guide/syllabuses?from=for-parents returns 200', function () {
     $this->get('/exam-guide/syllabuses?from=for-parents')
         ->assertStatus(200);
 });
+
+// ──────────────────────────────────────────
+// Admin Routes — basic 200 smoke test
+// ──────────────────────────────────────────
+
+test('GET /admin/imports returns 200 for an authenticated admin', function () {
+    $admin = \App\Models\User::factory()->create(['role' => 'admin']);
+    $this->actingAs($admin)
+        ->get('/admin/imports')
+        ->assertStatus(200);
+});

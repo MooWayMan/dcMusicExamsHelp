@@ -19,6 +19,7 @@ import {
     Contact as ContactIcon,
     MessageSquareText,
     Mail as MailIcon,
+    Upload,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
@@ -96,6 +97,11 @@ const adminPeopleNavItems: NavItem[] = [
 ];
 
 const adminExamsNavItems: NavItem[] = [
+    {
+        title: 'Import',
+        href: '/admin/imports',
+        icon: Upload,
+    },
     {
         title: 'Orders',
         href: '/admin/orders',
