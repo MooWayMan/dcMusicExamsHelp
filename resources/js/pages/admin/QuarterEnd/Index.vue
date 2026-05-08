@@ -646,13 +646,30 @@ function copyEmailTemplate(teacher: Teacher) {
     ? `\n\nStudent Prize Draw\nThe winner of the £50 gift token this quarter is ${winnerShortName} (${studentWinner.value.instrument} Grade ${studentWinner.value.grade}) — congratulations! Every student entered through centre 120 was in the draw.${studentWinner.value.teacher === teacher.teacher_name ? ' As their teacher, I\'ll be in touch with you separately about getting the prize to them.' : ''}\n`
     : ''
 
+  // Teacher prize draw — wording depends on whether the draw has been run
+  // for this quarter. Once run, "taking place in the coming weeks" is wrong
+  // and confuses any teacher who logs in expecting to see their result.
+  // Winners aren't named in the email (privacy) — teachers log in to check.
+  const teacherDrawText = props.existingDraws.teacher
+    ? `Teacher draw: this quarter's draw has been run. Winners are notified privately rather than announced publicly — log into your teacher dashboard at https://musicexams.help/register to check if you won. The more students you enter through centre 120 next quarter, the more tickets you'll have.`
+    : `Teacher draw: taking place in the coming weeks. The prize is a £50 gift token to help buy musical instruments for your school. The more students linked to you, the more tickets you have — that's why the question at the top matters!\n\nThe teacher draw result won't be published on the website — no competition between teachers. Winners can see their result privately by logging in, and you're welcome to promote it on your own channels if you win!`
+
+  // Linked-students nudge — wording depends on whether this quarter's
+  // draw + badges are already settled. Pre-draw the pitch is "earn extra
+  // tickets THIS quarter"; post-draw the pitch is forward-looking ("counts
+  // toward next quarter's badge and draw"). Asking AFTER the badges are
+  // awarded with the same urgency reads as a bit late.
+  const linkedStudentsNudge = props.existingDraws.teacher
+    ? `Quick favour while I have you: do you have any students who booked their exam through centre 120 in 2026 but booked directly or through a parent? If so, reply with their names and I'll link them to you — it'll feed into your badge tally going forward and add extra tickets to the next teacher prize draw.`
+    : `Before I get to the good stuff: do you have any students who booked their exam through centre 120 in 2026 but booked directly or through a parent? If so, reply with their names so I can link them to you — it counts towards your Teacher Appreciation badge and extra tickets in the teacher prize draw!`
+
   const firstName = recipientGreetingName(teacher.teacher_name)
 
   const template = `Hi ${firstName},
 
 Quick heads-up — I've moved to a new email address: musicexams@musicexams.help. Please save this for future correspondence.
 
-Before I get to the good stuff: do you have any students who booked their exam through centre 120 in 2026 but booked directly or through a parent? If so, reply with their names so I can link them to you — it counts towards your Teacher Appreciation badge and extra tickets in the teacher prize draw!
+${linkedStudentsNudge}
 
 ---
 
@@ -675,9 +692,7 @@ Prize Draws
 
 Every quarter we run two prize draws — one for students, one for teachers. Every student entry through centre 120 earns one ticket.
 ${studentDrawText}
-Teacher draw: taking place in the coming weeks. The prize is a £50 gift token to help buy musical instruments for your school. The more students linked to you, the more tickets you have — that's why the question at the top matters!
-
-The teacher draw result won't be published on the website — no competition between teachers. Winners can see their result privately by logging in, and you're welcome to promote it on your own channels if you win!
+${teacherDrawText}
 
 Top Scorer awards and gift tokens are announced around 6 weeks after the quarter ends, once all results (including digital) are in. Keep an eye on musicExams.help!
 
