@@ -128,6 +128,9 @@ const props = defineProps<{
     student: ExistingDraw | null
     teacher: ExistingDraw | null
   }
+  // Per-winner workflow status from DB. Keyed `award_key|winner_full_name`.
+  // Tied winners each get their own entry. Missing key = all three steps false.
+  winnerWorkflow?: Record<string, { bought: boolean; sent: boolean; cert: boolean }>
 }>()
 
 const page = usePage()
@@ -291,6 +294,69 @@ const AWARD_META: Record<AwardKey, AwardMeta> = {
   initial_5_merit:       { certificate: 'Centre Stage', groupLabel: 'Initial–5',   bandLabel: 'Highest Merit'       },
   '6_8_distinction':     { certificate: 'Showstopper',  groupLabel: 'Grades 6–8',  bandLabel: 'Highest Distinction' },
   '6_8_merit':           { certificate: 'Centre Stage', groupLabel: 'Grades 6–8',  bandLabel: 'Highest Merit'       },
+}
+
+// ── Per-winner workflow tracking (Bought / Sent / Cert) ───────────────────
+// Three manual progress checkboxes per winner row. Backed by the DB so Paul
+// can look back at which winners were dealt with last quarter — full audit
+// trail. Optimistic UI: tick toggles immediately, POST in background, revert
+// on failure. Tied winners each get their own row because the storage key
+// includes winner_full_name.
+type WorkflowStep = 'bought' | 'sent' | 'cert'
+type WorkflowStatus = { bought: boolean; sent: boolean; cert: boolean }
+
+const workflowChecks = ref<Record<string, WorkflowStatus>>({ ...(props.winnerWorkflow ?? {}) })
+
+function workflowKey(awardKey: AwardKey, winnerFullName: string): string {
+  return `${awardKey}|${winnerFullName}`
+}
+
+function workflowStatus(awardKey: AwardKey, winnerFullName: string): WorkflowStatus {
+  return workflowChecks.value[workflowKey(awardKey, winnerFullName)]
+    ?? { bought: false, sent: false, cert: false }
+}
+
+function workflowAllDone(awardKey: AwardKey, winnerFullName: string): boolean {
+  const s = workflowStatus(awardKey, winnerFullName)
+  return s.bought && s.sent && s.cert
+}
+
+async function toggleWorkflowStep(awardKey: AwardKey, winnerFullName: string, step: WorkflowStep) {
+  const key = workflowKey(awardKey, winnerFullName)
+  const previous = workflowStatus(awardKey, winnerFullName)
+  const newValue = ! previous[step]
+  // Optimistic update — flip the box right away so it feels responsive.
+  workflowChecks.value = {
+    ...workflowChecks.value,
+    [key]: { ...previous, [step]: newValue },
+  }
+  try {
+    const res = await fetch('/admin/quarter-end/toggle-workflow', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-XSRF-TOKEN': getXsrfToken(),
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        quarter: props.quarter,
+        year: props.year,
+        award_key: awardKey,
+        winner_full_name: winnerFullName,
+        step,
+        value: newValue,
+      }),
+    })
+    if (! res.ok) throw new Error('Toggle failed')
+    const data = await res.json()
+    if (data?.status) {
+      workflowChecks.value = { ...workflowChecks.value, [key]: data.status }
+    }
+  } catch (e) {
+    // Roll back on failure so the UI reflects what's actually persisted.
+    workflowChecks.value = { ...workflowChecks.value, [key]: previous }
+    console.error('Failed to save workflow step', e)
+  }
 }
 
 // Greeting name resolver. Two cases Paul wants distinct:
@@ -1428,6 +1494,25 @@ const topScorerAwardCount = computed(() => {
                       <button v-if="w.teacher_email" class="inline-flex items-center gap-1 rounded-md border border-yellow-700 bg-yellow-700 px-2.5 py-1 text-xs font-semibold text-white hover:opacity-90 transition" @click="openGmailComposeForWinner(w, 'initial_5_distinction')">
                         <ExternalLink class="h-3 w-3" /> Open Gmail
                       </button>
+                      <!-- Workflow: Bought / Sent / Cert checkboxes — DB-backed audit trail per winner -->
+                      <div class="basis-full mt-1 flex flex-wrap items-center gap-3 text-xs text-yellow-800">
+                        <span class="font-semibold">Workflow:</span>
+                        <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                          <input type="checkbox" :checked="workflowStatus('initial_5_distinction', w.full_name).bought" @change="toggleWorkflowStep('initial_5_distinction', w.full_name, 'bought')" class="rounded border-yellow-700">
+                          <span>Bought</span>
+                        </label>
+                        <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                          <input type="checkbox" :checked="workflowStatus('initial_5_distinction', w.full_name).sent" @change="toggleWorkflowStep('initial_5_distinction', w.full_name, 'sent')" class="rounded border-yellow-700">
+                          <span>Sent</span>
+                        </label>
+                        <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                          <input type="checkbox" :checked="workflowStatus('initial_5_distinction', w.full_name).cert" @change="toggleWorkflowStep('initial_5_distinction', w.full_name, 'cert')" class="rounded border-yellow-700">
+                          <span>Cert</span>
+                        </label>
+                        <span v-if="workflowAllDone('initial_5_distinction', w.full_name)" class="ml-auto inline-flex items-center gap-1 rounded-full bg-brand-success/20 px-2 py-0.5 font-semibold text-brand-success">
+                          <CheckCircle2 class="h-3 w-3" /> All done
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <div v-if="initial5.merit.length" class="rounded-lg border border-brand-accent/30 bg-brand-accent/5 p-4">
@@ -1452,6 +1537,25 @@ const topScorerAwardCount = computed(() => {
                       <button v-if="w.teacher_email" class="inline-flex items-center gap-1 rounded-md border border-brand-accent bg-brand-accent px-2.5 py-1 text-xs font-semibold text-white hover:opacity-90 transition" @click="openGmailComposeForWinner(w, 'initial_5_merit')">
                         <ExternalLink class="h-3 w-3" /> Open Gmail
                       </button>
+                      <!-- Workflow: Bought / Sent / Cert checkboxes -->
+                      <div class="basis-full mt-1 flex flex-wrap items-center gap-3 text-xs text-brand-text">
+                        <span class="font-semibold">Workflow:</span>
+                        <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                          <input type="checkbox" :checked="workflowStatus('initial_5_merit', w.full_name).bought" @change="toggleWorkflowStep('initial_5_merit', w.full_name, 'bought')" class="rounded border-brand-accent">
+                          <span>Bought</span>
+                        </label>
+                        <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                          <input type="checkbox" :checked="workflowStatus('initial_5_merit', w.full_name).sent" @change="toggleWorkflowStep('initial_5_merit', w.full_name, 'sent')" class="rounded border-brand-accent">
+                          <span>Sent</span>
+                        </label>
+                        <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                          <input type="checkbox" :checked="workflowStatus('initial_5_merit', w.full_name).cert" @change="toggleWorkflowStep('initial_5_merit', w.full_name, 'cert')" class="rounded border-brand-accent">
+                          <span>Cert</span>
+                        </label>
+                        <span v-if="workflowAllDone('initial_5_merit', w.full_name)" class="ml-auto inline-flex items-center gap-1 rounded-full bg-brand-success/20 px-2 py-0.5 font-semibold text-brand-success">
+                          <CheckCircle2 class="h-3 w-3" /> All done
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <p v-if="!initial5.distinction.length && !initial5.merit.length" class="text-sm italic text-brand-text-soft">
@@ -1486,6 +1590,25 @@ const topScorerAwardCount = computed(() => {
                       <button v-if="w.teacher_email" class="inline-flex items-center gap-1 rounded-md border border-yellow-700 bg-yellow-700 px-2.5 py-1 text-xs font-semibold text-white hover:opacity-90 transition" @click="openGmailComposeForWinner(w, '6_8_distinction')">
                         <ExternalLink class="h-3 w-3" /> Open Gmail
                       </button>
+                      <!-- Workflow: Bought / Sent / Cert checkboxes -->
+                      <div class="basis-full mt-1 flex flex-wrap items-center gap-3 text-xs text-yellow-800">
+                        <span class="font-semibold">Workflow:</span>
+                        <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                          <input type="checkbox" :checked="workflowStatus('6_8_distinction', w.full_name).bought" @change="toggleWorkflowStep('6_8_distinction', w.full_name, 'bought')" class="rounded border-yellow-700">
+                          <span>Bought</span>
+                        </label>
+                        <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                          <input type="checkbox" :checked="workflowStatus('6_8_distinction', w.full_name).sent" @change="toggleWorkflowStep('6_8_distinction', w.full_name, 'sent')" class="rounded border-yellow-700">
+                          <span>Sent</span>
+                        </label>
+                        <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                          <input type="checkbox" :checked="workflowStatus('6_8_distinction', w.full_name).cert" @change="toggleWorkflowStep('6_8_distinction', w.full_name, 'cert')" class="rounded border-yellow-700">
+                          <span>Cert</span>
+                        </label>
+                        <span v-if="workflowAllDone('6_8_distinction', w.full_name)" class="ml-auto inline-flex items-center gap-1 rounded-full bg-brand-success/20 px-2 py-0.5 font-semibold text-brand-success">
+                          <CheckCircle2 class="h-3 w-3" /> All done
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <div v-if="grades68.merit.length" class="rounded-lg border border-brand-accent/30 bg-brand-accent/5 p-4">
@@ -1510,6 +1633,25 @@ const topScorerAwardCount = computed(() => {
                       <button v-if="w.teacher_email" class="inline-flex items-center gap-1 rounded-md border border-brand-accent bg-brand-accent px-2.5 py-1 text-xs font-semibold text-white hover:opacity-90 transition" @click="openGmailComposeForWinner(w, '6_8_merit')">
                         <ExternalLink class="h-3 w-3" /> Open Gmail
                       </button>
+                      <!-- Workflow: Bought / Sent / Cert checkboxes -->
+                      <div class="basis-full mt-1 flex flex-wrap items-center gap-3 text-xs text-brand-text">
+                        <span class="font-semibold">Workflow:</span>
+                        <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                          <input type="checkbox" :checked="workflowStatus('6_8_merit', w.full_name).bought" @change="toggleWorkflowStep('6_8_merit', w.full_name, 'bought')" class="rounded border-brand-accent">
+                          <span>Bought</span>
+                        </label>
+                        <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                          <input type="checkbox" :checked="workflowStatus('6_8_merit', w.full_name).sent" @change="toggleWorkflowStep('6_8_merit', w.full_name, 'sent')" class="rounded border-brand-accent">
+                          <span>Sent</span>
+                        </label>
+                        <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                          <input type="checkbox" :checked="workflowStatus('6_8_merit', w.full_name).cert" @change="toggleWorkflowStep('6_8_merit', w.full_name, 'cert')" class="rounded border-brand-accent">
+                          <span>Cert</span>
+                        </label>
+                        <span v-if="workflowAllDone('6_8_merit', w.full_name)" class="ml-auto inline-flex items-center gap-1 rounded-full bg-brand-success/20 px-2 py-0.5 font-semibold text-brand-success">
+                          <CheckCircle2 class="h-3 w-3" /> All done
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <p v-if="!grades68.distinction.length && !grades68.merit.length" class="text-sm italic text-brand-text-soft">

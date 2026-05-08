@@ -8,6 +8,7 @@ use App\Models\ExamEntry;
 use App\Models\Order;
 use App\Models\PrizeDraw;
 use App\Models\TopScorerPublication;
+use App\Models\TopScorerWorkflow;
 use App\Support\TopScorers;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -427,6 +428,21 @@ class QuarterEndController extends Controller
             ->pluck('teacher_name')
             ->toArray();
 
+        // Per-winner workflow checkboxes (Bought / Sent / Cert) for the
+        // top-scorer awards. Keyed `award_key|winner_full_name` so the Vue
+        // side can look up status for each tied winner independently.
+        $winnerWorkflow = TopScorerWorkflow::where('quarter', $quarter)
+            ->where('year', $year)
+            ->get()
+            ->mapWithKeys(fn ($r) => [
+                "{$r->award_key}|{$r->winner_full_name}" => [
+                    'bought' => $r->bought,
+                    'sent'   => $r->sent,
+                    'cert'   => $r->cert,
+                ],
+            ])
+            ->toArray();
+
         // Persistent batch result — scan the storage dir for existing ZIPs so
         // download links survive navigation and Inertia flash consumption.
         // Flash data is still used for the just-generated feedback, but this
@@ -529,6 +545,47 @@ class QuarterEndController extends Controller
                 'teacher_ticket_count' => count($teacherTickets),
             ],
             'persistedBatchResult' => $persistedBatchResult,
+            'winnerWorkflow' => $winnerWorkflow,
+        ]);
+    }
+
+    /**
+     * Toggle a single workflow step for a single top-scorer winner.
+     * Called from /admin/quarter-end checkboxes (Bought / Sent / Cert).
+     *
+     * Tied winners are tracked separately because the table key includes
+     * winner_full_name — Anna and Maya each have their own row even when
+     * they share the same award_key.
+     */
+    public function toggleWorkflow(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'quarter'          => 'required|integer|min:1|max:4',
+            'year'             => 'required|integer|min:2025|max:2030',
+            'award_key'        => 'required|string|in:'.implode(',', TopScorerWorkflow::AWARD_KEYS),
+            'winner_full_name' => 'required|string|max:255',
+            'step'             => 'required|string|in:'.implode(',', TopScorerWorkflow::STEPS),
+            'value'            => 'required|boolean',
+        ]);
+
+        $record = TopScorerWorkflow::firstOrNew([
+            'quarter'          => $validated['quarter'],
+            'year'             => $validated['year'],
+            'award_key'        => $validated['award_key'],
+            'winner_full_name' => $validated['winner_full_name'],
+        ]);
+
+        $record->{$validated['step']} = $validated['value'];
+        $record->updated_by = $request->user()->id;
+        $record->save();
+
+        return response()->json([
+            'success' => true,
+            'status' => [
+                'bought' => $record->bought,
+                'sent'   => $record->sent,
+                'cert'   => $record->cert,
+            ],
         ]);
     }
 

@@ -152,7 +152,7 @@ async function handleSubmit() {
           Trinity Exam Checklist
         </h3>
         <p class="mt-2 text-base text-brand-text-soft sm:text-lg">
-          A simple, printable checklist that walks you through every step of booking and preparing for a Trinity music exam — sent straight to your inbox.
+          A simple, printable checklist for preparing, recording, and sitting your Trinity music exam — sent straight to your inbox.
         </p>
       </div>
 

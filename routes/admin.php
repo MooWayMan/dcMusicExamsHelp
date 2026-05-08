@@ -95,6 +95,7 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
         Route::post('quarter-end/draw', [QuarterEndController::class, 'runDraw'])->name('quarter-end.draw');
         Route::post('quarter-end/mark-sent', [QuarterEndController::class, 'markSent'])->name('quarter-end.mark-sent');
         Route::post('quarter-end/publish-top-scorers', [QuarterEndController::class, 'publishTopScorers'])->name('quarter-end.publish-top-scorers');
+        Route::post('quarter-end/toggle-workflow', [QuarterEndController::class, 'toggleWorkflow'])->name('quarter-end.toggle-workflow');
 
         // Certificates — generate personalised certificates
         Route::get('certificates', [CertificateController::class, 'index'])->name('certificates.index');
