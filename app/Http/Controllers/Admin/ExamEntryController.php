@@ -125,6 +125,11 @@ class ExamEntryController extends Controller
             'with_results' => $summaryBase()->whereNotNull('exam_entries.result')->count('exam_entries.id'),
             'distinctions' => $summaryBase()->where('exam_entries.result', 'Distinction')->count('exam_entries.id'),
             'merits' => $summaryBase()->where('exam_entries.result', 'Merit')->count('exam_entries.id'),
+            // Awaiting = no result AND not CANCELLED / NO_SHOW (those will never produce one).
+            'awaiting' => $summaryBase()
+                ->whereNull('exam_entries.result')
+                ->whereResultPossible()
+                ->count('exam_entries.id'),
         ];
 
         return Inertia::render('admin/ExamEntries/Index', [

@@ -820,9 +820,11 @@ function formatRunSummary(run: { type: string; summary: Record<string, unknown> 
             <div v-if="candidatePreview" class="mt-5 rounded-lg border border-brand-border bg-brand-surface-soft p-4">
                 <h3 class="mb-3 text-base font-semibold text-brand-text">Preview</h3>
 
-                <div v-if="candidatePreview.warnings.length" class="mb-4 rounded-lg border border-brand-warning/40 bg-brand-warning/10 p-3">
-                    <p class="text-sm font-semibold text-brand-warning">Warnings</p>
-                    <ul class="mt-1 list-disc space-y-1 pl-5 text-sm text-brand-text">
+                <div v-if="candidatePreview.warnings.length" class="mb-4 rounded-lg border-2 border-brand-danger bg-brand-danger p-4 text-white shadow-md">
+                    <p class="flex items-center gap-2 text-base font-bold uppercase tracking-wide">
+                        <span aria-hidden="true">⚠</span> Warnings
+                    </p>
+                    <ul class="mt-2 list-disc space-y-1 pl-6 text-sm font-medium">
                         <li v-for="(w, i) in candidatePreview.warnings" :key="i">{{ w }}</li>
                     </ul>
                 </div>
