@@ -27,14 +27,61 @@ class CertificateController extends Controller
 
     /**
      * Student certificate templates (blank PNGs on S3).
+     *
+     * Centre Stage / Showstopper here are the LEGACY single-version templates
+     * kept as a fallback. The live top-scorer cert generator picks group-
+     * specific templates from TOP_SCORER_TEMPLATES below — those are what
+     * Paul actually wants attached to the winner emails. The legacy entries
+     * stay so any older code path that looks up by certificate name keeps
+     * working.
      */
     private const STUDENT_TEMPLATES = [
-        'Bravo Certificate'            => 'certStu_1.png',
-        'Take a Bow Certificate'       => 'certStu_2.png',
+        'Bravo Certificate'             => 'certStu_1.png',
+        'Take a Bow Certificate'        => 'certStu_2.png',
         'Standing Ovation Certificate'  => 'certStu_3.png',
         'Centre Stage Certificate'      => 'certStu_4.png',
         'Showstopper Certificate'       => 'certStu_5.png',
     ];
+
+    /**
+     * Group-specific top-scorer cert templates.
+     *
+     * Each quarter awards FOUR top-scorer certificates — one per
+     * (group × tier) combination. Anna in Initial–5 might score 92 (her
+     * group's top Distinction) the same quarter Seth scores 93 in Grades
+     * 6–8 (his group's top Distinction). Both deserve a cert that says
+     * "highest in YOUR group" — not the legacy generic "highest this
+     * quarter" that misled the recipient about which slice was won.
+     *
+     * Index: [tier][group] → S3 filename.
+     *   tier  = 'Showstopper' (Distinction) | 'Centre Stage' (Merit)
+     *   group = 'initial_5' | '6_8'
+     */
+    private const TOP_SCORER_TEMPLATES = [
+        'Showstopper' => [
+            'initial_5' => 'certStu_5_initial5.png',
+            '6_8'       => 'certStu_5_g68.png',
+        ],
+        'Centre Stage' => [
+            'initial_5' => 'certStu_4_initial5.png',
+            '6_8'       => 'certStu_4_g68.png',
+        ],
+    ];
+
+    /**
+     * Resolve the S3 filename for a (tier × group) top-scorer cert.
+     *
+     * Public so tests can verify the wiring without reaching into a
+     * private constant via reflection.
+     *
+     * @param  string  $tier   'Showstopper' (Distinction) | 'Centre Stage' (Merit)
+     * @param  string  $group  'initial_5' | '6_8'
+     * @return string|null     Matching filename, or null for unknown combos.
+     */
+    public static function topScorerTemplate(string $tier, string $group): ?string
+    {
+        return self::TOP_SCORER_TEMPLATES[$tier][$group] ?? null;
+    }
 
     /**
      * Teacher certificate templates (blank PNGs on S3).
@@ -934,12 +981,22 @@ class CertificateController extends Controller
             $entry = $award['entry'];
             $certName = $award['certificate'].' Certificate'; // 'Showstopper Certificate' | 'Centre Stage Certificate'
 
-            if (! isset(self::STUDENT_TEMPLATES[$certName])) {
+            // Pick the group-specific template (Initial–5 vs 6–8) so the cert
+            // text reflects which slice was won. Falls back to the legacy
+            // single template by certificate name if the group-specific
+            // file isn't mapped — defensive only, the map should always hit.
+            $tier  = $award['certificate']; // 'Showstopper' | 'Centre Stage'
+            $group = $award['group'];       // 'initial_5'   | '6_8'
+            $templateFile = self::topScorerTemplate($tier, $group)
+                ?? self::STUDENT_TEMPLATES[$certName]
+                ?? null;
+
+            if (! $templateFile) {
                 continue;
             }
 
             try {
-                $templateUrl = self::S3_BASE.self::STUDENT_TEMPLATES[$certName];
+                $templateUrl = self::S3_BASE.$templateFile;
 
                 if (! isset($templateImageCache[$templateUrl])) {
                     $response = Http::get($templateUrl);
