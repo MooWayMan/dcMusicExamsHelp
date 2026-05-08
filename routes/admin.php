@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\ContactLogController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ExamEntryController;
 use App\Http\Controllers\Admin\ImpersonationController;
+use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PageMaintenanceController;
 use App\Http\Controllers\Admin\PendingResultsController;
@@ -81,6 +82,13 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
 
         // AJAX: sync calendar + return fresh active task count (for sidebar polling)
         Route::post('tasks/sync', [TaskController::class, 'sync'])->name('tasks.sync');
+
+        // Imports — Trinity CSV exports → Orders + Exam Entries
+        Route::get('imports', [ImportController::class, 'index'])->name('imports.index');
+        Route::post('imports/preview-orders', [ImportController::class, 'previewOrders'])->name('imports.preview-orders');
+        Route::post('imports/commit-orders', [ImportController::class, 'commitOrders'])->name('imports.commit-orders');
+        Route::post('imports/preview-candidate', [ImportController::class, 'previewCandidate'])->name('imports.preview-candidate');
+        Route::post('imports/commit-candidate', [ImportController::class, 'commitCandidate'])->name('imports.commit-candidate');
 
         // Quarter End — step-by-step workflow for sending certs, badges and emails
         Route::get('quarter-end', [QuarterEndController::class, 'index'])->name('quarter-end.index');

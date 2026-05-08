@@ -128,10 +128,10 @@ test('can mass assign fillable fields', function () {
         ->and($subscriber->source)->toBe('landing');
 });
 
-test('fillable includes exactly 6 fields', function () {
+test('fillable includes the expected 7 fields', function () {
     $subscriber = new Subscriber();
 
-    expect($subscriber->getFillable())->toHaveCount(6);
+    expect($subscriber->getFillable())->toHaveCount(7);
 });
 
 // ──────────────────────────────────────────
