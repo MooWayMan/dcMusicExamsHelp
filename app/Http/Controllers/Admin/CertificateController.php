@@ -470,7 +470,9 @@ class CertificateController extends Controller
         $startDate = "{$year}-" . str_pad($startMonth, 2, '0', STR_PAD_LEFT) . '-01';
         $endDate = \Carbon\Carbon::parse($startDate)->addMonths(3)->subDay()->toDateString();
 
-        // Get all entries with scores in this quarter
+        // Get all entries with PASSING scores in this quarter — drives the
+        // per-student certificate generation (every passing student gets a
+        // Bravo / Take a Bow / Standing Ovation cert based on their grade).
         $entries = ExamEntry::whereNotNull('score')
             ->where('score', '>=', 60)
             ->where(function ($q) {
@@ -489,6 +491,32 @@ class CertificateController extends Controller
 
         // Group by teacher
         $grouped = $entries->groupBy(fn ($e) => $e->teacher_name ?? 'Unassigned');
+
+        // ── Teacher badge volume counts ──────────────────────────────────────
+        // The Bronze/Silver/Gold/Top-Award badge counts EVERY non-CANCELLED
+        // entry in the quarter — including NO_SHOW and Fails — because the
+        // booking itself earns the teacher their volume tally. Using the
+        // passing-scores-only $grouped count (the previous behaviour) under-
+        // counted teachers near a threshold and shipped them the wrong cert
+        // (e.g. Daniel Rogers Q1 2026: 19 passes + 2 NO_SHOW + 1 Fail = 22
+        // entries → Silver, but the old logic said 19 → Bronze, which then
+        // disagreed with the email body's "22+ candidates / Silver" line).
+        // Mirrors the inclusion rule on /admin/quarter-end so the cert
+        // generator and the email body always agree on which badge to award.
+        $teacherBadgeCounts = ExamEntry::query()
+            ->where(function ($q) {
+                $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
+            })
+            ->whereNotNull('teacher_name')
+            ->where('teacher_name', '!=', '')
+            ->with('order:id,requested_start_date')
+            ->get()
+            ->filter(function ($entry) use ($startDate, $endDate) {
+                $date = $entry->exam_date ?? $entry->order?->requested_start_date;
+                return $date && $date->between($startDate, $endDate);
+            })
+            ->groupBy('teacher_name')
+            ->map->count();
 
         // Template image cache
         $templateImageCache = [];
@@ -776,8 +804,12 @@ class CertificateController extends Controller
                 ->first();
             $certDisplayName = $teacherContact?->schools->first()?->name ?? $teacher;
 
-            // Badges reset per-quarter — count only this quarter's non-cancelled entries.
-            $quarterCandidates = $teacherEntries->count();
+            // Badges reset per-quarter — count this quarter's non-CANCELLED
+            // entries (NO_SHOW + Fails included, see $teacherBadgeCounts
+            // build above). Falls back to the passing-scores group count
+            // only if the teacher somehow isn't in the badge-count map
+            // (defensive — shouldn't happen since the badge query is broader).
+            $quarterCandidates = $teacherBadgeCounts->get($teacher, $teacherEntries->count());
 
             $badgeTier = match (true) {
                 $quarterCandidates >= 40 => 'Top Award Appreciation Certificate',
