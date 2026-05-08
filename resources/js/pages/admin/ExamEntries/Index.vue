@@ -43,7 +43,7 @@ interface PaginatedEntries {
 
 const props = defineProps<{
     entries: PaginatedEntries
-    summary: { total: number; with_results: number; distinctions: number; merits: number }
+    summary: { total: number; with_results: number; distinctions: number; merits: number; awaiting: number }
     filters: {
         sort: string
         direction: 'asc' | 'desc'
@@ -58,7 +58,9 @@ const search = ref(props.filters.search ?? '')
 
 // Derived stats — make the nesting explicit so the cards are self-documenting
 const passCount = computed(() => Math.max(0, props.summary.with_results - props.summary.distinctions - props.summary.merits))
-const awaitingCount = computed(() => Math.max(0, props.summary.total - props.summary.with_results))
+// Awaiting now comes directly from the controller — excludes CANCELLED + NO_SHOW
+// (formerly: total − with_results, which incorrectly included them).
+const awaitingCount = computed(() => props.summary.awaiting ?? 0)
 function pct(part: number, whole: number): string {
     if (!whole) return '0%'
     return `${Math.round((part / whole) * 100)}%`
