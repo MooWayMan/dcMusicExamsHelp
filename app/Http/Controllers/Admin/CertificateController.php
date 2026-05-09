@@ -150,7 +150,11 @@ class CertificateController extends Controller
             ->groupBy('teacher_name');
 
         $teachers = $quarterEntriesByTeacher->map(function ($entries, $teacherName) {
-            $contact = ExamContact::withType('teacher')
+            // Include school_admin type alongside teacher — school admins
+            // (e.g. Daniel Rogers / Pulse Music) book on behalf of the
+            // school's teachers and earn the appreciation cert + badge for
+            // their volume too. Mirrors how /admin/quarter-end treats them.
+            $contact = ExamContact::withType(['teacher', 'school_admin'])
                 ->whereRaw('LOWER(name) = ?', [mb_strtolower($teacherName)])
                 ->first();
             $count = $entries->count();
