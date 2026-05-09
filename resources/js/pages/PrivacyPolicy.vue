@@ -99,6 +99,16 @@ const lastUpdated = '4 April 2026'
               school affiliations, instruments taught, and a record of exam entries made through the centre.
               This information helps us provide support and administer the rewards and recognition programme.
             </p>
+            <p class="mt-3 text-base font-semibold text-brand-text sm:text-base md:text-lg">Augmentation from public sources</p>
+            <p class="mt-1 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
+              For contacts who interact with us — teachers, parents, and students booking exams — we may augment our records
+              with publicly available professional information (for example school affiliation, instrument specialism, or
+              location) drawn from sources such as professional networking sites and our customer relationship management
+              platform's enrichment service. We do this to provide better service and to keep our records accurate. This
+              data is held under <span class="font-semibold">legitimate interest</span> and is not shared with third parties
+              for marketing purposes. You can request to see, correct, or delete the augmented information held on your
+              record at any time by emailing <a href="mailto:musicexams@musicexams.help" class="font-medium text-brand-accent hover:underline">musicexams@musicexams.help</a>.
+            </p>
             <p class="mt-3 text-base font-semibold text-brand-text sm:text-base md:text-lg">Student and exam data</p>
             <p class="mt-1 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
               We process student names, instruments, grades and exam results submitted through centre 120.
@@ -166,6 +176,13 @@ const lastUpdated = '4 April 2026'
             </p>
             <p class="mt-2 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
               <span class="font-semibold">Laravel Cloud</span> — our website is hosted on Laravel Cloud infrastructure. Data is stored securely on their servers.
+            </p>
+            <p class="mt-2 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
+              <span class="font-semibold">HubSpot</span> — we use HubSpot as our customer relationship management (CRM) and email marketing platform.
+              Contact information for teachers, parents and students is stored on HubSpot's secure servers, and HubSpot's
+              enrichment service may augment records with publicly available professional information (see "Augmentation
+              from public sources" above). HubSpot's privacy policy is available at
+              <a href="https://legal.hubspot.com/privacy-policy" target="_blank" rel="noopener noreferrer" class="font-medium text-brand-accent hover:underline">legal.hubspot.com/privacy-policy</a>.
             </p>
             <p class="mt-2 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
               We do not sell your personal data to anyone. We do not share your information with third parties for marketing purposes.
