@@ -19,7 +19,7 @@ const pageMeta = {
     'How musicExams.help collects, uses and protects your personal data. GDPR-compliant privacy policy for teachers, parents and students.',
 }
 
-const lastUpdated = '4 April 2026'
+const lastUpdated = '10 May 2026'
 </script>
 
 <template>
@@ -71,10 +71,13 @@ const lastUpdated = '4 April 2026'
           <div>
             <h2 class="text-lg font-bold text-brand-primary sm:text-xl">Who we are</h2>
             <p class="mt-2 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
-              musicExams.help is operated by Paul Sheridan, a sole trader based in Wirral, England.
-              We are a registered exam centre (centre 120) for Trinity College London music examinations.
-              For the purposes of exam-related data, Trinity College London and musicExams.help act as co-controllers
-              under the UK General Data Protection Regulation (UK GDPR).
+              musicExams.help is operated by Paul Sheridan, a sole trader trading as Red Hot Music, based in Wirral, England.
+              We are a Trinity College London Registered Public Exam Centre (centre 120) for music examinations.
+            </p>
+            <p class="mt-2 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
+              musicExams.help is registered with the UK Information Commissioner's Office as an independent Data Controller
+              (registration ZA••••••• — listing pending). For the purposes of UK GDPR, both musicExams.help and Trinity College London
+              act as independent Data Controllers in respect of exam-related personal data.
             </p>
             <p class="mt-2 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
               If you have questions about this policy, please contact us at
@@ -165,8 +168,9 @@ const lastUpdated = '4 April 2026'
           <div>
             <h2 class="text-lg font-bold text-brand-primary sm:text-xl">Who we share data with</h2>
             <p class="mt-2 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
-              <span class="font-semibold">Trinity College London</span> — as co-controller for exam-related data.
-              Trinity's own privacy policy is available at
+              <span class="font-semibold">Trinity College London</span> — as the awarding organisation for the exams we administer.
+              We share candidate enrolment, exam booking, and result data with Trinity in our role as a Registered Public Exam Centre.
+              Trinity acts as an independent Data Controller for that data. Trinity's privacy statements are available at
               <a href="https://www.trinitycollege.com/page/privacy" target="_blank" rel="noopener noreferrer" class="font-medium text-brand-accent hover:underline">trinitycollege.com/page/privacy</a>.
             </p>
             <p class="mt-2 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
@@ -185,7 +189,21 @@ const lastUpdated = '4 April 2026'
               <a href="https://legal.hubspot.com/privacy-policy" target="_blank" rel="noopener noreferrer" class="font-medium text-brand-accent hover:underline">legal.hubspot.com/privacy-policy</a>.
             </p>
             <p class="mt-2 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
-              We do not sell your personal data to anyone. We do not share your information with third parties for marketing purposes.
+              <span class="font-semibold">Advertising platforms (Meta, Google)</span> — we may share your email address (and where available, your name),
+              in hashed form, with online advertising platforms such as Meta and Google, to help them identify their users who have a relationship
+              with musicExams.help and to help us reach other people with similar professional interests in music teaching and Trinity exams.
+              Hashing means your details are converted into a one-way encrypted string before they leave our systems, so the platforms cannot read
+              your actual contact information. We rely on our <span class="font-semibold">legitimate interest</span> as the lawful basis for this
+              processing under Article 6(1)(f) of the UK GDPR — specifically, our interest in promoting Trinity exam services to music teachers
+              who are likely to value them. You can opt out of this processing at any time by clicking the unsubscribe link in any email we send
+              you, or by emailing us at
+              <a href="mailto:musicexams@musicexams.help" class="font-medium text-brand-accent hover:underline">musicexams@musicexams.help</a>.
+              Once you opt out, we will remove your details from any active advertising audiences within a reasonable period (typically the next
+              scheduled audience refresh).
+            </p>
+            <p class="mt-2 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
+              We do not sell your personal data to anyone. Other than the advertising-platform processing described above, we do not share
+              your information with third parties for marketing purposes.
             </p>
           </div>
 
