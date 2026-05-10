@@ -19,6 +19,16 @@ test('GET /for-teachers returns 200', function () {
         ->assertStatus(200);
 });
 
+test('GET /switch-to-centre-120 returns 200', function () {
+    $this->get('/switch-to-centre-120')
+        ->assertStatus(200);
+});
+
+test('GET /switch-to-centre-120 with utm params returns 200', function () {
+    $this->get('/switch-to-centre-120?utm_source=google&utm_medium=cpc&utm_campaign=phase1_q2_2026&utm_content=hero')
+        ->assertStatus(200);
+});
+
 test('GET /for-parents returns 200', function () {
     $this->get('/for-parents')
         ->assertStatus(200);
