@@ -181,7 +181,8 @@ async function handleSubmit() {
             class="mt-1 h-4 w-4 shrink-0 cursor-pointer rounded border-brand-border accent-brand-accent"
           />
           <span>
-            Email me occasional updates from musicExams.help (optional)
+            <span class="font-semibold text-brand-text">Yes, send me Trinity exam tips, results-day reminders and centre 120 community updates.</span>
+            <span class="mt-0.5 block">Usually once or twice a month. Never spam. Easy unsubscribe.</span>
           </span>
         </label>
 
@@ -200,7 +201,7 @@ async function handleSubmit() {
         </p>
 
         <p class="text-center text-xs text-brand-text-soft">
-          We email you the PDF once. No spam.
+          We email you the PDF once. Tick the box above for occasional Trinity exam guidance.
           <a href="/privacy" class="underline hover:text-brand-accent">Privacy Policy</a>
         </p>
       </form>
