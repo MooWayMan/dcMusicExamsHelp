@@ -36,6 +36,7 @@ Route::inertia('/faq', 'Faq')->name('faq');
 Route::inertia('/for-teachers', 'ForTeachers')->name('for-teachers');
 Route::redirect('/for-teachers/faber-discounts', '/books', 301);
 Route::inertia('/for-teachers/awards', 'TeacherAwards')->name('teacher-awards');
+Route::inertia('/switch-to-centre-120', 'SwitchToCentre120')->name('switch-to-centre-120');
 Route::inertia('/for-parents', 'ForParents')->name('for-parents');
 Route::inertia('/for-students', 'ForStudents')->name('for-students');
 Route::inertia('/books', 'Books')->name('books');
