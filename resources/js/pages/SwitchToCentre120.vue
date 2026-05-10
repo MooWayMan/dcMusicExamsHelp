@@ -123,11 +123,6 @@ const benefits = [
     detail: 'musicExams.help is a full guidance library — exam dates, fees, what to expect on the day, grades explained, UCAS points, syllabus details, FAQs, repertoire notes. Send your parents and students here instead of fielding the same questions yourself every term. Plus the Trinity Exam Checklist PDF as a downloadable cheat sheet for the booking flow.',
   },
   {
-    icon: MessagesSquare,
-    title: 'Real human help when you need it',
-    detail: 'Email us with any question — booking, results, repertoire, you name it. We answer within working hours. Trinity gives you the exam; centre 120 gives you the surrounding support.',
-  },
-  {
     icon: LayoutDashboard,
     title: 'Your free teacher dashboard',
     detail: 'Sign up free and see every centre 120 student in one place — bookings, exam dates, results as they land, plus live progress toward your next Appreciation Award and your current prize-draw ticket count. No spreadsheets, no hunting around Trinity\'s portal.',
@@ -479,7 +474,7 @@ const faqItems = [
               Trinity College London Registered Public Exam Centre — code 120
             </p>
             <p class="mt-2 text-base leading-relaxed text-brand-text-soft sm:text-base md:text-lg">
-              Centre 120 covers all four Trinity booking routes: digital practical, digital theory, Classical &amp; Jazz face-to-face, and Rock &amp; Pop face-to-face. Active since 2020. Run by Paul Sheridan, Wirral-based music teacher and Trinity Registered Public Exam Centre Representative.
+              Centre 120 covers all four Trinity booking routes: digital practical, digital theory, Classical &amp; Jazz face-to-face, and Rock &amp; Pop face-to-face. Run by Paul Sheridan, Wirral-based music teacher and Trinity Registered Public Exam Centre Representative — running Trinity exams in the Liverpool and Wirral area for over 30 years.
             </p>
           </div>
         </div>
