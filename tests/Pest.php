@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 /*
@@ -15,6 +16,14 @@ use Tests\TestCase;
 
 pest()->extend(TestCase::class)
  // ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+    ->beforeEach(function (): void {
+        // Rate limiter state persists in the array cache across tests in
+        // a single process. Without a flush, any Feature test that fires
+        // its 6th+ request to a throttled endpoint trips the limit and
+        // fails — even though the test isn't trying to test throttling.
+        // Flushing here keeps every Feature test independent.
+        Cache::flush();
+    })
     ->in('Feature');
 
 /*

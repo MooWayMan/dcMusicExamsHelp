@@ -78,19 +78,22 @@ class Task extends Model
     }
 
     /**
-     * Scope: only pending/in-progress tasks.
+     * Scope: only pending/in-progress tasks. Column qualified so the scope
+     * stays composition-safe when callers join other tables that have a
+     * `status` column. See docs/dev-rules.md "Model scopes" rule.
      */
     public function scopeActive($query)
     {
-        return $query->whereIn('status', ['pending', 'in_progress']);
+        return $query->whereIn('tasks.status', ['pending', 'in_progress']);
     }
 
     /**
-     * Scope: order by priority (high first) then sort_order.
+     * Scope: order by priority (high first) then sort_order. Columns
+     * qualified so the scope stays composition-safe when joined.
      */
     public function scopePriorityOrder($query)
     {
-        return $query->orderByRaw("CASE priority WHEN 'high' THEN 0 WHEN 'medium' THEN 1 WHEN 'low' THEN 2 ELSE 3 END")
-                     ->orderBy('created_at', 'desc');
+        return $query->orderByRaw("CASE tasks.priority WHEN 'high' THEN 0 WHEN 'medium' THEN 1 WHEN 'low' THEN 2 ELSE 3 END")
+                     ->orderBy('tasks.created_at', 'desc');
     }
 }

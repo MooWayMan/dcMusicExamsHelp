@@ -12,11 +12,20 @@ class ContactController extends Controller
 {
     public function store(Request $request)
     {
+        // Honeypot — silently swallow bot submissions. `website_url` is a
+        // hidden field a real visitor never fills. We return the same
+        // success response so bots can't tell it's a trap. See
+        // dev-rules.md "Public forms" rule.
+        if (filled($request->input('website_url'))) {
+            return back()->with('success', 'Message sent successfully.');
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email:rfc,dns|max:255',
             'subject' => 'nullable|string|max:255',
             'message' => 'required|string|max:5000',
+            'website_url' => 'nullable|string|max:255',
         ]);
 
         // Send HTML email notification to Paul

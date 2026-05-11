@@ -27,11 +27,15 @@ const breadcrumbPages = [
 ]
 
 /* ── Contact form ── */
+// `website_url` is the honeypot — a real user never fills it; bots routinely
+// do. Submissions where this is non-empty are silently dropped server-side.
+// See docs/dev-rules.md "Public forms" rule.
 const form = ref({
   name: '',
   email: '',
   subject: '',
   message: '',
+  website_url: '',
 })
 const formSubmitting = ref(false)
 const formSuccess = ref(false)
@@ -57,7 +61,7 @@ function submitForm() {
     onSuccess: () => {
       formSuccess.value = true
       formSubmitting.value = false
-      form.value = { name: '', email: '', subject: '', message: '' }
+      form.value = { name: '', email: '', subject: '', message: '', website_url: '' }
     },
     onError: (errors: Record<string, string>) => {
       formError.value = Object.values(errors).join(' ')
@@ -179,6 +183,17 @@ const faqs = [
 
         <!-- Form -->
         <form v-else @submit.prevent="submitForm" class="mt-8 space-y-6">
+          <!-- Honeypot: hidden from real users, irresistible to bots. -->
+          <input
+            v-model="form.website_url"
+            type="text"
+            name="website_url"
+            tabindex="-1"
+            autocomplete="off"
+            aria-hidden="true"
+            class="absolute -left-[10000px] h-0 w-0 opacity-0"
+          />
+
           <div :class="animClass('fade-up', 2)">
             <MyInputConstructor
               v-model="form.name"

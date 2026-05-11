@@ -55,12 +55,19 @@ Route::inertia('/privacy', 'PrivacyPolicy')->name('privacy');
 Route::inertia('/cookies', 'CookiePolicy')->name('cookies');
 Route::inertia('/terms', 'TermsOfUse')->name('terms');
 
-Route::post('/subscribe', [SubscriberController::class, 'store'])->name('subscribe');
-// Lead magnet — captures name + email + optional marketing consent and
-// emails the Trinity Exam Checklist PDF. Distinct from /subscribe so the
-// existing newsletter forms keep working.
-Route::post('/lead-magnet/subscribe', [SubscriberController::class, 'leadMagnet'])->name('lead-magnet.subscribe');
-Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
+// Public form endpoints — rate-limited per IP to stop bot/email-bomb abuse.
+// 5 submissions per minute is generous for a real human, hostile for bots.
+// Each controller additionally honeypot-checks `website_url`: a hidden form
+// field a real visitor never fills but bots routinely do. See dev-rules.md
+// "Public forms" rule for the rationale.
+Route::middleware('throttle:5,1')->group(function () {
+    Route::post('/subscribe', [SubscriberController::class, 'store'])->name('subscribe');
+    // Lead magnet — captures name + email + optional marketing consent and
+    // emails the Trinity Exam Checklist PDF. Distinct from /subscribe so the
+    // existing newsletter forms keep working.
+    Route::post('/lead-magnet/subscribe', [SubscriberController::class, 'leadMagnet'])->name('lead-magnet.subscribe');
+    Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
+});
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');

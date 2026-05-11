@@ -21,6 +21,10 @@ const { isSubscribed, subscriberName, markSubscribed } = useSubscription()
 const name = ref('')
 const email = ref('')
 const role = ref('')
+// Honeypot — a real user never fills this; bots routinely do. Submissions
+// where this is non-empty are silently dropped server-side. See
+// docs/dev-rules.md "Public forms" rule.
+const websiteUrl = ref('')
 const isSubmitting = ref(false)
 const errorMessage = ref('')
 
@@ -56,6 +60,7 @@ async function handleSubmit() {
         email: email.value.trim(),
         role: role.value || null,
         source: props.source,
+        website_url: websiteUrl.value,
       }),
     })
 
@@ -90,6 +95,17 @@ async function handleSubmit() {
 
     <!-- Form -->
     <form v-else @submit.prevent="handleSubmit" class="space-y-3">
+      <!-- Honeypot: hidden from real users, irresistible to bots. -->
+      <input
+        v-model="websiteUrl"
+        type="text"
+        name="website_url"
+        tabindex="-1"
+        autocomplete="off"
+        aria-hidden="true"
+        class="absolute -left-[10000px] h-0 w-0 opacity-0"
+      />
+
       <div :class="compact ? 'flex flex-col gap-2 sm:flex-row' : 'space-y-3'">
         <input
           v-model="name"
