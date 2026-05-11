@@ -13,7 +13,7 @@ See how we recognise students
 
 If you teach music, [create a free teacher account]({{ url('/register') }}) at musicExams.help to track every student's bookings, results and awards in one dashboard.
 
-Any questions, just hit reply — I read every email myself.
+Any questions, you'll find FAQs at [musicexams.help/faq]({{ url('/faq') }}).
 
 Speak soon,<br>
 Paul Sheridan<br>
