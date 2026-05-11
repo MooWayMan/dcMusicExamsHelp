@@ -92,6 +92,24 @@ For every model scope, add TWO tests:
 1. **Isolation test** — `Model::scope()->get()` and assert the right rows come back (semantics).
 2. **Composition test** — `Model::query()->leftJoin('other_table', …)->scope()->get()` against a table that shares a likely-conflicting column name. Just asserting the query executes without throwing is enough — the test exists to catch unqualified-column SQL errors that isolation tests can't detect. See `tests/Feature/NoShowSemanticsTest.php` for the pattern (`whereResultPossible survives a join with orders`).
 
+### Calendar sync — production-only
+The Google Calendar → Tasks sync (`calendar:sync-tasks` command, plus `App\Http\Middleware\SyncCalendarTasks`) runs on production only. Both the scheduled invocation (in `routes/console.php`) and the per-admin-request middleware invocation are guarded by `app()->environment('production')`. Reason: staging and local environments don't have Google OAuth credentials populated, so firing the sync there just produces noisy `Missing OAuth credentials` errors in the log stream that obscure real problems.
+
+Same pattern applies to any future scheduled task or middleware that depends on production-only env vars (third-party API keys, payment processor webhooks, etc.). Wrap the registration in an `app()->environment('production')` check rather than letting non-prod environments error every time the task fires.
+
+### Lead magnet PDF gating
+The Trinity Exam Checklist PDF (downloaded as the lead-magnet reward) lives in S3 at `moowaymusicbucket/musicexamshelp/Trinity Exam Checklist.pdf`. The S3 object should be PRIVATE on production. Access flows:
+
+1. `App\Mail\LeadMagnetDelivery::pdfUrl()` generates a short-lived (15-minute) presigned URL via `Storage::disk('s3')->temporaryUrl(...)` using the IAM user `musicexams-app` credentials (env: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION=eu-west-2`, `AWS_BUCKET=moowaymusicbucket`).
+2. The Mailable's `attachments()` HTTP-fetches that URL server-side, attaches the bytes to the email, then the URL expires.
+3. The subscriber receives the PDF as an email attachment — they never see or hold the URL.
+
+The IAM user has a single-permission policy (`s3:GetObject` on `moowaymusicbucket/musicexamshelp/*`) so a leaked key can only read those marketing assets — can't delete, upload, or touch any other resource. See `~/Documents/Claude/aws-followups.md` for the IAM setup context.
+
+In local dev or any environment where AWS keys aren't populated, the Mailable falls back to the public URL via `LEAD_MAGNET_PDF_URL` (or the hard-coded default in the class). This keeps `sail` development working without committing keys to non-secret places.
+
+If the PDF asset moves: update `LEAD_MAGNET_PDF_PATH` (path within the bucket) — no code change needed.
+
 ### Public forms — throttle + honeypot
 Every public, unauthenticated POST endpoint reachable from the website MUST have both:
 1. **Rate limiting** — `Route::middleware('throttle:5,1')->group(...)` caps each IP at 5 submissions/minute. Stops single-IP flood attacks. See `routes/web.php` for the pattern.

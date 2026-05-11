@@ -14,9 +14,18 @@ class SyncCalendarTasks
     /**
      * Sync Google Calendar REMINDER events on every admin request.
      * Throttled to once every 5 minutes via cache lock.
+     *
+     * Production-only — staging and local don't have Google OAuth
+     * credentials configured, so firing the sync there just produces
+     * noisy "Missing OAuth credentials" errors on every admin request.
+     * See docs/dev-rules.md "Calendar sync" rule.
      */
     public function handle(Request $request, Closure $next): Response
     {
+        if (! app()->environment('production')) {
+            return $next($request);
+        }
+
         if (Cache::add('gcal_sync_lock', true, 300)) {
             try {
                 Artisan::call('calendar:sync-tasks');
