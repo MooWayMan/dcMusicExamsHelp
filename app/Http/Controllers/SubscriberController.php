@@ -16,11 +16,23 @@ class SubscriberController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        // Honeypot — silently swallow bot submissions. `website_url` is a
+        // hidden form field a real visitor never fills. We return the same
+        // success shape so bots can't tell it's a trap. See dev-rules.md
+        // "Public forms" rule.
+        if (filled($request->input('website_url'))) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Thank you for subscribing!',
+            ]);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'role' => 'nullable|string|in:teacher,parent,student',
             'source' => 'nullable|string|max:50',
+            'website_url' => 'nullable|string|max:255',
         ]);
 
         // Check if already subscribed
@@ -72,10 +84,22 @@ class SubscriberController extends Controller
      */
     public function leadMagnet(Request $request): JsonResponse
     {
+        // Honeypot — silently swallow bot submissions. Particularly important
+        // here because a successful POST triggers a real email send (the
+        // PDF attachment) — an unprotected endpoint is a free email-bombing
+        // tool. See dev-rules.md "Public forms" rule.
+        if (filled($request->input('website_url'))) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Thanks — your Trinity Exam Checklist is on its way.',
+            ]);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'marketing_consent' => 'nullable|boolean',
+            'website_url' => 'nullable|string|max:255',
         ]);
 
         $marketingConsent = (bool) ($validated['marketing_consent'] ?? false);

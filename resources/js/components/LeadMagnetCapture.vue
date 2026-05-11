@@ -28,6 +28,10 @@ const STORAGE_KEY = 'leadMagnetClaimed:trinity-exam-checklist'
 const name = ref('')
 const email = ref('')
 const marketingConsent = ref(false)
+// Honeypot — a real user never fills this; bots routinely do. Submissions
+// where this is non-empty are silently dropped server-side. See
+// docs/dev-rules.md "Public forms" rule.
+const websiteUrl = ref('')
 const isSubmitting = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
@@ -77,6 +81,7 @@ async function handleSubmit() {
         name: name.value.trim(),
         email: email.value.trim(),
         marketing_consent: marketingConsent.value,
+        website_url: websiteUrl.value,
       }),
     })
 
@@ -158,6 +163,17 @@ async function handleSubmit() {
 
       <!-- Right: form -->
       <form @submit.prevent="handleSubmit" class="space-y-3">
+        <!-- Honeypot: hidden from real users, irresistible to bots. -->
+        <input
+          v-model="websiteUrl"
+          type="text"
+          name="website_url"
+          tabindex="-1"
+          autocomplete="off"
+          aria-hidden="true"
+          class="absolute -left-[10000px] h-0 w-0 opacity-0"
+        />
+
         <input
           v-model="name"
           type="text"

@@ -45,9 +45,12 @@ class ExamEntry extends Model
      */
     public function scopeWhereResultPossible($query)
     {
+        // Columns are table-qualified so this scope stays composition-safe
+        // when callers join other tables that also have a `notes` column
+        // (e.g. `orders.notes`). See docs/dev-rules.md "Model scopes" rule.
         return $query->where(function ($q) {
-            $q->whereNull('notes')
-                ->orWhereNotIn('notes', self::NOTES_NO_RESULT);
+            $q->whereNull('exam_entries.notes')
+                ->orWhereNotIn('exam_entries.notes', self::NOTES_NO_RESULT);
         });
     }
 

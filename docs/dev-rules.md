@@ -76,11 +76,32 @@ Full reference: `Claude/Research/trinity-booking-systems.md`
 - Export from prod TablePlus → make .sql → migrate:fresh + paste into local
 - Never destructive commands on prod without backup; test local first
 
+### Model scopes — qualify every column
+Every column referenced inside a model scope MUST be table-qualified (`exam_entries.notes`, not bare `notes`). Scopes are composable primitives — the moment a caller adds a `->join('orders', …)` and `orders` also has a `notes` column, an unqualified reference throws `SQLSTATE[42702]: ambiguous column`. Postgres is unforgiving here. This bit us on `/admin/exam-entries` (May 8 2026) — see `app/Models/ExamEntry.php` scope comment.
+
+Same rule applies to any reusable helper method that returns a query Builder or wraps a `where*` call.
+
 ## Testing
 - Every feature needs Pest tests — never skip (TDD)
 - Every new public page: add route test to `tests/Feature/RoutesTest.php`
 - Run `sail test` before finishing any work
 - Browser testing (Cypress/Playwright) planned for post-launch
+
+### Scope composition test (mandatory alongside isolation test)
+For every model scope, add TWO tests:
+1. **Isolation test** — `Model::scope()->get()` and assert the right rows come back (semantics).
+2. **Composition test** — `Model::query()->leftJoin('other_table', …)->scope()->get()` against a table that shares a likely-conflicting column name. Just asserting the query executes without throwing is enough — the test exists to catch unqualified-column SQL errors that isolation tests can't detect. See `tests/Feature/NoShowSemanticsTest.php` for the pattern (`whereResultPossible survives a join with orders`).
+
+### Public forms — throttle + honeypot
+Every public, unauthenticated POST endpoint reachable from the website MUST have both:
+1. **Rate limiting** — `Route::middleware('throttle:5,1')->group(...)` caps each IP at 5 submissions/minute. Stops single-IP flood attacks. See `routes/web.php` for the pattern.
+2. **Honeypot** — a hidden `website_url` input in the Vue form (visually offscreen, `tabindex="-1"`, `autocomplete="off"`) and a `filled($request->input('website_url'))` early-return in the controller that responds success-shaped without doing anything. Stops the long tail of distributed bots that slip under the throttle.
+
+Both layers are independently necessary. Without throttle, a fast attacker overwhelms before honeypot matters. Without honeypot, distributed bots evade per-IP throttling. Together they cut deep into automated abuse without any friction for real users.
+
+Why this matters: contact / lead-magnet / subscribe endpoints fire real outbound emails. An unprotected endpoint is a free email-bombing tool against any third-party address — and bot abuse burns sender reputation, which silently kills deliverability for the entire site. See `tests/Feature/PublicFormProtectionTest.php` for the regression tests.
+
+If adding a new public POST endpoint, the route MUST go inside the existing `throttle:5,1` group and the controller MUST honeypot-check.
 
 ## Cowork Sandbox Limitations
 - No Docker in sandbox — give Paul sail commands to run, never try them here

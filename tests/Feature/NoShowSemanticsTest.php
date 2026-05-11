@@ -90,6 +90,25 @@ test('whereResultPossible keeps entries with non-empty unrelated notes', functio
         ->toContain('Has note');
 });
 
+test('whereResultPossible survives a join with orders (composition safety)', function () {
+    // Regression for SQLSTATE[42702] ambiguous-column error:
+    // orders.notes and exam_entries.notes both exist, so an unqualified
+    // 'notes' inside the scope explodes the moment a caller joins orders.
+    // The scope must qualify its columns. This test asserts the join
+    // executes without throwing — semantics are covered by the tests above.
+    nsEntry(['candidate_name' => 'Joined Clean']);
+    nsEntry(['candidate_name' => 'Joined Cancelled', 'notes' => ExamEntry::NOTE_CANCELLED]);
+
+    $names = ExamEntry::query()
+        ->leftJoin('orders', 'orders.id', '=', 'exam_entries.order_id')
+        ->whereResultPossible()
+        ->pluck('exam_entries.candidate_name')
+        ->all();
+
+    expect($names)->toContain('Joined Clean')
+        ->not->toContain('Joined Cancelled');
+});
+
 // ── Recognition page (ThankYouController) ────────────────────────────────
 
 test('Recognition page hides NO_SHOW entries from the public table', function () {
