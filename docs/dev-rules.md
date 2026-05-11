@@ -92,6 +92,11 @@ For every model scope, add TWO tests:
 1. **Isolation test** — `Model::scope()->get()` and assert the right rows come back (semantics).
 2. **Composition test** — `Model::query()->leftJoin('other_table', …)->scope()->get()` against a table that shares a likely-conflicting column name. Just asserting the query executes without throwing is enough — the test exists to catch unqualified-column SQL errors that isolation tests can't detect. See `tests/Feature/NoShowSemanticsTest.php` for the pattern (`whereResultPossible survives a join with orders`).
 
+### Calendar sync — production-only
+The Google Calendar → Tasks sync (`calendar:sync-tasks` command, plus `App\Http\Middleware\SyncCalendarTasks`) runs on production only. Both the scheduled invocation (in `routes/console.php`) and the per-admin-request middleware invocation are guarded by `app()->environment('production')`. Reason: staging and local environments don't have Google OAuth credentials populated, so firing the sync there just produces noisy `Missing OAuth credentials` errors in the log stream that obscure real problems.
+
+Same pattern applies to any future scheduled task or middleware that depends on production-only env vars (third-party API keys, payment processor webhooks, etc.). Wrap the registration in an `app()->environment('production')` check rather than letting non-prod environments error every time the task fires.
+
 ### Lead magnet PDF gating
 The Trinity Exam Checklist PDF (downloaded as the lead-magnet reward) lives in S3 at `moowaymusicbucket/musicexamshelp/Trinity Exam Checklist.pdf`. The S3 object should be PRIVATE on production. Access flows:
 
