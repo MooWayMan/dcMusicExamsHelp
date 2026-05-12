@@ -76,7 +76,8 @@ const lastUpdated = '10 May 2026'
             </p>
             <p class="mt-2 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
               musicExams.help is registered with the UK Information Commissioner's Office as an independent Data Controller
-              (registration ZA••••••• — listing pending). For the purposes of UK GDPR, both musicExams.help and Trinity College London
+              (registration <a href="https://ico.org.uk/ESDWebPages/Entry/ZC143303" target="_blank" rel="noopener noreferrer" class="font-medium text-brand-accent hover:underline">ZC143303</a>).
+              For the purposes of UK GDPR, both musicExams.help and Trinity College London
               act as independent Data Controllers in respect of exam-related personal data.
             </p>
             <p class="mt-2 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
