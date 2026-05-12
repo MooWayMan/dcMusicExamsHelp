@@ -213,6 +213,21 @@ const handleInternalClick = (link: NavigationLink) => {
                 {{ copyrightText }}
               </template>
             </MyTextConstructor>
+
+            <p :class="['mt-1 text-xs', bodyTextColor]">
+              Registered with the UK Information Commissioner's Office:
+              <a
+                href="https://ico.org.uk/ESDWebPages/Entry/ZC143303"
+                target="_blank"
+                rel="noopener noreferrer"
+                :class="[
+                  'font-medium hover:underline',
+                  isDark ? 'text-white' : 'text-brand-accent',
+                ]"
+              >
+                ZC143303
+              </a>
+            </p>
           </div>
 
           <div v-if="props.showSocials" class="mt-6">
