@@ -126,6 +126,32 @@ test('GET /terms returns 200', function () {
 });
 
 // ──────────────────────────────────────────
+// sitemap.xml — every <loc> must return 200 (no 301s, no 404s)
+// ──────────────────────────────────────────
+
+test('public/sitemap.xml is well-formed XML', function () {
+    libxml_use_internal_errors(true);
+    $xml = simplexml_load_file(public_path('sitemap.xml'));
+    expect($xml)->not->toBeFalse('sitemap.xml failed to parse');
+    expect($xml->getName())->toBe('urlset');
+});
+
+test('every URL in sitemap.xml returns 200', function () {
+    $xml = simplexml_load_file(public_path('sitemap.xml'));
+    expect($xml)->not->toBeFalse();
+
+    foreach ($xml->url as $url) {
+        $loc = (string) $url->loc;
+        $path = parse_url($loc, PHP_URL_PATH) ?: '/';
+
+        $response = $this->get($path);
+
+        expect($response->status())
+            ->toBe(200, "Sitemap URL {$loc} returned {$response->status()} — it must be 200 (no redirects, no errors).");
+    }
+});
+
+// ──────────────────────────────────────────
 // robots.txt (env-aware: blocks crawlers on non-prod)
 // ──────────────────────────────────────────
 
