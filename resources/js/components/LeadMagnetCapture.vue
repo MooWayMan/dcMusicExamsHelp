@@ -3,6 +3,9 @@
 import { onMounted, ref } from 'vue'
 import { CheckCircle2, FileDown } from 'lucide-vue-next'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
+import { useAnalytics } from '@/composables/useAnalytics'
+
+const { trackEvent } = useAnalytics()
 
 // Lead magnet capture form: collect name + email, optional marketing
 // consent (GDPR — silence is NOT consent), then POST to
@@ -98,6 +101,17 @@ async function handleSubmit() {
 
     successMessage.value = data.message ?? 'Check your inbox — the checklist is on its way.'
     isDone.value = true
+
+    // Fire GA4 conversion event. Imported into Google Ads as the
+    // `lead_form_submit` conversion goal (see google-ads-phase1-q2-2026.md).
+    // Value £14 = average commission per digital practical candidate —
+    // proxy for what a single signup is worth, used by Google Ads
+    // Smart Bidding once we switch off Manual CPC.
+    trackEvent('lead_form_submit', {
+      value: 14,
+      lead_magnet: 'trinity-exam-checklist',
+      marketing_consent: marketingConsent.value,
+    })
 
     // Remember in this browser so they don't see the form on every visit.
     try {

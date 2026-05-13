@@ -3,6 +3,9 @@
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import { Monitor, Users, Music, BookOpen, X } from 'lucide-vue-next'
+import { useAnalytics } from '@/composables/useAnalytics'
+
+const { trackEvent } = useAnalytics()
 
 interface Props {
   show: boolean
@@ -64,8 +67,20 @@ const bookingOptions = [
   },
 ]
 
-const handleOptionClick = (url: string) => {
-  window.open(url, '_blank', 'noopener,noreferrer')
+const handleOptionClick = (option: typeof bookingOptions[number]) => {
+  // Fire GA4 conversion event BEFORE opening the new tab so the request
+  // has time to flush. `option.id` lets us see in GA4 which of the four
+  // Trinity systems attracted the click — useful for ad optimisation
+  // (digital practical vs theory vs F2F classical vs F2F rock-pop).
+  // Imported into Google Ads as the `booking_click` conversion goal
+  // (see google-ads-phase1-q2-2026.md).
+  trackEvent('booking_click', {
+    value: 14,
+    booking_system: option.id,
+    booking_title: option.title,
+  })
+
+  window.open(option.url, '_blank', 'noopener,noreferrer')
   emit('close')
 }
 
@@ -177,7 +192,7 @@ onUnmounted(() => {
                 <button
                   v-for="option in bookingOptions"
                   :key="option.id"
-                  @click="handleOptionClick(option.url)"
+                  @click="handleOptionClick(option)"
                   class="group flex w-full items-center gap-3 rounded-xl border-2 border-brand-border bg-brand-bg p-3 text-left transition-all duration-200 hover:border-brand-accent hover:shadow-lg sm:items-start sm:gap-4 sm:p-5"
                 >
                   <div
