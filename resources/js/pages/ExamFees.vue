@@ -172,9 +172,9 @@ const dateColumns = [
 ]
 
 const dateData = [
-  { session: 'Week of 2nd March 2026', closing: '2nd February 2026', note: 'Rock & Pop usually Saturday' },
-  { session: 'Week of 6th July 2026', closing: '6th June 2026', note: 'Rock & Pop usually Saturday' },
-  { session: 'Week of 30th November 2026', closing: '30th October 2026', note: 'Rock & Pop usually Saturday' },
+  { session: 'Week of 2nd March 2026', closing: '2nd February 2026 — or when full', note: 'Rock & Pop usually Saturday' },
+  { session: 'Week of 6th July 2026', closing: '6th June 2026 — or when full', note: 'Rock & Pop usually Saturday' },
+  { session: 'Week of 30th November 2026', closing: '30th October 2026 — or when full', note: 'Rock & Pop usually Saturday' },
 ]
 
 const bookingWindowColumns = [
