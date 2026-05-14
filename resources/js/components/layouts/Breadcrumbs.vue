@@ -35,6 +35,7 @@ const parentPages: Record<string, { name: string; href: string }> = {
   'exam-guide': { name: 'Exam Guide', href: '/exam-guide' },
   'exam-fees': { name: 'Exam Fees', href: '/exam-fees' },
   'faq': { name: 'FAQ', href: '/faq' },
+  'trinity-exam-information': { name: 'Trinity Exam Information', href: '/trinity-exam-information' },
   'about': { name: 'About', href: '/about' },
   'what-to-expect': { name: 'What to Expect', href: '/exam-guide/what-to-expect' },
   'digital-exams': { name: 'Digital Exams', href: '/exam-guide/digital-exams' },

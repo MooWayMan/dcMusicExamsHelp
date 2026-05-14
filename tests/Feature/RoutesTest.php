@@ -29,6 +29,16 @@ test('GET /switch-to-centre-120 with utm params returns 200', function () {
         ->assertStatus(200);
 });
 
+test('GET /trinity-exam-information returns 200', function () {
+    $this->get('/trinity-exam-information')
+        ->assertStatus(200);
+});
+
+test('GET /trinity-exam-information with utm params returns 200', function () {
+    $this->get('/trinity-exam-information?utm_source=google&utm_medium=cpc&utm_campaign=phase1_q2_2026&utm_content=info')
+        ->assertStatus(200);
+});
+
 test('GET /for-parents returns 200', function () {
     $this->get('/for-parents')
         ->assertStatus(200);
@@ -198,6 +208,11 @@ test('GET /recognition?from=for-students returns 200', function () {
 
 test('GET /recognition?from=for-parents returns 200', function () {
     $this->get('/recognition?from=for-parents')
+        ->assertStatus(200);
+});
+
+test('GET /recognition?from=trinity-exam-information returns 200', function () {
+    $this->get('/recognition?from=trinity-exam-information')
         ->assertStatus(200);
 });
 
