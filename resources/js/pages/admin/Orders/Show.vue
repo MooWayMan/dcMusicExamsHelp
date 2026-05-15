@@ -9,6 +9,7 @@ interface ExamEntry {
     id: number
     student_id: number | null
     student_name: string
+    candidate_number: string | null
     instrument: string
     grade: string
     result: string
@@ -44,6 +45,7 @@ function goBack() { window.history.back() }
 
 const examColumns = [
     { key: 'student_name', title: 'Student' },
+    { key: 'candidate_number', title: 'Candidate #' },
     { key: 'instrument', title: 'Instrument' },
     { key: 'grade', title: 'Grade' },
     { key: 'result', title: 'Result' },
@@ -180,6 +182,9 @@ const examColumns = [
                             {{ row.student_name }}
                         </Link>
                         <span v-else class="text-brand-text">{{ row.student_name }}</span>
+                    </template>
+                    <template #cell-candidate_number="{ value }">
+                        <span class="select-all text-sm text-brand-text-soft">{{ value ?? '—' }}</span>
                     </template>
                     <template #cell-instrument="{ value }">
                         <span class="text-sm text-brand-text-soft">{{ value }}</span>

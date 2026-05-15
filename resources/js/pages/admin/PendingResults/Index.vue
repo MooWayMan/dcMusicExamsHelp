@@ -203,12 +203,7 @@ const columns = [
                     <span v-else class="font-medium text-brand-text">{{ row.candidate_name }}</span>
                 </template>
                 <template #cell-candidate_number="{ row }">
-                    <Link v-if="row.order_id && row.candidate_number !== '—'"
-                        :href="`/admin/orders/${row.order_id}`"
-                        class="text-sm font-medium text-brand-accent hover:underline">
-                        {{ row.candidate_number }}
-                    </Link>
-                    <span v-else class="text-sm text-brand-text-soft">{{ row.candidate_number }}</span>
+                    <span class="select-all text-sm text-brand-text-soft">{{ row.candidate_number }}</span>
                 </template>
                 <template #cell-instrument="{ row }">
                     <span class="text-sm text-brand-text-soft">{{ row.instrument }}</span>

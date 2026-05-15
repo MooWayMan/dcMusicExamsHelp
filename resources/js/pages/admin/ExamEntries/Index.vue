@@ -243,7 +243,7 @@ function resultBadgeClass(result: string): string {
             </div>
 
             <div class="overflow-x-auto">
-                <table class="min-w-[900px] w-full text-left text-base">
+                <table class="min-w-[1000px] w-full text-left text-base">
                     <thead class="border-b border-brand-border bg-brand-surface-soft">
                         <tr>
                             <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('exam_date')">
@@ -254,6 +254,9 @@ function resultBadgeClass(result: string): string {
                             </th>
                             <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('candidate_name')">
                                 Candidate{{ sortIcon('candidate_name') }}
+                            </th>
+                            <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('candidate_number')">
+                                Candidate #{{ sortIcon('candidate_number') }}
                             </th>
                             <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('subject_area')">
                                 Subject{{ sortIcon('subject_area') }}
@@ -295,6 +298,10 @@ function resultBadgeClass(result: string): string {
                                 <span v-else class="text-brand-text-soft">—</span>
                             </td>
                             <td class="px-4 py-3">
+                                <span v-if="entry.candidate_number" class="select-all text-sm text-brand-text-soft">{{ entry.candidate_number }}</span>
+                                <span v-else class="text-brand-text-soft">—</span>
+                            </td>
+                            <td class="px-4 py-3">
                                 <button v-if="entry.subject_area" type="button"
                                     class="text-left text-sm text-brand-text-soft hover:text-brand-accent hover:underline"
                                     @click="filterByValue(entry.subject_area)">
@@ -330,7 +337,7 @@ function resultBadgeClass(result: string): string {
                             </td>
                         </tr>
                         <tr v-if="!entries.data.length">
-                            <td colspan="10" class="px-4 py-8 text-center text-base text-brand-text-soft">No exam entries found.</td>
+                            <td colspan="11" class="px-4 py-8 text-center text-base text-brand-text-soft">No exam entries found.</td>
                         </tr>
                     </tbody>
                 </table>
