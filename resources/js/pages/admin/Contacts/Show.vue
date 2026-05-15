@@ -95,6 +95,7 @@ const entryColumns = [
     { key: 'exam_date', title: 'Date', sortable: true },
     { key: 'order_number', title: 'Order', sortable: true },
     { key: 'candidate_name', title: 'Candidate', sortable: true },
+    { key: 'candidate_number', title: 'Candidate #', sortable: true },
     { key: 'grade', title: 'Grade', sortable: true },
     { key: 'subject_area', title: 'Subject', sortable: true },
     { key: 'delivery_method', title: 'Type', sortable: true },
@@ -242,6 +243,9 @@ const visibleOrders = computed(() =>
                     </template>
                     <template #cell-candidate_name="{ value }">
                         <span class="text-base text-brand-text">{{ value ?? '—' }}</span>
+                    </template>
+                    <template #cell-candidate_number="{ value }">
+                        <span class="select-all text-sm text-brand-text-soft" @click.stop>{{ value ?? '—' }}</span>
                     </template>
                     <template #cell-grade="{ value }">
                         <span class="text-sm text-brand-text-soft">{{ value ?? '—' }}</span>

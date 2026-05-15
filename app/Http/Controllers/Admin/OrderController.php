@@ -287,6 +287,7 @@ class OrderController extends Controller
                 'student_name' => $e->student
                     ? "{$e->student->first_name} {$e->student->last_name}"
                     : ($e->candidate_name ?? '—'),
+                'candidate_number' => $e->candidate_number,
                 'instrument' => $e->instrument->name ?? '—',
                 'grade' => $e->grade,
                 'result' => $e->result ?? 'Pending',

@@ -227,6 +227,27 @@ test('admin can view an order', function () {
         );
 });
 
+test('order show payload includes candidate number for each exam entry', function () {
+    $admin = orderAdmin();
+    $order = Order::factory()->create();
+
+    $order->examEntries()->create([
+        'candidate_name' => 'Delfina Yelich Battistessa',
+        'candidate_number' => '1-15899370904',
+        'grade' => '1',
+        'delivery_method' => 'Digital',
+        'source' => 'manual',
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.orders.show', $order))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('admin/Orders/Show')
+            ->where('order.exam_entries.0.candidate_number', '1-15899370904')
+        );
+});
+
 // ──────────────────────────────────────────
 // Create / Store — manual Trinity order entry
 // ──────────────────────────────────────────
