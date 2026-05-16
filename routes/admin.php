@@ -105,6 +105,7 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
         Route::post('certificates/top-scorers', [CertificateController::class, 'generateTopScorers'])->name('certificates.top-scorers');
         Route::post('certificates/mark-sent', [CertificateController::class, 'markSent'])->name('certificates.mark-sent');
         Route::post('certificates/unmark-sent', [CertificateController::class, 'unmarkSent'])->name('certificates.unmark-sent');
+        Route::post('certificates/batch-by-entries', [CertificateController::class, 'batchByEntries'])->name('certificates.batch-by-entries');
         Route::get('certificates/download/{filename}', [CertificateController::class, 'downloadZip'])
             ->name('certificates.download')
             ->where('filename', '.*');

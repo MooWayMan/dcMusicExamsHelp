@@ -18,6 +18,11 @@ interface StudentEntry {
   result_band: string
   certificate: string
   exam_date: string
+  // Whether the weekly cert email has been marked sent for this entry.
+  // Drives the Sent ✓ pill in the flat Student Certificates table.
+  sent: boolean
+  // Display date (e.g. "12 May 2026") for the tooltip — null if unsent.
+  sent_at: string | null
 }
 
 interface TeacherEntry {
@@ -99,11 +104,32 @@ function toggleWeeklyTeacher(name: string) {
 // the POST is in flight so Paul can't double-fire and double-stamp).
 const markingSent = ref<Record<string, boolean>>({})
 
-// Per-student client-side tracking of which certs Paul has downloaded
-// during this session. Doesn't persist — once he Marks-as-Sent, the
-// whole group disappears, so we only need to remember within one accordion
-// pass. Keys are entry IDs, value is true once download completes.
-const downloadedEntries = ref<Record<number, boolean>>({})
+// Per-student client-side tracking of which certs Paul has downloaded.
+// Persisted in localStorage so a page refresh / nav-away-and-back
+// doesn't lose the "✓ Downloaded" pills. Stays per-browser only —
+// good enough since Paul does the cert workflow from one Mac.
+// Cleared per-entry when Mark-as-Sent fires for the teacher group.
+const DOWNLOAD_STATE_KEY = 'cert_downloaded_entries'
+
+function loadDownloadState(): Record<number, boolean> {
+  if (typeof window === 'undefined') return {}
+  try {
+    const raw = window.localStorage.getItem(DOWNLOAD_STATE_KEY)
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
+}
+
+function persistDownloadState(state: Record<number, boolean>) {
+  try {
+    window.localStorage.setItem(DOWNLOAD_STATE_KEY, JSON.stringify(state))
+  } catch {
+    // localStorage can throw in private/incognito Safari — ignore.
+  }
+}
+
+const downloadedEntries = ref<Record<number, boolean>>(loadDownloadState())
 const downloadingEntries = ref<Record<number, boolean>>({})
 
 /**
@@ -158,6 +184,7 @@ async function downloadWeeklyStudentCert(student: WeeklyStudent) {
     URL.revokeObjectURL(url)
 
     downloadedEntries.value[student.id] = true
+    persistDownloadState(downloadedEntries.value)
   } catch (e: any) {
     alert(e.message || 'Error generating certificate.')
     console.error('Cert download failed:', e)
@@ -166,20 +193,75 @@ async function downloadWeeklyStudentCert(student: WeeklyStudent) {
   }
 }
 
+// Tracks the in-flight ZIP request per teacher so the button can
+// disable + show a "Bundling..." state during the (often slow)
+// server-side cert render.
+const downloadingZip = ref<Record<string, boolean>>({})
+
 /**
- * Download every cert for a teacher group, one after another. Browsers
- * will fire multiple downloads in quick succession; some block this
- * after the first one unless the user has already allowed multi-file
- * downloads for the origin. Not perfect, but avoids needing a new
- * server-side ZIP endpoint. Each successful download still flags the
- * student as downloaded so the per-row checkmarks light up.
+ * Download every cert for a teacher group.
+ *
+ *  - 1 student → call the existing per-student PDF endpoint. No ZIP
+ *    needed for one cert; saves the user an extract step.
+ *  - 2+ students → call the new /batch-by-entries endpoint which
+ *    bundles every PDF into a single ZIP and streams it back. One
+ *    file to drag into Gmail, no browser "allow multi-download"
+ *    permission prompt, no race conditions between individual fetches.
+ *
+ * On success, every student ID in the group is flagged as Downloaded
+ * (persisted to localStorage) so the green pills light up.
  */
 async function downloadAllWeeklyCerts(group: WeeklyGroup) {
-  for (const student of group.students) {
-    if (downloadedEntries.value[student.id]) continue
-    await downloadWeeklyStudentCert(student)
-    // Tiny pause so the browser doesn't choke on a flood of downloads.
-    await new Promise(r => setTimeout(r, 250))
+  if (group.students.length === 1) {
+    await downloadWeeklyStudentCert(group.students[0])
+    return
+  }
+
+  if (downloadingZip.value[group.teacher_name]) return
+  downloadingZip.value[group.teacher_name] = true
+
+  try {
+    const response = await fetch('/admin/certificates/batch-by-entries', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+      },
+      body: JSON.stringify({
+        entry_ids: group.students.map(s => s.id),
+      }),
+    })
+
+    if (!response.ok) {
+      const text = await response.text()
+      let parsed: any = {}
+      try { parsed = JSON.parse(text) } catch { /* not JSON */ }
+      const detail = parsed.error || parsed.message || text.substring(0, 300) || `HTTP ${response.status}`
+      throw new Error(`ZIP generation failed (${response.status}): ${detail}`)
+    }
+
+    const blob = await response.blob()
+    const url = URL.createObjectURL(blob)
+    const safeTeacher = group.teacher_name.replace(/[^a-zA-Z0-9_-]/g, '_')
+    const filename = `${safeTeacher}_Certs.zip`
+
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.click()
+    URL.revokeObjectURL(url)
+
+    // Flag every student in the group as downloaded.
+    group.students.forEach(s => {
+      downloadedEntries.value[s.id] = true
+    })
+    persistDownloadState(downloadedEntries.value)
+  } catch (e: any) {
+    alert(e.message || 'Error generating ZIP.')
+    console.error('ZIP download failed:', e)
+  } finally {
+    downloadingZip.value[group.teacher_name] = false
   }
 }
 
@@ -372,6 +454,13 @@ function markWeeklyGroupSent(group: WeeklyGroup) {
       // Refresh the weeklyGroups payload so the marked-sent teacher
       // disappears from the list and the counts update.
       router.reload({ only: ['weeklyGroups'] })
+
+      // Drop these IDs from the localStorage downloaded-state map —
+      // they're sent, the cert pills no longer need to be remembered.
+      // Keeps the map lean over time and means an Undo-Sent would
+      // re-show "Cert" (not the stale "✓ Downloaded").
+      entryIds.forEach(id => { delete downloadedEntries.value[id] })
+      persistDownloadState(downloadedEntries.value)
     })
     .catch(() => alert('Could not mark as sent. Try again.'))
     .finally(() => { markingSent.value[group.teacher_name] = false })
@@ -396,6 +485,27 @@ const studentQuarter = ref('')
 const studentSearch = ref('')
 const generatingStudent = ref(false)
 
+// Sort state for the Student Certificates flat list. Click a column header
+// to sort by that field; click again to flip direction. Default sort is
+// by exam_date descending — newest results at the top.
+type StudentSortKey =
+  | 'candidate_name' | 'instrument' | 'grade'
+  | 'score' | 'certificate' | 'exam_date' | 'sent'
+const studentSortKey = ref<StudentSortKey>('exam_date')
+const studentSortDir = ref<'asc' | 'desc'>('desc')
+
+function setStudentSort(key: StudentSortKey) {
+  if (studentSortKey.value === key) {
+    studentSortDir.value = studentSortDir.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    studentSortKey.value = key
+    // Sensible defaults — names asc, dates/scores desc.
+    studentSortDir.value = (key === 'candidate_name' || key === 'instrument' || key === 'certificate')
+      ? 'asc'
+      : 'desc'
+  }
+}
+
 // Teacher form
 const selectedTeacher = ref<number | null>(null)
 const teacherTemplate = ref('')
@@ -416,15 +526,62 @@ function getQuarterFromDate(dateStr: string): string {
   return `${suffix} Quarter ${year}`
 }
 
-// Filtered lists
+// Filtered + sorted student list. Search filters first, then sort runs
+// against the survivors so the visible rows are always ordered by the
+// user's current sort selection.
 const filteredStudents = () => {
-  if (!studentSearch.value) return props.students
-  const q = studentSearch.value.toLowerCase()
-  return props.students.filter(s =>
-    s.candidate_name.toLowerCase().includes(q) ||
-    s.instrument.toLowerCase().includes(q) ||
-    s.certificate.toLowerCase().includes(q)
-  )
+  const q = studentSearch.value.toLowerCase().trim()
+  const base = q
+    ? props.students.filter(s =>
+        s.candidate_name.toLowerCase().includes(q) ||
+        s.instrument.toLowerCase().includes(q) ||
+        s.certificate.toLowerCase().includes(q),
+      )
+    : [...props.students]
+
+  const key = studentSortKey.value
+  const dir = studentSortDir.value === 'asc' ? 1 : -1
+
+  // Grade comparator handles "Initial" + numeric ("1"-"8") sensibly —
+  // Initial sorts before 1 in ascending order; numeric grades compare
+  // as numbers, not as strings (otherwise "10" sorts before "2").
+  const gradeRank = (g: string): number => {
+    if (!g) return -1
+    if (/^initial$/i.test(g)) return 0
+    const n = parseInt(g, 10)
+    return Number.isNaN(n) ? -1 : n
+  }
+
+  return base.sort((a, b) => {
+    let av: number | string = ''
+    let bv: number | string = ''
+    switch (key) {
+      case 'score':
+        av = a.score ?? 0
+        bv = b.score ?? 0
+        break
+      case 'grade':
+        av = gradeRank(a.grade)
+        bv = gradeRank(b.grade)
+        break
+      case 'exam_date':
+        // exam_date is a human-readable string like "12 May 2026" — parse
+        // via Date for proper chronological ordering.
+        av = new Date(a.exam_date).getTime() || 0
+        bv = new Date(b.exam_date).getTime() || 0
+        break
+      case 'sent':
+        av = a.sent ? 1 : 0
+        bv = b.sent ? 1 : 0
+        break
+      default:
+        av = (a[key] ?? '').toString().toLowerCase()
+        bv = (b[key] ?? '').toString().toLowerCase()
+    }
+    if (av < bv) return -1 * dir
+    if (av > bv) return 1 * dir
+    return 0
+  })
 }
 
 const filteredTeachers = () => {
@@ -751,7 +908,7 @@ async function generateTeacherCert(mode: 'preview' | 'download' = 'preview') {
                         <button
                           class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold transition disabled:opacity-50"
                           :class="downloadedEntries[student.id]
-                            ? 'bg-brand-success-soft text-brand-success'
+                            ? 'bg-brand-teal-soft text-brand-teal'
                             : 'bg-brand-accent text-white hover:opacity-90'"
                           :disabled="downloadingEntries[student.id]"
                           @click="downloadWeeklyStudentCert(student)"
@@ -779,10 +936,16 @@ async function generateTeacherCert(mode: 'preview' | 'download' = 'preview') {
               <!-- Action buttons -->
               <div v-if="group.applicant_email" class="flex flex-wrap gap-2">
                 <button
-                  class="inline-flex items-center gap-1.5 rounded-lg bg-brand-accent px-3 py-2 text-sm font-semibold text-white hover:opacity-90 transition"
+                  class="inline-flex items-center gap-1.5 rounded-lg bg-brand-accent px-3 py-2 text-sm font-semibold text-white hover:opacity-90 transition disabled:opacity-50"
+                  :disabled="downloadingZip[group.teacher_name]"
                   @click="downloadAllWeeklyCerts(group)"
                 >
-                  <Download class="h-4 w-4" /> Download All Certs
+                  <Download class="h-4 w-4" />
+                  {{ downloadingZip[group.teacher_name]
+                      ? 'Bundling ZIP…'
+                      : group.students.length > 1
+                        ? `Download All Certs (ZIP, ${group.students.length})`
+                        : 'Download Cert' }}
                 </button>
                 <button
                   class="inline-flex items-center gap-1.5 rounded-lg bg-brand-primary px-3 py-2 text-sm font-semibold text-white hover:opacity-90 transition"
@@ -938,12 +1101,76 @@ async function generateTeacherCert(mode: 'preview' | 'download' = 'preview') {
           <table class="w-full text-sm">
             <thead class="bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary text-white">
               <tr>
-                <th class="px-3 py-2 text-left font-semibold">Name</th>
-                <th class="px-3 py-2 text-left font-semibold">Instrument</th>
-                <th class="px-3 py-2 text-center font-semibold">Grade</th>
-                <th class="px-3 py-2 text-center font-semibold">Score</th>
-                <th class="px-3 py-2 text-left font-semibold">Certificate</th>
-                <th class="px-3 py-2 text-left font-semibold">Date</th>
+                <th
+                  class="px-3 py-2 text-left font-semibold cursor-pointer select-none"
+                  @click="setStudentSort('candidate_name')"
+                >
+                  <span class="inline-flex items-center gap-1">
+                    Name
+                    <ChevronUp v-if="studentSortKey === 'candidate_name' && studentSortDir === 'asc'" class="h-3 w-3" />
+                    <ChevronDown v-else-if="studentSortKey === 'candidate_name' && studentSortDir === 'desc'" class="h-3 w-3" />
+                  </span>
+                </th>
+                <th
+                  class="px-3 py-2 text-left font-semibold cursor-pointer select-none"
+                  @click="setStudentSort('instrument')"
+                >
+                  <span class="inline-flex items-center gap-1">
+                    Instrument
+                    <ChevronUp v-if="studentSortKey === 'instrument' && studentSortDir === 'asc'" class="h-3 w-3" />
+                    <ChevronDown v-else-if="studentSortKey === 'instrument' && studentSortDir === 'desc'" class="h-3 w-3" />
+                  </span>
+                </th>
+                <th
+                  class="px-3 py-2 text-center font-semibold cursor-pointer select-none"
+                  @click="setStudentSort('grade')"
+                >
+                  <span class="inline-flex items-center gap-1">
+                    Grade
+                    <ChevronUp v-if="studentSortKey === 'grade' && studentSortDir === 'asc'" class="h-3 w-3" />
+                    <ChevronDown v-else-if="studentSortKey === 'grade' && studentSortDir === 'desc'" class="h-3 w-3" />
+                  </span>
+                </th>
+                <th
+                  class="px-3 py-2 text-center font-semibold cursor-pointer select-none"
+                  @click="setStudentSort('score')"
+                >
+                  <span class="inline-flex items-center gap-1">
+                    Score
+                    <ChevronUp v-if="studentSortKey === 'score' && studentSortDir === 'asc'" class="h-3 w-3" />
+                    <ChevronDown v-else-if="studentSortKey === 'score' && studentSortDir === 'desc'" class="h-3 w-3" />
+                  </span>
+                </th>
+                <th
+                  class="px-3 py-2 text-left font-semibold cursor-pointer select-none"
+                  @click="setStudentSort('certificate')"
+                >
+                  <span class="inline-flex items-center gap-1">
+                    Certificate
+                    <ChevronUp v-if="studentSortKey === 'certificate' && studentSortDir === 'asc'" class="h-3 w-3" />
+                    <ChevronDown v-else-if="studentSortKey === 'certificate' && studentSortDir === 'desc'" class="h-3 w-3" />
+                  </span>
+                </th>
+                <th
+                  class="px-3 py-2 text-left font-semibold cursor-pointer select-none"
+                  @click="setStudentSort('exam_date')"
+                >
+                  <span class="inline-flex items-center gap-1">
+                    Date
+                    <ChevronUp v-if="studentSortKey === 'exam_date' && studentSortDir === 'asc'" class="h-3 w-3" />
+                    <ChevronDown v-else-if="studentSortKey === 'exam_date' && studentSortDir === 'desc'" class="h-3 w-3" />
+                  </span>
+                </th>
+                <th
+                  class="px-3 py-2 text-center font-semibold cursor-pointer select-none"
+                  @click="setStudentSort('sent')"
+                >
+                  <span class="inline-flex items-center gap-1">
+                    Sent
+                    <ChevronUp v-if="studentSortKey === 'sent' && studentSortDir === 'asc'" class="h-3 w-3" />
+                    <ChevronDown v-else-if="studentSortKey === 'sent' && studentSortDir === 'desc'" class="h-3 w-3" />
+                  </span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -964,9 +1191,20 @@ async function generateTeacherCert(mode: 'preview' | 'download' = 'preview') {
                   </span>
                 </td>
                 <td class="px-3 py-2"><span class="text-sm text-brand-text-soft">{{ entry.exam_date }}</span></td>
+                <td class="px-3 py-2 text-center">
+                  <span
+                    v-if="entry.sent"
+                    class="inline-flex items-center gap-1 rounded-full bg-brand-teal-soft px-2 py-0.5 text-xs font-semibold text-brand-teal"
+                    :title="entry.sent_at ? `Sent ${entry.sent_at}` : 'Sent'"
+                  >
+                    <CheckCircle2 class="h-3 w-3" />
+                    Sent
+                  </span>
+                  <span v-else class="text-xs text-brand-text-soft">—</span>
+                </td>
               </tr>
               <tr v-if="filteredStudents().length === 0">
-                <td colspan="6" class="px-3 py-8 text-center text-brand-text-soft">No entries found</td>
+                <td colspan="7" class="px-3 py-8 text-center text-brand-text-soft">No entries found</td>
               </tr>
             </tbody>
           </table>

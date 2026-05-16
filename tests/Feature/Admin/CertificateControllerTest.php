@@ -354,3 +354,73 @@ test('mark-sent endpoint requires admin', function () {
         ->postJson('/admin/certificates/mark-sent', ['entry_ids' => [$entry->id]])
         ->assertForbidden();
 });
+
+// ──────────────────────────────────────────
+// Sent ✓ pill on the Student Certificates flat list
+// ──────────────────────────────────────────
+
+test('students payload includes a sent boolean reflecting certificate_sent_at', function () {
+    $unsent = makeCertEntry('Mrs A', 2026, 2, ['score' => 80]);
+    $sent   = makeCertEntry('Mrs A', 2026, 2, ['score' => 80, 'certificate_sent_at' => now()]);
+
+    $props = $this->actingAs(certsAdmin())
+        ->get('/admin/certificates?quarter=1&year=2026')
+        ->viewData('page')['props'];
+
+    $byId = collect($props['students'])->keyBy('id');
+    expect($byId[$unsent->id]['sent'])->toBeFalse();
+    expect($byId[$sent->id]['sent'])->toBeTrue();
+    expect($byId[$sent->id]['sent_at'])->toBeString();
+});
+
+// ──────────────────────────────────────────
+// batch-by-entries endpoint — validation + auth
+// (Actual ZIP generation needs Intervention + S3, not covered here.)
+// ──────────────────────────────────────────
+
+test('batch-by-entries requires at least one entry_id', function () {
+    $this->actingAs(certsAdmin())
+        ->postJson('/admin/certificates/batch-by-entries', ['entry_ids' => []])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['entry_ids']);
+});
+
+test('batch-by-entries rejects unknown entry ids', function () {
+    $this->actingAs(certsAdmin())
+        ->postJson('/admin/certificates/batch-by-entries', ['entry_ids' => [999999]])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['entry_ids.0']);
+});
+
+test('batch-by-entries rejects more than 100 entry ids', function () {
+    // Capped to keep cert-render time bounded — 100 PDFs is already a lot.
+    $entry = makeCertEntry('Mrs A', 2026, 2, ['score' => 80]);
+    $payload = ['entry_ids' => array_fill(0, 101, $entry->id)];
+
+    $this->actingAs(certsAdmin())
+        ->postJson('/admin/certificates/batch-by-entries', $payload)
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['entry_ids']);
+});
+
+test('batch-by-entries endpoint requires admin', function () {
+    $entry = makeCertEntry('Mrs A', 2026, 2, ['score' => 80]);
+
+    $this->postJson('/admin/certificates/batch-by-entries', ['entry_ids' => [$entry->id]])
+        ->assertUnauthorized();
+
+    $this->actingAs(User::factory()->create(['role' => 'teacher']))
+        ->postJson('/admin/certificates/batch-by-entries', ['entry_ids' => [$entry->id]])
+        ->assertForbidden();
+});
+
+test('batch-by-entries returns 422 when no matching scored entries', function () {
+    // Entry without a score — gets filtered out by the controller's
+    // whereNotNull('score'), so the resulting collection is empty.
+    $unscored = makeCertEntry('Mrs A', 2026, 2, ['score' => null]);
+
+    $this->actingAs(certsAdmin())
+        ->postJson('/admin/certificates/batch-by-entries', ['entry_ids' => [$unscored->id]])
+        ->assertStatus(422)
+        ->assertJsonFragment(['error' => 'No matching scored entries.']);
+});

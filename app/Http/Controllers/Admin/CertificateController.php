@@ -134,6 +134,11 @@ class CertificateController extends Controller
                 'result_band'     => $entry->result_band,
                 'certificate'     => $entry->certificate_name,
                 'exam_date'       => ($entry->exam_date ?? $entry->order?->requested_start_date)?->format('j F Y'),
+                // Drives the Sent ✓ pill in the flat Student Certificates
+                // list — lets the bottom tab double as a master view of
+                // who's already had their weekly cert email.
+                'sent'            => $entry->certificate_sent_at !== null,
+                'sent_at'         => $entry->certificate_sent_at?->format('j M Y'),
             ])
             ->values();
 
@@ -339,6 +344,138 @@ class CertificateController extends Controller
         return response()->json([
             'success'   => true,
             'unmarked'  => $count,
+        ]);
+    }
+
+    /**
+     * Render one student's cert PDF and return the bytes.
+     *
+     * Shared helper used by batchByEntries — keeps the cert-rendering
+     * recipe (S3 template fetch → overlay text → encode PNG → wrap in
+     * DomPDF) in one place instead of duplicating the inline blocks from
+     * generateStudent / batchGenerate. Returns null on any failure
+     * (template missing, S3 unreachable, encode error) so the caller
+     * can skip the entry rather than 500-ing the whole batch.
+     */
+    private function renderStudentCertPdfBytes(ExamEntry $entry, string $quarterLabel): ?string
+    {
+        $certName = $entry->certificate_name;
+        if (! $certName || ! isset(self::STUDENT_TEMPLATES[$certName])) {
+            return null;
+        }
+
+        try {
+            $templateUrl = self::S3_BASE . self::STUDENT_TEMPLATES[$certName];
+            $image = $this->overlayStudentText(
+                $templateUrl,
+                $entry->candidate_name,
+                $entry->instrument?->name ?? '',
+                $entry->grade ?? '',
+                $quarterLabel,
+            );
+
+            $encoded = $image->encode(new PngEncoder());
+            $base64 = base64_encode((string) $encoded);
+            $html = '<html><head><style>@page { margin: 0; } body { margin: 0; }</style></head><body>'
+                . '<img src="data:image/png;base64,' . $base64 . '" style="width:210mm;height:297mm;display:block;">'
+                . '</body></html>';
+
+            return Pdf::loadHTML($html)->setPaper('a4', 'portrait')->output();
+        } catch (\Throwable $e) {
+            \Log::error("Cert render failed for entry {$entry->id}: {$e->getMessage()}");
+            return null;
+        }
+    }
+
+    /**
+     * Bundle certs for an arbitrary list of entry IDs into a single ZIP
+     * and stream it back. Drives the "Download All Certs" button in the
+     * Weekly Send accordion when a teacher has 2+ students — one ZIP
+     * attachment to drag into Gmail beats N separate PDFs the browser
+     * would have to be granted multi-download permission for.
+     *
+     * Why server-side ZIP not client-side: the cert rendering needs
+     * Intervention Image + S3 + DomPDF, all server-only. Browser would
+     * need to fetch each PDF individually anyway, then pack with JSZip —
+     * extra round-trips and a JS dep we don't carry. Better to do it
+     * here, return one binary response.
+     */
+    public function batchByEntries(Request $request)
+    {
+        set_time_limit(120);
+
+        $validated = $request->validate([
+            'entry_ids'   => 'required|array|min:1|max:100',
+            'entry_ids.*' => 'integer|exists:exam_entries,id',
+        ]);
+
+        $entries = ExamEntry::with(['instrument', 'order:id,requested_start_date'])
+            ->whereIn('id', $validated['entry_ids'])
+            ->whereNotNull('score')
+            ->get();
+
+        if ($entries->isEmpty()) {
+            return response()->json(['error' => 'No matching scored entries.'], 422);
+        }
+
+        // Use the first entry's exam/order date as the quarter label.
+        // The Vue groups by teacher's unsent batch so all entries are
+        // typically the same quarter; if they ever diverged, the label
+        // would still pick a reasonable Q for the cert footer text.
+        $firstEntry = $entries->first();
+        $effectiveDate = $firstEntry->exam_date ?? $firstEntry->order?->requested_start_date;
+        $quarterLabel = $this->getQuarterLabel($effectiveDate);
+
+        // Temp working dir for PDFs + the ZIP. Cleaned up before return
+        // so we don't accumulate junk under /tmp on the box.
+        $tempDir = sys_get_temp_dir() . '/cert-batch-' . uniqid('', true);
+        if (! mkdir($tempDir, 0700, true) && ! is_dir($tempDir)) {
+            return response()->json(['error' => 'Could not create temp dir.'], 500);
+        }
+
+        $writtenFiles = [];
+        foreach ($entries as $entry) {
+            $pdfBytes = $this->renderStudentCertPdfBytes($entry, $quarterLabel);
+            if (! $pdfBytes) {
+                continue;
+            }
+            $safeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $entry->candidate_name);
+            $shortCert = str_replace([' Certificate', ' '], ['', '_'], $entry->certificate_name ?? 'Cert');
+            $pdfPath = "{$tempDir}/{$safeName}_{$shortCert}.pdf";
+            file_put_contents($pdfPath, $pdfBytes);
+            $writtenFiles[] = $pdfPath;
+        }
+
+        if (empty($writtenFiles)) {
+            @rmdir($tempDir);
+            return response()->json(['error' => 'No certs could be generated.'], 500);
+        }
+
+        $zipPath = "{$tempDir}/certs.zip";
+        $zip = new ZipArchive();
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            foreach ($writtenFiles as $f) @unlink($f);
+            @rmdir($tempDir);
+            return response()->json(['error' => 'Could not create ZIP.'], 500);
+        }
+        foreach ($writtenFiles as $f) {
+            $zip->addFile($f, basename($f));
+        }
+        $zip->close();
+
+        $zipBytes = file_get_contents($zipPath);
+
+        // Cleanup temp files before returning.
+        foreach ($writtenFiles as $f) @unlink($f);
+        @unlink($zipPath);
+        @rmdir($tempDir);
+
+        $downloadName = 'certs_' . now()->format('Y-m-d_His') . '.zip';
+
+        return response($zipBytes, 200, [
+            'Content-Type'        => 'application/zip',
+            'Content-Disposition' => 'attachment; filename="' . $downloadName . '"',
+            'Content-Length'      => (string) strlen($zipBytes),
         ]);
     }
 
