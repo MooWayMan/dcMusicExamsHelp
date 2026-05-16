@@ -4,6 +4,13 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
+        {{-- Meta domain verification — links musicexams.help to the
+             musicExams.help Facebook Page so the (i) "About this content"
+             panel on ads no longer says "Facebook Page: Not found". Also
+             required for full Aggregated Event Measurement signal on iOS
+             14+ pixel events. Added 16 May 2026. --}}
+        <meta name="facebook-domain-verification" content="z78vgs8v7fhls7ae39xs3nf1jstrol" />
+
         {{-- Opt out of Chrome's "force dark mode" — the site has its own design tokens --}}
         <meta name="color-scheme" content="light">
 
