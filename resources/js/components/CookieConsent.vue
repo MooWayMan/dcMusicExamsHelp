@@ -7,11 +7,19 @@ import { useCookieConsent } from '@/composables/useCookieConsent'
 
 const { accept: acceptConsent, decline: declineConsent } = useCookieConsent()
 const isVisible = ref(false)
+const bannerStyle = ref<'modal' | 'bottom-bar'>('modal')
 
 // Pages where the banner must NOT auto-popup, otherwise it covers
 // the very content the user came to read before deciding.
 // These pages provide their own inline Accept / Decline buttons.
 const SUPPRESS_AUTO_POPUP_PATHS = ['/cookies', '/privacy']
+
+// Pages where the banner should be a non-blocking bottom bar instead
+// of a centred modal. Used on paid-traffic landing pages where the
+// hero + lead-magnet form must be visible immediately and the cookie
+// consent shouldn't get in the way of the conversion. Still GDPR
+// compliant because both Accept and Decline are explicit buttons.
+const BOTTOM_BAR_PATHS = ['/switch-to-centre-120', '/trinity-exam-information']
 
 let pendingShow: ReturnType<typeof setTimeout> | null = null
 
@@ -24,6 +32,7 @@ function clearPending() {
 
 function evaluateBanner(path: string) {
   const onSuppressedPage = SUPPRESS_AUTO_POPUP_PATHS.includes(path)
+  const onBottomBarPage = BOTTOM_BAR_PATHS.includes(path)
   const hasConsent = !!localStorage.getItem('cookie-consent')
 
   // Already decided — never auto-show again
@@ -36,6 +45,11 @@ function evaluateBanner(path: string) {
     isVisible.value = false
     return
   }
+
+  // Set the banner style for this page. Paid-traffic landing pages
+  // use a non-blocking bottom bar; everything else uses the centred
+  // modal (forces a choice for higher analytics opt-in on the main site).
+  bannerStyle.value = onBottomBarPage ? 'bottom-bar' : 'modal'
 
   // Not on a suppressed page, no consent yet — schedule the banner.
   // Skip if it's already visible or already scheduled.
@@ -89,6 +103,8 @@ function decline() {
 </script>
 
 <template>
+  <!-- Modal style — blocks page interaction. Used on most pages to force -->
+  <!-- a choice and maximise analytics opt-in. -->
   <Transition
     enter-from-class="opacity-0"
     enter-active-class="transition duration-500 ease-out"
@@ -97,15 +113,12 @@ function decline() {
     leave-active-class="transition duration-300 ease-in"
     leave-to-class="opacity-0"
   >
-    <!-- Backdrop overlay — blocks interaction with the page -->
     <div
-      v-if="isVisible"
+      v-if="isVisible && bannerStyle === 'modal'"
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
     >
-      <!-- Popup card -->
       <div class="w-full max-w-sm rounded-2xl bg-brand-surface p-6 shadow-2xl ring-1 ring-brand-border sm:p-8">
         <div class="flex flex-col items-center text-center">
-          <!-- Cookie icon -->
           <div class="mb-4 rounded-full bg-brand-accent/10 p-3">
             <Cookie class="h-8 w-8 text-brand-accent" />
           </div>
@@ -117,7 +130,6 @@ function decline() {
             We use cookies to improve your experience and understand how our site is used.
           </p>
 
-          <!-- Accept all — prominent -->
           <button
             @click="accept"
             class="mt-5 w-full cursor-pointer rounded-lg bg-brand-accent px-6 py-3 text-base font-semibold text-brand-text-inverse transition-colors hover:bg-brand-accent-dark sm:text-lg"
@@ -125,7 +137,6 @@ function decline() {
             Accept all cookies
           </button>
 
-          <!-- Necessary only + Cookie policy — smaller, underneath -->
           <div class="mt-3 flex items-center justify-center gap-4">
             <button
               @click="decline"
@@ -141,6 +152,48 @@ function decline() {
               Cookie Policy
             </a>
           </div>
+        </div>
+      </div>
+    </div>
+  </Transition>
+
+  <!-- Bottom-bar style — non-blocking. Used on paid-traffic landing -->
+  <!-- pages (BOTTOM_BAR_PATHS) where conversion matters more than -->
+  <!-- forced analytics opt-in. Still GDPR compliant: both Accept and -->
+  <!-- Decline are explicit buttons, plus Cookie Policy link. -->
+  <Transition
+    enter-from-class="translate-y-full opacity-0"
+    enter-active-class="transition duration-500 ease-out"
+    enter-to-class="translate-y-0 opacity-100"
+    leave-from-class="translate-y-0 opacity-100"
+    leave-active-class="transition duration-300 ease-in"
+    leave-to-class="translate-y-full opacity-0"
+  >
+    <div
+      v-if="isVisible && bannerStyle === 'bottom-bar'"
+      class="fixed inset-x-0 bottom-0 z-50 border-t border-brand-border bg-brand-surface shadow-lg"
+      role="region"
+      aria-label="Cookie consent"
+    >
+      <div class="mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 py-3 sm:flex-row sm:gap-4 sm:py-4">
+        <Cookie class="h-5 w-5 shrink-0 text-brand-accent" aria-hidden="true" />
+        <p class="flex-1 text-center text-sm text-brand-text sm:text-left">
+          We use cookies to improve your experience.
+          <a href="/cookies" class="text-brand-accent hover:underline">Learn more</a>
+        </p>
+        <div class="flex shrink-0 items-center gap-2">
+          <button
+            @click="decline"
+            class="cursor-pointer rounded-md px-3 py-1.5 text-sm text-brand-text-soft transition-colors hover:bg-brand-bg hover:text-brand-text"
+          >
+            Necessary only
+          </button>
+          <button
+            @click="accept"
+            class="cursor-pointer rounded-md bg-brand-accent px-4 py-1.5 text-sm font-semibold text-brand-text-inverse transition-colors hover:bg-brand-accent-dark"
+          >
+            Accept all
+          </button>
         </div>
       </div>
     </div>

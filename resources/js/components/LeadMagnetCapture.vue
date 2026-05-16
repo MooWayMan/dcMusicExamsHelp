@@ -28,6 +28,18 @@ const props = withDefaults(defineProps<Props>(), {
 // per-incognito-session — fresh device = fresh form.
 const STORAGE_KEY = 'leadMagnetClaimed:trinity-exam-checklist'
 
+// Pages where successful form submission should auto-scroll to the top
+// (so the visitor sees the hero + rest of the page after they've got
+// their checklist). Only `/switch-to-centre-120` qualifies: the Meta
+// ad explicitly promises the checklist and lands the visitor directly
+// at the form via the #get-checklist anchor, so the scroll back to top
+// is the only way to surface the centre 120 sell content.
+// On `/trinity-exam-information` (Google ad landing), the ad promises
+// information about booking Trinity exams, not the checklist — so the
+// form is secondary and an auto-scroll would feel surprising.
+// On the homepage and elsewhere, the form is part of a browsing flow.
+const SCROLL_TO_TOP_AFTER_SUBMIT_PATHS = ['/switch-to-centre-120']
+
 const name = ref('')
 const email = ref('')
 const marketingConsent = ref(false)
@@ -102,8 +114,29 @@ async function handleSubmit() {
     successMessage.value = data.message ?? 'Check your inbox — the checklist is on its way.'
     isDone.value = true
 
+    // After successful submission on paid-traffic landing pages, smooth
+    // -scroll the page to the top AFTER a 1.5-second pause so the visitor
+    // sees the green success message ("Check your inbox...") first, then
+    // the page reveals the hero + centre 120 sell content above. Paid
+    // -traffic landings (Meta ad with #get-checklist anchor, Google ad
+    // landing on /trinity-exam-information) drop visitors directly at
+    // this form, so this scroll is their only way to re-engage with the
+    // rest of the page. On other pages (e.g. homepage) where the form
+    // is part of a browsing flow, we don't auto-scroll — the visitor
+    // chose where to be and we shouldn't override their position.
+    if (
+      typeof window !== 'undefined' &&
+      SCROLL_TO_TOP_AFTER_SUBMIT_PATHS.includes(window.location.pathname)
+    ) {
+      window.setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }, 1500)
+    }
+
     // Fire GA4 conversion event. Imported into Google Ads as the
     // `lead_form_submit` conversion goal (see google-ads-phase1-q2-2026.md).
+    // Also fires as Meta Pixel `Lead` event via the trackEvent wrapper
+    // (see useAnalytics.ts META_EVENT_MAP).
     // Value £14 = average commission per digital practical candidate —
     // proxy for what a single signup is worth, used by Google Ads
     // Smart Bidding once we switch off Manual CPC.
