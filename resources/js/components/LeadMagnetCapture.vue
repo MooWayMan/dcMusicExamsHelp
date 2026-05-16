@@ -102,16 +102,20 @@ async function handleSubmit() {
     successMessage.value = data.message ?? 'Check your inbox — the checklist is on its way.'
     isDone.value = true
 
-    // After successful submission, smooth-scroll the page to the top.
-    // Paid-traffic landings (e.g. Meta ad with #get-checklist anchor) drop
-    // visitors directly at this form; once they submit, scrolling back to
-    // the top reveals the hero + the rest of the centre 120 sell content.
-    // Wrapped in requestAnimationFrame so the success-state render lands
-    // first, otherwise the smooth scroll competes with Vue's DOM update.
+    // After successful submission, smooth-scroll the page to the top
+    // AFTER a 1.5-second pause so the visitor sees the green success
+    // message ("Check your inbox...") first, then the page reveals the
+    // hero + centre 120 sell content above. Without the delay, the
+    // scroll fires immediately and whisks the visitor past the success
+    // confirmation. Paid-traffic landings (Meta ad with #get-checklist
+    // anchor) drop visitors directly at this form, so this scroll is
+    // their only way to re-engage with the rest of the page. If they
+    // tab away to email during the 1.5s window, they return to the
+    // scrolled-to-top state, which is the intended landing for follow-up.
     if (typeof window !== 'undefined') {
-      window.requestAnimationFrame(() => {
+      window.setTimeout(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' })
-      })
+      }, 1500)
     }
 
     // Fire GA4 conversion event. Imported into Google Ads as the
