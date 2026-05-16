@@ -2,7 +2,10 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
-import { Award, Download, User, Music, Search, Eye, X, Package, Loader2 } from 'lucide-vue-next'
+import {
+  Award, Download, User, Music, Search, Eye, X, Package, Loader2,
+  Copy, ExternalLink, CheckCircle2, ChevronUp, ChevronDown, Mail, Send,
+} from 'lucide-vue-next'
 import PageHeader from '@/components/reusables/PageHeader.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 
@@ -15,6 +18,11 @@ interface StudentEntry {
   result_band: string
   certificate: string
   exam_date: string
+  // Whether the weekly cert email has been marked sent for this entry.
+  // Drives the Sent ✓ pill in the flat Student Certificates table.
+  sent: boolean
+  // Display date (e.g. "12 May 2026") for the tooltip — null if unsent.
+  sent_at: string | null
 }
 
 interface TeacherEntry {
@@ -24,6 +32,25 @@ interface TeacherEntry {
   tier: string | null
 }
 
+interface WeeklyStudent {
+  id: number
+  name: string
+  instrument: string
+  grade: string
+  score: number
+  result: string
+  certificate: string
+}
+
+interface WeeklyGroup {
+  teacher_name: string
+  applicant_email: string | null
+  is_parent_booking: boolean
+  booking_role: string | null
+  unsent_count: number
+  students: WeeklyStudent[]
+}
+
 const props = defineProps<{
   students: StudentEntry[]
   teachers: TeacherEntry[]
@@ -31,6 +58,7 @@ const props = defineProps<{
   teacherTemplates: string[]
   selectedQuarter: number
   selectedYear: number
+  weeklyGroups: WeeklyGroup[]
 }>()
 
 // Flash data
@@ -54,9 +82,389 @@ watch([batchQuarter, batchYear], ([q, y]) => {
   router.get(
     '/admin/certificates',
     { quarter: q, year: y },
-    { preserveScroll: true, preserveState: true, only: ['students', 'teachers', 'selectedQuarter', 'selectedYear'] }
+    {
+      preserveScroll: true,
+      preserveState: true,
+      only: ['students', 'teachers', 'selectedQuarter', 'selectedYear', 'weeklyGroups'],
+    },
   )
 })
+
+// ────────────────────────────────────────────────────────────
+// Weekly Send — accordion state + email helpers
+// ────────────────────────────────────────────────────────────
+
+// Which teacher row in the accordion is currently expanded.
+const expandedWeeklyTeacher = ref<string | null>(null)
+function toggleWeeklyTeacher(name: string) {
+  expandedWeeklyTeacher.value = expandedWeeklyTeacher.value === name ? null : name
+}
+
+// Marking-in-progress flag per teacher row (disables the button while
+// the POST is in flight so Paul can't double-fire and double-stamp).
+const markingSent = ref<Record<string, boolean>>({})
+
+// Per-student client-side tracking of which certs Paul has downloaded.
+// Persisted in localStorage so a page refresh / nav-away-and-back
+// doesn't lose the "✓ Downloaded" pills. Stays per-browser only —
+// good enough since Paul does the cert workflow from one Mac.
+// Cleared per-entry when Mark-as-Sent fires for the teacher group.
+const DOWNLOAD_STATE_KEY = 'cert_downloaded_entries'
+
+function loadDownloadState(): Record<number, boolean> {
+  if (typeof window === 'undefined') return {}
+  try {
+    const raw = window.localStorage.getItem(DOWNLOAD_STATE_KEY)
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
+}
+
+function persistDownloadState(state: Record<number, boolean>) {
+  try {
+    window.localStorage.setItem(DOWNLOAD_STATE_KEY, JSON.stringify(state))
+  } catch {
+    // localStorage can throw in private/incognito Safari — ignore.
+  }
+}
+
+const downloadedEntries = ref<Record<number, boolean>>(loadDownloadState())
+const downloadingEntries = ref<Record<number, boolean>>({})
+
+/**
+ * Download a single student's cert PDF straight from a row in the
+ * Weekly Send accordion. Reuses the existing per-student endpoint —
+ * just packages the request so Paul doesn't have to bounce down to
+ * the Student Certificates tab and re-select.
+ */
+async function downloadWeeklyStudentCert(student: WeeklyStudent) {
+  if (downloadingEntries.value[student.id]) return
+  downloadingEntries.value[student.id] = true
+
+  try {
+    const response = await fetch('/admin/certificates/student', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        // Accept JSON so Laravel's exception handler returns JSON
+        // for any unhandled throwable rather than the HTML app shell.
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+      },
+      body: JSON.stringify({
+        entry_id: student.id,
+        template: student.certificate,
+        format: 'pdf',
+      }),
+    })
+
+    if (!response.ok) {
+      // Surface the real underlying error rather than masking it as
+      // "Unknown error". Laravel may return JSON (with `error`) for
+      // try/catch-handled exceptions, or HTML for debug-mode crashes /
+      // 419 CSRF expiries. Try JSON first, fall back to text so Paul
+      // can see what actually broke.
+      const text = await response.text()
+      let parsed: any = {}
+      try { parsed = JSON.parse(text) } catch { /* not JSON — keep text */ }
+      const detail = parsed.error || parsed.message || text.substring(0, 300) || `HTTP ${response.status}`
+      throw new Error(`Certificate generation failed (${response.status}): ${detail}`)
+    }
+
+    const blob = await response.blob()
+    const url = URL.createObjectURL(blob)
+    const filename = response.headers.get('Content-Disposition')?.split('filename="')[1]?.replace('"', '')
+      || `${student.name.replace(/\s+/g, '_')}_cert.pdf`
+
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.click()
+    URL.revokeObjectURL(url)
+
+    downloadedEntries.value[student.id] = true
+    persistDownloadState(downloadedEntries.value)
+  } catch (e: any) {
+    alert(e.message || 'Error generating certificate.')
+    console.error('Cert download failed:', e)
+  } finally {
+    downloadingEntries.value[student.id] = false
+  }
+}
+
+// Tracks the in-flight ZIP request per teacher so the button can
+// disable + show a "Bundling..." state during the (often slow)
+// server-side cert render.
+const downloadingZip = ref<Record<string, boolean>>({})
+
+/**
+ * Download every cert for a teacher group.
+ *
+ *  - 1 student → call the existing per-student PDF endpoint. No ZIP
+ *    needed for one cert; saves the user an extract step.
+ *  - 2+ students → call the new /batch-by-entries endpoint which
+ *    bundles every PDF into a single ZIP and streams it back. One
+ *    file to drag into Gmail, no browser "allow multi-download"
+ *    permission prompt, no race conditions between individual fetches.
+ *
+ * On success, every student ID in the group is flagged as Downloaded
+ * (persisted to localStorage) so the green pills light up.
+ */
+async function downloadAllWeeklyCerts(group: WeeklyGroup) {
+  if (group.students.length === 1) {
+    await downloadWeeklyStudentCert(group.students[0])
+    return
+  }
+
+  if (downloadingZip.value[group.teacher_name]) return
+  downloadingZip.value[group.teacher_name] = true
+
+  try {
+    const response = await fetch('/admin/certificates/batch-by-entries', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+      },
+      body: JSON.stringify({
+        entry_ids: group.students.map(s => s.id),
+      }),
+    })
+
+    if (!response.ok) {
+      const text = await response.text()
+      let parsed: any = {}
+      try { parsed = JSON.parse(text) } catch { /* not JSON */ }
+      const detail = parsed.error || parsed.message || text.substring(0, 300) || `HTTP ${response.status}`
+      throw new Error(`ZIP generation failed (${response.status}): ${detail}`)
+    }
+
+    const blob = await response.blob()
+    const url = URL.createObjectURL(blob)
+    const safeTeacher = group.teacher_name.replace(/[^a-zA-Z0-9_-]/g, '_')
+    const filename = `${safeTeacher}_Certs.zip`
+
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.click()
+    URL.revokeObjectURL(url)
+
+    // Flag every student in the group as downloaded.
+    group.students.forEach(s => {
+      downloadedEntries.value[s.id] = true
+    })
+    persistDownloadState(downloadedEntries.value)
+  } catch (e: any) {
+    alert(e.message || 'Error generating ZIP.')
+    console.error('ZIP download failed:', e)
+  } finally {
+    downloadingZip.value[group.teacher_name] = false
+  }
+}
+
+const totalWeeklyTeachers = computed(() => props.weeklyGroups.length)
+const totalWeeklyStudents = computed(() =>
+  props.weeklyGroups.reduce((acc, g) => acc + g.unsent_count, 0),
+)
+
+/**
+ * Strip surnames off "Mr Smith" / "Mrs Jones" / "Daniel Rogers" so the
+ * Hi line reads naturally. Matches recipientGreetingName() in QuarterEnd.
+ */
+function recipientGreetingName(fullName: string): string {
+  if (!fullName) return ''
+  const stripped = fullName.replace(/^(Mr|Mrs|Ms|Miss|Dr|Mx)\.?\s+/i, '').trim()
+  return stripped.split(/\s+/)[0]
+}
+
+/**
+ * Last month of the currently-selected quarter, used in the weekly email
+ * so the "quarter-end summary" line reads correctly for any Q1–Q4.
+ *   Q1 → March   Q2 → June   Q3 → September   Q4 → December
+ */
+const quarterEndMonthName = computed(() => {
+  return ['March', 'June', 'September', 'December'][props.selectedQuarter - 1] ?? 'June'
+})
+
+/**
+ * Build the weekly cert-delivery email body.
+ *
+ * Mid-quarter drip — much lighter than the QuarterEnd celebration template.
+ * No top-scorer announcement (premature mid-quarter), no badge promise (the
+ * teacher might not qualify), no Faber/prize-draw pitch. Just: "Trinity
+ * released results, here's the cert, parent script for your forwarding."
+ *
+ * Plural-aware so "one of your students" / "3 of your students" reads
+ * right whether the teacher has 1 or many unsent results this week.
+ */
+function buildWeeklyEmail(group: WeeklyGroup): string {
+  const firstName = recipientGreetingName(group.teacher_name)
+  const count = group.students.length
+
+  const intro = count === 1
+    ? `Quick update — Trinity has released results for one of your students:`
+    : `Quick update — Trinity has released results for ${count} of your students:`
+
+  const studentList = group.students
+    .map(s => `  • ${s.name} — ${s.instrument} Grade ${s.grade} — ${s.score} (${s.result}) — ${s.certificate}`)
+    .join('\n')
+
+  // 1 student → single PDF attachment. 2+ → ZIP attachment with the
+  // "double-click to open" hint so teachers don't get tripped up by the
+  // archive format. Mirrors the QuarterEnd ZIP guidance, lighter wording.
+  const certSentence = count === 1
+    ? `The personalised musicExams.help certificate is attached (Trinity have already sent the official certificate separately).`
+    : `The personalised musicExams.help certificates are bundled in the attached ZIP file — just double-click to open it and you'll find a PDF for each student. Trinity have already sent the official certificates separately.`
+
+  const recognitionSentence = count === 1
+    ? `They'll also appear on the Recognition page at https://musicexams.help/recognition (first name + surname initial only, as per GDPR).`
+    : `They'll also appear on the Recognition page at https://musicexams.help/recognition (first names + surname initial only, as per GDPR).`
+
+  const parentPsLead = count === 1
+    ? `P.S. Here's a message you can send to the parent with their child's certificate:`
+    : `P.S. Here's a message you can send to parents with their children's certificates:`
+
+  // Parent-forward script — includes the Top Scorer carrot so parents know
+  // their child is in the running for a gift token. Timing matches the
+  // QuarterEnd email policy: 6 weeks after the quarter ends, once digital
+  // results are in. The "in addition to any official Trinity certificate"
+  // aside is there so parents don't think the musicExams.help cert is
+  // replacing Trinity's — they get both.
+  const parentScript = `"Hi [Parent Name], I've recently partnered with musicExams.help, a platform that supports teachers, parents and students taking Trinity exams. Your child now receives a personalised certificate (in addition to any official Trinity certificate) — please find it attached. They also appear on the Recognition page at https://musicexams.help/recognition (first name and surname initial only). They're also in the running for our quarterly Top Scorer award — winners receive a gift token, announced around 6 weeks after the quarter ends once all results (including digital) are in. If you'd like their full name displayed, just email musicexams@musicexams.help."`
+
+  return `Hi ${firstName},
+
+${intro}
+
+${studentList}
+
+${certSentence}
+
+${recognitionSentence}
+
+I'll send the full quarter-end summary at the end of ${quarterEndMonthName.value} with prize draw results and top scorer awards.
+
+Best wishes,
+Paul
+
+${parentPsLead}
+
+${parentScript}`
+}
+
+function copyWeeklyEmail(group: WeeklyGroup) {
+  // Parent / self-bookers get the parent-direct variant — no "your students"
+  // language, no teacher-prize-draw talk, addressed straight to the booker.
+  const body = group.is_parent_booking
+    ? buildWeeklyParentEmail(group)
+    : buildWeeklyEmail(group)
+  navigator.clipboard.writeText(body)
+  alert('Weekly email copied to clipboard! Now click "Open in Gmail" to compose.')
+}
+
+/**
+ * Direct-to-parent weekly variant — for parent/self bookings where the
+ * recipient IS the candidate's parent (or the candidate themselves), not
+ * the teacher. Mirrors the parent-direct logic in QuarterEnd Step 2 but
+ * trimmed for mid-quarter drip.
+ */
+function buildWeeklyParentEmail(group: WeeklyGroup): string {
+  const firstName = recipientGreetingName(group.teacher_name)
+  const count = group.students.length
+
+  const candidateFirstNames = group.students.map(s => s.name.split(' ')[0])
+  const namesSentence = count === 1
+    ? candidateFirstNames[0]
+    : count === 2
+      ? `${candidateFirstNames[0]} and ${candidateFirstNames[1]}`
+      : `${candidateFirstNames.slice(0, -1).join(', ')} and ${candidateFirstNames.slice(-1)[0]}`
+
+  const studentList = group.students
+    .map(s => `  • ${s.name} — ${s.instrument} Grade ${s.grade} — ${s.score} (${s.result}) — ${s.certificate}`)
+    .join('\n')
+
+  // 1 student → single PDF attachment. 2+ → ZIP attachment with the
+  // "double-click to open" hint so teachers don't get tripped up by the
+  // archive format. Mirrors the QuarterEnd ZIP guidance, lighter wording.
+  const certSentence = count === 1
+    ? `The personalised musicExams.help certificate is attached (Trinity have already sent the official certificate separately).`
+    : `The personalised musicExams.help certificates are bundled in the attached ZIP file — just double-click to open it and you'll find a PDF for each student. Trinity have already sent the official certificates separately.`
+
+  const recognitionSentence = count === 1
+    ? `${namesSentence} will also appear on the Recognition page at https://musicexams.help/recognition — first name and surname initial only, for GDPR. If you'd like the full name shown, just reply and say the word.`
+    : `${namesSentence} will also appear on the Recognition page at https://musicexams.help/recognition — first names and surname initial only, for GDPR. If you'd like full names shown, just reply and say the word.`
+
+  const topScorerLine = count === 1
+    ? `${namesSentence} is also in the running for our quarterly Top Scorer award — winners receive a gift token, announced around 6 weeks after the quarter ends once all results (including digital) are in.`
+    : `${namesSentence} are also in the running for our quarterly Top Scorer award — winners receive a gift token, announced around 6 weeks after the quarter ends once all results (including digital) are in.`
+
+  return `Hi ${firstName},
+
+Quick update — Trinity has released results for ${namesSentence}:
+
+${studentList}
+
+${certSentence}
+
+${recognitionSentence}
+
+${topScorerLine}
+
+I'll send the full quarter-end summary at the end of ${quarterEndMonthName.value} with prize draw results and top scorer awards.
+
+Thanks for choosing centre 120.
+
+Best wishes,
+Paul Sheridan`
+}
+
+function openWeeklyGmail(group: WeeklyGroup) {
+  if (!group.applicant_email) return
+  const subjectText = group.is_parent_booking
+    ? `musicExams.help Certificate${group.students.length > 1 ? 's' : ''} — ${group.students.map(s => s.name.split(' ')[0]).join(' & ')}`
+    : `Trinity Exam Result${group.students.length > 1 ? 's' : ''} — Your Student${group.students.length > 1 ? 's' : ''} Did Brilliantly!`
+  const subject = encodeURIComponent(subjectText)
+  const to = encodeURIComponent(group.applicant_email)
+  window.open(`https://mail.google.com/mail/?view=cm&to=${to}&su=${subject}`, '_blank')
+}
+
+/**
+ * Flip certificate_sent_at = now() for every student in this teacher's
+ * group, then reload the weeklyGroups payload so the row disappears.
+ */
+function markWeeklyGroupSent(group: WeeklyGroup) {
+  if (markingSent.value[group.teacher_name]) return
+  markingSent.value[group.teacher_name] = true
+
+  const entryIds = group.students.map(s => s.id)
+  fetch('/admin/certificates/mark-sent', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+    },
+    body: JSON.stringify({ entry_ids: entryIds }),
+  })
+    .then(r => r.ok ? r.json() : Promise.reject(r))
+    .then(() => {
+      // Refresh the weeklyGroups payload so the marked-sent teacher
+      // disappears from the list and the counts update.
+      router.reload({ only: ['weeklyGroups'] })
+
+      // Drop these IDs from the localStorage downloaded-state map —
+      // they're sent, the cert pills no longer need to be remembered.
+      // Keeps the map lean over time and means an Undo-Sent would
+      // re-show "Cert" (not the stale "✓ Downloaded").
+      entryIds.forEach(id => { delete downloadedEntries.value[id] })
+      persistDownloadState(downloadedEntries.value)
+    })
+    .catch(() => alert('Could not mark as sent. Try again.'))
+    .finally(() => { markingSent.value[group.teacher_name] = false })
+}
 
 async function batchGenerate() {
   batchGenerating.value = true
@@ -76,6 +484,27 @@ const studentCustomName = ref('')
 const studentQuarter = ref('')
 const studentSearch = ref('')
 const generatingStudent = ref(false)
+
+// Sort state for the Student Certificates flat list. Click a column header
+// to sort by that field; click again to flip direction. Default sort is
+// by exam_date descending — newest results at the top.
+type StudentSortKey =
+  | 'candidate_name' | 'instrument' | 'grade'
+  | 'score' | 'certificate' | 'exam_date' | 'sent'
+const studentSortKey = ref<StudentSortKey>('exam_date')
+const studentSortDir = ref<'asc' | 'desc'>('desc')
+
+function setStudentSort(key: StudentSortKey) {
+  if (studentSortKey.value === key) {
+    studentSortDir.value = studentSortDir.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    studentSortKey.value = key
+    // Sensible defaults — names asc, dates/scores desc.
+    studentSortDir.value = (key === 'candidate_name' || key === 'instrument' || key === 'certificate')
+      ? 'asc'
+      : 'desc'
+  }
+}
 
 // Teacher form
 const selectedTeacher = ref<number | null>(null)
@@ -97,15 +526,62 @@ function getQuarterFromDate(dateStr: string): string {
   return `${suffix} Quarter ${year}`
 }
 
-// Filtered lists
+// Filtered + sorted student list. Search filters first, then sort runs
+// against the survivors so the visible rows are always ordered by the
+// user's current sort selection.
 const filteredStudents = () => {
-  if (!studentSearch.value) return props.students
-  const q = studentSearch.value.toLowerCase()
-  return props.students.filter(s =>
-    s.candidate_name.toLowerCase().includes(q) ||
-    s.instrument.toLowerCase().includes(q) ||
-    s.certificate.toLowerCase().includes(q)
-  )
+  const q = studentSearch.value.toLowerCase().trim()
+  const base = q
+    ? props.students.filter(s =>
+        s.candidate_name.toLowerCase().includes(q) ||
+        s.instrument.toLowerCase().includes(q) ||
+        s.certificate.toLowerCase().includes(q),
+      )
+    : [...props.students]
+
+  const key = studentSortKey.value
+  const dir = studentSortDir.value === 'asc' ? 1 : -1
+
+  // Grade comparator handles "Initial" + numeric ("1"-"8") sensibly —
+  // Initial sorts before 1 in ascending order; numeric grades compare
+  // as numbers, not as strings (otherwise "10" sorts before "2").
+  const gradeRank = (g: string): number => {
+    if (!g) return -1
+    if (/^initial$/i.test(g)) return 0
+    const n = parseInt(g, 10)
+    return Number.isNaN(n) ? -1 : n
+  }
+
+  return base.sort((a, b) => {
+    let av: number | string = ''
+    let bv: number | string = ''
+    switch (key) {
+      case 'score':
+        av = a.score ?? 0
+        bv = b.score ?? 0
+        break
+      case 'grade':
+        av = gradeRank(a.grade)
+        bv = gradeRank(b.grade)
+        break
+      case 'exam_date':
+        // exam_date is a human-readable string like "12 May 2026" — parse
+        // via Date for proper chronological ordering.
+        av = new Date(a.exam_date).getTime() || 0
+        bv = new Date(b.exam_date).getTime() || 0
+        break
+      case 'sent':
+        av = a.sent ? 1 : 0
+        bv = b.sent ? 1 : 0
+        break
+      default:
+        av = (a[key] ?? '').toString().toLowerCase()
+        bv = (b[key] ?? '').toString().toLowerCase()
+    }
+    if (av < bv) return -1 * dir
+    if (av > bv) return 1 * dir
+    return 0
+  })
 }
 
 const filteredTeachers = () => {
@@ -340,6 +816,170 @@ async function generateTeacherCert(mode: 'preview' | 'download' = 'preview') {
         </div>
       </div>
 
+      <!-- ─────────────────────────────────────────────────── -->
+      <!-- WEEKLY SEND — mid-quarter drip of new results       -->
+      <!-- Only shows when there are unsent scored entries in  -->
+      <!-- the selected quarter.                               -->
+      <!-- ─────────────────────────────────────────────────── -->
+      <div v-if="weeklyGroups.length" class="mb-8 rounded-xl border-2 border-brand-accent bg-brand-surface p-6 shadow-sm">
+        <div class="flex items-center gap-3 mb-2">
+          <Send class="h-6 w-6 text-brand-accent" />
+          <h2 class="text-lg font-bold text-brand-text">Send This Week's Results</h2>
+        </div>
+        <p class="text-sm text-brand-text-soft mb-4">
+          Trinity has released results for {{ totalWeeklyStudents }} student{{ totalWeeklyStudents !== 1 ? 's' : '' }} across
+          {{ totalWeeklyTeachers }} teacher{{ totalWeeklyTeachers !== 1 ? 's' : '' }}/parent{{ totalWeeklyTeachers !== 1 ? 's' : '' }} this quarter.
+          Email each one their certificate, then mark them as sent so they don't reappear next week.
+        </p>
+
+        <div class="space-y-3">
+          <div
+            v-for="group in weeklyGroups"
+            :key="group.teacher_name"
+            class="rounded-lg border border-brand-border bg-white transition"
+          >
+            <!-- Header / toggle row -->
+            <div
+              class="flex items-center justify-between px-4 py-3 cursor-pointer"
+              @click="toggleWeeklyTeacher(group.teacher_name)"
+            >
+              <div class="flex items-center gap-3">
+                <div>
+                  <span class="font-bold text-brand-text">{{ group.teacher_name }}</span>
+                  <span v-if="group.booking_role === 'self'" class="ml-2 inline-block rounded-full bg-brand-accent/10 px-2 py-0.5 text-xs font-semibold text-brand-accent">
+                    Self booking
+                  </span>
+                  <span v-else-if="group.is_parent_booking" class="ml-2 inline-block rounded-full bg-brand-success/10 px-2 py-0.5 text-xs font-semibold text-brand-success">
+                    Parent booking
+                  </span>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 text-sm text-brand-text-soft">
+                <span>{{ group.unsent_count }} cert{{ group.unsent_count !== 1 ? 's' : '' }} to send</span>
+                <ChevronUp v-if="expandedWeeklyTeacher === group.teacher_name" class="h-4 w-4" />
+                <ChevronDown v-else class="h-4 w-4" />
+              </div>
+            </div>
+
+            <!-- Expanded detail -->
+            <div v-if="expandedWeeklyTeacher === group.teacher_name" class="border-t border-brand-border px-4 py-4 space-y-4">
+              <!-- Email -->
+              <div v-if="group.applicant_email" class="text-sm">
+                <span class="text-brand-text-soft">Email:</span>
+                <a :href="`mailto:${group.applicant_email}`" class="ml-1 font-medium text-brand-accent hover:underline">{{ group.applicant_email }}</a>
+              </div>
+
+              <!-- Students table -->
+              <div class="overflow-x-auto rounded-lg border border-brand-border">
+                <table class="w-full text-sm">
+                  <thead class="bg-brand-surface-soft">
+                    <tr>
+                      <th class="px-3 py-2 text-left font-semibold text-brand-text">Student</th>
+                      <th class="px-3 py-2 text-left font-semibold text-brand-text">Instrument</th>
+                      <th class="px-3 py-2 text-center font-semibold text-brand-text">Grade</th>
+                      <th class="px-3 py-2 text-center font-semibold text-brand-text">Score</th>
+                      <th class="px-3 py-2 text-left font-semibold text-brand-text">Result</th>
+                      <th class="px-3 py-2 text-left font-semibold text-brand-text">Certificate</th>
+                      <th class="px-3 py-2 text-center font-semibold text-brand-text">Download</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="student in group.students" :key="student.id" class="border-t border-brand-border">
+                      <td class="px-3 py-2"><span class="font-medium text-brand-text">{{ student.name }}</span></td>
+                      <td class="px-3 py-2"><span class="text-sm text-brand-text-soft">{{ student.instrument }}</span></td>
+                      <td class="px-3 py-2 text-center"><span class="text-sm text-brand-text-soft">{{ student.grade }}</span></td>
+                      <td class="px-3 py-2 text-center text-sm font-bold text-brand-text">{{ student.score }}</td>
+                      <td class="px-3 py-2">
+                        <span class="rounded-full px-2 py-0.5 text-sm font-medium"
+                          :class="{
+                            'bg-brand-success-soft text-brand-success': student.result === 'Distinction',
+                            'bg-brand-accent/10 text-brand-accent': student.result === 'Merit',
+                            'bg-brand-surface-soft text-brand-text-soft': student.result === 'Pass',
+                          }">
+                          {{ student.result }}
+                        </span>
+                      </td>
+                      <td class="px-3 py-2">
+                        <span class="inline-block rounded-full bg-brand-accent/10 px-2 py-0.5 text-xs font-semibold text-brand-accent">
+                          {{ student.certificate }}
+                        </span>
+                      </td>
+                      <td class="px-3 py-2 text-center">
+                        <button
+                          class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold transition disabled:opacity-50"
+                          :class="downloadedEntries[student.id]
+                            ? 'bg-brand-teal-soft text-brand-teal'
+                            : 'bg-brand-accent text-white hover:opacity-90'"
+                          :disabled="downloadingEntries[student.id]"
+                          @click="downloadWeeklyStudentCert(student)"
+                        >
+                          <CheckCircle2 v-if="downloadedEntries[student.id]" class="h-3 w-3" />
+                          <Download v-else class="h-3 w-3" />
+                          {{ downloadingEntries[student.id]
+                              ? '…'
+                              : downloadedEntries[student.id]
+                                ? 'Downloaded'
+                                : 'Cert' }}
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Orphaned bucket guidance -->
+              <div v-if="!group.applicant_email" class="rounded-lg border border-dashed border-amber-400 bg-amber-50 p-3 text-sm text-amber-900">
+                <p class="font-semibold mb-1">No contact linked yet</p>
+                <p>These candidates were booked without a named teacher or parent. Look up the correspondence email on Trinity's candidate page and link the contact before emailing.</p>
+              </div>
+
+              <!-- Action buttons -->
+              <div v-if="group.applicant_email" class="flex flex-wrap gap-2">
+                <button
+                  class="inline-flex items-center gap-1.5 rounded-lg bg-brand-accent px-3 py-2 text-sm font-semibold text-white hover:opacity-90 transition disabled:opacity-50"
+                  :disabled="downloadingZip[group.teacher_name]"
+                  @click="downloadAllWeeklyCerts(group)"
+                >
+                  <Download class="h-4 w-4" />
+                  {{ downloadingZip[group.teacher_name]
+                      ? 'Bundling ZIP…'
+                      : group.students.length > 1
+                        ? `Download All Certs (ZIP, ${group.students.length})`
+                        : 'Download Cert' }}
+                </button>
+                <button
+                  class="inline-flex items-center gap-1.5 rounded-lg bg-brand-primary px-3 py-2 text-sm font-semibold text-white hover:opacity-90 transition"
+                  @click="copyWeeklyEmail(group)"
+                >
+                  <Copy class="h-4 w-4" /> Copy Weekly Email
+                </button>
+                <button
+                  class="inline-flex items-center gap-1.5 rounded-lg bg-red-500 px-3 py-2 text-sm font-semibold text-white hover:opacity-90 transition"
+                  @click="openWeeklyGmail(group)"
+                >
+                  <ExternalLink class="h-4 w-4" /> Open in Gmail
+                </button>
+                <button
+                  class="inline-flex items-center gap-1.5 rounded-lg border border-brand-accent bg-brand-accent/10 px-3 py-2 text-sm font-semibold text-brand-accent hover:bg-brand-accent hover:text-white transition disabled:opacity-50"
+                  :disabled="markingSent[group.teacher_name]"
+                  @click="markWeeklyGroupSent(group)"
+                >
+                  <CheckCircle2 class="h-4 w-4" />
+                  {{ markingSent[group.teacher_name] ? 'Marking…' : 'Mark as Sent' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- "All caught up" — keeps the page useful even when nothing's queued -->
+      <div v-else class="mb-8 rounded-xl border border-brand-border bg-brand-surface-soft p-6 text-center">
+        <Mail class="mx-auto h-8 w-8 text-brand-text-soft mb-2" />
+        <p class="text-sm font-semibold text-brand-text">All caught up — no new results to email this week</p>
+        <p class="text-xs text-brand-text-soft mt-1">As soon as Trinity releases more {{ quarterLabel }} results, the affected teachers will appear here.</p>
+      </div>
+
       <!-- Tabs -->
       <div class="mb-6 flex gap-2">
         <button
@@ -461,12 +1101,76 @@ async function generateTeacherCert(mode: 'preview' | 'download' = 'preview') {
           <table class="w-full text-sm">
             <thead class="bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary text-white">
               <tr>
-                <th class="px-3 py-2 text-left font-semibold">Name</th>
-                <th class="px-3 py-2 text-left font-semibold">Instrument</th>
-                <th class="px-3 py-2 text-center font-semibold">Grade</th>
-                <th class="px-3 py-2 text-center font-semibold">Score</th>
-                <th class="px-3 py-2 text-left font-semibold">Certificate</th>
-                <th class="px-3 py-2 text-left font-semibold">Date</th>
+                <th
+                  class="px-3 py-2 text-left font-semibold cursor-pointer select-none"
+                  @click="setStudentSort('candidate_name')"
+                >
+                  <span class="inline-flex items-center gap-1">
+                    Name
+                    <ChevronUp v-if="studentSortKey === 'candidate_name' && studentSortDir === 'asc'" class="h-3 w-3" />
+                    <ChevronDown v-else-if="studentSortKey === 'candidate_name' && studentSortDir === 'desc'" class="h-3 w-3" />
+                  </span>
+                </th>
+                <th
+                  class="px-3 py-2 text-left font-semibold cursor-pointer select-none"
+                  @click="setStudentSort('instrument')"
+                >
+                  <span class="inline-flex items-center gap-1">
+                    Instrument
+                    <ChevronUp v-if="studentSortKey === 'instrument' && studentSortDir === 'asc'" class="h-3 w-3" />
+                    <ChevronDown v-else-if="studentSortKey === 'instrument' && studentSortDir === 'desc'" class="h-3 w-3" />
+                  </span>
+                </th>
+                <th
+                  class="px-3 py-2 text-center font-semibold cursor-pointer select-none"
+                  @click="setStudentSort('grade')"
+                >
+                  <span class="inline-flex items-center gap-1">
+                    Grade
+                    <ChevronUp v-if="studentSortKey === 'grade' && studentSortDir === 'asc'" class="h-3 w-3" />
+                    <ChevronDown v-else-if="studentSortKey === 'grade' && studentSortDir === 'desc'" class="h-3 w-3" />
+                  </span>
+                </th>
+                <th
+                  class="px-3 py-2 text-center font-semibold cursor-pointer select-none"
+                  @click="setStudentSort('score')"
+                >
+                  <span class="inline-flex items-center gap-1">
+                    Score
+                    <ChevronUp v-if="studentSortKey === 'score' && studentSortDir === 'asc'" class="h-3 w-3" />
+                    <ChevronDown v-else-if="studentSortKey === 'score' && studentSortDir === 'desc'" class="h-3 w-3" />
+                  </span>
+                </th>
+                <th
+                  class="px-3 py-2 text-left font-semibold cursor-pointer select-none"
+                  @click="setStudentSort('certificate')"
+                >
+                  <span class="inline-flex items-center gap-1">
+                    Certificate
+                    <ChevronUp v-if="studentSortKey === 'certificate' && studentSortDir === 'asc'" class="h-3 w-3" />
+                    <ChevronDown v-else-if="studentSortKey === 'certificate' && studentSortDir === 'desc'" class="h-3 w-3" />
+                  </span>
+                </th>
+                <th
+                  class="px-3 py-2 text-left font-semibold cursor-pointer select-none"
+                  @click="setStudentSort('exam_date')"
+                >
+                  <span class="inline-flex items-center gap-1">
+                    Date
+                    <ChevronUp v-if="studentSortKey === 'exam_date' && studentSortDir === 'asc'" class="h-3 w-3" />
+                    <ChevronDown v-else-if="studentSortKey === 'exam_date' && studentSortDir === 'desc'" class="h-3 w-3" />
+                  </span>
+                </th>
+                <th
+                  class="px-3 py-2 text-center font-semibold cursor-pointer select-none"
+                  @click="setStudentSort('sent')"
+                >
+                  <span class="inline-flex items-center gap-1">
+                    Sent
+                    <ChevronUp v-if="studentSortKey === 'sent' && studentSortDir === 'asc'" class="h-3 w-3" />
+                    <ChevronDown v-else-if="studentSortKey === 'sent' && studentSortDir === 'desc'" class="h-3 w-3" />
+                  </span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -487,9 +1191,20 @@ async function generateTeacherCert(mode: 'preview' | 'download' = 'preview') {
                   </span>
                 </td>
                 <td class="px-3 py-2"><span class="text-sm text-brand-text-soft">{{ entry.exam_date }}</span></td>
+                <td class="px-3 py-2 text-center">
+                  <span
+                    v-if="entry.sent"
+                    class="inline-flex items-center gap-1 rounded-full bg-brand-teal-soft px-2 py-0.5 text-xs font-semibold text-brand-teal"
+                    :title="entry.sent_at ? `Sent ${entry.sent_at}` : 'Sent'"
+                  >
+                    <CheckCircle2 class="h-3 w-3" />
+                    Sent
+                  </span>
+                  <span v-else class="text-xs text-brand-text-soft">—</span>
+                </td>
               </tr>
               <tr v-if="filteredStudents().length === 0">
-                <td colspan="6" class="px-3 py-8 text-center text-brand-text-soft">No entries found</td>
+                <td colspan="7" class="px-3 py-8 text-center text-brand-text-soft">No entries found</td>
               </tr>
             </tbody>
           </table>

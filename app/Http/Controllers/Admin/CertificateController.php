@@ -134,6 +134,11 @@ class CertificateController extends Controller
                 'result_band'     => $entry->result_band,
                 'certificate'     => $entry->certificate_name,
                 'exam_date'       => ($entry->exam_date ?? $entry->order?->requested_start_date)?->format('j F Y'),
+                // Drives the Sent ✓ pill in the flat Student Certificates
+                // list — lets the bottom tab double as a master view of
+                // who's already had their weekly cert email.
+                'sent'            => $entry->certificate_sent_at !== null,
+                'sent_at'         => $entry->certificate_sent_at?->format('j M Y'),
             ])
             ->values();
 
@@ -173,6 +178,13 @@ class CertificateController extends Controller
             ];
         })->sortByDesc('candidates_count')->values();
 
+        // ────────────── Weekly Send groups ──────────────
+        // Teachers (or parent-bookers) with results in this quarter whose
+        // weekly cert email hasn't been sent yet. Drives the Send This Week's
+        // Results accordion. Mirrors QuarterEnd Step 2's teacher-group shape
+        // so the Vue can reuse the same accordion + button cluster.
+        $weeklyGroups = $this->buildWeeklyGroups($startDate, $endDate);
+
         return Inertia::render('admin/Certificates/Index', [
             'students'          => $students,
             'teachers'          => $teachers,
@@ -180,6 +192,290 @@ class CertificateController extends Controller
             'teacherTemplates'  => array_keys(self::TEACHER_TEMPLATES),
             'selectedQuarter'   => $quarter,
             'selectedYear'      => $year,
+            'weeklyGroups'      => $weeklyGroups,
+        ]);
+    }
+
+    /**
+     * Build the Weekly Send accordion payload.
+     *
+     * Scope: scored entries in the selected quarter whose
+     * certificate_sent_at is still NULL. Grouped by teacher_name (or
+     * "Parent Bookings (no teacher assigned)" for orphans), with the
+     * applicant_email resolved via the same ExamContact lookup the
+     * QuarterEnd Step 2 page uses — so the Open in Gmail button routes
+     * to the teacher's real address, not Paul's submitter email.
+     *
+     * Returns an array of teacher groups, each with:
+     *   - teacher_name, applicant_email, is_parent_booking, booking_role
+     *   - unsent_count, students[] (id, name, instrument, grade, score, result, certificate)
+     *
+     * Empty array when nothing's unsent — the Vue hides the section then.
+     */
+    private function buildWeeklyGroups(\Carbon\Carbon $startDate, \Carbon\Carbon $endDate): array
+    {
+        $unsentEntries = ExamEntry::with([
+                'instrument:id,name',
+                'order:id,requested_start_date,delivery_method,applicant_name,applicant_email',
+            ])
+            ->whereNotNull('score')
+            ->where('score', '>=', 60)
+            ->certNotSent()
+            ->where(function ($q) {
+                $q->whereNull('notes')->orWhereNotIn('notes', ExamEntry::NOTES_NO_RESULT);
+            })
+            ->get()
+            ->filter(function ($entry) use ($startDate, $endDate) {
+                $date = $entry->exam_date ?? $entry->order?->requested_start_date;
+                return $date && $date->between($startDate, $endDate);
+            });
+
+        if ($unsentEntries->isEmpty()) {
+            return [];
+        }
+
+        // Parent / self-booker lookup — matches QuarterEnd Step 2 behaviour.
+        $parentOrSelfLookup = ExamContact::with('emails')
+            ->withType(['parent', 'candidate'])
+            ->get()
+            ->keyBy(fn ($c) => mb_strtolower(trim($c->name)));
+
+        $grouped = $unsentEntries->groupBy(function ($e) {
+            $name = trim((string) ($e->teacher_name ?? ''));
+            return $name === '' ? 'Parent Bookings (no teacher assigned)' : $e->teacher_name;
+        });
+
+        return $grouped->map(function ($entries, $teacherName) use ($parentOrSelfLookup) {
+            // Resolve booking role — explicit per-entry override wins, else
+            // infer from the contact type. Same precedence as QuarterEnd.
+            $parentContact = $parentOrSelfLookup->get(mb_strtolower(trim($teacherName)));
+            $entryRoles = $entries->pluck('booking_role')->filter()->unique();
+            $explicitRole = $entryRoles->count() === 1 ? $entryRoles->first() : null;
+            $contactInferredRole = match (true) {
+                $parentContact === null     => null,
+                $parentContact->isParent()  => 'parent',
+                $parentContact->isCandidate() => 'self',
+                default                     => null,
+            };
+            $bookingRole = $explicitRole ?? $contactInferredRole;
+            $isParentBooking = $bookingRole === 'parent' || $bookingRole === 'self';
+
+            $firstOrder = $entries->first()?->order;
+            $ownOrder = $entries->first(fn ($e) =>
+                $e->order
+                && mb_strtolower(trim($e->order->applicant_name ?? '')) === mb_strtolower(trim($teacherName))
+            )?->order;
+
+            if ($isParentBooking) {
+                $teacherEmail = $parentContact?->primary_email ?? $ownOrder?->applicant_email;
+            } else {
+                $teacherRecord = ExamContact::with('emails')
+                    ->whereRaw('LOWER(name) = ?', [mb_strtolower($teacherName)])
+                    ->first();
+                $teacherEmail = $teacherRecord?->primary_email
+                    ?? $ownOrder?->applicant_email
+                    ?? $firstOrder?->applicant_email;
+            }
+
+            // Orphaned bucket has no real recipient — null the email so the
+            // UI hides the Copy / Open Gmail buttons.
+            if ($teacherName === 'Parent Bookings (no teacher assigned)') {
+                $teacherEmail = null;
+            }
+
+            return [
+                'teacher_name'      => $teacherName,
+                'applicant_email'   => $teacherEmail,
+                'is_parent_booking' => $isParentBooking,
+                'booking_role'      => $bookingRole,
+                'unsent_count'      => $entries->count(),
+                'students'          => $entries->map(fn ($e) => [
+                    'id'          => $e->id,
+                    'name'        => $e->candidate_name,
+                    'instrument'  => $e->instrument?->name ?? 'Unknown',
+                    'grade'       => $e->grade,
+                    'score'       => $e->score,
+                    'result'      => $e->result_band,
+                    'certificate' => $e->certificate_name,
+                ])->values()->toArray(),
+            ];
+        })->sortByDesc('unsent_count')->values()->toArray();
+    }
+
+    /**
+     * Flip certificate_sent_at to now() on a set of entry IDs.
+     *
+     * Used by the Weekly Send "Mark as Sent" button — when Paul finishes
+     * emailing a teacher their batch of unsent certs, this hides the row
+     * so the teacher doesn't pop back into next week's list.
+     */
+    public function markSent(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'entry_ids'   => 'required|array|min:1',
+            'entry_ids.*' => 'integer|exists:exam_entries,id',
+        ]);
+
+        $count = ExamEntry::whereIn('id', $validated['entry_ids'])
+            ->update(['certificate_sent_at' => now()]);
+
+        return response()->json([
+            'success' => true,
+            'marked'  => $count,
+        ]);
+    }
+
+    /**
+     * Undo a "Mark as Sent" — sets certificate_sent_at back to NULL so the
+     * entries reappear in the Weekly Send list. Used when Paul ticks the
+     * box by accident or wants to re-send (e.g. teacher said the email
+     * didn't arrive).
+     */
+    public function unmarkSent(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'entry_ids'   => 'required|array|min:1',
+            'entry_ids.*' => 'integer|exists:exam_entries,id',
+        ]);
+
+        $count = ExamEntry::whereIn('id', $validated['entry_ids'])
+            ->update(['certificate_sent_at' => null]);
+
+        return response()->json([
+            'success'   => true,
+            'unmarked'  => $count,
+        ]);
+    }
+
+    /**
+     * Render one student's cert PDF and return the bytes.
+     *
+     * Shared helper used by batchByEntries — keeps the cert-rendering
+     * recipe (S3 template fetch → overlay text → encode PNG → wrap in
+     * DomPDF) in one place instead of duplicating the inline blocks from
+     * generateStudent / batchGenerate. Returns null on any failure
+     * (template missing, S3 unreachable, encode error) so the caller
+     * can skip the entry rather than 500-ing the whole batch.
+     */
+    private function renderStudentCertPdfBytes(ExamEntry $entry, string $quarterLabel): ?string
+    {
+        $certName = $entry->certificate_name;
+        if (! $certName || ! isset(self::STUDENT_TEMPLATES[$certName])) {
+            return null;
+        }
+
+        try {
+            $templateUrl = self::S3_BASE . self::STUDENT_TEMPLATES[$certName];
+            $image = $this->overlayStudentText(
+                $templateUrl,
+                $entry->candidate_name,
+                $entry->instrument?->name ?? '',
+                $entry->grade ?? '',
+                $quarterLabel,
+            );
+
+            $encoded = $image->encode(new PngEncoder());
+            $base64 = base64_encode((string) $encoded);
+            $html = '<html><head><style>@page { margin: 0; } body { margin: 0; }</style></head><body>'
+                . '<img src="data:image/png;base64,' . $base64 . '" style="width:210mm;height:297mm;display:block;">'
+                . '</body></html>';
+
+            return Pdf::loadHTML($html)->setPaper('a4', 'portrait')->output();
+        } catch (\Throwable $e) {
+            \Log::error("Cert render failed for entry {$entry->id}: {$e->getMessage()}");
+            return null;
+        }
+    }
+
+    /**
+     * Bundle certs for an arbitrary list of entry IDs into a single ZIP
+     * and stream it back. Drives the "Download All Certs" button in the
+     * Weekly Send accordion when a teacher has 2+ students — one ZIP
+     * attachment to drag into Gmail beats N separate PDFs the browser
+     * would have to be granted multi-download permission for.
+     *
+     * Why server-side ZIP not client-side: the cert rendering needs
+     * Intervention Image + S3 + DomPDF, all server-only. Browser would
+     * need to fetch each PDF individually anyway, then pack with JSZip —
+     * extra round-trips and a JS dep we don't carry. Better to do it
+     * here, return one binary response.
+     */
+    public function batchByEntries(Request $request)
+    {
+        set_time_limit(120);
+
+        $validated = $request->validate([
+            'entry_ids'   => 'required|array|min:1|max:100',
+            'entry_ids.*' => 'integer|exists:exam_entries,id',
+        ]);
+
+        $entries = ExamEntry::with(['instrument', 'order:id,requested_start_date'])
+            ->whereIn('id', $validated['entry_ids'])
+            ->whereNotNull('score')
+            ->get();
+
+        if ($entries->isEmpty()) {
+            return response()->json(['error' => 'No matching scored entries.'], 422);
+        }
+
+        // Use the first entry's exam/order date as the quarter label.
+        // The Vue groups by teacher's unsent batch so all entries are
+        // typically the same quarter; if they ever diverged, the label
+        // would still pick a reasonable Q for the cert footer text.
+        $firstEntry = $entries->first();
+        $effectiveDate = $firstEntry->exam_date ?? $firstEntry->order?->requested_start_date;
+        $quarterLabel = $this->getQuarterLabel($effectiveDate);
+
+        // Temp working dir for PDFs + the ZIP. Cleaned up before return
+        // so we don't accumulate junk under /tmp on the box.
+        $tempDir = sys_get_temp_dir() . '/cert-batch-' . uniqid('', true);
+        if (! mkdir($tempDir, 0700, true) && ! is_dir($tempDir)) {
+            return response()->json(['error' => 'Could not create temp dir.'], 500);
+        }
+
+        $writtenFiles = [];
+        foreach ($entries as $entry) {
+            $pdfBytes = $this->renderStudentCertPdfBytes($entry, $quarterLabel);
+            if (! $pdfBytes) {
+                continue;
+            }
+            $safeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $entry->candidate_name);
+            $shortCert = str_replace([' Certificate', ' '], ['', '_'], $entry->certificate_name ?? 'Cert');
+            $pdfPath = "{$tempDir}/{$safeName}_{$shortCert}.pdf";
+            file_put_contents($pdfPath, $pdfBytes);
+            $writtenFiles[] = $pdfPath;
+        }
+
+        if (empty($writtenFiles)) {
+            @rmdir($tempDir);
+            return response()->json(['error' => 'No certs could be generated.'], 500);
+        }
+
+        $zipPath = "{$tempDir}/certs.zip";
+        $zip = new ZipArchive();
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            foreach ($writtenFiles as $f) @unlink($f);
+            @rmdir($tempDir);
+            return response()->json(['error' => 'Could not create ZIP.'], 500);
+        }
+        foreach ($writtenFiles as $f) {
+            $zip->addFile($f, basename($f));
+        }
+        $zip->close();
+
+        $zipBytes = file_get_contents($zipPath);
+
+        // Cleanup temp files before returning.
+        foreach ($writtenFiles as $f) @unlink($f);
+        @unlink($zipPath);
+        @rmdir($tempDir);
+
+        $downloadName = 'certs_' . now()->format('Y-m-d_His') . '.zip';
+
+        return response($zipBytes, 200, [
+            'Content-Type'        => 'application/zip',
+            'Content-Disposition' => 'attachment; filename="' . $downloadName . '"',
+            'Content-Length'      => (string) strlen($zipBytes),
         ]);
     }
 
@@ -1222,8 +1518,13 @@ class CertificateController extends Controller
 
     /**
      * Get a quarter label from a date (e.g. "1st Quarter 2026").
+     *
+     * Accepts both Carbon and CarbonImmutable — Laravel's date casts can
+     * hand either back depending on the cast definition and Carbon
+     * version, and a narrower hint here used to crash the cert generator
+     * with a TypeError on local seed data.
      */
-    private function getQuarterLabel(?\Carbon\Carbon $date): string
+    private function getQuarterLabel(?\Carbon\CarbonInterface $date): string
     {
         $date = $date ?? now();
         $quarter = (int) ceil($date->month / 3);

@@ -139,15 +139,15 @@ test('GET /terms returns 200', function () {
 // sitemap.xml — every <loc> must return 200 (no 301s, no 404s)
 // ──────────────────────────────────────────
 
-test('public/sitemap.xml is well-formed XML', function () {
+test('resources/seo/sitemap.xml is well-formed XML', function () {
     libxml_use_internal_errors(true);
-    $xml = simplexml_load_file(public_path('sitemap.xml'));
+    $xml = simplexml_load_file(resource_path('seo/sitemap.xml'));
     expect($xml)->not->toBeFalse('sitemap.xml failed to parse');
     expect($xml->getName())->toBe('urlset');
 });
 
 test('every URL in sitemap.xml returns 200', function () {
-    $xml = simplexml_load_file(public_path('sitemap.xml'));
+    $xml = simplexml_load_file(resource_path('seo/sitemap.xml'));
     expect($xml)->not->toBeFalse();
 
     foreach ($xml->url as $url) {
@@ -159,6 +159,19 @@ test('every URL in sitemap.xml returns 200', function () {
         expect($response->status())
             ->toBe(200, "Sitemap URL {$loc} returned {$response->status()} — it must be 200 (no redirects, no errors).");
     }
+});
+
+test('GET /sitemap.xml is served by Laravel with application/xml Content-Type', function () {
+    // Regression guard: Search Console "Couldn't fetch" was suspected to
+    // be caused by nginx/Cloudflare serving the static file with the
+    // wrong Content-Type. The Laravel route forces application/xml so
+    // crawlers can't mistake the body for HTML.
+    $response = $this->get('/sitemap.xml');
+
+    expect($response->status())->toBe(200);
+    expect($response->headers->get('Content-Type'))->toContain('application/xml');
+    expect($response->getContent())->toContain('<urlset');
+    expect($response->getContent())->toContain('https://musicexams.help/');
 });
 
 // ──────────────────────────────────────────
