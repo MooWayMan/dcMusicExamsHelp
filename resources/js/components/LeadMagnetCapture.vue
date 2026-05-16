@@ -102,8 +102,22 @@ async function handleSubmit() {
     successMessage.value = data.message ?? 'Check your inbox — the checklist is on its way.'
     isDone.value = true
 
+    // After successful submission, smooth-scroll the page to the top.
+    // Paid-traffic landings (e.g. Meta ad with #get-checklist anchor) drop
+    // visitors directly at this form; once they submit, scrolling back to
+    // the top reveals the hero + the rest of the centre 120 sell content.
+    // Wrapped in requestAnimationFrame so the success-state render lands
+    // first, otherwise the smooth scroll competes with Vue's DOM update.
+    if (typeof window !== 'undefined') {
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      })
+    }
+
     // Fire GA4 conversion event. Imported into Google Ads as the
     // `lead_form_submit` conversion goal (see google-ads-phase1-q2-2026.md).
+    // Also fires as Meta Pixel `Lead` event via the trackEvent wrapper
+    // (see useAnalytics.ts META_EVENT_MAP).
     // Value £14 = average commission per digital practical candidate —
     // proxy for what a single signup is worth, used by Google Ads
     // Smart Bidding once we switch off Manual CPC.
