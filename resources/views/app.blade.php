@@ -51,6 +51,29 @@
             })();
         </script>
 
+        {{-- Meta Pixel - only loads when cookie consent given. --}}
+        {{-- Pixel ID 2164549404093546 = musicExams.help website dataset --}}
+        {{-- (live ad account 26629640546692642, NOT the personal one). --}}
+        <script>
+            (function() {
+                if (localStorage.getItem('cookie-consent') === 'accepted') {
+                    !function(f,b,e,v,n,t,s)
+                    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+                    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+                    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+                    n.queue=[];t=b.createElement(e);t.async=!0;
+                    t.src=v;s=b.getElementsByTagName(e)[0];
+                    s.parentNode.insertBefore(t,s)}(window, document,'script',
+                    'https://connect.facebook.net/en_US/fbevents.js');
+                    fbq('init', '2164549404093546');
+                    fbq('track', 'PageView');
+                }
+            })();
+        </script>
+        <noscript><img height="1" width="1" style="display:none"
+        src="https://www.facebook.com/tr?id=2164549404093546&ev=PageView&noscript=1"
+        /></noscript>
+
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
