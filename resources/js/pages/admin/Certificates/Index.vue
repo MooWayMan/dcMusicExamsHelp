@@ -99,6 +99,90 @@ function toggleWeeklyTeacher(name: string) {
 // the POST is in flight so Paul can't double-fire and double-stamp).
 const markingSent = ref<Record<string, boolean>>({})
 
+// Per-student client-side tracking of which certs Paul has downloaded
+// during this session. Doesn't persist — once he Marks-as-Sent, the
+// whole group disappears, so we only need to remember within one accordion
+// pass. Keys are entry IDs, value is true once download completes.
+const downloadedEntries = ref<Record<number, boolean>>({})
+const downloadingEntries = ref<Record<number, boolean>>({})
+
+/**
+ * Download a single student's cert PDF straight from a row in the
+ * Weekly Send accordion. Reuses the existing per-student endpoint —
+ * just packages the request so Paul doesn't have to bounce down to
+ * the Student Certificates tab and re-select.
+ */
+async function downloadWeeklyStudentCert(student: WeeklyStudent) {
+  if (downloadingEntries.value[student.id]) return
+  downloadingEntries.value[student.id] = true
+
+  try {
+    const response = await fetch('/admin/certificates/student', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        // Accept JSON so Laravel's exception handler returns JSON
+        // for any unhandled throwable rather than the HTML app shell.
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+      },
+      body: JSON.stringify({
+        entry_id: student.id,
+        template: student.certificate,
+        format: 'pdf',
+      }),
+    })
+
+    if (!response.ok) {
+      // Surface the real underlying error rather than masking it as
+      // "Unknown error". Laravel may return JSON (with `error`) for
+      // try/catch-handled exceptions, or HTML for debug-mode crashes /
+      // 419 CSRF expiries. Try JSON first, fall back to text so Paul
+      // can see what actually broke.
+      const text = await response.text()
+      let parsed: any = {}
+      try { parsed = JSON.parse(text) } catch { /* not JSON — keep text */ }
+      const detail = parsed.error || parsed.message || text.substring(0, 300) || `HTTP ${response.status}`
+      throw new Error(`Certificate generation failed (${response.status}): ${detail}`)
+    }
+
+    const blob = await response.blob()
+    const url = URL.createObjectURL(blob)
+    const filename = response.headers.get('Content-Disposition')?.split('filename="')[1]?.replace('"', '')
+      || `${student.name.replace(/\s+/g, '_')}_cert.pdf`
+
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.click()
+    URL.revokeObjectURL(url)
+
+    downloadedEntries.value[student.id] = true
+  } catch (e: any) {
+    alert(e.message || 'Error generating certificate.')
+    console.error('Cert download failed:', e)
+  } finally {
+    downloadingEntries.value[student.id] = false
+  }
+}
+
+/**
+ * Download every cert for a teacher group, one after another. Browsers
+ * will fire multiple downloads in quick succession; some block this
+ * after the first one unless the user has already allowed multi-file
+ * downloads for the origin. Not perfect, but avoids needing a new
+ * server-side ZIP endpoint. Each successful download still flags the
+ * student as downloaded so the per-row checkmarks light up.
+ */
+async function downloadAllWeeklyCerts(group: WeeklyGroup) {
+  for (const student of group.students) {
+    if (downloadedEntries.value[student.id]) continue
+    await downloadWeeklyStudentCert(student)
+    // Tiny pause so the browser doesn't choke on a flood of downloads.
+    await new Promise(r => setTimeout(r, 250))
+  }
+}
+
 const totalWeeklyTeachers = computed(() => props.weeklyGroups.length)
 const totalWeeklyStudents = computed(() =>
   props.weeklyGroups.reduce((acc, g) => acc + g.unsent_count, 0),
@@ -146,9 +230,12 @@ function buildWeeklyEmail(group: WeeklyGroup): string {
     .map(s => `  • ${s.name} — ${s.instrument} Grade ${s.grade} — ${s.score} (${s.result}) — ${s.certificate}`)
     .join('\n')
 
+  // 1 student → single PDF attachment. 2+ → ZIP attachment with the
+  // "double-click to open" hint so teachers don't get tripped up by the
+  // archive format. Mirrors the QuarterEnd ZIP guidance, lighter wording.
   const certSentence = count === 1
     ? `The personalised musicExams.help certificate is attached (Trinity have already sent the official certificate separately).`
-    : `The personalised musicExams.help certificates are attached (Trinity have already sent the official certificates separately).`
+    : `The personalised musicExams.help certificates are bundled in the attached ZIP file — just double-click to open it and you'll find a PDF for each student. Trinity have already sent the official certificates separately.`
 
   const recognitionSentence = count === 1
     ? `They'll also appear on the Recognition page at https://musicexams.help/recognition (first name + surname initial only, as per GDPR).`
@@ -161,8 +248,10 @@ function buildWeeklyEmail(group: WeeklyGroup): string {
   // Parent-forward script — includes the Top Scorer carrot so parents know
   // their child is in the running for a gift token. Timing matches the
   // QuarterEnd email policy: 6 weeks after the quarter ends, once digital
-  // results are in.
-  const parentScript = `"Hi [Parent Name], I've recently partnered with musicExams.help, a platform that supports teachers, parents and students taking Trinity exams. Your child now receives a personalised certificate — please find it attached. They also appear on the Recognition page at https://musicexams.help/recognition (first name and surname initial only). They're also in the running for our quarterly Top Scorer award — winners receive a gift token, announced around 6 weeks after the quarter ends once all results (including digital) are in. If you'd like their full name displayed, just email musicexams@musicexams.help."`
+  // results are in. The "in addition to any official Trinity certificate"
+  // aside is there so parents don't think the musicExams.help cert is
+  // replacing Trinity's — they get both.
+  const parentScript = `"Hi [Parent Name], I've recently partnered with musicExams.help, a platform that supports teachers, parents and students taking Trinity exams. Your child now receives a personalised certificate (in addition to any official Trinity certificate) — please find it attached. They also appear on the Recognition page at https://musicexams.help/recognition (first name and surname initial only). They're also in the running for our quarterly Top Scorer award — winners receive a gift token, announced around 6 weeks after the quarter ends once all results (including digital) are in. If you'd like their full name displayed, just email musicexams@musicexams.help."`
 
   return `Hi ${firstName},
 
@@ -215,9 +304,12 @@ function buildWeeklyParentEmail(group: WeeklyGroup): string {
     .map(s => `  • ${s.name} — ${s.instrument} Grade ${s.grade} — ${s.score} (${s.result}) — ${s.certificate}`)
     .join('\n')
 
+  // 1 student → single PDF attachment. 2+ → ZIP attachment with the
+  // "double-click to open" hint so teachers don't get tripped up by the
+  // archive format. Mirrors the QuarterEnd ZIP guidance, lighter wording.
   const certSentence = count === 1
     ? `The personalised musicExams.help certificate is attached (Trinity have already sent the official certificate separately).`
-    : `The personalised musicExams.help certificates are attached (Trinity have already sent the official certificates separately).`
+    : `The personalised musicExams.help certificates are bundled in the attached ZIP file — just double-click to open it and you'll find a PDF for each student. Trinity have already sent the official certificates separately.`
 
   const recognitionSentence = count === 1
     ? `${namesSentence} will also appear on the Recognition page at https://musicexams.help/recognition — first name and surname initial only, for GDPR. If you'd like the full name shown, just reply and say the word.`
@@ -631,6 +723,7 @@ async function generateTeacherCert(mode: 'preview' | 'download' = 'preview') {
                       <th class="px-3 py-2 text-center font-semibold text-brand-text">Score</th>
                       <th class="px-3 py-2 text-left font-semibold text-brand-text">Result</th>
                       <th class="px-3 py-2 text-left font-semibold text-brand-text">Certificate</th>
+                      <th class="px-3 py-2 text-center font-semibold text-brand-text">Download</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -654,6 +747,24 @@ async function generateTeacherCert(mode: 'preview' | 'download' = 'preview') {
                           {{ student.certificate }}
                         </span>
                       </td>
+                      <td class="px-3 py-2 text-center">
+                        <button
+                          class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold transition disabled:opacity-50"
+                          :class="downloadedEntries[student.id]
+                            ? 'bg-brand-success-soft text-brand-success'
+                            : 'bg-brand-accent text-white hover:opacity-90'"
+                          :disabled="downloadingEntries[student.id]"
+                          @click="downloadWeeklyStudentCert(student)"
+                        >
+                          <CheckCircle2 v-if="downloadedEntries[student.id]" class="h-3 w-3" />
+                          <Download v-else class="h-3 w-3" />
+                          {{ downloadingEntries[student.id]
+                              ? '…'
+                              : downloadedEntries[student.id]
+                                ? 'Downloaded'
+                                : 'Cert' }}
+                        </button>
+                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -667,6 +778,12 @@ async function generateTeacherCert(mode: 'preview' | 'download' = 'preview') {
 
               <!-- Action buttons -->
               <div v-if="group.applicant_email" class="flex flex-wrap gap-2">
+                <button
+                  class="inline-flex items-center gap-1.5 rounded-lg bg-brand-accent px-3 py-2 text-sm font-semibold text-white hover:opacity-90 transition"
+                  @click="downloadAllWeeklyCerts(group)"
+                >
+                  <Download class="h-4 w-4" /> Download All Certs
+                </button>
                 <button
                   class="inline-flex items-center gap-1.5 rounded-lg bg-brand-primary px-3 py-2 text-sm font-semibold text-white hover:opacity-90 transition"
                   @click="copyWeeklyEmail(group)"

@@ -1381,8 +1381,13 @@ class CertificateController extends Controller
 
     /**
      * Get a quarter label from a date (e.g. "1st Quarter 2026").
+     *
+     * Accepts both Carbon and CarbonImmutable — Laravel's date casts can
+     * hand either back depending on the cast definition and Carbon
+     * version, and a narrower hint here used to crash the cert generator
+     * with a TypeError on local seed data.
      */
-    private function getQuarterLabel(?\Carbon\Carbon $date): string
+    private function getQuarterLabel(?\Carbon\CarbonInterface $date): string
     {
         $date = $date ?? now();
         $quarter = (int) ceil($date->month / 3);
