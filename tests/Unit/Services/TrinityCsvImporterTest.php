@@ -43,6 +43,14 @@ test('parseGrade parses Grade Initial', function () {
     expect(TrinityCsvImporter::parseGrade('Rock and Pop Grade Initial (Digital)'))->toBe('Initial');
 });
 
+test('parseGrade parses Grade IN as Initial (Trinity abbreviation)', function () {
+    // Real Q2 2026 example that surfaced the bug — Theo Curtis,
+    // Classical and Jazz Technical Initial grade exported as "Grade IN".
+    expect(TrinityCsvImporter::parseGrade('Classical and Jazz Technical Grade IN (Digital)'))->toBe('Initial');
+    // Case-insensitive
+    expect(TrinityCsvImporter::parseGrade('Rock and Pop Grade in (Digital)'))->toBe('Initial');
+});
+
 test('parseGrade parses ATCL diploma', function () {
     expect(TrinityCsvImporter::parseGrade('Music Performers ATCL Diploma'))->toBe('ATCL');
     expect(TrinityCsvImporter::parseGrade('LTCL'))->toBe('LTCL');
