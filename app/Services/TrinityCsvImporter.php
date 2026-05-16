@@ -663,6 +663,7 @@ class TrinityCsvImporter
 
             // Applicant contact — when role is parent and the applicant differs from the submitter,
             // ensure we have a contact for them too.
+            $applicantContact = null;
             if ($preview['derivedRole'] === 'parent' && $enrol['applicant_name'] !== $enrol['submitter_name']) {
                 $email = $preview['derivedEmail'] ?: $applicantEmail;
                 $applicantContact = $email
@@ -679,13 +680,36 @@ class TrinityCsvImporter
                 }
             }
 
-            // Backfill order's applicant_name/applicant_email if not set.
+            // Backfill order's applicant_name / applicant_email if not set,
+            // AND link the order to the applicant contact via
+            // `created_by_contact_id` so the applicant name renders as a
+            // clickable link on /admin/orders. When the applicant IS the
+            // submitter (same person — the typical case for teacher /
+            // self-applicant), the submitter contact IS the applicant
+            // contact. When they differ (parent submitted by a teacher,
+            // etc.), use the `$applicantContact` resolved just above.
+            // Only set the link if it's not already in place — never
+            // overwrite a manual link a human may have set in TablePlus.
+            //
+            // Bug fix (16 May 2026): the legacy importers set
+            // `created_by_contact_id`; the new TrinityCsvImporter (built
+            // 8 May 2026) was missing this step, leaving every post-8-May
+            // import with a null link and a plain-text-only applicant
+            // name on the orders list. Backfill SQL covers existing rows.
             $orderUpdates = [];
             if (empty($order->applicant_name) && $enrol['applicant_name'] !== '') {
                 $orderUpdates['applicant_name'] = $enrol['applicant_name'];
             }
             if (empty($order->applicant_email) && $preview['derivedEmail']) {
                 $orderUpdates['applicant_email'] = $preview['derivedEmail'];
+            }
+            if (empty($order->created_by_contact_id)) {
+                $contactForOrder = ($enrol['applicant_name'] === $enrol['submitter_name'])
+                    ? $submitterContact
+                    : $applicantContact;
+                if ($contactForOrder) {
+                    $orderUpdates['created_by_contact_id'] = $contactForOrder->id;
+                }
             }
             if (! empty($orderUpdates)) {
                 $order->update($orderUpdates);
