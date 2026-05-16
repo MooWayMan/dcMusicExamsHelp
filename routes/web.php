@@ -32,6 +32,31 @@ Route::get('/robots.txt', function () {
     return response($body, 200, ['Content-Type' => 'text/plain']);
 })->name('robots');
 
+/**
+ * Sitemap — served via Laravel so we can guarantee the right
+ * Content-Type and bypass any nginx/Cloudflare static-file quirks that
+ * may have been blocking Google Search Console fetches.
+ *
+ * The XML source lives at resources/seo/sitemap.xml (deliberately NOT
+ * in public/ — if it were, nginx would serve it directly and this route
+ * would never fire). This route reads + re-serves it with the correct
+ * application/xml Content-Type. Mirrors the /robots.txt pattern above.
+ *
+ * If Search Console says "Couldn't fetch" again after this is live, the
+ * cause is upstream (Cloudflare bot protection, Laravel Cloud edge, DNS)
+ * — file your support ticket from this point.
+ */
+Route::get('/sitemap.xml', function () {
+    $path = resource_path('seo/sitemap.xml');
+    if (! file_exists($path)) {
+        abort(404);
+    }
+    return response(file_get_contents($path), 200, [
+        'Content-Type' => 'application/xml; charset=utf-8',
+        'Cache-Control' => 'public, max-age=3600',
+    ]);
+})->name('sitemap');
+
 Route::inertia('/faq', 'Faq')->name('faq');
 Route::inertia('/for-teachers', 'ForTeachers')->name('for-teachers');
 Route::redirect('/for-teachers/faber-discounts', '/books', 301);
