@@ -68,9 +68,15 @@ class TrinityCsvImporter
      * Parse a Trinity Examination string into one of our allowed grades.
      *
      * Examples:
-     *   "Classical and Jazz Technical Grade 2 (Digital)" → "2"
-     *   "Rock and Pop Grade Initial (Digital)"           → "Initial"
-     *   "Music Performers ATCL Diploma"                  → "ATCL"
+     *   "Classical and Jazz Technical Grade 2 (Digital)"  → "2"
+     *   "Rock and Pop Grade Initial (Digital)"            → "Initial"
+     *   "Classical and Jazz Technical Grade IN (Digital)" → "Initial"
+     *   "Music Performers ATCL Diploma"                   → "ATCL"
+     *
+     * "Grade IN" is Trinity's abbreviation for Initial grade — confirmed
+     * 16 May 2026 from a real Theo Curtis Classical and Jazz Technical
+     * entry that was failing to parse. The "IN" form only counts as
+     * Initial when prefixed with "Grade" (a bare "in" is too ambiguous).
      *
      * Returns null when nothing matches — caller stores the raw string
      * in `notes` so a human can sort it out.
@@ -89,10 +95,10 @@ class TrinityCsvImporter
             }
         }
 
-        // "Grade Initial" or "Grade <number>"
-        if (preg_match('/grade\s+(initial|[1-8])\b/i', $exam, $m)) {
-            $val = $m[1];
-            return strtolower($val) === 'initial' ? 'Initial' : (string) (int) $val;
+        // "Grade Initial", "Grade IN" (Trinity abbreviation), or "Grade <number>"
+        if (preg_match('/grade\s+(initial|in|[1-8])\b/i', $exam, $m)) {
+            $val = strtolower($m[1]);
+            return ($val === 'initial' || $val === 'in') ? 'Initial' : (string) (int) $m[1];
         }
 
         // Naked "Initial"
