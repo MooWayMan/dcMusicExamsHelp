@@ -80,6 +80,7 @@ class ExamEntry extends Model
         'applicant_name',
         'applicant_email',
         'submitter_contact_id',
+        'certificate_sent_at',
     ];
 
     protected function casts(): array
@@ -90,7 +91,29 @@ class ExamEntry extends Model
             'score' => 'integer',
             'show_full_name' => 'boolean',
             'show_on_thank_you' => 'boolean',
+            'certificate_sent_at' => 'datetime',
         ];
+    }
+
+    // ──────────────────────────────────────────
+    // Weekly cert-send tracking
+    // ──────────────────────────────────────────
+
+    /**
+     * Scope: entries whose weekly cert email has NOT yet been sent.
+     * Drives the Weekly Send section on /admin/certificates.
+     */
+    public function scopeCertNotSent($query)
+    {
+        return $query->whereNull('exam_entries.certificate_sent_at');
+    }
+
+    /**
+     * Scope: entries whose weekly cert email has been marked sent.
+     */
+    public function scopeCertSent($query)
+    {
+        return $query->whereNotNull('exam_entries.certificate_sent_at');
     }
 
     // ──────────────────────────────────────────

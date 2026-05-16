@@ -208,3 +208,149 @@ test('student cert format param only accepts png or pdf', function () {
         ->assertStatus(422)
         ->assertJsonValidationErrors(['format']);
 });
+
+// ──────────────────────────────────────────
+// Weekly Send — payload + mark-sent endpoints
+// ──────────────────────────────────────────
+
+test('weeklyGroups payload only includes scored, unsent, non-cancelled entries for the selected quarter', function () {
+    // Mrs A — 2 scored unsent entries in Q1 (should show up)
+    makeCertEntry('Mrs A', 2026, 2, ['score' => 78]);
+    makeCertEntry('Mrs A', 2026, 2, ['score' => 90]);
+    // Mrs A — 1 scored entry already marked sent (should NOT show up)
+    makeCertEntry('Mrs A', 2026, 2, ['score' => 80, 'certificate_sent_at' => now()]);
+    // Mrs A — 1 cancelled entry (should NOT show up)
+    makeCertEntry('Mrs A', 2026, 2, ['score' => 80, 'notes' => 'CANCELLED']);
+    // Mrs A — 1 pending entry, no score (should NOT show up — no result yet)
+    makeCertEntry('Mrs A', 2026, 2, ['score' => null]);
+    // Mr B — 1 scored unsent entry in Q2 (different quarter — should NOT show on Q1)
+    makeCertEntry('Mr B', 2026, 5, ['score' => 80]);
+
+    $this->actingAs(certsAdmin())
+        ->get('/admin/certificates?quarter=1&year=2026')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('weeklyGroups', 1)
+            ->where('weeklyGroups.0.teacher_name', 'Mrs A')
+            ->where('weeklyGroups.0.unsent_count', 2)
+            ->has('weeklyGroups.0.students', 2)
+        );
+});
+
+test('weeklyGroups is an empty array when nothing is queued', function () {
+    // Only a sent entry exists — nothing should be queued
+    makeCertEntry('Mrs A', 2026, 2, ['score' => 80, 'certificate_sent_at' => now()]);
+
+    $this->actingAs(certsAdmin())
+        ->get('/admin/certificates?quarter=1&year=2026')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->has('weeklyGroups', 0));
+});
+
+test('weeklyGroups excludes NO_SHOW entries', function () {
+    makeCertEntry('Mrs A', 2026, 2, ['score' => null, 'notes' => 'NO_SHOW']);
+    makeCertEntry('Mrs A', 2026, 2, ['score' => 80]); // real unsent — should appear
+
+    $this->actingAs(certsAdmin())
+        ->get('/admin/certificates?quarter=1&year=2026')
+        ->assertInertia(fn ($page) => $page
+            ->where('weeklyGroups.0.unsent_count', 1)
+        );
+});
+
+test('weeklyGroups payload is always a sequential array, never an object', function () {
+    // If `->filter()` is called without `->values()` the JSON serialises as
+    // an object keyed by integer position and `v-for` in Vue breaks.
+    makeCertEntry('Mrs A', 2026, 2, ['score' => 80]);
+    makeCertEntry('Mrs B', 2026, 2, ['score' => 80, 'certificate_sent_at' => now()]);
+    makeCertEntry('Mrs C', 2026, 2, ['score' => 80]);
+
+    $props = $this->actingAs(certsAdmin())
+        ->get('/admin/certificates?quarter=1&year=2026')
+        ->viewData('page')['props'];
+
+    expect($props['weeklyGroups'])->toBeArray();
+    expect(array_keys($props['weeklyGroups']))->toEqual(range(0, count($props['weeklyGroups']) - 1));
+});
+
+test('mark-sent flips certificate_sent_at to now()', function () {
+    $entry = makeCertEntry('Mrs A', 2026, 2, ['score' => 80]);
+    expect($entry->certificate_sent_at)->toBeNull();
+
+    $this->actingAs(certsAdmin())
+        ->postJson('/admin/certificates/mark-sent', [
+            'entry_ids' => [$entry->id],
+        ])
+        ->assertOk()
+        ->assertJson(['success' => true, 'marked' => 1]);
+
+    expect($entry->fresh()->certificate_sent_at)->not->toBeNull();
+});
+
+test('mark-sent hides the entry from weeklyGroups', function () {
+    $entry = makeCertEntry('Mrs A', 2026, 2, ['score' => 80]);
+
+    // Pre-mark: weekly should have one teacher
+    $this->actingAs(certsAdmin())
+        ->get('/admin/certificates?quarter=1&year=2026')
+        ->assertInertia(fn ($page) => $page->has('weeklyGroups', 1));
+
+    // Mark sent
+    $this->actingAs(certsAdmin())
+        ->postJson('/admin/certificates/mark-sent', ['entry_ids' => [$entry->id]])
+        ->assertOk();
+
+    // Post-mark: weekly should be empty
+    $this->actingAs(certsAdmin())
+        ->get('/admin/certificates?quarter=1&year=2026')
+        ->assertInertia(fn ($page) => $page->has('weeklyGroups', 0));
+});
+
+test('mark-sent requires at least one entry_id', function () {
+    $this->actingAs(certsAdmin())
+        ->postJson('/admin/certificates/mark-sent', ['entry_ids' => []])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['entry_ids']);
+});
+
+test('mark-sent rejects unknown entry ids', function () {
+    $this->actingAs(certsAdmin())
+        ->postJson('/admin/certificates/mark-sent', ['entry_ids' => [999999]])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['entry_ids.0']);
+});
+
+test('unmark-sent clears certificate_sent_at and brings the entry back', function () {
+    $entry = makeCertEntry('Mrs A', 2026, 2, ['score' => 80, 'certificate_sent_at' => now()]);
+
+    // Confirm it's hidden first
+    $this->actingAs(certsAdmin())
+        ->get('/admin/certificates?quarter=1&year=2026')
+        ->assertInertia(fn ($page) => $page->has('weeklyGroups', 0));
+
+    // Unmark
+    $this->actingAs(certsAdmin())
+        ->postJson('/admin/certificates/unmark-sent', ['entry_ids' => [$entry->id]])
+        ->assertOk()
+        ->assertJson(['success' => true, 'unmarked' => 1]);
+
+    expect($entry->fresh()->certificate_sent_at)->toBeNull();
+
+    // And it should reappear in the weekly list
+    $this->actingAs(certsAdmin())
+        ->get('/admin/certificates?quarter=1&year=2026')
+        ->assertInertia(fn ($page) => $page->has('weeklyGroups', 1));
+});
+
+test('mark-sent endpoint requires admin', function () {
+    $entry = makeCertEntry('Mrs A', 2026, 2, ['score' => 80]);
+
+    // Guest
+    $this->postJson('/admin/certificates/mark-sent', ['entry_ids' => [$entry->id]])
+        ->assertUnauthorized();
+
+    // Teacher role — not admin
+    $this->actingAs(User::factory()->create(['role' => 'teacher']))
+        ->postJson('/admin/certificates/mark-sent', ['entry_ids' => [$entry->id]])
+        ->assertForbidden();
+});

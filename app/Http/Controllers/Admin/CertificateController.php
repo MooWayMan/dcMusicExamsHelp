@@ -173,6 +173,13 @@ class CertificateController extends Controller
             ];
         })->sortByDesc('candidates_count')->values();
 
+        // ────────────── Weekly Send groups ──────────────
+        // Teachers (or parent-bookers) with results in this quarter whose
+        // weekly cert email hasn't been sent yet. Drives the Send This Week's
+        // Results accordion. Mirrors QuarterEnd Step 2's teacher-group shape
+        // so the Vue can reuse the same accordion + button cluster.
+        $weeklyGroups = $this->buildWeeklyGroups($startDate, $endDate);
+
         return Inertia::render('admin/Certificates/Index', [
             'students'          => $students,
             'teachers'          => $teachers,
@@ -180,6 +187,158 @@ class CertificateController extends Controller
             'teacherTemplates'  => array_keys(self::TEACHER_TEMPLATES),
             'selectedQuarter'   => $quarter,
             'selectedYear'      => $year,
+            'weeklyGroups'      => $weeklyGroups,
+        ]);
+    }
+
+    /**
+     * Build the Weekly Send accordion payload.
+     *
+     * Scope: scored entries in the selected quarter whose
+     * certificate_sent_at is still NULL. Grouped by teacher_name (or
+     * "Parent Bookings (no teacher assigned)" for orphans), with the
+     * applicant_email resolved via the same ExamContact lookup the
+     * QuarterEnd Step 2 page uses — so the Open in Gmail button routes
+     * to the teacher's real address, not Paul's submitter email.
+     *
+     * Returns an array of teacher groups, each with:
+     *   - teacher_name, applicant_email, is_parent_booking, booking_role
+     *   - unsent_count, students[] (id, name, instrument, grade, score, result, certificate)
+     *
+     * Empty array when nothing's unsent — the Vue hides the section then.
+     */
+    private function buildWeeklyGroups(\Carbon\Carbon $startDate, \Carbon\Carbon $endDate): array
+    {
+        $unsentEntries = ExamEntry::with([
+                'instrument:id,name',
+                'order:id,requested_start_date,delivery_method,applicant_name,applicant_email',
+            ])
+            ->whereNotNull('score')
+            ->where('score', '>=', 60)
+            ->certNotSent()
+            ->where(function ($q) {
+                $q->whereNull('notes')->orWhereNotIn('notes', ExamEntry::NOTES_NO_RESULT);
+            })
+            ->get()
+            ->filter(function ($entry) use ($startDate, $endDate) {
+                $date = $entry->exam_date ?? $entry->order?->requested_start_date;
+                return $date && $date->between($startDate, $endDate);
+            });
+
+        if ($unsentEntries->isEmpty()) {
+            return [];
+        }
+
+        // Parent / self-booker lookup — matches QuarterEnd Step 2 behaviour.
+        $parentOrSelfLookup = ExamContact::with('emails')
+            ->withType(['parent', 'candidate'])
+            ->get()
+            ->keyBy(fn ($c) => mb_strtolower(trim($c->name)));
+
+        $grouped = $unsentEntries->groupBy(function ($e) {
+            $name = trim((string) ($e->teacher_name ?? ''));
+            return $name === '' ? 'Parent Bookings (no teacher assigned)' : $e->teacher_name;
+        });
+
+        return $grouped->map(function ($entries, $teacherName) use ($parentOrSelfLookup) {
+            // Resolve booking role — explicit per-entry override wins, else
+            // infer from the contact type. Same precedence as QuarterEnd.
+            $parentContact = $parentOrSelfLookup->get(mb_strtolower(trim($teacherName)));
+            $entryRoles = $entries->pluck('booking_role')->filter()->unique();
+            $explicitRole = $entryRoles->count() === 1 ? $entryRoles->first() : null;
+            $contactInferredRole = match (true) {
+                $parentContact === null     => null,
+                $parentContact->isParent()  => 'parent',
+                $parentContact->isCandidate() => 'self',
+                default                     => null,
+            };
+            $bookingRole = $explicitRole ?? $contactInferredRole;
+            $isParentBooking = $bookingRole === 'parent' || $bookingRole === 'self';
+
+            $firstOrder = $entries->first()?->order;
+            $ownOrder = $entries->first(fn ($e) =>
+                $e->order
+                && mb_strtolower(trim($e->order->applicant_name ?? '')) === mb_strtolower(trim($teacherName))
+            )?->order;
+
+            if ($isParentBooking) {
+                $teacherEmail = $parentContact?->primary_email ?? $ownOrder?->applicant_email;
+            } else {
+                $teacherRecord = ExamContact::with('emails')
+                    ->whereRaw('LOWER(name) = ?', [mb_strtolower($teacherName)])
+                    ->first();
+                $teacherEmail = $teacherRecord?->primary_email
+                    ?? $ownOrder?->applicant_email
+                    ?? $firstOrder?->applicant_email;
+            }
+
+            // Orphaned bucket has no real recipient — null the email so the
+            // UI hides the Copy / Open Gmail buttons.
+            if ($teacherName === 'Parent Bookings (no teacher assigned)') {
+                $teacherEmail = null;
+            }
+
+            return [
+                'teacher_name'      => $teacherName,
+                'applicant_email'   => $teacherEmail,
+                'is_parent_booking' => $isParentBooking,
+                'booking_role'      => $bookingRole,
+                'unsent_count'      => $entries->count(),
+                'students'          => $entries->map(fn ($e) => [
+                    'id'          => $e->id,
+                    'name'        => $e->candidate_name,
+                    'instrument'  => $e->instrument?->name ?? 'Unknown',
+                    'grade'       => $e->grade,
+                    'score'       => $e->score,
+                    'result'      => $e->result_band,
+                    'certificate' => $e->certificate_name,
+                ])->values()->toArray(),
+            ];
+        })->sortByDesc('unsent_count')->values()->toArray();
+    }
+
+    /**
+     * Flip certificate_sent_at to now() on a set of entry IDs.
+     *
+     * Used by the Weekly Send "Mark as Sent" button — when Paul finishes
+     * emailing a teacher their batch of unsent certs, this hides the row
+     * so the teacher doesn't pop back into next week's list.
+     */
+    public function markSent(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'entry_ids'   => 'required|array|min:1',
+            'entry_ids.*' => 'integer|exists:exam_entries,id',
+        ]);
+
+        $count = ExamEntry::whereIn('id', $validated['entry_ids'])
+            ->update(['certificate_sent_at' => now()]);
+
+        return response()->json([
+            'success' => true,
+            'marked'  => $count,
+        ]);
+    }
+
+    /**
+     * Undo a "Mark as Sent" — sets certificate_sent_at back to NULL so the
+     * entries reappear in the Weekly Send list. Used when Paul ticks the
+     * box by accident or wants to re-send (e.g. teacher said the email
+     * didn't arrive).
+     */
+    public function unmarkSent(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'entry_ids'   => 'required|array|min:1',
+            'entry_ids.*' => 'integer|exists:exam_entries,id',
+        ]);
+
+        $count = ExamEntry::whereIn('id', $validated['entry_ids'])
+            ->update(['certificate_sent_at' => null]);
+
+        return response()->json([
+            'success'   => true,
+            'unmarked'  => $count,
         ]);
     }
 
