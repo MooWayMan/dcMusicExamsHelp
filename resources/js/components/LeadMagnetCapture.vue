@@ -28,6 +28,14 @@ const props = withDefaults(defineProps<Props>(), {
 // per-incognito-session — fresh device = fresh form.
 const STORAGE_KEY = 'leadMagnetClaimed:trinity-exam-checklist'
 
+// Pages where successful form submission should auto-scroll to the top
+// (so the visitor sees the hero + rest of the page after they've got
+// their checklist). These are the paid-traffic landing pages — Meta ad
+// (#get-checklist anchor lands them at the form) and Google ad. On
+// other pages (e.g. homepage), the form may be mid-page or part of a
+// browsing flow, and an auto-scroll would feel surprising.
+const SCROLL_TO_TOP_AFTER_SUBMIT_PATHS = ['/switch-to-centre-120', '/trinity-exam-information']
+
 const name = ref('')
 const email = ref('')
 const marketingConsent = ref(false)
@@ -102,17 +110,20 @@ async function handleSubmit() {
     successMessage.value = data.message ?? 'Check your inbox — the checklist is on its way.'
     isDone.value = true
 
-    // After successful submission, smooth-scroll the page to the top
-    // AFTER a 1.5-second pause so the visitor sees the green success
-    // message ("Check your inbox...") first, then the page reveals the
-    // hero + centre 120 sell content above. Without the delay, the
-    // scroll fires immediately and whisks the visitor past the success
-    // confirmation. Paid-traffic landings (Meta ad with #get-checklist
-    // anchor) drop visitors directly at this form, so this scroll is
-    // their only way to re-engage with the rest of the page. If they
-    // tab away to email during the 1.5s window, they return to the
-    // scrolled-to-top state, which is the intended landing for follow-up.
-    if (typeof window !== 'undefined') {
+    // After successful submission on paid-traffic landing pages, smooth
+    // -scroll the page to the top AFTER a 1.5-second pause so the visitor
+    // sees the green success message ("Check your inbox...") first, then
+    // the page reveals the hero + centre 120 sell content above. Paid
+    // -traffic landings (Meta ad with #get-checklist anchor, Google ad
+    // landing on /trinity-exam-information) drop visitors directly at
+    // this form, so this scroll is their only way to re-engage with the
+    // rest of the page. On other pages (e.g. homepage) where the form
+    // is part of a browsing flow, we don't auto-scroll — the visitor
+    // chose where to be and we shouldn't override their position.
+    if (
+      typeof window !== 'undefined' &&
+      SCROLL_TO_TOP_AFTER_SUBMIT_PATHS.includes(window.location.pathname)
+    ) {
       window.setTimeout(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' })
       }, 1500)
