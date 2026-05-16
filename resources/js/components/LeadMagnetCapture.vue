@@ -30,11 +30,15 @@ const STORAGE_KEY = 'leadMagnetClaimed:trinity-exam-checklist'
 
 // Pages where successful form submission should auto-scroll to the top
 // (so the visitor sees the hero + rest of the page after they've got
-// their checklist). These are the paid-traffic landing pages — Meta ad
-// (#get-checklist anchor lands them at the form) and Google ad. On
-// other pages (e.g. homepage), the form may be mid-page or part of a
-// browsing flow, and an auto-scroll would feel surprising.
-const SCROLL_TO_TOP_AFTER_SUBMIT_PATHS = ['/switch-to-centre-120', '/trinity-exam-information']
+// their checklist). Only `/switch-to-centre-120` qualifies: the Meta
+// ad explicitly promises the checklist and lands the visitor directly
+// at the form via the #get-checklist anchor, so the scroll back to top
+// is the only way to surface the centre 120 sell content.
+// On `/trinity-exam-information` (Google ad landing), the ad promises
+// information about booking Trinity exams, not the checklist — so the
+// form is secondary and an auto-scroll would feel surprising.
+// On the homepage and elsewhere, the form is part of a browsing flow.
+const SCROLL_TO_TOP_AFTER_SUBMIT_PATHS = ['/switch-to-centre-120']
 
 const name = ref('')
 const email = ref('')
