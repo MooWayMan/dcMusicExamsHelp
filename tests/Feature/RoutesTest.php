@@ -286,3 +286,22 @@ test('homepage renders fb:pages meta tag with correct Page ID', function () {
         ->assertStatus(200)
         ->assertSee('<meta property="fb:pages" content="61573366599549"', escape: false);
 });
+
+// ──────────────────────────────────────────
+// HTML sitemap (/sitemap) — backstop for Googlebot which can't fetch
+// /sitemap.xml through Cloudflare's Bot Management.
+// ──────────────────────────────────────────
+
+test('GET /sitemap returns 200', function () {
+    $this->get('/sitemap')
+        ->assertStatus(200);
+});
+
+test('GET /sitemap renders the Sitemap Inertia component', function () {
+    // The actual URL list is hard-coded in resources/js/pages/Sitemap.vue.
+    // If you add a new public route, also add it to the sections array
+    // in that file so the sitemap stays in sync.
+    $this->get('/sitemap')
+        ->assertStatus(200)
+        ->assertInertia(fn ($page) => $page->component('Sitemap'));
+});

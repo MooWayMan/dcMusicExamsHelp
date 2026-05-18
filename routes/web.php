@@ -55,7 +55,16 @@ Route::get('/sitemap.xml', function () {
         'Content-Type' => 'application/xml; charset=utf-8',
         'Cache-Control' => 'public, max-age=3600',
     ]);
-})->name('sitemap');
+})->name('sitemap-xml');
+
+/**
+ * Human-readable HTML sitemap — backstop for Googlebot which can't fetch
+ * /sitemap.xml through Cloudflare's Bot Management. Linked from the footer
+ * so any crawler that hits the homepage can discover the whole site by
+ * following internal links. Also useful for human visitors.
+ * Added 18 May 2026.
+ */
+Route::inertia('/sitemap', 'Sitemap')->name('sitemap');
 
 Route::inertia('/faq', 'Faq')->name('faq');
 Route::inertia('/for-teachers', 'ForTeachers')->name('for-teachers');

@@ -191,6 +191,18 @@ const handleInternalClick = (link: NavigationLink) => {
             </button>
             <button
               type="button"
+              @click="router.get('/sitemap')"
+              :class="[
+                'inline-block cursor-pointer rounded-full border px-3 py-1.5 text-xs font-medium transition-colors sm:text-sm',
+                isDark
+                  ? 'border-white/30 text-white hover:bg-white/10'
+                  : 'border-brand-border text-brand-text hover:bg-brand-surface-soft'
+              ]"
+            >
+              Sitemap
+            </button>
+            <button
+              type="button"
               @click="openCookiePreferences"
               :class="[
                 'inline-block cursor-pointer rounded-full border px-3 py-1.5 text-xs font-medium transition-colors sm:text-sm',
