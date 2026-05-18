@@ -265,3 +265,24 @@ test('GET /admin/imports returns 200 for an authenticated admin', function () {
         ->get('/admin/imports')
         ->assertStatus(200);
 });
+
+// ──────────────────────────────────────────
+// Meta tags in global layout
+// ──────────────────────────────────────────
+
+test('homepage renders facebook-domain-verification meta tag', function () {
+    // Confirms domain ownership for Meta Business Manager / iOS 14
+    // Aggregated Event Measurement. Lives in resources/views/app.blade.php.
+    $this->get('/')
+        ->assertStatus(200)
+        ->assertSee('<meta name="facebook-domain-verification" content="z78vgs8v7fhls7ae39xs3nf1jstrol"', escape: false);
+});
+
+test('homepage renders fb:pages meta tag with correct Page ID', function () {
+    // Tells Meta's public "About this content" ad panel which Facebook
+    // Page owns this domain — fixes the "Facebook Page: Not found"
+    // message. Lives in resources/views/app.blade.php.
+    $this->get('/')
+        ->assertStatus(200)
+        ->assertSee('<meta property="fb:pages" content="61573366599549"', escape: false);
+});

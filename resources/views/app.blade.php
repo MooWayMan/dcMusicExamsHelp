@@ -4,12 +4,21 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        {{-- Meta domain verification — links musicexams.help to the
-             musicExams.help Facebook Page so the (i) "About this content"
-             panel on ads no longer says "Facebook Page: Not found". Also
-             required for full Aggregated Event Measurement signal on iOS
-             14+ pixel events. Added 16 May 2026. --}}
+        {{-- Meta domain verification — confirms domain ownership to Meta
+             Business Manager. Required for full Aggregated Event Measurement
+             signal on iOS 14+ pixel events. Added 16 May 2026.
+             NOTE: this tag does NOT fix the "Facebook Page: Not found"
+             message in the public "About this content" ad panel — that
+             needs fb:pages below. --}}
         <meta name="facebook-domain-verification" content="z78vgs8v7fhls7ae39xs3nf1jstrol" />
+
+        {{-- Meta page-to-website link — explicit pointer from this website
+             back to the musicExams.help Facebook Page. This is the tag
+             Meta's public "About this content" panel reads to declare
+             "this domain belongs to that Page" and stop saying "Facebook
+             Page: Not found for musicexams.help". Page ID is the numeric
+             Page ID, not the vanity name. Added 18 May 2026. --}}
+        <meta property="fb:pages" content="61573366599549" />
 
         {{-- Opt out of Chrome's "force dark mode" — the site has its own design tokens --}}
         <meta name="color-scheme" content="light">
