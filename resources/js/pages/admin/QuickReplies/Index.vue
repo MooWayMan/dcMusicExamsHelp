@@ -111,7 +111,7 @@ function audiencePillClass(audience: string): string {
     </template>
   </PageHeader>
 
-  <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+  <div class="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
     <!-- Jump-to TOC -->
     <aside
       :class="animClass('fade-up', 1)"

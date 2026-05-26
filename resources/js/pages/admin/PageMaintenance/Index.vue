@@ -69,7 +69,7 @@ function saveMessage(page: MaintenancePage) {
     </template>
   </PageHeader>
 
-  <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+  <div class="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
     <div :class="animClass('fade-up', 1)" class="space-y-4">
       <div
         v-for="page in pages"

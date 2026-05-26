@@ -101,11 +101,12 @@ const wrapperClasses = computed(() =>
   'my-4 rounded-xl border border-brand-border bg-brand-surface px-2 py-4 sm:my-8 sm:px-4 sm:py-8 md:my-10 md:px-6 md:py-10'
 )
 
-const tableBoxClasses = computed(() =>
-  [props.fullWidth ? 'block' : 'inline-block', 'overflow-x-auto rounded-lg', props.bordered ? 'border-4 border-brand-primary' : 'border-0'].join(' ')
-)
-
-const tableClasses = computed(() => ['w-full', sizeClasses[props.size]].join(' '))
+// `min-w-full` (NOT `w-full`): table is AT LEAST 100% of its scroll-wrapper, so
+// it fills the card on desktop, but can grow past 100% when cell content forces
+// it (e.g. `whitespace-nowrap` headers + pills on iPhone). That overflow is
+// what the wrapper's `overflow-x-auto` needs to scroll. Paired with `min-w-0`
+// on AppContent (AppSidebarLayout) which lets the flex item shrink to viewport.
+const tableClasses = computed(() => ['min-w-full', sizeClasses[props.size]].join(' '))
 
 const headerBaseClasses = computed(() =>
   [props.headerColor, props.headerTextColor, 'whitespace-nowrap font-bold', cellPadding[props.size]].join(' ')
@@ -251,9 +252,18 @@ function sortIndicator(column: Column) {
       </MyTextConstructor>
     </div>
 
-    <div :class="props.responsive ? 'w-full overflow-x-auto' : ''">
-      <div :class="props.fullWidth ? 'w-full' : 'mx-auto w-max'">
-        <div :class="tableBoxClasses">
+    <!--
+      Single scroll container. Old chain (responsive → fullWidth → tableBox)
+      had three nested `w-full` wrappers which widened to fit the table's
+      content on iPhone instead of letting it overflow. Canonical Tailwind
+      responsive-table pattern: ONE wrapper, one table inside.
+    -->
+    <div :class="[
+      'max-w-full',
+      props.responsive ? 'overflow-x-auto' : '',
+      'rounded-lg',
+      props.bordered ? 'border-4 border-brand-primary' : '',
+    ]">
           <table :class="tableClasses">
             <thead>
               <tr>
@@ -361,8 +371,6 @@ function sortIndicator(column: Column) {
             </template>
           </MyTextConstructor>
         </div>
-      </div>
-    </div>
   </component>
 </template>
 

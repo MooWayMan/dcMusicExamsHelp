@@ -1106,7 +1106,7 @@ const topScorerAwardCount = computed(() => {
       </template>
     </PageHeader>
 
-    <div class="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
+    <div class="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
 
       <!-- SUMMARY CARDS -->
       <div class="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
