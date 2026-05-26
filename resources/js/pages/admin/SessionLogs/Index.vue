@@ -142,7 +142,7 @@ const tableColumns = [
             </template>
         </PageHeader>
 
-        <div class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <div class="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
 
             <!-- Stats row -->
             <div :class="animClass('fade-up', 1)" class="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

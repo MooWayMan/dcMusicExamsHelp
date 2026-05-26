@@ -113,7 +113,7 @@ const columns = [
             </template>
         </PageHeader>
 
-        <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <div class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
             <!-- Summary cards -->
             <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div class="rounded-xl border border-amber-200 bg-amber-50 p-4">

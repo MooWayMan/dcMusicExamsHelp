@@ -742,7 +742,7 @@ async function generateTeacherCert(mode: 'preview' | 'download' = 'preview') {
       </template>
     </PageHeader>
 
-    <div class="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
+    <div class="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
       <!-- BATCH GENERATE SECTION -->
       <div class="mb-8 rounded-xl border-2 border-brand-accent bg-brand-surface p-6 shadow-sm">
         <div class="flex items-center gap-3 mb-4">
