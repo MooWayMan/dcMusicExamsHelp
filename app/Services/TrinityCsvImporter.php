@@ -647,6 +647,13 @@ class TrinityCsvImporter
             &$createdEntry, &$updatedEntry, &$createdContact
         ) {
             // Submitter contact — lookup by email, create if missing.
+            //
+            // Type tagging is based on the derived booking_role, NOT blanket
+            // 'parent'. Pre-30 May 2026 this hardcoded 'parent', which then
+            // poisoned deriveBookingRole on re-imports of the same submitter
+            // (lookup found a 'parent' contact → role stuck as parent → entry
+            // teacher_name + teacher_contact_id left blank). The Maria Nielsen
+            // case (5 May 2026, Lily Jago Grade 4 Singing) was the trigger.
             $submitterContact = null;
             if ($enrol['submitter_email'] !== '') {
                 $submitterContact = ExamContact::whereRaw('LOWER(email) = ?', [strtolower($enrol['submitter_email'])])->first();
@@ -656,8 +663,19 @@ class TrinityCsvImporter
                         'email' => $enrol['submitter_email'],
                         'source' => 'trinity_csv_import',
                     ]);
-                    $submitterContact->addType('parent');
                     $createdContact = true;
+                }
+                // Tag with type matching derived role. Multi-type pivot is
+                // additive, so re-imports that change role can layer types
+                // (a teacher who later submits their own kid's exam keeps
+                // both). 'self' submissions don't get a parent/teacher tag.
+                $tagType = match ($preview['derivedRole']) {
+                    'teacher' => 'teacher',
+                    'parent' => 'parent',
+                    default => null,
+                };
+                if ($tagType && ! $submitterContact->hasType($tagType)) {
+                    $submitterContact->addType($tagType);
                 }
             }
 
@@ -730,6 +748,29 @@ class TrinityCsvImporter
                 $notes = implode(' | ', $noteParts);
             }
 
+            // Teacher FK — the source of truth for "who taught this exam".
+            // Priority:
+            //   1. Summary CSV has a Teacher Name → match an existing teacher
+            //      contact by name (Trinity-confirmed).
+            //   2. derivedRole='teacher' → submitter contact (the typical
+            //      Maria-Nielsen pattern: submitter == applicant != candidate).
+            //   3. Else null (Adrian-O'Malley-style parent submitter — Paul
+            //      resolves the teacher manually).
+            $teacherContactId = $this->resolveTeacherContactId(
+                $summary,
+                $preview['derivedRole'],
+                $submitterContact,
+            );
+
+            // teacher_name stays as a denormalised cache for search +
+            // backward-compat with old reads. Source it from the FK when
+            // set, else fall back to the role-derived string.
+            $teacherNameFromContact = $teacherContactId
+                ? ExamContact::query()->whereKey($teacherContactId)->value('name')
+                : null;
+            $teacherName = $teacherNameFromContact
+                ?: $this->resolveTeacherName($summary, $enrol, $preview['derivedRole']);
+
             // Note: exam_entries has no `applicant_name` column — that lives
             // on `orders` only (the per-entry applicant lives on the linked
             // order). The ExamEntry payload deliberately omits it.
@@ -746,7 +787,8 @@ class TrinityCsvImporter
                 'result' => $summary['result'],
                 'exam_date' => $summary['examination_date']?->toDateString(),
                 'date_of_birth' => $dob ?: null,
-                'teacher_name' => $this->resolveTeacherName($summary, $enrol, $preview['derivedRole']),
+                'teacher_name' => $teacherName,
+                'teacher_contact_id' => $teacherContactId,
                 'school_name' => $summary['school'],
                 'booking_role' => $preview['derivedRole'],
                 'applicant_email' => $preview['derivedEmail'],
@@ -930,6 +972,45 @@ class TrinityCsvImporter
     }
 
     /**
+     * Resolve teacher_contact_id (FK to exam_contacts) for the exam_entries
+     * row. This is the proper, queryable source of truth — the denormalised
+     * `teacher_name` string is kept in sync for search but the FK is what
+     * the UI relies on going forward.
+     *
+     * Priority:
+     *   1. Summary CSV has a Teacher Name → match an existing teacher
+     *      contact by case-insensitive name. (Trinity-confirmed teacher.)
+     *   2. derivedRole='teacher' → submitter contact (Maria-Nielsen
+     *      pattern: submitter == applicant != candidate).
+     *   3. Else null. (Parent-submitter without a Summary teacher; Paul
+     *      flags the right contact manually via the admin.)
+     */
+    private function resolveTeacherContactId(
+        array $summary,
+        string $derivedRole,
+        ?ExamContact $submitterContact,
+    ): ?int {
+        $fromSummary = trim((string) ($summary['teacher_name'] ?? ''));
+        if ($fromSummary !== '') {
+            $matched = ExamContact::query()
+                ->whereRaw('LOWER(name) = ?', [strtolower($fromSummary)])
+                ->get()
+                ->first(fn (ExamContact $c) => $c->isTeacher());
+            if ($matched) {
+                return $matched->id;
+            }
+            // Fall through — if no existing teacher contact matched the
+            // Summary name, still prefer the submitter when role=teacher.
+        }
+
+        if ($derivedRole === 'teacher' && $submitterContact) {
+            return $submitterContact->id;
+        }
+
+        return null;
+    }
+
+    /**
      * Booking-role auto-derivation per spec:
      *   1. Applicant name == Candidate name (Enrolment) → 'self'
      *   2. Else Summary teacher matches Applicant name → 'teacher'
@@ -937,12 +1018,18 @@ class TrinityCsvImporter
      *        type teacher / school_admin → 'teacher'
      *        type parent only            → 'parent'
      *        type trinity_admin AND Summary has separate teacher → 'teacher'
-     *   4. Default → 'parent'
+     *   4. Shape-based default — submitter == applicant != candidate →
+     *      'teacher' (the dominant LAR-centre pattern: a teacher booking on
+     *      behalf of a student). True 'parent' submitters (Adrian-O'Malley
+     *      shape) require an existing parent-tagged contact, or a manual
+     *      retag via the contacts admin.
+     *   5. Else default → 'parent'
      */
     private function deriveBookingRole(array $enrol, array $summary, ?string $derivedEmail): string
     {
         $applicantName = $enrol['applicant_name'];
         $candidateName = $enrol['candidate_name'];
+        $submitterName = $enrol['submitter_name'];
         $summaryTeacher = trim($summary['teacher_name']);
 
         // 1. Self
@@ -977,7 +1064,15 @@ class TrinityCsvImporter
             }
         }
 
-        // 4. Default — parent
+        // 4. Shape-based default: submitter == applicant, candidate is a
+        //    different person — submitter is acting as the teacher.
+        //    Resolves the Maria-Nielsen case (5 May 2026, Lily Jago).
+        if ($this->namesMatch($submitterName, $applicantName)
+            && ! $this->namesMatch($applicantName, $candidateName)) {
+            return 'teacher';
+        }
+
+        // 5. Default — parent
         return 'parent';
     }
 }
