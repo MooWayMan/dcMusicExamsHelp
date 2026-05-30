@@ -80,6 +80,7 @@ class ExamEntryController extends Controller
         };
 
         $query = ExamEntry::query()
+            ->with('teacherContact:id,name')
             ->leftJoin('orders', 'exam_entries.order_id', '=', 'orders.id')
             ->select([
                 'exam_entries.*',
@@ -110,7 +111,12 @@ class ExamEntryController extends Controller
                 'result' => $entry->result,
                 'score' => $entry->score,
                 'exam_date' => $entry->exam_date?->format('d M Y'),
-                'teacher_name' => $entry->teacher_name,
+                // Teacher: prefer the FK relation (source of truth, set by
+                // TrinityCsvImporter from 30 May 2026). Fall back to the
+                // denormalised teacher_name string for pre-fix rows until
+                // `php artisan exam-entries:repair-teacher-links` runs.
+                'teacher_name' => $entry->teacherContact?->name ?? $entry->teacher_name,
+                'teacher_contact_id' => $entry->teacher_contact_id,
                 'school_name' => $entry->school_name,
                 'fee' => $entry->fee !== null ? number_format((float) $entry->fee, 2) : null,
             ]);

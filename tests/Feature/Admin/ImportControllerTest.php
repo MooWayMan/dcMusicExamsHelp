@@ -194,9 +194,13 @@ test('Section 2 commit creates an exam_entry linked to the existing order with p
     expect($entry->score)->toBe(78);
     expect($entry->grade)->toBe('2');
     expect($entry->delivery_method)->toBe('Digital');
-    // Megan != Paul → not 'self'. No teacher in summary → not 'teacher'.
-    // No matching contact → default 'parent'.
-    expect($entry->booking_role)->toBe('parent');
+    // Megan != Paul → not 'self'. No teacher in summary → not 'teacher'
+    // from step 2. No matching contact in step 3.
+    // **Shape-based default (added 30 May 2026):** submitter == applicant
+    // != candidate → 'teacher'. Paul submits Megan's exam from his own
+    // account → he's acting as her teacher. (Pre-fix this defaulted to
+    // 'parent', which silently broke the Maria Nielsen / Lily Jago case.)
+    expect($entry->booking_role)->toBe('teacher');
     // Email should auto-fill from submitter when names match the applicant.
     expect($entry->applicant_email)->toBe('madmusic6@hotmail.com');
 });
