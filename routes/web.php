@@ -42,9 +42,14 @@ Route::get('/robots.txt', function () {
  * would never fire). This route reads + re-serves it with the correct
  * application/xml Content-Type. Mirrors the /robots.txt pattern above.
  *
- * If Search Console says "Couldn't fetch" again after this is live, the
- * cause is upstream (Cloudflare bot protection, Laravel Cloud edge, DNS)
- * — file your support ticket from this point.
+ * NOTE (9 Jun 2026): GSC still reports "Couldn't fetch" for this endpoint,
+ * but this is NOT a Cloudflare/origin block — that theory was investigated
+ * and DISPROVEN via a Laravel Cloud support ticket (~20 May): Cloudflare
+ * served 47/47 requests from origin incl. a Verified Bot / Google Inspector
+ * 200 OK, BingBot fetched the same XML fine (23 URLs), curl returns 200
+ * application/xml. It's a Google-side/GSC cosmetic quirk on a young domain.
+ * Do NOT chase Cloudflare, re-submit, or re-open a support ticket — all
+ * dead ends. Indexing works via internal links + the /sitemap backstop.
  */
 Route::get('/sitemap.xml', function () {
     $path = resource_path('seo/sitemap.xml');
@@ -58,11 +63,12 @@ Route::get('/sitemap.xml', function () {
 })->name('sitemap-xml');
 
 /**
- * Human-readable HTML sitemap — backstop for Googlebot which can't fetch
- * /sitemap.xml through Cloudflare's Bot Management. Linked from the footer
- * so any crawler that hits the homepage can discover the whole site by
- * following internal links. Also useful for human visitors.
- * Added 18 May 2026.
+ * Human-readable HTML sitemap — internal-link backstop so any crawler that
+ * hits the homepage can discover the whole site by following links. Linked
+ * from the footer. Also useful for human visitors.
+ * Added 18 May 2026 (originally to work around a suspected Cloudflare block
+ * on /sitemap.xml — that block was later DISPROVEN, see the /sitemap.xml
+ * note above; the page is still worth keeping for discovery + humans).
  */
 Route::inertia('/sitemap', 'Sitemap')->name('sitemap');
 

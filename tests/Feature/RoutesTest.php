@@ -162,10 +162,10 @@ test('every URL in sitemap.xml returns 200', function () {
 });
 
 test('GET /sitemap.xml is served by Laravel with application/xml Content-Type', function () {
-    // Regression guard: Search Console "Couldn't fetch" was suspected to
-    // be caused by nginx/Cloudflare serving the static file with the
-    // wrong Content-Type. The Laravel route forces application/xml so
-    // crawlers can't mistake the body for HTML.
+    // Regression guard: the Laravel route forces application/xml so crawlers
+    // can't mistake the body for HTML. (The old GSC "Couldn't fetch" was once
+    // blamed on Cloudflare/nginx; that was DISPROVEN — Cloudflare serves
+    // Googlebot 200, BingBot fetched fine. It's a GSC-side quirk, not origin.)
     $response = $this->get('/sitemap.xml');
 
     expect($response->status())->toBe(200);
@@ -288,8 +288,9 @@ test('homepage renders fb:pages meta tag with correct Page ID', function () {
 });
 
 // ──────────────────────────────────────────
-// HTML sitemap (/sitemap) — backstop for Googlebot which can't fetch
-// /sitemap.xml through Cloudflare's Bot Management.
+// HTML sitemap (/sitemap) — internal-link discovery backstop.
+// (Originally added for a suspected Cloudflare block on /sitemap.xml that
+// was later DISPROVEN — kept for crawl discovery + human visitors.)
 // ──────────────────────────────────────────
 
 test('GET /sitemap returns 200', function () {

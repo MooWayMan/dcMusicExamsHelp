@@ -1,11 +1,12 @@
 <!-- resources/js/pages/Sitemap.vue -->
 <!--
   Human-readable sitemap. Two reasons it exists:
-  1. Crawlers (Googlebot in particular) can't fetch /sitemap.xml because
-     Cloudflare's Bot Management blocks Googlebot on the XML endpoint.
-     This page is plain HTML with <a href> links to every public page,
-     linked from the footer, so any crawler that hits the homepage can
-     follow links here and discover the whole site.
+  1. Internal-link discovery backstop. Plain HTML with <a href> links to
+     every public page, linked from the footer, so any crawler that hits
+     the homepage can follow links here and discover the whole site.
+     (Originally added when /sitemap.xml was suspected to be blocked for
+     Googlebot by Cloudflare — that was later DISPROVEN, see the route
+     comment in routes/web.php — but this page remains useful for discovery.)
   2. Users occasionally want a one-page overview of what's here.
   Keep links plain — semantic <a> tags, no fancy hover JS, no client-
   rendering tricks. The whole point is that the markup is crawlable.
