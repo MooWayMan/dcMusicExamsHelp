@@ -32,6 +32,9 @@ class ContactController extends Controller
                 // render without N+1 queries. examEntries() is the
                 // teacher_contact_id relation; instrument is per-entry.
                 'examEntries.instrument:id,name,family',
+                // Persisted instruments (contact_instrument) — survive entry
+                // deletion. The chips show the union of these + derived.
+                'instruments:id,name,family',
             ])
             ->withCount(['examEntries', 'students', 'orders']);
 
@@ -72,9 +75,11 @@ class ContactController extends Controller
         // the contact's exam entries (only meaningful for teachers / school
         // admins who have a teacher_contact_id link to entries).
         $contacts->through(function ($contact) {
-            $instruments = $contact->examEntries
-                ->pluck('instrument')
-                ->filter()
+            // Union of persisted (contact_instrument) + derived (from current
+            // entries), distinct by id — so the chips survive entry deletion
+            // but also show instruments from entries not yet backfilled.
+            $instruments = $contact->instruments
+                ->concat($contact->examEntries->pluck('instrument')->filter())
                 ->unique('id')
                 ->values()
                 ->map(fn ($i) => [

@@ -762,6 +762,7 @@ class TrinityCsvImporter
             // school_name defaults to whatever Trinity gave us; a School-admin
             // role can override it with the confirmed school below.
             $schoolName = $summary['school'];
+            $school = null;
             $teacherContact = null;
             if (in_array($role, ['teacher', 'school_admin'], true)) {
                 $explicitId = $roleOverride['teacher_contact_id'] ?? null;
@@ -810,6 +811,15 @@ class TrinityCsvImporter
                         $schoolName = $school->name;
                         $teacherContact?->schools()->syncWithoutDetaching([$school->id]);
                     }
+                }
+
+                // Persist this entry's instrument on the teacher/school-admin
+                // contact (and the school) so the instrument profile survives
+                // deletion of the entry it came from.
+                $instrumentId = $preview['instrument']['id'] ?? null;
+                if ($instrumentId) {
+                    $teacherContact?->instruments()->syncWithoutDetaching([$instrumentId]);
+                    $school?->instruments()->syncWithoutDetaching([$instrumentId]);
                 }
             } elseif ($role === 'parent') {
                 $parentContact = $applicantContact ?? $submitterContact;

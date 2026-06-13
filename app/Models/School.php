@@ -37,4 +37,15 @@ class School extends Model
     {
         return $this->hasMany(Order::class);
     }
+
+    /**
+     * Instruments this school is associated with, persisted via the
+     * school_instrument pivot so they survive deletion of the exam entries
+     * they were originally derived from.
+     */
+    public function instruments(): BelongsToMany
+    {
+        return $this->belongsToMany(Instrument::class, 'school_instrument')
+            ->withTimestamps();
+    }
 }
