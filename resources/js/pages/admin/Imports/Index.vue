@@ -980,9 +980,9 @@ function formatRunSummary(run: { type: string; summary: Record<string, unknown> 
                     <div><span class="text-brand-text-soft">Score:</span> {{ candidatePreview.score }}</div>
                     <div><span class="text-brand-text-soft">Result:</span> {{ candidatePreview.result || '—' }}</div>
                     <div><span class="text-brand-text-soft">Exam Date:</span> {{ candidatePreview.exam_date || '—' }}</div>
-                    <div><span class="text-brand-text-soft">Teacher:</span> {{ candidatePreview.teacher_name || '—' }}</div>
+                    <div><span class="text-brand-text-soft">{{ roleIsSchoolAdmin ? 'School admin:' : 'Teacher:' }}</span> {{ (roleIsTeacherish ? teacherName : candidatePreview.teacher_name) || '—' }}</div>
                     <div><span class="text-brand-text-soft">Subject Area:</span> {{ candidatePreview.subject_area || '—' }}</div>
-                    <div><span class="text-brand-text-soft">School:</span> {{ candidatePreview.school_name || '—' }}</div>
+                    <div><span class="text-brand-text-soft">School:</span> {{ (roleIsSchoolAdmin ? schoolName : candidatePreview.school_name) || '—' }}</div>
                 </div>
             </div>
         </section>
