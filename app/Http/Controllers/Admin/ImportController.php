@@ -192,6 +192,13 @@ class ImportController extends Controller
             // ambiguous on UK dates (10/01/2015 → Oct 1, not Jan 10).
             'date_of_birth' => 'nullable|string|max:32',
             'applicant_email' => 'nullable|email',
+            // Human-confirmed booking role from the preview. Trinity gives no
+            // teacher field, so the role is chosen explicitly now rather than
+            // guessed. Teacher / school admin = draw-eligible.
+            'booking_role' => 'required|in:teacher,school_admin,parent,self',
+            'teacher_contact_id' => 'nullable|integer|exists:exam_contacts,id',
+            'teacher_name' => 'nullable|string|max:255',
+            'teacher_email' => 'nullable|email',
         ]);
 
         $dob = $this->normaliseDob($validated['date_of_birth'] ?? null);
@@ -215,6 +222,12 @@ class ImportController extends Controller
                 $validated['applicant_email'] ?? null,
                 $request->user()?->id,
                 $validated['enrolment']->getClientOriginalName(),
+                [
+                    'role' => $validated['booking_role'],
+                    'teacher_contact_id' => $validated['teacher_contact_id'] ?? null,
+                    'teacher_name' => $validated['teacher_name'] ?? null,
+                    'teacher_email' => $validated['teacher_email'] ?? null,
+                ],
             );
         } catch (\Throwable $e) {
             return back()->withErrors(['enrolment' => $e->getMessage()]);

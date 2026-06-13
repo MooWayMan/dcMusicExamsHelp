@@ -165,6 +165,11 @@ const candidatePreview = ref<{
     candidate: Record<string, string | null>
     order: Record<string, string | number | null> | null
     derivedRole: string
+    roleSuggestion: {
+        role: string | null
+        reason: string
+        matched_contact: { id: number; name: string; types: string[]; matched_by: string; who: string } | null
+    }
     derivedEmail: string | null
     fee: number
     instrument: { id: number; name: string } | null
@@ -180,6 +185,24 @@ const candidatePreview = ref<{
 } | null>(null)
 const candidateError = ref<string | null>(null)
 const candidateBusy = ref(false)
+
+// Human-confirmed booking role for the current preview. Trinity gives no
+// teacher field, so the role is confirmed every time before commit rather
+// than guessed. Pre-filled from the preview's suggestion.
+const chosenRole = ref<string | null>(null)
+const teacherName = ref<string>('')
+const teacherEmail = ref<string>('')
+const teacherContactId = ref<number | null>(null)
+
+const roleIsTeacherish = computed(
+    () => chosenRole.value === 'teacher' || chosenRole.value === 'school_admin',
+)
+
+const canCommit = computed(() => {
+    if (!chosenRole.value) return false
+    if (roleIsTeacherish.value && !teacherName.value.trim()) return false
+    return true
+})
 
 const namesDiffer = computed(() =>
     submitterName.value && applicantName.value &&
@@ -456,6 +479,23 @@ async function submitCandidatePreview() {
             candidateError.value = data.error || data.message || `Preview failed (${res.status}).`
         } else {
             candidatePreview.value = await res.json()
+
+            // Pre-fill the role selector from the suggestion (the human still
+            // confirms). When the suggestion matched an existing teacher /
+            // school admin, carry its id so we reuse that exact contact;
+            // otherwise pre-fill the teacher fields from the applicant.
+            const sug = candidatePreview.value?.roleSuggestion
+            chosenRole.value = sug?.role ?? null
+            const teacherish = sug?.role === 'teacher' || sug?.role === 'school_admin'
+            if (teacherish && sug?.matched_contact) {
+                teacherContactId.value = sug.matched_contact.id
+                teacherName.value = sug.matched_contact.name
+                teacherEmail.value = ''
+            } else {
+                teacherContactId.value = null
+                teacherName.value = candidatePreview.value?.candidate.applicant_name ?? ''
+                teacherEmail.value = candidatePreview.value?.derivedEmail ?? ''
+            }
         }
     } catch (err: unknown) {
         candidateError.value = err instanceof Error ? err.message : 'Preview failed.'
@@ -465,13 +505,17 @@ async function submitCandidatePreview() {
 }
 
 function commitCandidate() {
-    if (!allCandidateFilesPicked.value) return
+    if (!allCandidateFilesPicked.value || !canCommit.value) return
     const form = useForm({
         enrolment: enrolmentFile.value as File,
         summary: summaryFile.value as File,
         marksheet: marksheetFile.value as File,
         date_of_birth: dob.value || null,
         applicant_email: applicantEmail.value || null,
+        booking_role: chosenRole.value,
+        teacher_contact_id: teacherContactId.value,
+        teacher_name: roleIsTeacherish.value ? teacherName.value || null : null,
+        teacher_email: roleIsTeacherish.value ? teacherEmail.value || null : null,
     })
     form.post('/admin/imports/commit-candidate', {
         forceFormData: true,
@@ -488,6 +532,10 @@ function commitCandidate() {
             applicantName.value = ''
             candidateClassifyNote.value = ''
             candidateExtrasWarning.value = ''
+            chosenRole.value = null
+            teacherName.value = ''
+            teacherEmail.value = ''
+            teacherContactId.value = null
         },
     })
 }
@@ -812,9 +860,12 @@ function formatRunSummary(run: { type: string; summary: Record<string, unknown> 
                     <Loader2 v-if="candidateBusy" class="h-4 w-4 animate-spin" />
                     <span v-else>Preview</span>
                 </MyButtonConstructor>
-                <MyButtonConstructor v-if="candidatePreview" variant="success" size="medium" @click="commitCandidate">
+                <MyButtonConstructor v-if="candidatePreview" variant="success" size="medium" :disabled="!canCommit" @click="commitCandidate">
                     Commit
                 </MyButtonConstructor>
+                <span v-if="candidatePreview && !canCommit" class="text-sm text-brand-text-soft">
+                    Confirm the role below before committing.
+                </span>
             </div>
 
             <div v-if="candidatePreview" class="mt-5 rounded-lg border border-brand-border bg-brand-surface-soft p-4">
@@ -829,12 +880,54 @@ function formatRunSummary(run: { type: string; summary: Record<string, unknown> 
                     </ul>
                 </div>
 
+                <!-- Role confirmation. Trinity gives us no teacher field, so we
+                     confirm who the applicant is every time before committing,
+                     pre-filled from an evidence-based suggestion. -->
+                <div class="mb-4 rounded-lg border border-brand-border bg-brand-surface p-4">
+                    <p class="mb-1 text-sm font-semibold text-brand-text">Who is this applicant?</p>
+                    <p class="mb-3 text-xs text-brand-text-soft">{{ candidatePreview.roleSuggestion.reason }}</p>
+
+                    <select v-model="chosenRole" class="w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3 text-base text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent">
+                        <option :value="null" disabled>— Choose a role —</option>
+                        <option value="self">Self — candidate entered themselves (not in draw)</option>
+                        <option value="teacher">Teacher — in the prize draw</option>
+                        <option value="school_admin">School admin — in the prize draw</option>
+                        <option value="parent">Parent — not in the draw</option>
+                    </select>
+
+                    <div v-if="roleIsTeacherish" class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div>
+                            <label class="mb-1 block text-xs text-brand-text-soft">Teacher name</label>
+                            <input
+                                v-model="teacherName"
+                                type="text"
+                                placeholder="Teacher's name"
+                                class="w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3 text-base text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                                @input="teacherContactId = null"
+                            />
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs text-brand-text-soft">Teacher email (optional)</label>
+                            <input
+                                v-model="teacherEmail"
+                                type="email"
+                                placeholder="teacher@example.com"
+                                class="w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3 text-base text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                                @input="teacherContactId = null"
+                            />
+                        </div>
+                        <p v-if="teacherContactId" class="text-xs text-brand-accent sm:col-span-2">
+                            ✓ Using registered contact “{{ teacherName }}”. Edit the name to use a different teacher.
+                        </p>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
                     <div><span class="text-brand-text-soft">Candidate:</span> {{ candidatePreview.candidate.candidate_name }}</div>
                     <div><span class="text-brand-text-soft">Candidate #:</span> {{ candidatePreview.candidate.candidate_number }}</div>
                     <div><span class="text-brand-text-soft">Applicant:</span> {{ candidatePreview.candidate.applicant_name }}</div>
                     <div><span class="text-brand-text-soft">Applicant Email:</span> {{ candidatePreview.derivedEmail || '—' }}</div>
-                    <div><span class="text-brand-text-soft">Booking Role:</span> {{ candidatePreview.derivedRole }}</div>
+                    <div><span class="text-brand-text-soft">Booking Role:</span> {{ chosenRole || '(choose above)' }}</div>
                     <div><span class="text-brand-text-soft">Order:</span> {{ candidatePreview.order?.trinity_order_number || 'NOT FOUND' }}</div>
                     <div><span class="text-brand-text-soft">Instrument:</span> {{ candidatePreview.instrument?.name || '(unmapped)' }}</div>
                     <div><span class="text-brand-text-soft">Grade:</span> {{ candidatePreview.grade || '—' }}</div>
