@@ -36,7 +36,11 @@ class PopulateFromEntries extends Command
         foreach ($teacherNames as $name) {
             $trimmed = trim($name);
 
-            $existing = ExamContact::withType('teacher')
+            // Match across teacher AND school_admin: a school admin (e.g.
+            // Daniel Rogers / Pulse Music) counts as a teacher here, and
+            // checking 'teacher' only would miss him and mint a DUPLICATE
+            // contact tagged teacher (bug found 13 Jun 2026).
+            $existing = ExamContact::withType(['teacher', 'school_admin'])
                 ->whereRaw('LOWER(TRIM(name)) = ?', [strtolower($trimmed)])
                 ->first();
 

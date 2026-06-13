@@ -183,10 +183,14 @@ test('Section 2 commit creates an exam_entry linked to the existing order with p
     // Default fixture: Megan Roberts (candidate) entered by Paul Sheridan
     // (applicant + submitter). Submitter == Applicant, so applicant_email
     // is auto-derived from Submitter Email Address — no form input needed.
+    // The role is now confirmed explicitly on the import page.
     $this->actingAs($this->admin)->post('/admin/imports/commit-candidate', [
         'enrolment' => enrolmentCsv(),
         'summary' => summaryCsv(),
         'marksheet' => marksheetCsv(18, 17, 18, 11, 7, 7),
+        'booking_role' => 'teacher',
+        'teacher_name' => 'Paul Sheridan',
+        'teacher_email' => 'madmusic6@hotmail.com',
     ])->assertRedirect();
 
     $entry = ExamEntry::where('candidate_number', '1-CAND-1')->first();
@@ -194,18 +198,20 @@ test('Section 2 commit creates an exam_entry linked to the existing order with p
     expect($entry->score)->toBe(78);
     expect($entry->grade)->toBe('2');
     expect($entry->delivery_method)->toBe('Digital');
-    // Megan != Paul → not 'self'. No teacher in summary → not 'teacher'
-    // from step 2. No matching contact in step 3.
-    // **Shape-based default (added 30 May 2026):** submitter == applicant
-    // != candidate → 'teacher'. Paul submits Megan's exam from his own
-    // account → he's acting as her teacher. (Pre-fix this defaulted to
-    // 'parent', which silently broke the Maria Nielsen / Lily Jago case.)
+    // The confirmed role is stored verbatim — no guessing.
     expect($entry->booking_role)->toBe('teacher');
     // Email should auto-fill from submitter when names match the applicant.
     expect($entry->applicant_email)->toBe('madmusic6@hotmail.com');
+
+    // Student linked inline — the candidate is now visible on /admin/students
+    // immediately (the Isaac Ellison gap, where a cert existed but no Student).
+    expect($entry->student_id)->not->toBeNull();
+    $student = \App\Models\Student::find($entry->student_id);
+    expect($student->first_name)->toBe('Megan')
+        ->and($student->last_name)->toBe('Roberts');
 });
 
-test('booking_role = self when applicant name matches candidate name', function () {
+test('commit stores an explicit self role', function () {
     Order::create([
         'trinity_order_number' => '1-IMP-ORDER',
         'delivery_method' => 'Digital',
@@ -223,12 +229,15 @@ test('booking_role = self when applicant name matches candidate name', function 
         ]),
         'summary' => summaryCsv(['candidate' => 'Paul Sheridan']),
         'marksheet' => marksheetCsv(20),
+        'booking_role' => 'self',
     ])->assertRedirect();
 
-    expect(ExamEntry::where('candidate_number', '1-CAND-1')->value('booking_role'))->toBe('self');
+    $entry = ExamEntry::where('candidate_number', '1-CAND-1')->first();
+    expect($entry->booking_role)->toBe('self')
+        ->and($entry->teacher_contact_id)->toBeNull();
 });
 
-test('booking_role = teacher when summary teacher matches applicant name', function () {
+test('commit with teacher role links + tags the teacher contact (no duplicate)', function () {
     Order::create([
         'trinity_order_number' => '1-IMP-ORDER',
         'delivery_method' => 'Digital',
@@ -247,18 +256,60 @@ test('booking_role = teacher when summary teacher matches applicant name', funct
             'submitter_last' => 'Mitchell',
             'submitter_email' => 'sarah@example.com',
         ]),
-        'summary' => summaryCsv([
-            'candidate' => 'Some Student',
-            'teacher_first' => 'Sarah',
-            'teacher_last' => 'Mitchell',
-        ]),
+        'summary' => summaryCsv(['candidate' => 'Some Student']),
         'marksheet' => marksheetCsv(60),
+        'booking_role' => 'teacher',
+        'teacher_name' => 'Sarah Mitchell',
+        'teacher_email' => 'sarah@example.com',
     ])->assertRedirect();
 
-    expect(ExamEntry::where('candidate_number', '1-CAND-1')->value('booking_role'))->toBe('teacher');
+    $entry = ExamEntry::where('candidate_number', '1-CAND-1')->first();
+    expect($entry->booking_role)->toBe('teacher');
+
+    // Reused the submitter contact by email — exactly one Sarah, tagged teacher.
+    $teachers = \App\Models\ExamContact::where('email', 'sarah@example.com')->get();
+    expect($teachers)->toHaveCount(1);
+    expect($entry->teacher_contact_id)->toBe($teachers->first()->id)
+        ->and($teachers->first()->isTeacher())->toBeTrue();
 });
 
-test('booking_role = parent by default when names differ and no contact match', function () {
+test('commit with parent role does NOT tag the parent as a teacher', function () {
+    Order::create([
+        'trinity_order_number' => '1-IMP-ORDER',
+        'delivery_method' => 'Digital',
+        'subject_area' => 'Music',
+        'candidates' => 1,
+        'order_status' => 'Delivered',
+        'requested_start_date' => '2026-04-08',
+    ]);
+
+    // Mary Lamb books her own child Tilly. Pre-fix the rule-4 shape default
+    // would have minted Mary as a teacher and dropped her in the draw.
+    $this->actingAs($this->admin)->post('/admin/imports/commit-candidate', [
+        'enrolment' => enrolmentCsv([
+            'candidate_name' => 'Tilly Lamb',
+            'applicant_first' => 'Mary',
+            'applicant_last' => 'Lamb',
+            'submitter_first' => 'Mary',
+            'submitter_last' => 'Lamb',
+            'submitter_email' => 'mary@example.com',
+        ]),
+        'summary' => summaryCsv(['candidate' => 'Tilly Lamb']),
+        'marksheet' => marksheetCsv(70),
+        'booking_role' => 'parent',
+    ])->assertRedirect();
+
+    $entry = ExamEntry::where('candidate_number', '1-CAND-1')->first();
+    expect($entry->booking_role)->toBe('parent')
+        ->and($entry->teacher_contact_id)->toBeNull();
+
+    $mary = \App\Models\ExamContact::where('email', 'mary@example.com')->first();
+    expect($mary)->not->toBeNull();
+    expect($mary->isTeacher())->toBeFalse()
+        ->and($mary->isParent())->toBeTrue();
+});
+
+test('commit requires a booking_role', function () {
     Order::create([
         'trinity_order_number' => '1-IMP-ORDER',
         'delivery_method' => 'Digital',
@@ -269,21 +320,10 @@ test('booking_role = parent by default when names differ and no contact match', 
     ]);
 
     $this->actingAs($this->admin)->post('/admin/imports/commit-candidate', [
-        'enrolment' => enrolmentCsv([
-            'candidate_name' => 'Tilly Lamb',
-            'applicant_first' => 'Mary',
-            'applicant_last' => 'Lamb',
-            'submitter_first' => 'Paul',
-            'submitter_last' => 'Sheridan',
-            'submitter_email' => 'madmusic6@hotmail.com',
-        ]),
-        'summary' => summaryCsv(['candidate' => 'Tilly Lamb']),
-        'marksheet' => marksheetCsv(70),
-        // Submitter != Applicant → controller requires applicant_email.
-        'applicant_email' => 'mary@example.com',
-    ])->assertRedirect();
-
-    expect(ExamEntry::where('candidate_number', '1-CAND-1')->value('booking_role'))->toBe('parent');
+        'enrolment' => enrolmentCsv(),
+        'summary' => summaryCsv(),
+        'marksheet' => marksheetCsv(60),
+    ])->assertSessionHasErrors('booking_role');
 });
 
 test('Section 2 errors when the matched order does not exist', function () {
@@ -292,6 +332,8 @@ test('Section 2 errors when the matched order does not exist', function () {
         'enrolment' => enrolmentCsv(),
         'summary' => summaryCsv(),
         'marksheet' => marksheetCsv(60),
+        'booking_role' => 'teacher',
+        'teacher_name' => 'Paul Sheridan',
     ]);
 
     // Inertia/Laravel back()->withErrors → 302 with errors session bag.
@@ -312,6 +354,7 @@ test('candidate-number mismatch between Enrolment and Summary returns validation
         'enrolment' => enrolmentCsv(['candidate_number' => '1-CAND-A']),
         'summary' => summaryCsv(['candidate_number' => '1-CAND-B']),
         'marksheet' => marksheetCsv(60),
+        'booking_role' => 'self',
     ]);
 
     $response->assertSessionHasErrors();
@@ -331,10 +374,15 @@ test('re-running Section 2 with the same triple does not duplicate the entry', f
         'enrolment' => enrolmentCsv(),
         'summary' => summaryCsv(),
         'marksheet' => marksheetCsv(78),
+        'booking_role' => 'teacher',
+        'teacher_name' => 'Paul Sheridan',
+        'teacher_email' => 'madmusic6@hotmail.com',
     ];
 
     $this->actingAs($this->admin)->post('/admin/imports/commit-candidate', $payload())->assertRedirect();
     $this->actingAs($this->admin)->post('/admin/imports/commit-candidate', $payload())->assertRedirect();
 
     expect(ExamEntry::where('candidate_number', '1-CAND-1')->count())->toBe(1);
+    // Re-import must not create a second Student either.
+    expect(\App\Models\Student::where('first_name', 'Megan')->where('last_name', 'Roberts')->count())->toBe(1);
 });

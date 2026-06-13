@@ -9,6 +9,8 @@ use App\Models\ExamEntry;
 use App\Models\ImportRun;
 use App\Models\Instrument;
 use App\Models\Order;
+use App\Models\School;
+use App\Models\Student;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -566,6 +568,7 @@ class TrinityCsvImporter
 
         $derivedEmail = $this->deriveApplicantEmail($enrol, $applicantEmail);
         $derivedRole = $this->deriveBookingRole($enrol, $summary, $derivedEmail);
+        $roleSuggestion = $this->suggestRole($enrol, $summary, $derivedEmail);
 
         // Email is required when names differ and the user didn't supply one.
         $namesMatch = $this->namesMatch($enrol['submitter_name'], $enrol['applicant_name']);
@@ -593,6 +596,7 @@ class TrinityCsvImporter
                 'applicant_email' => $order->applicant_email,
             ] : null,
             'derivedRole' => $derivedRole,
+            'roleSuggestion' => $roleSuggestion,
             'derivedEmail' => $derivedEmail,
             'fee' => $fee,
             'instrument' => $instrument ? [
@@ -616,9 +620,14 @@ class TrinityCsvImporter
      * an Applicant Email override when names differ). Idempotent on
      * candidate_number within the matched order.
      */
-    public function commitCandidate(array $enrol, array $summary, int $score, ?string $dob, ?string $applicantEmail, ?int $userId, ?string $filename = null): ImportRun
+    public function commitCandidate(array $enrol, array $summary, int $score, ?string $dob, ?string $applicantEmail, ?int $userId, ?string $filename = null, ?array $roleOverride = null): ImportRun
     {
         $preview = $this->previewCandidate($enrol, $summary, $score, $dob, $applicantEmail);
+
+        // The human-confirmed role from the import page wins over the
+        // heuristic. When absent (legacy callers / tests), fall back to the
+        // derived suggestion so existing behaviour is unchanged.
+        $role = $roleOverride['role'] ?? $preview['derivedRole'];
 
         // Hard-stops: missing order or candidate-number mismatch.
         if ($enrol['candidate_number'] !== $summary['candidate_number']) {
@@ -644,16 +653,17 @@ class TrinityCsvImporter
 
         DB::transaction(function () use (
             $enrol, $summary, $score, $dob, $applicantEmail, $preview, $order,
+            $role, $roleOverride,
             &$createdEntry, &$updatedEntry, &$createdContact
         ) {
             // Submitter contact — lookup by email, create if missing.
             //
-            // Type tagging is based on the derived booking_role, NOT blanket
-            // 'parent'. Pre-30 May 2026 this hardcoded 'parent', which then
-            // poisoned deriveBookingRole on re-imports of the same submitter
-            // (lookup found a 'parent' contact → role stuck as parent → entry
-            // teacher_name + teacher_contact_id left blank). The Maria Nielsen
-            // case (5 May 2026, Lily Jago Grade 4 Singing) was the trigger.
+            // NOTE: we no longer tag the submitter teacher/parent off a
+            // guessed role here. That guess (rule-4 shape default) was
+            // minting parents as teachers and polluting the prize draw
+            // (Mark Vincent-Smith, Helen Khoo, … — 13 Jun 2026). Typing now
+            // happens against the ACTUAL resolved teacher/parent below, from
+            // the human-confirmed role.
             $submitterContact = null;
             if ($enrol['submitter_email'] !== '') {
                 $submitterContact = ExamContact::whereRaw('LOWER(email) = ?', [strtolower($enrol['submitter_email'])])->first();
@@ -665,24 +675,12 @@ class TrinityCsvImporter
                     ]);
                     $createdContact = true;
                 }
-                // Tag with type matching derived role. Multi-type pivot is
-                // additive, so re-imports that change role can layer types
-                // (a teacher who later submits their own kid's exam keeps
-                // both). 'self' submissions don't get a parent/teacher tag.
-                $tagType = match ($preview['derivedRole']) {
-                    'teacher' => 'teacher',
-                    'parent' => 'parent',
-                    default => null,
-                };
-                if ($tagType && ! $submitterContact->hasType($tagType)) {
-                    $submitterContact->addType($tagType);
-                }
             }
 
             // Applicant contact — when role is parent and the applicant differs from the submitter,
             // ensure we have a contact for them too.
             $applicantContact = null;
-            if ($preview['derivedRole'] === 'parent' && $enrol['applicant_name'] !== $enrol['submitter_name']) {
+            if ($role === 'parent' && $enrol['applicant_name'] !== $enrol['submitter_name']) {
                 $email = $preview['derivedEmail'] ?: $applicantEmail;
                 $applicantContact = $email
                     ? ExamContact::whereRaw('LOWER(email) = ?', [strtolower($email)])->first()
@@ -748,28 +746,97 @@ class TrinityCsvImporter
                 $notes = implode(' | ', $noteParts);
             }
 
-            // Teacher FK — the source of truth for "who taught this exam".
-            // Priority:
-            //   1. Summary CSV has a Teacher Name → match an existing teacher
-            //      contact by name (Trinity-confirmed).
-            //   2. derivedRole='teacher' → submitter contact (the typical
-            //      Maria-Nielsen pattern: submitter == applicant != candidate).
-            //   3. Else null (Adrian-O'Malley-style parent submitter — Paul
-            //      resolves the teacher manually).
-            $teacherContactId = $this->resolveTeacherContactId(
-                $summary,
-                $preview['derivedRole'],
-                $submitterContact,
-            );
+            // Teacher FK + type tagging, driven by the confirmed role.
+            //
+            //   teacher / school_admin → resolve a teacher contact and tag it
+            //     with the matching type. Resolution order:
+            //       1. explicit teacher_contact_id from the import page,
+            //       2. explicit teacher name (+ email) → find-or-create
+            //          (email is the precise key, so an existing teacher like
+            //          Clare Keeling is reused, never duplicated),
+            //       3. fall back to the legacy heuristic (Summary teacher /
+            //          submitter) for callers that pass no override.
+            //   parent → tag the parent (applicant, else submitter). No
+            //     teacher FK — Paul attributes the teacher later.
+            //   self → no teacher, no tags.
+            // school_name defaults to whatever Trinity gave us; a School-admin
+            // role can override it with the confirmed school below.
+            $schoolName = $summary['school'];
+            $school = null;
+            $teacherContact = null;
+            if (in_array($role, ['teacher', 'school_admin'], true)) {
+                $explicitId = $roleOverride['teacher_contact_id'] ?? null;
+                $explicitName = trim((string) ($roleOverride['teacher_name'] ?? ''));
+                $explicitEmail = trim((string) ($roleOverride['teacher_email'] ?? ''));
 
-            // teacher_name stays as a denormalised cache for search +
-            // backward-compat with old reads. Source it from the FK when
-            // set, else fall back to the role-derived string.
-            $teacherNameFromContact = $teacherContactId
-                ? ExamContact::query()->whereKey($teacherContactId)->value('name')
-                : null;
-            $teacherName = $teacherNameFromContact
-                ?: $this->resolveTeacherName($summary, $enrol, $preview['derivedRole']);
+                if ($explicitId) {
+                    $teacherContact = ExamContact::find($explicitId);
+                } elseif ($explicitName !== '') {
+                    if ($explicitEmail !== '') {
+                        $teacherContact = ExamContact::whereRaw('LOWER(email) = ?', [strtolower($explicitEmail)])->first();
+                    }
+                    if (! $teacherContact) {
+                        $teacherContact = ExamContact::whereRaw('LOWER(name) = ?', [strtolower($explicitName)])->first();
+                    }
+                    if (! $teacherContact) {
+                        $teacherContact = ExamContact::create([
+                            'name' => $explicitName,
+                            'email' => $explicitEmail ?: null,
+                            'source' => 'trinity_csv_import',
+                        ]);
+                        $createdContact = true;
+                    }
+                } else {
+                    // Legacy / no-override path — Maria-shape + Trinity-named.
+                    $resolvedId = $this->resolveTeacherContactId($summary, 'teacher', $submitterContact);
+                    $teacherContact = $resolvedId ? ExamContact::find($resolvedId) : null;
+                }
+
+                if ($teacherContact) {
+                    $type = $role === 'school_admin' ? 'school_admin' : 'teacher';
+                    if (! $teacherContact->hasType($type)) {
+                        $teacherContact->addType($type);
+                    }
+                }
+
+                // School-admin → resolve the school this entry rolls up to
+                // (pick existing by id, else find-or-create by name) and link
+                // the admin contact to it via contact_school. The Phase-2 draw
+                // credits the SCHOOL for school_admin entries, read off this
+                // link — so Emily Bates' Learn Music entries roll up to Learn
+                // Music while her private-teacher entries stay personal.
+                if ($role === 'school_admin') {
+                    $school = $this->resolveSchool($roleOverride);
+                    if ($school) {
+                        $schoolName = $school->name;
+                        $teacherContact?->schools()->syncWithoutDetaching([$school->id]);
+                    }
+                }
+
+                // Persist this entry's instrument on the teacher/school-admin
+                // contact (and the school) so the instrument profile survives
+                // deletion of the entry it came from.
+                $instrumentId = $preview['instrument']['id'] ?? null;
+                if ($instrumentId) {
+                    $teacherContact?->instruments()->syncWithoutDetaching([$instrumentId]);
+                    $school?->instruments()->syncWithoutDetaching([$instrumentId]);
+                }
+            } elseif ($role === 'parent') {
+                $parentContact = $applicantContact ?? $submitterContact;
+                if ($parentContact && ! $parentContact->hasType('parent')) {
+                    $parentContact->addType('parent');
+                }
+            }
+
+            $teacherContactId = $teacherContact?->id;
+            // teacher_name is a denormalised cache for search. Prefer the
+            // resolved contact's name; for a teacher/school-admin role with no
+            // contact resolved, fall back to the Summary/applicant string
+            // (old behaviour). Parent/self carry no teacher_name.
+            $teacherName = $teacherContact?->name
+                ?: (in_array($role, ['teacher', 'school_admin'], true)
+                    ? $this->resolveTeacherName($summary, $enrol, 'teacher')
+                    : null);
 
             // Note: exam_entries has no `applicant_name` column — that lives
             // on `orders` only (the per-entry applicant lives on the linked
@@ -789,8 +856,8 @@ class TrinityCsvImporter
                 'date_of_birth' => $dob ?: null,
                 'teacher_name' => $teacherName,
                 'teacher_contact_id' => $teacherContactId,
-                'school_name' => $summary['school'],
-                'booking_role' => $preview['derivedRole'],
+                'school_name' => $schoolName,
+                'booking_role' => $role,
                 'applicant_email' => $preview['derivedEmail'],
                 'submitter_contact_id' => $submitterContact?->id,
                 'notes' => $notes,
@@ -807,10 +874,19 @@ class TrinityCsvImporter
                     $existing->save();
                     $updatedEntry = true;
                 }
+                $entryModel = $existing;
             } else {
-                ExamEntry::create($payload);
+                $entryModel = ExamEntry::create($payload);
                 $createdEntry = true;
             }
+
+            // Create/link the Student for this candidate inline, so the
+            // candidate is visible on /admin/students immediately. Imports
+            // used to leave exam_entries.student_id null until
+            // `data:populate-from-entries` was run by hand — that gap is why
+            // a candidate (Isaac Ellison, 13 Jun 2026) had a certificate but
+            // no student row.
+            $this->linkStudentForEntry($entryModel, $teacherContactId);
         });
 
         return ImportRun::create([
@@ -824,11 +900,71 @@ class TrinityCsvImporter
                 'created_entry' => $createdEntry,
                 'updated_entry' => $updatedEntry,
                 'created_contact' => $createdContact,
-                'derived_role' => $preview['derivedRole'],
+                'derived_role' => $role,
                 'derived_email' => $preview['derivedEmail'],
                 'score' => $score,
             ],
         ]);
+    }
+
+    /**
+     * Resolve the School for a School-admin import: an explicit school_id
+     * wins, else find-or-create by trimmed name (case-insensitive, so we
+     * reuse "Learn Music Ltd" rather than duplicate it). Returns null when
+     * no school was supplied.
+     */
+    private function resolveSchool(?array $roleOverride): ?School
+    {
+        $id = $roleOverride['school_id'] ?? null;
+        if ($id) {
+            $school = School::find($id);
+            if ($school) {
+                return $school;
+            }
+        }
+
+        $name = trim((string) ($roleOverride['school_name'] ?? ''));
+        if ($name === '') {
+            return null;
+        }
+
+        return School::whereRaw('LOWER(name) = ?', [strtolower($name)])->first()
+            ?? School::create(['name' => $name]);
+    }
+
+    /**
+     * Find or create the Student for a committed exam entry and link it via
+     * exam_entries.student_id. Matches on lowercased "first last" exactly as
+     * `data:populate-from-entries` does, so the two stay consistent and a
+     * re-import can't create a second Student. Sets the student's teacher
+     * contact when we have one and the student doesn't already.
+     */
+    private function linkStudentForEntry(ExamEntry $entry, ?int $teacherContactId): void
+    {
+        $name = trim((string) $entry->candidate_name);
+        if ($name === '') {
+            return;
+        }
+
+        $parts = preg_split('/\s+/', $name);
+        $firstName = $parts[0];
+        $lastName = count($parts) > 1 ? implode(' ', array_slice($parts, 1)) : '';
+
+        $student = Student::whereRaw("LOWER(CONCAT(first_name, ' ', last_name)) = ?", [strtolower($name)])->first();
+
+        if (! $student) {
+            $student = Student::create([
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'teacher_contact_id' => $teacherContactId,
+            ]);
+        } elseif ($teacherContactId && ! $student->teacher_contact_id) {
+            $student->update(['teacher_contact_id' => $teacherContactId]);
+        }
+
+        if ($entry->student_id !== $student->id) {
+            $entry->update(['student_id' => $student->id]);
+        }
     }
 
     // ──────────────────────────────────────────────────────────────────
@@ -949,6 +1085,118 @@ class TrinityCsvImporter
         }
         $email = trim((string) $applicantEmail);
         return $email !== '' ? $email : null;
+    }
+
+    /**
+     * Suggest a booking role for the import PREVIEW, based on evidence we
+     * actually hold — never an auto-commit. Trinity gives us no teacher
+     * field, so the only reliable signal is whether the applicant or
+     * submitter is already a registered contact. The human confirms the
+     * role at commit; this just pre-selects the dropdown and shows WHY.
+     *
+     * Order of confidence:
+     *   1. Applicant == candidate → 'self'.
+     *   2. Applicant / submitter matches an existing contact (by email,
+     *      then name) typed teacher / school_admin / parent → suggest that.
+     *      teacher / school_admin beat parent; an applicant match beats a
+     *      submitter match.
+     *   3. Summary CSV names a teacher who exists as a teacher contact
+     *      → 'teacher'.
+     *   4. Otherwise null — no confident suggestion, the human must choose.
+     *
+     * @return array{role: ?string, reason: string, matched_contact: ?array{id:int,name:string,types:array<int,string>,matched_by:string,who:string}}
+     */
+    private function suggestRole(array $enrol, array $summary, ?string $derivedEmail): array
+    {
+        // 1. Self — the applicant is the candidate.
+        if ($this->namesMatch($enrol['applicant_name'], $enrol['candidate_name'])) {
+            return [
+                'role' => 'self',
+                'reason' => 'Applicant is the candidate — looks like a self-entry.',
+                'matched_contact' => null,
+            ];
+        }
+
+        // 2. Look the applicant, then the submitter, up against existing
+        //    contacts. Email is the precise key; fall back to exact name.
+        $probes = [
+            ['email' => $derivedEmail, 'name' => $enrol['applicant_name'] ?? '', 'who' => 'applicant'],
+            ['email' => $enrol['submitter_email'] ?? null, 'name' => $enrol['submitter_name'] ?? '', 'who' => 'submitter'],
+        ];
+
+        $matches = [];
+        foreach ($probes as $probe) {
+            $contact = null;
+            $by = null;
+
+            $email = trim((string) ($probe['email'] ?? ''));
+            if ($email !== '') {
+                $contact = ExamContact::whereRaw('LOWER(email) = ?', [strtolower($email)])->first();
+                if ($contact) {
+                    $by = 'email';
+                }
+            }
+            if (! $contact && trim((string) $probe['name']) !== '') {
+                $contact = ExamContact::whereRaw('LOWER(name) = ?', [strtolower(trim($probe['name']))])->first();
+                if ($contact) {
+                    $by = 'name';
+                }
+            }
+            if ($contact) {
+                $matches[] = ['contact' => $contact, 'by' => $by, 'who' => $probe['who']];
+            }
+        }
+
+        // Prefer a teacher/school_admin match (draw-eligible) over parent,
+        // and an applicant match over a submitter match (probe order does
+        // the latter for us).
+        foreach (['teacher', 'school_admin', 'parent'] as $wantType) {
+            foreach ($matches as $m) {
+                if ($m['contact']->hasType($wantType)) {
+                    $label = $wantType === 'school_admin' ? 'school admin' : $wantType;
+
+                    return [
+                        'role' => $wantType,
+                        'reason' => "Matches registered {$label} {$m['contact']->name} — by {$m['by']} ({$m['who']}).",
+                        'matched_contact' => [
+                            'id' => $m['contact']->id,
+                            'name' => $m['contact']->name,
+                            'types' => $m['contact']->types,
+                            'matched_by' => $m['by'],
+                            'who' => $m['who'],
+                        ],
+                    ];
+                }
+            }
+        }
+
+        // 3. Summary CSV names a teacher who already exists as a teacher.
+        $summaryTeacher = trim((string) ($summary['teacher_name'] ?? ''));
+        if ($summaryTeacher !== '') {
+            $teacher = ExamContact::whereRaw('LOWER(name) = ?', [strtolower($summaryTeacher)])
+                ->get()
+                ->first(fn (ExamContact $c) => $c->isTeacher() || $c->isSchoolAdmin());
+            if ($teacher) {
+                return [
+                    'role' => $teacher->isSchoolAdmin() && ! $teacher->isTeacher() ? 'school_admin' : 'teacher',
+                    'reason' => "Trinity Summary names teacher {$summaryTeacher}, who is a registered teacher.",
+                    'matched_contact' => [
+                        'id' => $teacher->id,
+                        'name' => $teacher->name,
+                        'types' => $teacher->types,
+                        'matched_by' => 'summary',
+                        'who' => 'teacher',
+                    ],
+                ];
+            }
+        }
+
+        // 4. No confident signal — the human must choose.
+        return [
+            'role' => null,
+            'reason' => 'No existing teacher, school or parent match — please choose the role.',
+            'matched_contact' => null,
+        ];
     }
 
     /**

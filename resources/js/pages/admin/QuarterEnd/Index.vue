@@ -25,7 +25,8 @@ interface Teacher {
   applicant_email: string | null
   applicant_name: string | null
   is_parent_booking: boolean
-  booking_role: 'parent' | 'self' | null
+  is_school: boolean
+  booking_role: 'parent' | 'self' | 'teacher' | 'school_admin' | null
   total_entries: number
   with_results: number
   pending: number
@@ -94,6 +95,7 @@ interface EligibleTeacher {
   name: string
   entries: number
   is_registered: boolean
+  is_school: boolean
   eligible: boolean
   reason: string
 }
@@ -722,7 +724,7 @@ Paul
 
 P.S. Here's a message you can send to parents with their child's certificate:
 
-"Hi [Parent Name], I've recently partnered with musicExams.help, a platform that supports teachers, parents and students taking Trinity exams. Your child now receives a personalised certificate — please find it attached. They also appear on the Recognition page at https://musicexams.help/recognition (first name and surname initial only). If you'd like their full name displayed, just email musicexams@musicexams.help."`
+"Hi [Parent Name], I've recently partnered with musicExams.help, a platform that supports teachers, parents and students taking Trinity exams. Your child now receives a personalised certificate — please find it attached. They also appear on the Recognition page at https://musicexams.help/recognition (first name and surname initial only). So we can credit the right person, please reply with your child's music teacher's name — and if their lessons are through a music school, let us know which one. If you'd like their full name displayed, just email musicexams@musicexams.help."`
 
   navigator.clipboard.writeText(template)
   alert('Email template copied to clipboard! Now click "Open in Gmail" to compose.')
@@ -1262,6 +1264,9 @@ const topScorerAwardCount = computed(() => {
                   </button>
                   <div>
                     <span class="font-bold text-brand-text">{{ teacher.teacher_name }}</span>
+                    <span v-if="teacher.is_school" class="ml-2 inline-block rounded-full bg-brand-accent/10 px-2 py-0.5 text-xs font-semibold text-brand-accent">
+                      School
+                    </span>
                     <span v-if="teacher.booking_role === 'self'" class="ml-2 inline-block rounded-full bg-purple-500/10 px-2 py-0.5 text-xs font-semibold text-purple-700">
                       Self booking
                     </span>
@@ -1802,7 +1807,8 @@ const topScorerAwardCount = computed(() => {
                     <tr v-for="t in prizeDraw.eligible_teachers" :key="t.name" class="border-t border-brand-border">
                       <td class="px-3 py-2">
                         <span class="font-medium text-brand-text">{{ t.name }}</span>
-                        <span v-if="t.is_registered" class="ml-1 inline-block rounded-full bg-brand-accent/10 px-1.5 py-0.5 text-xs text-brand-accent">registered</span>
+                        <span v-if="t.is_school" class="ml-1 inline-block rounded-full bg-brand-accent/10 px-1.5 py-0.5 text-xs text-brand-accent">school</span>
+                        <span v-else-if="t.is_registered" class="ml-1 inline-block rounded-full bg-brand-accent/10 px-1.5 py-0.5 text-xs text-brand-accent">registered</span>
                       </td>
                       <td class="px-3 py-2 text-center"><span class="text-sm font-medium text-brand-text">{{ t.entries }}</span></td>
                       <td class="px-3 py-2 text-center">

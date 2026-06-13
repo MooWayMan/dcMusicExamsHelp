@@ -117,6 +117,7 @@ class SchoolController extends Controller
         $school->load([
             'contacts' => fn ($q) => $q->withCount(['examEntries', 'orders']),
             'orders' => fn ($q) => $q->with(['createdByContact:id,name'])->latest(),
+            'instruments:id,name,family',
         ]);
 
         $primary = $this->pickPrimarySchoolContact($school);
@@ -155,6 +156,11 @@ class SchoolController extends Controller
             'contact_id' => $primary?->id,
             'notes' => $school->notes,
             'created_at' => $school->created_at->format('d M Y'),
+            'instruments' => $school->instruments->map(fn ($i) => [
+                'id' => $i->id,
+                'name' => $i->name,
+                'family' => $i->family,
+            ]),
             'teachers' => $derivedTeachers->map(fn ($t) => [
                 'id' => $t->id,
                 'name' => $t->name,

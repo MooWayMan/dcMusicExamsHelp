@@ -51,6 +51,15 @@ class QuarterEndController extends Controller
                 return $date && $date->between($startDate, $endDate);
             });
 
+        // School-admin rollup (Phase 2): a school_admin entry credits the
+        // SCHOOL it's linked to, not the individual admin — so Learn Music
+        // Ltd is the entrant, Emily Bates' private-teacher entries stay hers.
+        // When no school_admin-with-school entries exist these maps are empty
+        // and every credit name falls straight through to teacher_name, so the
+        // existing teacher behaviour is byte-for-byte unchanged.
+        [$schoolNameByContactId, $schoolMetaByNameLower] = $this->schoolCreditMaps();
+        $creditName = fn ($e) => $this->creditNameFor($e, $schoolNameByContactId);
+
         // Parents and self-bookers stamped as teacher_name during import need
         // the same Copy Email + Open Gmail workflow as teachers — they just
         // get a parent-variant template. Build a lookup so we can tag each row
@@ -79,12 +88,16 @@ class QuarterEndController extends Controller
         // teacher_name at all (NULL or empty/whitespace string) stay in the
         // catch-all bucket — empty strings used to slip through and create
         // a phantom blank-name card with Paul's applicant_email attached.
-        $teacherGroups = $allEntries->groupBy(function ($e) {
-            $name = trim((string) ($e->teacher_name ?? ''));
-            return $name === '' ? 'Parent Bookings (no teacher assigned)' : $e->teacher_name;
+        $teacherGroups = $allEntries->groupBy(function ($e) use ($creditName) {
+            $name = trim((string) ($creditName($e) ?? ''));
+            return $name === '' ? 'Parent Bookings (no teacher assigned)' : $creditName($e);
         });
 
-        $teachers = $teacherGroups->map(function ($entries, $teacherName) use ($parentOrSelfLookup) {
+        $teachers = $teacherGroups->map(function ($entries, $teacherName) use ($parentOrSelfLookup, $schoolMetaByNameLower) {
+            // Is this group a SCHOOL (school_admin entries rolled up)? If so the
+            // badge + email belong to the school, not an individual teacher.
+            $schoolMeta = $schoolMetaByNameLower[strtolower(trim((string) $teacherName))] ?? null;
+            $isSchool = $schoolMeta !== null;
             $withScores = $entries->filter(fn ($e) => $e->score !== null && $e->score >= 60);
             // "Pending" = unscored entries we're still waiting on. NO_SHOW
             // entries also have a null score but are NOT pending — Trinity
@@ -134,6 +147,12 @@ class QuarterEndController extends Controller
                     ?? $firstOrder?->applicant_email;
             }
 
+            // School groups route to the school's own email / its admin, since
+            // a contact lookup by the school's NAME wouldn't match a person.
+            if ($isSchool) {
+                $teacherEmail = $schoolMeta['email'] ?? $teacherEmail;
+            }
+
             // Orphaned bucket has no real recipient — null the email so the UI
             // can hide the Copy Email / Open Gmail buttons rather than prefill
             // a junk draft addressed to Paul himself.
@@ -164,7 +183,8 @@ class QuarterEndController extends Controller
                 'applicant_email' => $teacherEmail,
                 'applicant_name' => $firstOrder?->applicant_name,
                 'is_parent_booking' => $isParentBooking,
-                'booking_role' => $bookingRole,
+                'is_school' => $isSchool,
+                'booking_role' => $isSchool ? 'school_admin' : $bookingRole,
                 'total_entries' => $entries->count(),
                 'with_results' => $withScores->count(),
                 'pending' => $pending->count(),
@@ -313,8 +333,12 @@ class QuarterEndController extends Controller
             'name' => $e->candidate_name ?? ($e->student ? "{$e->student->first_name} {$e->student->last_name}" : 'Unknown'),
             'instrument' => $e->instrument?->name ?? 'Unknown',
             'grade' => $e->grade,
-            'teacher' => $e->teacher_name ?? 'Unknown',
+            'teacher' => $creditName($e) ?? 'Unknown',
         ])->values()->toArray();
+
+        // School credit names (lowercased) are eligible like registered
+        // teachers — a real school always gets a ticket per rolled-up entry.
+        $schoolCreditNamesLower = array_keys($schoolMetaByNameLower);
 
         // Teacher draw eligibility — built from `exam_entries.teacher_name`
         // (the curated string, not order applicant) but cross-checked against
@@ -357,21 +381,23 @@ class QuarterEndController extends Controller
         //     because line 44 only filters CANCELLED — that's deliberate
         //     so teacher VOLUME tallies still count NO_SHOW.)
         $applicantEntries = $allEntries
-            ->filter(fn ($e) => $e->teacher_name !== null && trim($e->teacher_name) !== '')
+            ->filter(fn ($e) => $creditName($e) !== null && trim((string) $creditName($e)) !== '')
             ->reject(fn ($e) => $e->notes === ExamEntry::NOTE_NO_SHOW)
-            ->reject(fn ($e) => in_array(strtolower(trim($e->teacher_name)), $selfExcludedNames, true))
-            ->groupBy(fn ($e) => $e->teacher_name);
+            ->reject(fn ($e) => in_array(strtolower(trim((string) $creditName($e))), $selfExcludedNames, true))
+            ->groupBy(fn ($e) => $creditName($e));
 
         $teacherTickets = [];
         foreach ($applicantEntries as $applicantName => $entries) {
             $entryCount = $entries->count();
             $nameKey = strtolower(trim($applicantName));
-            $isRegistered = in_array($nameKey, $registeredTeacherNames);
+            $isSchool = in_array($nameKey, $schoolCreditNamesLower, true);
+            $isRegistered = $isSchool || in_array($nameKey, $registeredTeacherNames);
             $isKnownNonTeacher = in_array($nameKey, $knownNonTeacherNames);
 
             // Eligibility:
+            //  - School (rolled up) → always in
             //  - Registered teacher  → always in
-            //  - Known non-teacher   → always out (parent, candidate, school admin)
+            //  - Known non-teacher   → always out (parent, candidate)
             //  - Unknown name with ≥2 entries → in (the catch-all heuristic
             //    for teachers who haven't been formally added yet)
             //  - Unknown name with 1 entry → out (almost always a parent)
@@ -384,6 +410,7 @@ class QuarterEndController extends Controller
                         'name' => $applicantName,
                         'entries' => $entryCount,
                         'is_registered' => $isRegistered,
+                        'is_school' => $isSchool,
                     ];
                 }
             }
@@ -391,14 +418,16 @@ class QuarterEndController extends Controller
 
         // Unique eligible teachers for display — same eligibility rules as
         // the ticket loop above so the table matches the actual draw.
-        $eligibleTeachers = collect($applicantEntries)->map(function ($entries, $name) use ($registeredTeacherNames, $knownNonTeacherNames) {
+        $eligibleTeachers = collect($applicantEntries)->map(function ($entries, $name) use ($registeredTeacherNames, $knownNonTeacherNames, $schoolCreditNamesLower) {
             $count = $entries->count();
             $nameKey = strtolower(trim($name));
-            $isRegistered = in_array($nameKey, $registeredTeacherNames);
+            $isSchool = in_array($nameKey, $schoolCreditNamesLower, true);
+            $isRegistered = $isSchool || in_array($nameKey, $registeredTeacherNames);
             $isKnownNonTeacher = in_array($nameKey, $knownNonTeacherNames);
             $eligible = $isRegistered || (! $isKnownNonTeacher && $count >= 2);
 
             $reason = match (true) {
+                $isSchool          => 'School (entries roll up here)',
                 $isRegistered      => 'Registered teacher',
                 $isKnownNonTeacher => 'Excluded — '.($this->nonTeacherType($nameKey) ?? 'non-teacher contact'),
                 $count >= 2        => "{$count} entries",
@@ -407,6 +436,7 @@ class QuarterEndController extends Controller
 
             return [
                 'name' => $name,
+                'is_school' => $isSchool,
                 'entries' => $count,
                 'is_registered' => $isRegistered,
                 'eligible' => $eligible,
@@ -679,6 +709,13 @@ class QuarterEndController extends Controller
         }
 
         // Teacher draw
+        // School-admin rollup: credit the school, and treat school names as
+        // registered (always eligible). Empty when no school entries exist,
+        // so the plain-teacher path is unchanged.
+        [$schoolNameByContactId, $schoolMetaByNameLower] = $this->schoolCreditMaps();
+        $creditName = fn ($e) => $this->creditNameFor($e, $schoolNameByContactId);
+        $schoolCreditNamesLower = array_keys($schoolMetaByNameLower);
+
         $registeredTeacherNames = ExamContact::withType('teacher')
             ->get()
             ->map(fn ($c) => strtolower(trim($c->name)))
@@ -712,16 +749,18 @@ class QuarterEndController extends Controller
             ->toArray();
 
         $applicantEntries = $allEntries
-            ->filter(fn ($e) => $e->teacher_name !== null && trim($e->teacher_name) !== '')
+            ->filter(fn ($e) => $creditName($e) !== null && trim((string) $creditName($e)) !== '')
             ->filter(fn ($e) => ! in_array($e->teacher_contact_id, $excludedContactIds, true))
-            ->filter(fn ($e) => ! in_array(strtolower(trim($e->teacher_name)), $excludedNamesLower, true))
-            ->reject(fn ($e) => in_array(strtolower(trim($e->teacher_name)), $selfExcludedNames, true))
-            ->groupBy(fn ($e) => $e->teacher_name);
+            ->filter(fn ($e) => ! in_array(strtolower(trim((string) $creditName($e))), $excludedNamesLower, true))
+            ->reject(fn ($e) => in_array(strtolower(trim((string) $creditName($e))), $selfExcludedNames, true))
+            ->groupBy(fn ($e) => $creditName($e));
 
         $tickets = [];
         foreach ($applicantEntries as $applicantName => $entries) {
             $entryCount = $entries->count();
-            $isRegistered = in_array(strtolower(trim($applicantName)), $registeredTeacherNames);
+            $nameKey = strtolower(trim($applicantName));
+            $isRegistered = in_array($nameKey, $schoolCreditNamesLower, true)
+                || in_array($nameKey, $registeredTeacherNames);
 
             // Same eligibility logic as the index() display so the draw
             // matches what the admin sees in the eligible list.
@@ -738,14 +777,17 @@ class QuarterEndController extends Controller
 
         $winnerName = $tickets[array_rand($tickets)];
         $winnerEntries = $applicantEntries[$winnerName]->count();
-        $isRegistered = in_array(strtolower(trim($winnerName)), $registeredTeacherNames);
+        $winnerKey = strtolower(trim($winnerName));
+        $isRegistered = in_array($winnerKey, $schoolCreditNamesLower, true)
+            || in_array($winnerKey, $registeredTeacherNames);
 
         if ($isReal) {
             // Build eligible list snapshot for audit
             $eligibleSnapshot = [];
             foreach ($applicantEntries as $name => $entries) {
                 $count = $entries->count();
-                $reg = in_array(strtolower(trim($name)), $registeredTeacherNames);
+                $nk = strtolower(trim($name));
+                $reg = in_array($nk, $schoolCreditNamesLower, true) || in_array($nk, $registeredTeacherNames);
                 if ($reg || $count >= 2) {
                     $eligibleSnapshot[] = ['name' => $name, 'entries' => $count, 'registered' => $reg];
                 }
@@ -906,6 +948,62 @@ class QuarterEndController extends Controller
      * Mirrors ThankYouController::displayName() so the admin UI and the public
      * Recognition page never disagree on a candidate's display label.
      */
+    /**
+     * Build the school-admin rollup maps (Phase 2).
+     *
+     * @return array{0: array<int,string>, 1: array<string,array{name:string,email:?string}>}
+     *   [0] teacher_contact_id => school name (for crediting entries)
+     *   [1] lowercased school name => ['name','email'] (display + routing)
+     *
+     * A school_admin contact's linked school is the entity its entries roll
+     * up to in the draw and the volume badges. When a contact admins more
+     * than one school we take the first (admins map to one school in practice
+     * — Clare/Emily → Learn Music Ltd).
+     */
+    private function schoolCreditMaps(): array
+    {
+        $byContactId = [];
+        $metaByNameLower = [];
+
+        $admins = ExamContact::withType('school_admin')
+            ->with(['schools:id,name,email', 'emails'])
+            ->get();
+
+        foreach ($admins as $admin) {
+            $school = $admin->schools->first();
+            if (! $school) {
+                continue;
+            }
+            $byContactId[$admin->id] = $school->name;
+            $key = strtolower(trim($school->name));
+            if (! isset($metaByNameLower[$key])) {
+                $metaByNameLower[$key] = [
+                    'name' => $school->name,
+                    'email' => $school->email ?: $admin->primary_email,
+                ];
+            }
+        }
+
+        return [$byContactId, $metaByNameLower];
+    }
+
+    /**
+     * The name an entry is credited to for the draw + badges: the linked
+     * school for a school_admin entry, otherwise the teacher_name string.
+     *
+     * @param  array<int,string>  $schoolNameByContactId
+     */
+    private function creditNameFor(ExamEntry $e, array $schoolNameByContactId): ?string
+    {
+        if ($e->booking_role === 'school_admin'
+            && $e->teacher_contact_id
+            && isset($schoolNameByContactId[$e->teacher_contact_id])) {
+            return $schoolNameByContactId[$e->teacher_contact_id];
+        }
+
+        return $e->teacher_name;
+    }
+
     private function shortName(string $fullName): string
     {
         $parts = preg_split('/\s+/', trim($fullName));

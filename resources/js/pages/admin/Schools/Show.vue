@@ -16,6 +16,7 @@ interface School {
     contact_name: string | null
     notes: string | null
     created_at: string
+    instruments: Array<{ id: number; name: string; family: string }>
     teachers: Array<{
         id: number
         name: string
@@ -107,6 +108,18 @@ const orderColumns = [
                     <div v-if="school.contact_name" class="flex items-center gap-3">
                         <User class="h-5 w-5 text-brand-text-soft" />
                         <span class="text-base text-brand-text">{{ school.contact_name }}</span>
+                    </div>
+                </div>
+                <div v-if="school.instruments.length" class="mt-5 border-t border-brand-border pt-4">
+                    <p class="mb-2 text-sm font-semibold uppercase tracking-wider text-brand-text-soft">Instruments</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span
+                            v-for="i in school.instruments"
+                            :key="i.id"
+                            class="inline-flex items-center rounded-full bg-brand-accent/10 px-3 py-1 text-sm font-medium text-brand-accent"
+                        >
+                            {{ i.name }}
+                        </span>
                     </div>
                 </div>
                 <div v-if="school.notes" class="mt-5 border-t border-brand-border pt-4">
