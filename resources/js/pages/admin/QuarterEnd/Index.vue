@@ -724,7 +724,7 @@ Paul
 
 P.S. Here's a message you can send to parents with their child's certificate:
 
-"Hi [Parent Name], I've recently partnered with musicExams.help, a platform that supports teachers, parents and students taking Trinity exams. Your child now receives a personalised certificate — please find it attached. They also appear on the Recognition page at https://musicexams.help/recognition (first name and surname initial only). If you'd like their full name displayed, just email musicexams@musicexams.help."`
+"Hi [Parent Name], I've recently partnered with musicExams.help, a platform that supports teachers, parents and students taking Trinity exams. Your child now receives a personalised certificate — please find it attached. They also appear on the Recognition page at https://musicexams.help/recognition (first name and surname initial only). So we can credit the right person, please reply with your child's music teacher's name — and if their lessons are through a music school, let us know which one. If you'd like their full name displayed, just email musicexams@musicexams.help."`
 
   navigator.clipboard.writeText(template)
   alert('Email template copied to clipboard! Now click "Open in Gmail" to compose.')
