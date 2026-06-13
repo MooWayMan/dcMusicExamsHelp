@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ImportRun;
+use App\Models\School;
 use App\Services\TrinityCsvImporter;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -50,6 +51,9 @@ class ImportController extends Controller
                 'quarter' => $defaultQuarter,
             ],
             'recent' => $recent,
+            // For the School-admin role: a datalist of existing schools so
+            // Paul reuses (e.g. Learn Music Ltd) instead of re-typing.
+            'schools' => School::orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -199,6 +203,10 @@ class ImportController extends Controller
             'teacher_contact_id' => 'nullable|integer|exists:exam_contacts,id',
             'teacher_name' => 'nullable|string|max:255',
             'teacher_email' => 'nullable|email',
+            // School-admin role: which school the entry rolls up to. Pick an
+            // existing school (id) or type a new name (find-or-create).
+            'school_id' => 'nullable|integer|exists:schools,id',
+            'school_name' => 'nullable|string|max:255',
         ]);
 
         $dob = $this->normaliseDob($validated['date_of_birth'] ?? null);
@@ -227,6 +235,8 @@ class ImportController extends Controller
                     'teacher_contact_id' => $validated['teacher_contact_id'] ?? null,
                     'teacher_name' => $validated['teacher_name'] ?? null,
                     'teacher_email' => $validated['teacher_email'] ?? null,
+                    'school_id' => $validated['school_id'] ?? null,
+                    'school_name' => $validated['school_name'] ?? null,
                 ],
             );
         } catch (\Throwable $e) {

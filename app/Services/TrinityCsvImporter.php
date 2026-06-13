@@ -9,6 +9,7 @@ use App\Models\ExamEntry;
 use App\Models\ImportRun;
 use App\Models\Instrument;
 use App\Models\Order;
+use App\Models\School;
 use App\Models\Student;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -758,6 +759,9 @@ class TrinityCsvImporter
             //   parent → tag the parent (applicant, else submitter). No
             //     teacher FK — Paul attributes the teacher later.
             //   self → no teacher, no tags.
+            // school_name defaults to whatever Trinity gave us; a School-admin
+            // role can override it with the confirmed school below.
+            $schoolName = $summary['school'];
             $teacherContact = null;
             if (in_array($role, ['teacher', 'school_admin'], true)) {
                 $explicitId = $roleOverride['teacher_contact_id'] ?? null;
@@ -791,6 +795,20 @@ class TrinityCsvImporter
                     $type = $role === 'school_admin' ? 'school_admin' : 'teacher';
                     if (! $teacherContact->hasType($type)) {
                         $teacherContact->addType($type);
+                    }
+                }
+
+                // School-admin → resolve the school this entry rolls up to
+                // (pick existing by id, else find-or-create by name) and link
+                // the admin contact to it via contact_school. The Phase-2 draw
+                // credits the SCHOOL for school_admin entries, read off this
+                // link — so Emily Bates' Learn Music entries roll up to Learn
+                // Music while her private-teacher entries stay personal.
+                if ($role === 'school_admin') {
+                    $school = $this->resolveSchool($roleOverride);
+                    if ($school) {
+                        $schoolName = $school->name;
+                        $teacherContact?->schools()->syncWithoutDetaching([$school->id]);
                     }
                 }
             } elseif ($role === 'parent') {
@@ -828,7 +846,7 @@ class TrinityCsvImporter
                 'date_of_birth' => $dob ?: null,
                 'teacher_name' => $teacherName,
                 'teacher_contact_id' => $teacherContactId,
-                'school_name' => $summary['school'],
+                'school_name' => $schoolName,
                 'booking_role' => $role,
                 'applicant_email' => $preview['derivedEmail'],
                 'submitter_contact_id' => $submitterContact?->id,
@@ -877,6 +895,31 @@ class TrinityCsvImporter
                 'score' => $score,
             ],
         ]);
+    }
+
+    /**
+     * Resolve the School for a School-admin import: an explicit school_id
+     * wins, else find-or-create by trimmed name (case-insensitive, so we
+     * reuse "Learn Music Ltd" rather than duplicate it). Returns null when
+     * no school was supplied.
+     */
+    private function resolveSchool(?array $roleOverride): ?School
+    {
+        $id = $roleOverride['school_id'] ?? null;
+        if ($id) {
+            $school = School::find($id);
+            if ($school) {
+                return $school;
+            }
+        }
+
+        $name = trim((string) ($roleOverride['school_name'] ?? ''));
+        if ($name === '') {
+            return null;
+        }
+
+        return School::whereRaw('LOWER(name) = ?', [strtolower($name)])->first()
+            ?? School::create(['name' => $name]);
     }
 
     /**

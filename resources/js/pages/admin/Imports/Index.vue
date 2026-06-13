@@ -17,6 +17,7 @@ interface RecentRun {
 const props = defineProps<{
     defaults: { year: number; quarter: number }
     recent: RecentRun[]
+    schools: Array<{ id: number; name: string }>
 }>()
 
 // ──────────────────────────────────────────────────────────────────
@@ -193,14 +194,29 @@ const chosenRole = ref<string | null>(null)
 const teacherName = ref<string>('')
 const teacherEmail = ref<string>('')
 const teacherContactId = ref<number | null>(null)
+// School-admin role: which school the entry rolls up to.
+const schoolName = ref<string>('')
+const schoolId = ref<number | null>(null)
 
 const roleIsTeacherish = computed(
     () => chosenRole.value === 'teacher' || chosenRole.value === 'school_admin',
 )
+const roleIsSchoolAdmin = computed(() => chosenRole.value === 'school_admin')
+
+// Keep schoolId in sync with the typed name: an exact match to an existing
+// school sends its id (precise reuse); anything else is treated as a new
+// school name to find-or-create.
+function onSchoolInput() {
+    const match = props.schools.find(
+        (s) => s.name.trim().toLowerCase() === schoolName.value.trim().toLowerCase(),
+    )
+    schoolId.value = match ? match.id : null
+}
 
 const canCommit = computed(() => {
     if (!chosenRole.value) return false
     if (roleIsTeacherish.value && !teacherName.value.trim()) return false
+    if (roleIsSchoolAdmin.value && !schoolName.value.trim()) return false
     return true
 })
 
@@ -496,6 +512,10 @@ async function submitCandidatePreview() {
                 teacherName.value = candidatePreview.value?.candidate.applicant_name ?? ''
                 teacherEmail.value = candidatePreview.value?.derivedEmail ?? ''
             }
+            // School fields start from whatever Trinity gave us (usually blank
+            // on digital), to be confirmed for the school-admin role.
+            schoolName.value = candidatePreview.value?.school_name ?? ''
+            onSchoolInput()
         }
     } catch (err: unknown) {
         candidateError.value = err instanceof Error ? err.message : 'Preview failed.'
@@ -516,6 +536,8 @@ function commitCandidate() {
         teacher_contact_id: teacherContactId.value,
         teacher_name: roleIsTeacherish.value ? teacherName.value || null : null,
         teacher_email: roleIsTeacherish.value ? teacherEmail.value || null : null,
+        school_id: roleIsSchoolAdmin.value ? schoolId.value : null,
+        school_name: roleIsSchoolAdmin.value ? schoolName.value || null : null,
     })
     form.post('/admin/imports/commit-candidate', {
         forceFormData: true,
@@ -536,6 +558,8 @@ function commitCandidate() {
             teacherName.value = ''
             teacherEmail.value = ''
             teacherContactId.value = null
+            schoolName.value = ''
+            schoolId.value = null
         },
     })
 }
@@ -897,27 +921,47 @@ function formatRunSummary(run: { type: string; summary: Record<string, unknown> 
 
                     <div v-if="roleIsTeacherish" class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div>
-                            <label class="mb-1 block text-xs text-brand-text-soft">Teacher name</label>
+                            <label class="mb-1 block text-xs text-brand-text-soft">{{ roleIsSchoolAdmin ? 'School admin name' : 'Teacher name' }}</label>
                             <input
                                 v-model="teacherName"
                                 type="text"
-                                placeholder="Teacher's name"
+                                :placeholder="roleIsSchoolAdmin ? 'Admin\'s name' : 'Teacher\'s name'"
                                 class="w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3 text-base text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
                                 @input="teacherContactId = null"
                             />
                         </div>
                         <div>
-                            <label class="mb-1 block text-xs text-brand-text-soft">Teacher email (optional)</label>
+                            <label class="mb-1 block text-xs text-brand-text-soft">{{ roleIsSchoolAdmin ? 'School admin email (optional)' : 'Teacher email (optional)' }}</label>
                             <input
                                 v-model="teacherEmail"
                                 type="email"
-                                placeholder="teacher@example.com"
+                                placeholder="name@example.com"
                                 class="w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3 text-base text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
                                 @input="teacherContactId = null"
                             />
                         </div>
+
+                        <!-- School-admin only: which school this entry rolls up to. -->
+                        <div v-if="roleIsSchoolAdmin" class="sm:col-span-2">
+                            <label class="mb-1 block text-xs text-brand-text-soft">School (rolls up to this in the draw)</label>
+                            <input
+                                v-model="schoolName"
+                                list="import-schools-list"
+                                type="text"
+                                placeholder="e.g. Learn Music Ltd"
+                                class="w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3 text-base text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                                @input="onSchoolInput"
+                            />
+                            <datalist id="import-schools-list">
+                                <option v-for="s in props.schools" :key="s.id" :value="s.name" />
+                            </datalist>
+                            <p class="mt-1 text-xs" :class="schoolId ? 'text-brand-accent' : 'text-brand-text-soft'">
+                                {{ schoolId ? '✓ Existing school — entries roll up here.' : 'New school — will be created and linked.' }}
+                            </p>
+                        </div>
+
                         <p v-if="teacherContactId" class="text-xs text-brand-accent sm:col-span-2">
-                            ✓ Using registered contact “{{ teacherName }}”. Edit the name to use a different teacher.
+                            ✓ Using registered contact “{{ teacherName }}”. Edit the name to use a different one.
                         </p>
                     </div>
                 </div>

@@ -12,6 +12,7 @@
 use App\Models\ExamContact;
 use App\Models\ExamEntry;
 use App\Models\Order;
+use App\Models\School;
 use App\Services\TrinityCsvImporter;
 use Carbon\Carbon;
 
@@ -151,16 +152,60 @@ test('explicit school_admin role tags school_admin and reuses an existing contac
             'candidate_number' => '1-OSCAR', 'candidate' => 'Oscar Cain',
         ]),
         score: 75, dob: null, applicantEmail: null, userId: null, filename: null,
-        roleOverride: ['role' => 'school_admin', 'teacher_contact_id' => $daniel->id],
+        roleOverride: [
+            'role' => 'school_admin',
+            'teacher_contact_id' => $daniel->id,
+            'school_name' => 'Pulse Music School',
+        ],
     );
 
     $entry = ExamEntry::where('candidate_number', '1-OSCAR')->firstOrFail();
     expect($entry->booking_role)->toBe('school_admin')
-        ->and($entry->teacher_contact_id)->toBe($daniel->id);
+        ->and($entry->teacher_contact_id)->toBe($daniel->id)
+        ->and($entry->school_name)->toBe('Pulse Music School');
 
     expect(ExamContact::where('name', 'Daniel Rogers')->count())->toBe(1);
     $daniel->refresh();
     expect($daniel->isSchoolAdmin())->toBeTrue();
+
+    // The admin contact is linked to the school it rolls up to.
+    $school = School::where('name', 'Pulse Music School')->firstOrFail();
+    expect($daniel->schools()->where('schools.id', $school->id)->exists())->toBeTrue();
+});
+
+test('school_admin role reuses an existing school by id without duplicating it', function () {
+    roleOrder('1-ROLE-SCHOOL-ID');
+
+    $learnMusic = School::create(['name' => 'Learn Music Ltd']);
+    $clare = ExamContact::create(['name' => 'Clare Keeling', 'email' => 'lessons@learnmusic.co.uk', 'source' => 'manual']);
+    $clare->addType('school_admin');
+
+    (new TrinityCsvImporter())->commitCandidate(
+        enrol: roleEnrol([
+            'submitter_first' => 'Emily', 'submitter_last' => 'Bates',
+            'submitter_name' => 'Emily Bates', 'submitter_email' => 'musiclearn11@gmail.com',
+            'applicant_first' => 'Clare', 'applicant_last' => 'Keeling',
+            'applicant_name' => 'Clare Keeling',
+            'candidate_name' => 'Joshua Ing Hern Ting', 'candidate_number' => '1-JOSHUA',
+        ]),
+        summary: roleSummary('1-ROLE-SCHOOL-ID', [
+            'candidate_number' => '1-JOSHUA', 'candidate' => 'Joshua Ing Hern Ting',
+        ]),
+        score: 76, dob: null, applicantEmail: 'lessons@learnmusic.co.uk', userId: null, filename: null,
+        roleOverride: [
+            'role' => 'school_admin',
+            'teacher_contact_id' => $clare->id,
+            'school_id' => $learnMusic->id,
+            'school_name' => 'Learn Music Ltd',
+        ],
+    );
+
+    $entry = ExamEntry::where('candidate_number', '1-JOSHUA')->firstOrFail();
+    expect($entry->school_name)->toBe('Learn Music Ltd');
+
+    // Reused, not duplicated.
+    expect(School::where('name', 'Learn Music Ltd')->count())->toBe(1);
+    expect($clare->fresh()->schools()->where('schools.id', $learnMusic->id)->exists())->toBeTrue();
 });
 
 test('commit without a role override still links a Student (legacy path, the Isaac Ellison gap)', function () {
