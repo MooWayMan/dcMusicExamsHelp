@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\SyllabusController;
 use App\Http\Controllers\SubscriberController;
 use App\Http\Controllers\ThankYouController;
 use Illuminate\Support\Facades\Route;
@@ -81,6 +82,7 @@ Route::inertia('/trinity-exam-information', 'TrinityExamInformation')->name('tri
 Route::inertia('/for-parents', 'ForParents')->name('for-parents');
 Route::inertia('/for-students', 'ForStudents')->name('for-students');
 Route::inertia('/books', 'Books')->name('books');
+Route::get('/syllabus', [SyllabusController::class, 'index'])->name('syllabus');
 Route::get('/recognition', ThankYouController::class)->name('recognition');
 Route::inertia('/exam-guide', 'ExamGuide')->name('exam-guide');
 Route::inertia('/exam-guide/ucas-points', 'ExamGuideUcas')->name('exam-guide.ucas');

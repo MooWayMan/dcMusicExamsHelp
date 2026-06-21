@@ -54,6 +54,16 @@ test('GET /books returns 200', function () {
         ->assertStatus(200);
 });
 
+test('GET /syllabus returns 200', function () {
+    $this->get('/syllabus')
+        ->assertStatus(200);
+});
+
+test('GET /syllabus with filter params returns 200', function () {
+    $this->get('/syllabus?stream=Rock+%26+Pop&instrument=Guitar&grade=Grade+3')
+        ->assertStatus(200);
+});
+
 test('GET /privacy returns 200', function () {
     $this->get('/privacy')
         ->assertStatus(200);
