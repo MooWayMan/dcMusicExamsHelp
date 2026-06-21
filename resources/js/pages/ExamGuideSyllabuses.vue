@@ -283,6 +283,31 @@ const faqs = [
       </div>
     </section>
 
+    <!-- SYLLABUS FINDER CALLOUT -->
+    <section class="bg-black">
+      <div class="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:py-12">
+        <div :class="animClass('fade-up', 1)" class="overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
+          <div class="flex items-center justify-center gap-3 bg-black px-5 py-3 sm:px-6">
+            <BookOpen class="h-5 w-5 shrink-0 text-brand-accent sm:h-6 sm:w-6" />
+            <p class="text-base font-semibold text-white sm:text-lg">Looking for the actual pieces?</p>
+          </div>
+          <div class="p-6 text-center text-white">
+            <p class="text-base text-white/80 sm:text-base md:text-lg">
+              Our <strong class="text-white">Piece Finder</strong> lets you search Trinity Piano and Rock &amp; Pop
+              repertoire by instrument, grade and exam type — hear each piece and buy the right exam book in a click.
+            </p>
+            <div class="mt-6 text-center">
+              <a href="/syllabus?from=syllabuses">
+                <MyButtonConstructor variant="light" size="large" :icon="ExternalLink" icon-position="right">
+                  Browse the Piece Finder
+                </MyButtonConstructor>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- HOW TO USE -->
     <section
       class="relative bg-cover bg-center bg-no-repeat"

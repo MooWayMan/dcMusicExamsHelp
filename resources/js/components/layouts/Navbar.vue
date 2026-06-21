@@ -59,6 +59,7 @@ const navigation = computed<NavItem[]>(() => {
         { name: 'For Parents', href: '/for-parents' },
         { name: 'For Students', href: '/for-students' },
         { name: 'Books', href: '/books' },
+        { name: 'Piece Finder', href: '/syllabus' },
         { name: '---', href: '#divider-thankyou' },
         { name: '★ Recognition (click here)', href: '/recognition', highlight: true },
         { name: 'Incentives', href: '/incentives' },
