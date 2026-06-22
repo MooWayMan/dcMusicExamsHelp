@@ -40,7 +40,7 @@ const jsonLd = JSON.stringify({
     'https://www.tiktok.com/@musicexamshelp',
     'https://www.linkedin.com/company/musicexams-help',
     'https://x.com/musicExamsHelp',
-    'https://www.youtube.com/@TrinityExamsLiverpool_UK',
+    'https://www.youtube.com/@musicExamsHelp',
   ],
   'contactPoint': {
     '@type': 'ContactPoint',
