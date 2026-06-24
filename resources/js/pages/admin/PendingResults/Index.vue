@@ -24,9 +24,19 @@ interface PendingEntry {
     order_date: string
 }
 
+interface AwaitingOrder {
+    id: number
+    order_number: string
+    status: string
+    delivery_method: string
+    requested_start_date: string
+    days_waiting: number | null
+}
+
 const props = defineProps<{
     entries: PendingEntry[]
-    summary: { pending: number; with_results: number; total: number }
+    awaitingImport: AwaitingOrder[]
+    summary: { pending: number; with_results: number; total: number; awaiting_import: number }
     filters: { search: string | null; method: string | null }
     quarter: number
     year: number
@@ -78,6 +88,14 @@ const columns = [
     { key: 'delivery_method', title: 'Method', sortable: true },
     { key: 'teacher_name', title: 'Teacher', sortable: true },
     { key: 'order_date', title: 'Order Date', sortable: true },
+]
+
+const awaitingColumns = [
+    { key: 'order_number', title: 'Order', sortable: true },
+    { key: 'status', title: 'Status', sortable: true },
+    { key: 'delivery_method', title: 'Method', sortable: true },
+    { key: 'requested_start_date', title: 'Requested start', sortable: true },
+    { key: 'days_waiting', title: 'Days waiting', sortable: true },
 ]
 </script>
 
@@ -227,11 +245,55 @@ const columns = [
                 </template>
             </MyTableConstructor>
 
-            <!-- Empty state -->
-            <div v-else class="rounded-xl border border-green-200 bg-green-50 p-12 text-center">
+            <!-- Empty state — only when there's nothing pending AND no orders
+                 are waiting on candidate import. -->
+            <div v-else-if="!awaitingImport.length" class="rounded-xl border border-green-200 bg-green-50 p-12 text-center">
                 <CheckCircle class="mx-auto h-12 w-12 text-green-500" />
                 <p class="mt-4 text-lg font-semibold text-green-700">All results collected!</p>
                 <p class="mt-1 text-sm text-green-600">No pending candidates — everything is up to date.</p>
+            </div>
+
+            <!-- Orders awaiting candidate import — booked via bulk import but no
+                 per-candidate data from Trinity yet, so they have zero entries
+                 and never appear in the table above. -->
+            <div v-if="awaitingImport.length" class="mt-8">
+                <div class="mb-3 flex items-center gap-2">
+                    <Clock class="h-5 w-5 text-amber-600" />
+                    <h2 class="text-base font-semibold text-brand-text">
+                        Orders awaiting candidate import
+                        <span class="ml-1 text-sm font-normal text-brand-text-soft">({{ awaitingImport.length }})</span>
+                    </h2>
+                </div>
+                <p class="mb-4 text-sm text-brand-text-soft">
+                    Booked orders whose exam window has started but no candidate data has been imported from Trinity yet. Nothing to chase on the candidate side — these are waiting on Trinity to issue enrolment data.
+                </p>
+                <MyTableConstructor
+                    :data="awaitingImport"
+                    :columns="awaitingColumns"
+                    rowKey="id"
+                    :sortable="true"
+                    :striped="true"
+                    :bordered="true"
+                    size="medium"
+                >
+                    <template #cell-order_number="{ row }">
+                        <Link :href="`/admin/orders/${row.id}`" class="font-medium text-brand-accent hover:underline">
+                            {{ row.order_number }}
+                        </Link>
+                    </template>
+                    <template #cell-status="{ row }">
+                        <span class="text-sm text-brand-text-soft">{{ row.status }}</span>
+                    </template>
+                    <template #cell-delivery_method="{ row }">
+                        <span class="text-sm text-brand-text-soft">{{ row.delivery_method }}</span>
+                    </template>
+                    <template #cell-requested_start_date="{ row }">
+                        <span class="text-sm text-brand-text-soft">{{ row.requested_start_date }}</span>
+                    </template>
+                    <template #cell-days_waiting="{ row }">
+                        <span class="text-sm text-brand-text-soft">{{ row.days_waiting ?? '—' }}</span>
+                    </template>
+                </MyTableConstructor>
             </div>
         </div>
     </div>

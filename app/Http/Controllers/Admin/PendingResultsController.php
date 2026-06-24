@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ExamEntry;
+use App\Models\Order;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -128,12 +129,50 @@ class PendingResultsController extends Controller
         $totalWithResults = $quarterScoped->whereNotNull('score')->count();
         $totalEntries = $quarterScoped->count();
 
+        // Orders booked but with no candidate triple imported yet. These have
+        // ZERO exam_entries rows, so they're invisible to the entries-driven
+        // list above — without this the page reads "All results collected"
+        // while orders are genuinely waiting on Trinity to issue enrolment
+        // data. Scoped to the same quarter window and method pill as the rest
+        // of the page; date-passed only (a future requested_start is just
+        // scheduled, not awaiting), mirroring the strict "pending" definition.
+        $awaitingImportQuery = Order::query()
+            ->whereDoesntHave('examEntries')
+            ->whereNotNull('requested_start_date')
+            ->whereBetween('requested_start_date', [$startDate, $endDate])
+            ->where('requested_start_date', '<=', $today)
+            ->where(function ($q): void {
+                $q->whereNull('notes')
+                    ->orWhere('notes', '!=', ExamEntry::NOTE_CANCELLED);
+            });
+
+        if ($method) {
+            $awaitingImportQuery->where('delivery_method', $method);
+        }
+
+        $awaitingImport = $awaitingImportQuery
+            ->orderBy('requested_start_date', 'asc')
+            ->get()
+            ->map(fn (Order $o) => [
+                'id' => $o->id,
+                'order_number' => $o->trinity_order_number ?? '—',
+                'status' => $o->order_status ?? '—',
+                'delivery_method' => $o->delivery_method ?? '—',
+                'requested_start_date' => $o->requested_start_date?->format('d M Y') ?? '—',
+                'days_waiting' => $o->requested_start_date
+                    ? (int) round(abs($o->requested_start_date->diffInDays($today)))
+                    : null,
+            ])
+            ->values();
+
         return Inertia::render('admin/PendingResults/Index', [
             'entries' => $data,
+            'awaitingImport' => $awaitingImport,
             'summary' => [
                 'pending' => $totalPending,
                 'with_results' => $totalWithResults,
                 'total' => $totalEntries,
+                'awaiting_import' => $awaitingImport->count(),
             ],
             'filters' => [
                 'search' => $search,
