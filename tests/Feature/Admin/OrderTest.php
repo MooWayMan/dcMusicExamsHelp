@@ -523,6 +523,46 @@ test('admin can add a new candidate to existing order', function () {
     expect($order->fresh()->candidates)->toBe(2);
 });
 
+test('admin can update a zero-entry order without inventing a candidate', function () {
+    // An order awaiting Trinity's candidate import: booked count set, no
+    // entries yet. Editing the applicant must not be blocked by, or wipe, the
+    // candidate count.
+    $order = Order::factory()->create([
+        'trinity_order_number' => 'TRN-ZERO-ENTRIES',
+        'applicant_name' => null,
+        'candidates' => 12,
+        'requested_start_date' => '2026-05-28',
+    ]);
+
+    expect($order->examEntries()->count())->toBe(0);
+
+    $this->actingAs(orderAdmin())
+        ->put(route('admin.orders.update', $order), [
+            'trinity_order_number' => 'TRN-ZERO-ENTRIES',
+            'delivery_method' => 'Default',
+            'subject_area' => 'Music',
+            'order_status' => 'Delivered',
+            'requested_start_date' => '2026-05-28',
+            'created_by_contact_id' => null,
+            'commission_rate' => 28,
+            'applicant_name' => 'Peter Pan',
+            'applicant_email' => 'peter@example.com',
+            'entries' => [],
+        ])
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
+
+    $this->assertDatabaseHas('orders', [
+        'id' => $order->id,
+        'applicant_name' => 'Peter Pan',
+        'applicant_email' => 'peter@example.com',
+        // Booked count preserved, not overwritten with 0.
+        'candidates' => 12,
+    ]);
+
+    expect($order->fresh()->examEntries()->count())->toBe(0);
+});
+
 test('non-admin cannot update orders', function () {
     $order = Order::factory()->create();
 

@@ -370,7 +370,10 @@ class OrderController extends Controller
             'applicant_email' => 'nullable|email|max:255',
             'notes' => 'nullable|string',
 
-            'entries' => 'required|array|min:1',
+            // Allow an empty array: an order awaiting Trinity's candidate
+            // import legitimately has zero entries, and editing its header /
+            // applicant must not force the user to invent a candidate.
+            'entries' => 'present|array',
             'entries.*.id' => 'nullable|integer|exists:exam_entries,id',
             'entries.*.candidate_name' => 'required|string|max:255',
             'entries.*.candidate_number' => 'nullable|string|max:100',
@@ -384,10 +387,17 @@ class OrderController extends Controller
         ]);
 
         DB::transaction(function () use ($validated, $order) {
-            $entries = $validated['entries'];
+            $entries = $validated['entries'] ?? [];
             unset($validated['entries']);
 
-            $validated['candidates'] = count($entries);
+            // Only recompute the booked candidate count when entries were
+            // actually supplied. Otherwise an applicant/header-only edit on a
+            // zero-entry order (awaiting candidate import) would overwrite the
+            // count Trinity booked with 0.
+            if (count($entries) > 0) {
+                $validated['candidates'] = count($entries);
+            }
+
             $order->update($validated);
 
             foreach ($entries as $entry) {

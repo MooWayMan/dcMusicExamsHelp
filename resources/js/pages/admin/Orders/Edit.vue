@@ -87,14 +87,17 @@ const form = useForm({
     applicant_name: props.order.applicant_name ?? '',
     applicant_email: props.order.applicant_email ?? '',
     notes: props.order.notes ?? '',
-    entries: props.order.entries.length > 0 ? props.order.entries.map(e => ({
+    // Map existing candidates as-is. An order awaiting Trinity's candidate
+    // import has none — start empty rather than injecting a blank required
+    // row (which would block header/applicant-only edits from saving).
+    entries: props.order.entries.map(e => ({
         ...e,
         candidate_number: e.candidate_number ?? '',
         grade: e.grade ?? '',
         exam_date: e.exam_date ?? '',
         result: e.result ?? '',
         notes: e.notes ?? '',
-    })) : [emptyEntry()],
+    })),
 })
 
 const isFaceToFace = computed(() => form.delivery_method === 'Default')
@@ -228,6 +231,10 @@ function inputClass() {
                     <h3 class="text-xl font-semibold text-brand-text">Candidates ({{ form.entries.length }})</h3>
                     <MyButtonConstructor type="button" variant="ghost" size="small" :icon="Plus" @click="addEntry">Add candidate</MyButtonConstructor>
                 </div>
+
+                <p v-if="form.entries.length === 0" class="mb-4 rounded-lg border border-dashed border-brand-border bg-brand-surface-soft p-4 text-sm text-brand-text-soft">
+                    No candidates on this order yet — awaiting Trinity's candidate data. You can save the order details as they are, or use "Add candidate" to enter them manually.
+                </p>
 
                 <div v-for="(entry, i) in form.entries" :key="entry.id ?? `new-${i}`" class="mb-4 rounded-lg border border-brand-border bg-brand-surface-soft p-4">
                     <div class="mb-3 flex items-center justify-between">
