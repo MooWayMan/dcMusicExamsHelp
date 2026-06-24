@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3'
 import { ref, watch } from 'vue'
-import { Search, AlertCircle, CheckCircle, Clock } from 'lucide-vue-next'
+import { Search, AlertCircle, CheckCircle, Clock, Inbox } from 'lucide-vue-next'
 import PageHeader from '@/components/reusables/PageHeader.vue'
 import MyTableConstructor from '@/components/reusables/MyTableConstructor.vue'
 
@@ -133,13 +133,22 @@ const awaitingColumns = [
 
         <div class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
             <!-- Summary cards -->
-            <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div class="rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div class="rounded-xl border border-brand-danger/30 bg-brand-danger-soft p-4">
                     <div class="flex items-center gap-3">
-                        <Clock class="h-8 w-8 text-amber-600" />
+                        <Clock class="h-8 w-8 text-brand-danger" />
                         <div>
-                            <p class="text-2xl font-bold text-amber-700">{{ summary.pending }}</p>
-                            <p class="text-sm text-amber-600">Awaiting results</p>
+                            <p class="text-2xl font-bold text-brand-danger">{{ summary.pending }}</p>
+                            <p class="text-sm text-brand-danger">Awaiting results</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="rounded-xl border border-brand-teal/30 bg-brand-teal-soft p-4">
+                    <div class="flex items-center gap-3">
+                        <Inbox class="h-8 w-8 text-brand-teal" />
+                        <div>
+                            <p class="text-2xl font-bold text-brand-teal">{{ summary.awaiting_import }}</p>
+                            <p class="text-sm text-brand-teal">Awaiting candidate import</p>
                         </div>
                     </div>
                 </div>
@@ -258,7 +267,7 @@ const awaitingColumns = [
                  and never appear in the table above. -->
             <div v-if="awaitingImport.length" class="mt-8">
                 <div class="mb-3 flex items-center gap-2">
-                    <Clock class="h-5 w-5 text-amber-600" />
+                    <Inbox class="h-5 w-5 text-brand-teal" />
                     <h2 class="text-base font-semibold text-brand-text">
                         Orders awaiting candidate import
                         <span class="ml-1 text-sm font-normal text-brand-text-soft">({{ awaitingImport.length }})</span>
