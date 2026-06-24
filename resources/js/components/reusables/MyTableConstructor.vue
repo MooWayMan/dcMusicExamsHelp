@@ -161,12 +161,23 @@ function normalize(val: unknown) {
   if (typeof val === 'boolean') return { type: 'number', v: val ? 1 : 0 }
   if (val instanceof Date) return { type: 'number', v: val.getTime() }
 
+  const str = String(val).trim()
+
+  // Dates in our standard "13 Jun 2026" display format (PHP `d M Y`) must
+  // sort chronologically, not alphabetically — otherwise "01 Jul 2026"
+  // sorts before "13 Jun 2026". Match that exact shape and sort by
+  // timestamp so every date column across the admin orders correctly.
+  if (/^\d{1,2} [A-Za-z]{3} \d{4}$/.test(str)) {
+    const t = Date.parse(str)
+    if (!Number.isNaN(t)) return { type: 'number', v: t }
+  }
+
   const asNum = Number(val)
-  if (!Number.isNaN(asNum) && String(val).trim() !== '') {
+  if (!Number.isNaN(asNum) && str !== '') {
     return { type: 'number', v: asNum }
   }
 
-  return { type: 'string', v: String(val).toLowerCase() }
+  return { type: 'string', v: str.toLowerCase() }
 }
 
 const sortedData = computed(() => {
