@@ -143,12 +143,12 @@ const awaitingColumns = [
                         </div>
                     </div>
                 </div>
-                <div class="rounded-xl border border-brand-teal/30 bg-brand-teal-soft p-4">
+                <div class="rounded-xl border border-brand-purple/30 bg-brand-purple-soft p-4">
                     <div class="flex items-center gap-3">
-                        <Inbox class="h-8 w-8 text-brand-teal" />
+                        <Inbox class="h-8 w-8 text-brand-purple" />
                         <div>
-                            <p class="text-2xl font-bold text-brand-teal">{{ summary.awaiting_import }}</p>
-                            <p class="text-sm text-brand-teal">Awaiting candidate import</p>
+                            <p class="text-2xl font-bold text-brand-purple">{{ summary.awaiting_import }}</p>
+                            <p class="text-sm text-brand-purple">Awaiting candidate import</p>
                         </div>
                     </div>
                 </div>
@@ -267,7 +267,7 @@ const awaitingColumns = [
                  and never appear in the table above. -->
             <div v-if="awaitingImport.length" class="mt-8">
                 <div class="mb-3 flex items-center gap-2">
-                    <Inbox class="h-5 w-5 text-brand-teal" />
+                    <Inbox class="h-5 w-5 text-brand-purple" />
                     <h2 class="text-base font-semibold text-brand-text">
                         Orders awaiting candidate import
                         <span class="ml-1 text-sm font-normal text-brand-text-soft">({{ awaitingImport.length }})</span>

@@ -71,6 +71,8 @@
     --color-brand-teal-soft: var(--brand-teal-soft);
     --color-brand-danger: var(--brand-danger);
     --color-brand-danger-soft: var(--brand-danger-soft);
+    --color-brand-purple: var(--brand-purple);
+    --color-brand-purple-soft: var(--brand-purple-soft);
 
     /* SIDEBAR */
     --color-sidebar: var(--sidebar);
@@ -162,6 +164,9 @@
     --brand-teal-soft: hsl(175 65% 95%);
     --brand-danger: hsl(0 72% 50%);
     --brand-danger-soft: hsl(0 93% 97%);
+    /* Admin-only accent (rule #2: purple is allowed in /admin, never public). */
+    --brand-purple: hsl(265 60% 50%);
+    --brand-purple-soft: hsl(265 70% 96%);
 
     /* SIDEBAR */
     --sidebar: hsl(0 0% 100%);
@@ -215,6 +220,8 @@
     --brand-teal-soft: hsl(175 35% 18%);
     --brand-danger: hsl(0 84% 65%);
     --brand-danger-soft: hsl(0 35% 18%);
+    --brand-purple: hsl(265 70% 70%);
+    --brand-purple-soft: hsl(265 35% 20%);
 
     /* SIDEBAR DARK */
     --sidebar: hsl(224 36% 14%);
