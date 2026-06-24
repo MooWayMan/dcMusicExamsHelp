@@ -160,6 +160,83 @@ test('entries with null exam_date fall back to order requested_start_date', func
             ->where('entries.0.candidate_name', 'Legacy Q1'));
 });
 
+// ──────────────────────────────────────────
+// Orders awaiting candidate import
+// ──────────────────────────────────────────
+// Orders booked via bulk import but with NO per-candidate triple imported
+// yet have zero exam_entries rows, so they never appear in the pending list.
+// They're surfaced in their own section so the page can't read "All results
+// collected" while orders are genuinely waiting on Trinity enrolment data.
+
+test('orders booked but with no candidate entries appear in awaiting-import', function () {
+    makePendingOrder(Carbon::create(2026, 4, 20)); // Q2, past, zero entries
+
+    $this->actingAs($this->admin)
+        ->get('/admin/pending-results')
+        ->assertInertia(fn ($page) => $page
+            ->where('summary.pending', 0)
+            ->where('summary.awaiting_import', 1)
+            ->has('awaitingImport', 1));
+});
+
+test('future-dated orders with no entries are NOT awaiting-import (just scheduled)', function () {
+    makePendingOrder(Carbon::create(2026, 6, 20)); // Q2 but after testNow (1 May)
+
+    $this->actingAs($this->admin)
+        ->get('/admin/pending-results')
+        ->assertInertia(fn ($page) => $page->where('summary.awaiting_import', 0));
+});
+
+test('orders that already have candidate entries are NOT in awaiting-import', function () {
+    // makePendingEntry creates an order WITH one entry.
+    makePendingEntry([
+        'candidate_name' => 'Has Entry',
+        'exam_date' => Carbon::create(2026, 4, 15),
+    ]);
+
+    $this->actingAs($this->admin)
+        ->get('/admin/pending-results')
+        ->assertInertia(fn ($page) => $page
+            ->where('summary.pending', 1)
+            ->where('summary.awaiting_import', 0));
+});
+
+test('cancelled orders with no entries are excluded from awaiting-import', function () {
+    $order = makePendingOrder(Carbon::create(2026, 4, 20));
+    $order->update(['notes' => 'CANCELLED']);
+
+    $this->actingAs($this->admin)
+        ->get('/admin/pending-results')
+        ->assertInertia(fn ($page) => $page->where('summary.awaiting_import', 0));
+});
+
+test('awaiting-import respects the quarter selector', function () {
+    makePendingOrder(Carbon::create(2026, 2, 10)); // Q1, past, zero entries
+
+    // Default → Q2: the Q1 order shouldn't show.
+    $this->actingAs($this->admin)
+        ->get('/admin/pending-results')
+        ->assertInertia(fn ($page) => $page->where('summary.awaiting_import', 0));
+
+    // ?quarter=1 → it shows.
+    $this->actingAs($this->admin)
+        ->get('/admin/pending-results?quarter=1&year=2026')
+        ->assertInertia(fn ($page) => $page->where('summary.awaiting_import', 1));
+});
+
+test('method filter narrows awaiting-import', function () {
+    $digital = makePendingOrder(Carbon::create(2026, 4, 10));
+    $digital->update(['delivery_method' => 'Digital']);
+    $f2f = makePendingOrder(Carbon::create(2026, 4, 11));
+    $f2f->update(['delivery_method' => 'Default']);
+
+    $this->actingAs($this->admin)
+        ->get('/admin/pending-results?method=Digital')
+        ->assertInertia(fn ($page) => $page
+            ->where('summary.awaiting_import', 1)
+            ->where('awaitingImport.0.delivery_method', 'Digital'));
+});
+
 test('non-admin cannot reach pending results', function () {
     $teacher = User::factory()->create(['role' => 'teacher']);
 
