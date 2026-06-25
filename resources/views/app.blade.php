@@ -50,20 +50,48 @@
             }
         </style>
 
-        {{-- Google Analytics (GA4) - only loads when cookie consent given --}}
+        {{-- Google Analytics (GA4) with Consent Mode v2.
+             gtag.js now loads on EVERY page, NOT just for accepters. Consent
+             defaults to DENIED, so until the visitor accepts the banner no
+             analytics/ads cookies are written and no identifiers are stored —
+             GDPR/PECR compliant. In the denied state Google still sends
+             cookieless pings, which let Google Ads MODEL conversions from the
+             visitors who decline cookies. That recovers the measurement gap
+             found in the 15 Jun ads audit (paid Google clicks were converting
+             but the decliners were invisible, so Ads reported 0).
+             If the visitor previously accepted, we boot straight to granted.
+             The banner's accept()/decline() then fire gtag('consent','update')
+             (see useCookieConsent.ts). --}}
         <script>
             (function() {
-                if (localStorage.getItem('cookie-consent') === 'accepted') {
-                    var s = document.createElement('script');
-                    s.async = true;
-                    s.src = 'https://www.googletagmanager.com/gtag/js?id=G-TZJ8ZCZW3W';
-                    document.head.appendChild(s);
-                    window.dataLayer = window.dataLayer || [];
-                    function gtag(){dataLayer.push(arguments);}
-                    gtag('js', new Date());
-                    gtag('config', 'G-TZJ8ZCZW3W');
-                    window.gtag = gtag;
-                }
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                window.gtag = gtag;
+
+                var granted = localStorage.getItem('cookie-consent') === 'accepted';
+                var state = granted ? 'granted' : 'denied';
+
+                // Consent defaults MUST be set before the library config runs.
+                gtag('consent', 'default', {
+                    ad_storage: state,
+                    ad_user_data: state,
+                    ad_personalization: state,
+                    analytics_storage: state,
+                    wait_for_update: 500
+                });
+
+                // Redact ad click identifiers + pass gclid through the URL
+                // while consent is denied, so Ads modelling still works.
+                gtag('set', 'ads_data_redaction', !granted);
+                gtag('set', 'url_passthrough', true);
+
+                var s = document.createElement('script');
+                s.async = true;
+                s.src = 'https://www.googletagmanager.com/gtag/js?id=G-TZJ8ZCZW3W';
+                document.head.appendChild(s);
+
+                gtag('js', new Date());
+                gtag('config', 'G-TZJ8ZCZW3W');
             })();
         </script>
 

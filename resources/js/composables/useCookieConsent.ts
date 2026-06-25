@@ -20,21 +20,23 @@ if (typeof window !== 'undefined') {
   }
 }
 
-function loadAnalytics() {
-  loadGoogleAnalytics()
-  loadMetaPixel()
-}
-
-function loadGoogleAnalytics() {
-  const s = document.createElement('script')
-  s.async = true
-  s.src = 'https://www.googletagmanager.com/gtag/js?id=G-TZJ8ZCZW3W'
-  document.head.appendChild(s)
-  ;(window as any).dataLayer = (window as any).dataLayer || []
-  function gtag(...args: any[]) { (window as any).dataLayer.push(args) }
-  gtag('js', new Date())
-  gtag('config', 'G-TZJ8ZCZW3W')
-  ;(window as any).gtag = gtag
+// Google Consent Mode v2.
+// gtag.js is now loaded on every page by the bootstrap in app.blade.php with
+// consent DEFAULTING to denied (cookieless pings only). We therefore no
+// longer (re)load the library here — we just flip the consent state via
+// gtag('consent', 'update', ...). Meta has no equivalent modelling, so the
+// Meta Pixel stays hard-gated: it only loads once the visitor accepts.
+function updateGoogleConsent(state: 'granted' | 'denied') {
+  const w = window as any
+  if (typeof w.gtag !== 'function') return
+  w.gtag('consent', 'update', {
+    ad_storage: state,
+    ad_user_data: state,
+    ad_personalization: state,
+    analytics_storage: state,
+  })
+  // Once granted we no longer need to redact ad identifiers.
+  if (state === 'granted') w.gtag('set', 'ads_data_redaction', false)
 }
 
 function loadMetaPixel() {
@@ -74,13 +76,19 @@ export function useCookieConsent() {
     localStorage.setItem('cookie-consent', 'accepted')
     currentChoice.value = 'accepted'
     hasResponded.value = true
-    loadAnalytics()
+    // Grant Google consent (gtag is already on the page in denied mode),
+    // then load the Meta Pixel, which is still gated on explicit accept.
+    updateGoogleConsent('granted')
+    loadMetaPixel()
   }
 
   function decline() {
     localStorage.setItem('cookie-consent', 'declined')
     currentChoice.value = 'declined'
     hasResponded.value = true
+    // Explicitly confirm denied so the choice is recorded for modelling.
+    // (Default is already denied; Meta is never loaded.)
+    updateGoogleConsent('denied')
   }
 
   return {
