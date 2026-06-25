@@ -130,6 +130,12 @@ const lastUpdated = '4 April 2026'
               These cookies are only set if you click "Accept" on our cookie banner. They help us understand how visitors
               use our website so we can improve it. All data is anonymised — we cannot identify you personally from analytics data.
             </p>
+            <p class="mt-3 text-base leading-relaxed text-brand-text sm:text-base md:text-lg">
+              If you decline, no analytics or advertising cookies are stored on your device and you are not identified.
+              We may still receive anonymous, aggregated measurement signals (with no cookies or identifiers) that help us
+              estimate overall traffic and the performance of our advertising. This uses Google's Consent Mode and never
+              identifies you.
+            </p>
             <div class="mt-3 overflow-x-auto rounded-lg border border-brand-border">
               <table class="w-full text-left text-sm">
                 <thead class="bg-brand-surface-soft">
