@@ -122,10 +122,18 @@ class ReconciliationController extends Controller
                         $alreadyPaid++;
                         continue;
                     }
-                    $order->update([
+                    $update = [
                         'commission_paid_at' => $paidDate,
                         'commission_paid_amount' => $row['gbp_amount'],
-                    ]);
+                    ];
+                    // If the order was imported without a commission figure, take
+                    // Trinity's actual payment as the commission too — otherwise
+                    // it shows as a paid £0.00 order. Don't overwrite a real
+                    // expected commission (that's what surfaces a true mismatch).
+                    if (empty((float) $order->commission_amount)) {
+                        $update['commission_amount'] = $row['gbp_amount'];
+                    }
+                    $order->update($update);
                     $marked++;
                 }
             }

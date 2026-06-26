@@ -228,6 +228,24 @@ test('commit logs an ImportRun and stores the PDF', function () {
     Storage::disk('local')->assertExists($run->summary['stored_path']);
 });
 
+test('commit sets commission_amount from the paid amount when the order has none', function () {
+    Storage::fake('local');
+    $admin = User::factory()->create(['role' => 'admin']);
+
+    // Imported without a commission figure (the "Expected —" case).
+    $blank = Order::factory()->create(['trinity_order_number' => '1-17510214884', 'commission_amount' => null]);
+    // Already has an expected commission — must NOT be overwritten.
+    $hasExpected = Order::factory()->create(['trinity_order_number' => '1-17170186444', 'commission_amount' => 5.00]);
+
+    $this->actingAs($admin)
+        ->post('/admin/reconciliation/commit', ['file' => digitalPdf()]);
+
+    // Both digital rows are £9.80.
+    expect((float) $blank->fresh()->commission_amount)->toBe(9.80);
+    expect((float) $hasExpected->fresh()->commission_amount)->toBe(5.00);
+    expect((float) $hasExpected->fresh()->commission_paid_amount)->toBe(9.80);
+});
+
 test('reconciliation pages require an admin', function () {
     $teacher = User::factory()->create(['role' => 'teacher']);
 

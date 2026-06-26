@@ -125,10 +125,16 @@ test('orders can be sorted by requested_start_date ascending and descending', fu
 test('orders can be filtered by this quarter', function () {
     $admin = orderAdmin();
 
-    // This quarter — filter uses requested_start_date (the exam date), not created_at
-    Order::factory()->create(['requested_start_date' => now()]);
-    // Last year (outside this quarter)
-    Order::factory()->create(['requested_start_date' => now()->subYear()]);
+    // Anchor "now" mid-Q2 so before/in/after the quarter are unambiguous.
+    \Carbon\Carbon::setTestNow(\Carbon\Carbon::create(2026, 5, 15, 12));
+
+    // In this quarter (Q2: Apr–Jun)
+    Order::factory()->create(['requested_start_date' => '2026-05-20']);
+    // Before this quarter
+    Order::factory()->create(['requested_start_date' => '2026-02-10']);
+    // AFTER this quarter (July = Q3) — must NOT show. This is the bug the
+    // old start-only filter let through.
+    Order::factory()->create(['requested_start_date' => '2026-07-10']);
 
     $this->actingAs($admin)
         ->get(route('admin.orders.index', ['period' => 'this_quarter']))
@@ -136,19 +142,21 @@ test('orders can be filtered by this quarter', function () {
         ->assertInertia(fn ($page) => $page
             ->has('orders.data', 1)
         );
+
+    \Carbon\Carbon::setTestNow();
 });
 
 test('orders can be filtered by this year', function () {
     $admin = orderAdmin();
 
+    \Carbon\Carbon::setTestNow(\Carbon\Carbon::create(2026, 5, 15, 12));
+
     // This year
-    Order::factory()->count(2)->create([
-        'requested_start_date' => now()->startOfYear()->addDays(10),
-    ]);
+    Order::factory()->count(2)->create(['requested_start_date' => '2026-02-10']);
     // Previous year
-    Order::factory()->create([
-        'requested_start_date' => now()->subYear()->startOfYear(),
-    ]);
+    Order::factory()->create(['requested_start_date' => '2025-11-01']);
+    // NEXT year — must NOT show (the start-only filter let this through too).
+    Order::factory()->create(['requested_start_date' => '2027-01-05']);
 
     $this->actingAs($admin)
         ->get(route('admin.orders.index', ['period' => 'this_year']))
@@ -156,6 +164,8 @@ test('orders can be filtered by this year', function () {
         ->assertInertia(fn ($page) => $page
             ->has('orders.data', 2)
         );
+
+    \Carbon\Carbon::setTestNow();
 });
 
 test('orders can be filtered by last 12 months', function () {
