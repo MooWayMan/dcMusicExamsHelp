@@ -253,6 +253,57 @@ test('mark-paid command marks all duplicate rows when prod has no unique constra
 });
 
 // ──────────────────────────────────────────
+// Artisan: orders:backfill-commission-from-paid
+// ──────────────────────────────────────────
+
+test('backfill-commission-from-paid sets commission from the paid amount when missing', function () {
+    $blank = Order::factory()->create([
+        'commission_amount' => null,
+        'commission_paid_at' => '2026-06-02',
+        'commission_paid_amount' => 13.60,
+    ]);
+    $zero = Order::factory()->create([
+        'commission_amount' => 0,
+        'commission_paid_at' => '2026-06-02',
+        'commission_paid_amount' => 9.80,
+    ]);
+
+    Artisan::call('orders:backfill-commission-from-paid');
+
+    expect((float) $blank->fresh()->commission_amount)->toBe(13.60);
+    expect((float) $zero->fresh()->commission_amount)->toBe(9.80);
+});
+
+test('backfill-commission-from-paid leaves real commission figures and unpaid orders alone', function () {
+    $hasExpected = Order::factory()->create([
+        'commission_amount' => 5.00,
+        'commission_paid_at' => '2026-06-02',
+        'commission_paid_amount' => 13.60,
+    ]);
+    $unpaid = Order::factory()->create([
+        'commission_amount' => null,
+        'commission_paid_at' => null,
+    ]);
+
+    Artisan::call('orders:backfill-commission-from-paid');
+
+    expect((float) $hasExpected->fresh()->commission_amount)->toBe(5.00);
+    expect($unpaid->fresh()->commission_amount)->toBeNull();
+});
+
+test('backfill-commission-from-paid --dry-run writes nothing', function () {
+    $blank = Order::factory()->create([
+        'commission_amount' => null,
+        'commission_paid_at' => '2026-06-02',
+        'commission_paid_amount' => 13.60,
+    ]);
+
+    Artisan::call('orders:backfill-commission-from-paid', ['--dry-run' => true]);
+
+    expect($blank->fresh()->commission_amount)->toBeNull();
+});
+
+// ──────────────────────────────────────────
 // Seeder: CommissionBackfillQ1Seeder
 // ──────────────────────────────────────────
 

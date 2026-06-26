@@ -59,12 +59,12 @@ class OrderController extends Controller
         if ($period) {
             $now = Carbon::now();
             match ($period) {
-                'this_quarter' => $query->where('requested_start_date', '>=', $now->copy()->startOfQuarter()),
+                'this_quarter' => $query->whereBetween('requested_start_date', [$now->copy()->startOfQuarter(), $now->copy()->endOfQuarter()]),
                 'last_quarter' => $query->whereBetween('requested_start_date', [
                     $now->copy()->subQuarter()->startOfQuarter(),
                     $now->copy()->subQuarter()->endOfQuarter(),
                 ]),
-                'this_year' => $query->where('requested_start_date', '>=', $now->copy()->startOfYear()),
+                'this_year' => $query->whereBetween('requested_start_date', [$now->copy()->startOfYear(), $now->copy()->endOfYear()]),
                 'last_12' => $query->where('requested_start_date', '>=', $now->copy()->subMonths(12)),
                 default => null,
             };
@@ -135,12 +135,12 @@ class OrderController extends Controller
         if ($period) {
             $now = Carbon::now();
             match ($period) {
-                'this_quarter' => $summaryQuery->where('requested_start_date', '>=', $now->copy()->startOfQuarter()),
+                'this_quarter' => $summaryQuery->whereBetween('requested_start_date', [$now->copy()->startOfQuarter(), $now->copy()->endOfQuarter()]),
                 'last_quarter' => $summaryQuery->whereBetween('requested_start_date', [
                     $now->copy()->subQuarter()->startOfQuarter(),
                     $now->copy()->subQuarter()->endOfQuarter(),
                 ]),
-                'this_year' => $summaryQuery->where('requested_start_date', '>=', $now->copy()->startOfYear()),
+                'this_year' => $summaryQuery->whereBetween('requested_start_date', [$now->copy()->startOfYear(), $now->copy()->endOfYear()]),
                 'last_12' => $summaryQuery->where('requested_start_date', '>=', $now->copy()->subMonths(12)),
                 default => null,
             };
