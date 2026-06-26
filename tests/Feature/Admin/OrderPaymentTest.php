@@ -95,6 +95,38 @@ test('orders payload includes is_paid and commission_paid_at', function () {
         );
 });
 
+test('order show payload includes payment status', function () {
+    $admin = paymentAdmin();
+
+    $order = Order::factory()->create([
+        'commission_paid_at' => '2026-04-02',
+        'commission_paid_amount' => 15.60,
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.orders.show', $order))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('order.is_paid', true)
+            ->where('order.commission_paid_at', '02 Apr 2026')
+            ->where('order.commission_paid_amount', '15.60')
+        );
+});
+
+test('order show payload marks an unpaid order', function () {
+    $admin = paymentAdmin();
+
+    $order = Order::factory()->create(['commission_paid_at' => null]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.orders.show', $order))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('order.is_paid', false)
+            ->where('order.commission_paid_at', null)
+        );
+});
+
 test('summary totals split paid vs unpaid', function () {
     $admin = paymentAdmin();
 
