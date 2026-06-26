@@ -20,7 +20,8 @@
         "laravel/nightwatch": "^1.26",
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.14",
-        "league/flysystem-aws-s3-v3": "^3.32"
+        "league/flysystem-aws-s3-v3": "^3.32",
+        "smalot/pdfparser": "^2.12"
     },
     "require-dev": {
         "laravel/pail": "^1.2.5",

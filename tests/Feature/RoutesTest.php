@@ -276,6 +276,13 @@ test('GET /admin/imports returns 200 for an authenticated admin', function () {
         ->assertStatus(200);
 });
 
+test('GET /admin/reconciliation returns 200 for an authenticated admin', function () {
+    $admin = \App\Models\User::factory()->create(['role' => 'admin']);
+    $this->actingAs($admin)
+        ->get('/admin/reconciliation')
+        ->assertStatus(200);
+});
+
 // ──────────────────────────────────────────
 // Meta tags in global layout
 // ──────────────────────────────────────────

@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\PageMaintenanceController;
 use App\Http\Controllers\Admin\PendingResultsController;
 use App\Http\Controllers\Admin\QuarterEndController;
 use App\Http\Controllers\Admin\QuickRepliesController;
+use App\Http\Controllers\Admin\ReconciliationController;
 use App\Http\Controllers\Admin\RoadmapController;
 use App\Http\Controllers\Admin\SchoolController;
 use App\Http\Controllers\Admin\SessionLogController;
@@ -89,6 +90,11 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
         Route::post('imports/commit-orders', [ImportController::class, 'commitOrders'])->name('imports.commit-orders');
         Route::post('imports/preview-candidate', [ImportController::class, 'previewCandidate'])->name('imports.preview-candidate');
         Route::post('imports/commit-candidate', [ImportController::class, 'commitCandidate'])->name('imports.commit-candidate');
+
+        // Reconciliation — drop a Trinity remittance PDF → mark orders commission-paid
+        Route::get('reconciliation', [ReconciliationController::class, 'index'])->name('reconciliation.index');
+        Route::post('reconciliation/preview', [ReconciliationController::class, 'preview'])->name('reconciliation.preview');
+        Route::post('reconciliation/commit', [ReconciliationController::class, 'commit'])->name('reconciliation.commit');
 
         // Quarter End — step-by-step workflow for sending certs, badges and emails
         Route::get('quarter-end', [QuarterEndController::class, 'index'])->name('quarter-end.index');
