@@ -266,6 +266,11 @@ class OrderController extends Controller
             'order_status' => $order->order_status,
             'commission_rate' => $order->commission_rate,
             'commission_amount' => number_format($order->commission_amount, 2),
+            'commission_paid_at' => $order->commission_paid_at?->format('d M Y'),
+            'commission_paid_amount' => $order->commission_paid_amount
+                ? number_format($order->commission_paid_amount, 2)
+                : null,
+            'is_paid' => $order->isPaid(),
             'requested_start_date' => $order->requested_start_date?->format('d M Y'),
             'notes' => $order->notes,
             'created_at' => $order->created_at->format('d M Y'),

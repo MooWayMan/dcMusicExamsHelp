@@ -20,6 +20,7 @@ import {
     MessageSquareText,
     Mail as MailIcon,
     Upload,
+    Receipt,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
@@ -106,6 +107,11 @@ const adminExamsNavItems: NavItem[] = [
         title: 'Orders',
         href: '/admin/orders',
         icon: ClipboardList,
+    },
+    {
+        title: 'Reconciliation',
+        href: '/admin/reconciliation',
+        icon: Receipt,
     },
     {
         title: 'Exam Entries',

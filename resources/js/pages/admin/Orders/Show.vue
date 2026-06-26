@@ -1,7 +1,7 @@
 <!-- resources/js/pages/admin/Orders/Show.vue -->
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3'
-import { ArrowLeft, Monitor, MapPin, School, User, Music, Pencil } from 'lucide-vue-next'
+import { ArrowLeft, Monitor, MapPin, School, User, Music, Pencil, CheckCircle2, Clock } from 'lucide-vue-next'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyTableConstructor from '@/components/reusables/MyTableConstructor.vue'
 
@@ -28,6 +28,9 @@ interface Order {
     order_status: string
     commission_rate: number
     commission_amount: string
+    commission_paid_at: string | null
+    commission_paid_amount: string | null
+    is_paid: boolean
     requested_start_date: string
     notes: string | null
     created_at: string
@@ -77,6 +80,12 @@ const examColumns = [
                 }">
                 {{ order.order_status }}
             </span>
+            <span class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-medium"
+                :class="order.is_paid ? 'bg-brand-success-soft text-brand-success' : 'bg-brand-surface-soft text-brand-text-soft'">
+                <CheckCircle2 v-if="order.is_paid" class="h-4 w-4" />
+                <Clock v-else class="h-4 w-4" />
+                {{ order.is_paid ? 'Commission paid' : 'Awaiting payment' }}
+            </span>
             <div class="ml-auto">
                 <Link :href="`/admin/orders/${order.id}/edit`">
                     <MyButtonConstructor variant="primary" size="small" :icon="Pencil">Edit</MyButtonConstructor>
@@ -114,6 +123,23 @@ const examColumns = [
                     <div class="flex justify-between">
                         <span class="text-base font-medium text-brand-text-soft">Commission Amount</span>
                         <span class="text-xl font-bold text-brand-success">&pound;{{ order.commission_amount }}</span>
+                    </div>
+                    <div class="border-t border-brand-border pt-3">
+                        <div class="flex justify-between">
+                            <span class="text-base text-brand-text-soft">Payment</span>
+                            <span v-if="order.is_paid" class="inline-flex items-center gap-1 text-base font-medium text-brand-success">
+                                <CheckCircle2 class="h-4 w-4" />
+                                Paid {{ order.commission_paid_at }}
+                            </span>
+                            <span v-else class="inline-flex items-center gap-1 text-base font-medium text-brand-text-soft">
+                                <Clock class="h-4 w-4" />
+                                Awaiting remittance
+                            </span>
+                        </div>
+                        <div v-if="order.is_paid && order.commission_paid_amount" class="mt-1 flex justify-between">
+                            <span class="text-base text-brand-text-soft">Amount received</span>
+                            <span class="text-base font-medium text-brand-text">&pound;{{ order.commission_paid_amount }}</span>
+                        </div>
                     </div>
                 </div>
                 <div v-if="order.notes" class="mt-5 border-t border-brand-border pt-4">
