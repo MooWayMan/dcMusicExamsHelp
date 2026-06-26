@@ -136,6 +136,97 @@ function commitOrders() {
 }
 
 // ──────────────────────────────────────────────────────────────────
+// Section 3 — Enrolment list (pre-results)
+// ──────────────────────────────────────────────────────────────────
+
+const enrolFile = ref<File | null>(null)
+const enrolOrderNumber = ref<string>('')
+const enrolPreview = ref<{
+    order: { id: number; trinity_order_number: string; candidates: number } | null
+    submitter: { name: string; email: string }
+    totals: { rows: number; to_create: number; to_update: number; total_fees: number; commission_estimate: number }
+    toCreate: Array<Record<string, unknown>>
+    toUpdate: Array<Record<string, unknown>>
+    warnings: string[]
+} | null>(null)
+const enrolError = ref<string | null>(null)
+const enrolBusy = ref(false)
+const enrolDragOver = ref(false)
+const enrolInputRef = ref<HTMLInputElement | null>(null)
+
+function setEnrolFile(file: File | null) {
+    enrolFile.value = file
+    enrolPreview.value = null
+    enrolError.value = null
+}
+function onEnrolFileSelected(e: Event) {
+    const t = e.target as HTMLInputElement
+    setEnrolFile(t.files && t.files[0] ? t.files[0] : null)
+    if (t) t.value = ''
+}
+function onEnrolDrop(e: DragEvent) {
+    e.preventDefault()
+    enrolDragOver.value = false
+    const f = e.dataTransfer?.files?.[0]
+    if (!f) return
+    if (!/\.(csv|txt|tsv)$/i.test(f.name)) {
+        enrolError.value = 'Please drop a .csv file.'
+        return
+    }
+    setEnrolFile(f)
+}
+function onEnrolDragOver(e: DragEvent) { e.preventDefault(); enrolDragOver.value = true }
+function onEnrolDragLeave() { enrolDragOver.value = false }
+function openEnrolPicker() { enrolInputRef.value?.click() }
+function onEnrolDropZoneKey(e: KeyboardEvent) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openEnrolPicker() }
+}
+function clearEnrolFile() { setEnrolFile(null) }
+
+async function submitEnrolPreview() {
+    if (!enrolFile.value) { enrolError.value = 'Please choose the enrolment CSV first.'; return }
+    if (!enrolOrderNumber.value.trim()) { enrolError.value = 'Please paste the order number.'; return }
+    enrolBusy.value = true
+    enrolError.value = null
+    enrolPreview.value = null
+
+    const fd = new FormData()
+    fd.append('file', enrolFile.value)
+    fd.append('order_number', enrolOrderNumber.value.trim())
+
+    try {
+        const res = await fetch('/admin/imports/preview-enrolment-list', {
+            method: 'POST',
+            body: fd,
+            headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
+        })
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}))
+            enrolError.value = data.error || data.message || `Preview failed (${res.status}).`
+        } else {
+            enrolPreview.value = await res.json()
+        }
+    } catch (err: unknown) {
+        enrolError.value = err instanceof Error ? err.message : 'Preview failed.'
+    } finally {
+        enrolBusy.value = false
+    }
+}
+
+function commitEnrolList() {
+    if (!enrolFile.value || !enrolOrderNumber.value.trim()) return
+    const form = useForm({ file: enrolFile.value, order_number: enrolOrderNumber.value.trim() })
+    form.post('/admin/imports/commit-enrolment-list', {
+        forceFormData: true,
+        onSuccess: () => {
+            enrolFile.value = null
+            enrolOrderNumber.value = ''
+            enrolPreview.value = null
+        },
+    })
+}
+
+// ──────────────────────────────────────────────────────────────────
 // Section 2 — Per-candidate triple
 // ──────────────────────────────────────────────────────────────────
 
@@ -584,6 +675,12 @@ function formatRunSummary(run: { type: string; summary: Record<string, unknown> 
         const updated = s.updated ?? 0
         return `Q${quarter} ${year}: ${created} created, ${updated} updated`
     }
+    if (run.type === 'enrolment_list') {
+        const order = s.order_number ?? '?'
+        const created = s.created ?? 0
+        const updated = s.updated ?? 0
+        return `Enrolment ${order}: ${created} created, ${updated} updated`
+    }
     return JSON.stringify(s)
 }
 </script>
@@ -707,6 +804,95 @@ function formatRunSummary(run: { type: string; summary: Record<string, unknown> 
                     <ul class="mt-2 space-y-1 text-sm text-brand-text">
                         <li v-for="(o, i) in ordersPreview.toUpdate" :key="i" class="font-mono">
                             {{ o.order_number }} — {{ o.delivery_method }} — {{ o.requested_start_date }}
+                        </li>
+                    </ul>
+                </details>
+            </div>
+        </section>
+
+        <!-- ───────── Section 3: Enrolment List (pre-results) ───────── -->
+        <section class="mt-6 rounded-xl border border-brand-border bg-brand-surface p-5">
+            <div class="mb-4 flex items-center gap-3">
+                <FileText class="h-6 w-6 text-brand-accent" />
+                <div>
+                    <h2 class="text-xl font-semibold text-brand-text">3. Enrolment List (pre-results)</h2>
+                    <p class="text-sm text-brand-text-soft">Trinity's "Generate Summary of Entries" export. Loads all candidates + the submitter against an order before results — paste the order number from the Trinity page header. Scores fill in later from the triple.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div class="sm:col-span-2">
+                    <label class="mb-1 block text-sm font-medium text-brand-text">Enrolment CSV</label>
+                    <div
+                        role="button"
+                        tabindex="0"
+                        :aria-label="enrolFile ? `Selected ${enrolFile.name}. Press Enter to replace.` : 'Drop enrolment CSV here or press Enter to browse'"
+                        :class="[
+                            'flex flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-6 text-center transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-accent',
+                            enrolDragOver ? 'border-brand-accent bg-brand-accent/10' : 'border-brand-border bg-brand-surface-soft hover:border-brand-accent/60',
+                        ]"
+                        @click="openEnrolPicker"
+                        @keydown="onEnrolDropZoneKey"
+                        @dragover="onEnrolDragOver"
+                        @dragleave="onEnrolDragLeave"
+                        @drop="onEnrolDrop"
+                    >
+                        <UploadCloud class="h-6 w-6 text-brand-accent" />
+                        <p v-if="!enrolFile" class="mt-2 text-sm text-brand-text">Drop the enrolment CSV here, or <span class="font-semibold text-brand-accent">browse</span></p>
+                        <p v-if="!enrolFile" class="mt-1 text-xs text-brand-text-soft">.csv only · all candidates on one order</p>
+                        <div v-else class="mt-2 flex items-center gap-2 text-sm text-brand-text">
+                            <FileText class="h-4 w-4 text-brand-accent" />
+                            <span class="font-mono">{{ enrolFile.name }}</span>
+                            <button type="button" class="ml-1 inline-flex items-center gap-1 rounded-md border border-brand-border bg-brand-surface px-2 py-0.5 text-xs text-brand-text-soft hover:text-brand-danger" @click.stop="clearEnrolFile">
+                                <X class="h-3 w-3" /> Remove
+                            </button>
+                        </div>
+                    </div>
+                    <input ref="enrolInputRef" type="file" accept=".csv,.CSV,.txt,.TXT,.tsv,.TSV" class="hidden" @change="onEnrolFileSelected" />
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-brand-text">Order Number</label>
+                    <input v-model="enrolOrderNumber" type="text" placeholder="1-17521428644" :class="inputClass()" />
+                    <p class="mt-1 text-xs text-brand-text-soft">Copy it from the top of the Trinity order page.</p>
+                </div>
+            </div>
+
+            <div v-if="enrolError" class="mt-4 flex items-start gap-2 rounded-lg border border-brand-danger/40 bg-brand-danger/10 p-3 text-sm text-brand-danger">
+                <AlertCircle class="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{{ enrolError }}</span>
+            </div>
+
+            <div class="mt-4 flex flex-wrap items-center gap-3">
+                <MyButtonConstructor variant="primary" size="medium" :disabled="!enrolFile || !enrolOrderNumber || enrolBusy" @click="submitEnrolPreview">
+                    <Loader2 v-if="enrolBusy" class="h-4 w-4 animate-spin" />
+                    <span v-else>Preview</span>
+                </MyButtonConstructor>
+                <MyButtonConstructor v-if="enrolPreview && enrolPreview.order" variant="success" size="medium" @click="commitEnrolList">
+                    Commit ({{ enrolPreview.totals.to_create }} new, {{ enrolPreview.totals.to_update }} update)
+                </MyButtonConstructor>
+            </div>
+
+            <div v-if="enrolPreview" class="mt-5 rounded-lg border border-brand-border bg-brand-surface-soft p-4">
+                <div v-if="enrolPreview.warnings.length" class="mb-4 rounded-lg border border-brand-warning/40 bg-brand-warning/10 p-3 text-sm text-brand-warning">
+                    <ul class="list-disc space-y-1 pl-5">
+                        <li v-for="(w, i) in enrolPreview.warnings" :key="i">{{ w }}</li>
+                    </ul>
+                </div>
+                <h3 class="mb-3 text-base font-semibold text-brand-text">Preview</h3>
+                <div class="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+                    <div><span class="text-brand-text-soft">Order:</span> {{ enrolPreview.order?.trinity_order_number || 'NOT FOUND' }}</div>
+                    <div><span class="text-brand-text-soft">Submitter:</span> {{ enrolPreview.submitter.name || '—' }}</div>
+                    <div><span class="text-brand-text-soft">Candidates:</span> {{ enrolPreview.totals.rows }}</div>
+                    <div class="font-semibold"><span class="text-brand-text-soft">Commission est.:</span> &pound;{{ enrolPreview.totals.commission_estimate.toFixed(2) }}</div>
+                    <div><span class="text-brand-text-soft">To create:</span> {{ enrolPreview.totals.to_create }}</div>
+                    <div><span class="text-brand-text-soft">Already present:</span> {{ enrolPreview.totals.to_update }}</div>
+                    <div><span class="text-brand-text-soft">Total fees:</span> &pound;{{ enrolPreview.totals.total_fees.toFixed(2) }}</div>
+                </div>
+                <details v-if="enrolPreview.toCreate.length" class="mt-4">
+                    <summary class="cursor-pointer text-sm font-medium text-brand-accent">Show new candidates ({{ enrolPreview.toCreate.length }})</summary>
+                    <ul class="mt-2 space-y-1 text-sm text-brand-text">
+                        <li v-for="(c, i) in enrolPreview.toCreate" :key="i" class="font-mono">
+                            {{ c.candidate_name }} — {{ c.grade }} — {{ (c.instrument as { name?: string } | null)?.name || c.instrument_raw }}
                         </li>
                     </ul>
                 </details>

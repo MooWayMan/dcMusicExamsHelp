@@ -140,6 +140,63 @@ class ImportController extends Controller
     }
 
     /**
+     * Section 3 — JSON preview of an enrolment list (pre-results).
+     */
+    public function previewEnrolmentList(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'file' => 'required|file|max:10240',
+            'order_number' => 'required|string|max:64',
+        ]);
+
+        $contents = file_get_contents($validated['file']->getRealPath());
+        if ($contents === false) {
+            return response()->json(['error' => 'Could not read uploaded file.'], 422);
+        }
+
+        try {
+            $preview = $this->importer->previewEnrolmentList($contents, $validated['order_number']);
+        } catch (\Throwable $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
+
+        return response()->json($preview);
+    }
+
+    /**
+     * Section 3 — commit an enrolment list.
+     */
+    public function commitEnrolmentList(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'file' => 'required|file|max:10240',
+            'order_number' => 'required|string|max:64',
+        ]);
+
+        $contents = file_get_contents($validated['file']->getRealPath());
+        if ($contents === false) {
+            return back()->withErrors(['file' => 'Could not read uploaded file.']);
+        }
+
+        try {
+            $run = $this->importer->commitEnrolmentList(
+                $contents,
+                $validated['order_number'],
+                $request->user()?->id,
+                $validated['file']->getClientOriginalName(),
+            );
+        } catch (\Throwable $e) {
+            return back()->withErrors(['file' => $e->getMessage()]);
+        }
+
+        $created = $run->summary['created'] ?? 0;
+        $updated = $run->summary['updated'] ?? 0;
+
+        return redirect()->route('admin.imports.index')
+            ->with('success', "Enrolment list for order {$validated['order_number']}: {$created} created, {$updated} updated.");
+    }
+
+    /**
      * Section 2 — JSON preview of one candidate's triple.
      */
     public function previewCandidate(Request $request): JsonResponse
