@@ -90,6 +90,8 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
         Route::post('imports/commit-orders', [ImportController::class, 'commitOrders'])->name('imports.commit-orders');
         Route::post('imports/preview-candidate', [ImportController::class, 'previewCandidate'])->name('imports.preview-candidate');
         Route::post('imports/commit-candidate', [ImportController::class, 'commitCandidate'])->name('imports.commit-candidate');
+        Route::post('imports/preview-enrolment-list', [ImportController::class, 'previewEnrolmentList'])->name('imports.preview-enrolment-list');
+        Route::post('imports/commit-enrolment-list', [ImportController::class, 'commitEnrolmentList'])->name('imports.commit-enrolment-list');
 
         // Reconciliation — drop a Trinity remittance PDF → mark orders commission-paid
         Route::get('reconciliation', [ReconciliationController::class, 'index'])->name('reconciliation.index');

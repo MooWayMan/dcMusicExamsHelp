@@ -530,6 +530,281 @@ class TrinityCsvImporter
         return $sum;
     }
 
+    // ──────────────────────────────────────────────────────────────────
+    // Section 3 — Enrolment list (pre-results, before the triple)
+    //
+    // Trinity's "Generate Summary of Entries" export lists every candidate
+    // on an order (names, subject, grade, the booking submitter), but NOT
+    // the order number (that lives in the page header) and NOT results.
+    // This lets Paul load the list early — so the candidates and the
+    // submitter show against the order before exam day — and the later
+    // per-candidate triple fills in the scores on the SAME entries (matched
+    // by order_id + candidate_number), no duplicates.
+    //
+    // Deliberately does NOT tag the submitter as a teacher: the submitter is
+    // often a parent, and minting parents as teachers pollutes the prize
+    // draw (the bug fixed 13 Jun 2026). Role is still confirmed at triple
+    // time. We only link the submitter as the order's contact so the name
+    // is visible on /admin/orders.
+    // ──────────────────────────────────────────────────────────────────
+
+    /**
+     * Parse the multi-candidate Enrolment list CSV (same columns as the
+     * single-candidate Enrolment file, many rows). Skips the
+     * "Centre Commission - …" rows (empty Candidate Number).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function parseEnrolmentList(string $contents): array
+    {
+        [$headers, $rows] = $this->extractRows($contents, self::ENROLMENT_HEADERS);
+
+        $candidates = [];
+        foreach ($rows as $row) {
+            $data = array_combine($headers, $row);
+            $candNumber = trim((string) ($data['Candidate Number'] ?? ''));
+            if ($candNumber === '') {
+                continue; // Centre Commission row
+            }
+
+            $submitterFirst = trim((string) ($data['Submitter First Name'] ?? ''));
+            $submitterLast = trim((string) ($data['Submitter Last Name'] ?? ''));
+            $applicantFirst = trim((string) ($data['Applicant First Name'] ?? ''));
+            $applicantLast = trim((string) ($data['Applicant Last Name'] ?? ''));
+
+            $candidates[] = [
+                'examination' => trim((string) ($data['Examination'] ?? '')),
+                'subject' => trim((string) ($data['Subject'] ?? '')),
+                'candidate_number' => $candNumber,
+                'candidate_name' => trim((string) ($data['Candidate Name'] ?? '')),
+                'price' => self::parsePrice((string) ($data['Price'] ?? '')),
+                'submitter_name' => trim($submitterFirst . ' ' . $submitterLast),
+                'submitter_email' => trim((string) ($data['Submitter Email Address'] ?? '')),
+                'applicant_name' => trim($applicantFirst . ' ' . $applicantLast),
+            ];
+        }
+
+        if ($candidates === []) {
+            throw new RuntimeException('Enrolment list had no candidate rows.');
+        }
+
+        return $candidates;
+    }
+
+    /**
+     * Shape one enrolment-list candidate into the derived fields we'd store.
+     */
+    private function shapeEnrolmentCandidate(array $c): array
+    {
+        $instrumentMap = array_change_key_case(self::instrumentMap(), CASE_LOWER);
+        $mappedName = $instrumentMap[strtolower(trim($c['subject']))] ?? null;
+        $instrument = $mappedName ? Instrument::where('name', $mappedName)->first() : null;
+
+        return [
+            'candidate_number' => $c['candidate_number'],
+            'candidate_name' => $c['candidate_name'],
+            'grade' => self::parseGrade($c['examination']),
+            'delivery_method' => self::parseDeliveryMethod($c['examination']),
+            'subject_area' => self::subjectAreaFromExamination($c['examination']),
+            'instrument' => $instrument ? ['id' => $instrument->id, 'name' => $instrument->name] : null,
+            'instrument_raw' => $c['subject'],
+            'fee' => abs($c['price']),
+        ];
+    }
+
+    /**
+     * Subject area = the Examination string with the grade and the
+     * "(Digital)" / "(Default)" suffix stripped, e.g.
+     * "Rock and Pop Grade 1 (Digital)" → "Rock and Pop".
+     */
+    private static function subjectAreaFromExamination(string $exam): ?string
+    {
+        $area = preg_replace('/\s*(Grade\s.*|Initial.*|\(.*\)).*$/i', '', $exam) ?? $exam;
+        $area = trim($area);
+
+        return $area !== '' ? $area : null;
+    }
+
+    /**
+     * JSON preview of an enrolment-list import: match the order by the
+     * pasted number, and split candidates into to-create vs already-present.
+     */
+    public function previewEnrolmentList(string $contents, string $orderNumber): array
+    {
+        $orderNumber = trim($orderNumber);
+        $candidates = $this->parseEnrolmentList($contents);
+
+        $order = Order::where('trinity_order_number', $orderNumber)->first();
+
+        $existingNumbers = $order
+            ? ExamEntry::where('order_id', $order->id)->pluck('candidate_number')->all()
+            : [];
+
+        $warnings = [];
+        if (! $order) {
+            $warnings[] = "Order {$orderNumber} not found — import it on Section 1 (Bulk Orders) first.";
+        }
+
+        $submitter = [
+            'name' => $candidates[0]['submitter_name'] ?? '',
+            'email' => $candidates[0]['submitter_email'] ?? '',
+        ];
+
+        $toCreate = [];
+        $toUpdate = [];
+        $totalFees = 0.0;
+        foreach ($candidates as $c) {
+            $shaped = $this->shapeEnrolmentCandidate($c);
+            $totalFees += $shaped['fee'];
+            if (in_array($c['candidate_number'], $existingNumbers, true)) {
+                $toUpdate[] = $shaped;
+            } else {
+                $toCreate[] = $shaped;
+            }
+            if (! $shaped['instrument']) {
+                $warnings[] = "Instrument '{$c['subject']}' (candidate {$c['candidate_name']}) not in our map — stored in notes.";
+            }
+        }
+
+        $rate = ($order && $order->commission_rate !== null) ? (float) $order->commission_rate : 20.0;
+        $commissionEstimate = round($totalFees * $rate / 100, 2);
+
+        return [
+            'order' => $order ? [
+                'id' => $order->id,
+                'trinity_order_number' => $order->trinity_order_number,
+                'candidates' => $order->candidates,
+            ] : null,
+            'submitter' => $submitter,
+            'totals' => [
+                'rows' => count($candidates),
+                'to_create' => count($toCreate),
+                'to_update' => count($toUpdate),
+                'total_fees' => round($totalFees, 2),
+                'commission_estimate' => $commissionEstimate,
+            ],
+            'toCreate' => $toCreate,
+            'toUpdate' => $toUpdate,
+            'warnings' => array_values(array_unique($warnings)),
+        ];
+    }
+
+    /**
+     * Commit an enrolment-list import. Creates the candidate entries with
+     * results blank (filled later by the triple), links the submitter as the
+     * order's contact for visibility, and never overwrites results or a
+     * confirmed teacher on an entry the triple has already populated.
+     */
+    public function commitEnrolmentList(string $contents, string $orderNumber, ?int $userId, ?string $filename = null): ImportRun
+    {
+        $orderNumber = trim($orderNumber);
+        $candidates = $this->parseEnrolmentList($contents);
+
+        $order = Order::where('trinity_order_number', $orderNumber)->first();
+        if (! $order) {
+            throw new InvalidArgumentException("Order {$orderNumber} not found — import it on Section 1 (Bulk Orders) first.");
+        }
+
+        $created = 0;
+        $updated = 0;
+
+        DB::transaction(function () use ($candidates, $order, &$created, &$updated) {
+            // Submitter contact — find by email or create. NO type tagging
+            // (don't mint a teacher; the submitter may be a parent).
+            $submitterEmail = trim((string) ($candidates[0]['submitter_email'] ?? ''));
+            $submitterName = trim((string) ($candidates[0]['submitter_name'] ?? ''));
+            $submitterContact = null;
+            if ($submitterEmail !== '') {
+                $submitterContact = ExamContact::whereRaw('LOWER(email) = ?', [strtolower($submitterEmail)])->first();
+                if (! $submitterContact) {
+                    $submitterContact = ExamContact::create([
+                        'name' => $submitterName ?: $submitterEmail,
+                        'email' => $submitterEmail,
+                        'source' => 'trinity_csv_import',
+                    ]);
+                }
+            }
+
+            // Link the order to the submitter for visibility — only if not
+            // already linked (never overwrite a human/triple-set link).
+            if ($submitterContact && empty($order->created_by_contact_id)) {
+                $order->update(['created_by_contact_id' => $submitterContact->id]);
+            }
+
+            $totalFees = 0.0;
+            foreach ($candidates as $c) {
+                $shaped = $this->shapeEnrolmentCandidate($c);
+                $totalFees += $shaped['fee'];
+
+                $notes = $shaped['instrument'] ? null : ('Instrument (raw Trinity name): ' . $shaped['instrument_raw']);
+
+                $existing = ExamEntry::where('order_id', $order->id)
+                    ->where('candidate_number', $c['candidate_number'])
+                    ->first();
+
+                if ($existing) {
+                    // Backfill only empty descriptive fields — never touch a
+                    // score/result/exam_date/teacher the triple has set.
+                    $fill = [];
+                    if (empty($existing->candidate_name)) $fill['candidate_name'] = $c['candidate_name'];
+                    if (empty($existing->instrument_id) && $shaped['instrument']) $fill['instrument_id'] = $shaped['instrument']['id'];
+                    if (empty($existing->grade)) $fill['grade'] = $shaped['grade'];
+                    if (empty($existing->subject_area)) $fill['subject_area'] = $shaped['subject_area'];
+                    if (empty($existing->delivery_method)) $fill['delivery_method'] = $shaped['delivery_method'];
+                    if (empty($existing->fee)) $fill['fee'] = $shaped['fee'];
+                    if (empty($existing->submitter_contact_id) && $submitterContact) $fill['submitter_contact_id'] = $submitterContact->id;
+                    if ($fill !== []) {
+                        $existing->fill($fill)->save();
+                        $updated++;
+                    }
+                } else {
+                    ExamEntry::create([
+                        'order_id' => $order->id,
+                        'candidate_number' => $c['candidate_number'],
+                        'candidate_name' => $c['candidate_name'],
+                        'instrument_id' => $shaped['instrument']['id'] ?? null,
+                        'grade' => $shaped['grade'],
+                        'subject_area' => $shaped['subject_area'],
+                        'delivery_method' => $shaped['delivery_method'],
+                        'fee' => $shaped['fee'],
+                        'score' => null,
+                        'result' => null,
+                        'exam_date' => null,
+                        'teacher_name' => null,
+                        'teacher_contact_id' => null,
+                        'booking_role' => null,
+                        'submitter_contact_id' => $submitterContact?->id,
+                        'notes' => $notes,
+                        'source' => 'trinity_enrolment_list',
+                    ]);
+                    $created++;
+                }
+            }
+
+            // The enrolment file carries the per-candidate fees, so we can set
+            // the order's commission now (summed fees × rate) and stop it
+            // reading "Awaiting £0" pre-results. Only when not already set, so
+            // a real remittance figure is never overwritten.
+            if (empty((float) $order->commission_amount) && $totalFees > 0) {
+                $rate = $order->commission_rate !== null ? (float) $order->commission_rate : 20.0;
+                $order->update(['commission_amount' => round($totalFees * $rate / 100, 2)]);
+            }
+        });
+
+        return ImportRun::create([
+            'user_id' => $userId,
+            'type' => 'enrolment_list',
+            'filename' => $filename,
+            'summary' => [
+                'order_number' => $orderNumber,
+                'rows' => count($candidates),
+                'created' => $created,
+                'updated' => $updated,
+                'submitter' => $candidates[0]['submitter_name'] ?? null,
+            ],
+        ]);
+    }
+
     /**
      * Build a preview for a per-candidate import — runs all the auto-
      * derivation rules and reports what would be written without writing.
