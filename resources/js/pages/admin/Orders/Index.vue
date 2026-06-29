@@ -66,10 +66,6 @@ function filterByMethod(method: string | null) {
     router.get('/admin/orders', currentFilters({ method: method || undefined }), { preserveState: true, replace: true })
 }
 
-function filterByStatus(status: string | null) {
-    router.get('/admin/orders', currentFilters({ status: status || undefined }), { preserveState: true, replace: true })
-}
-
 function filterByPaid(paid: string | null) {
     router.get('/admin/orders', currentFilters({ paid: paid || undefined }), { preserveState: true, replace: true })
 }
@@ -154,21 +150,6 @@ const { animClass } = usePageAnimation()
                     class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
                     :class="filters.method === 'Default' ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
                     F2F
-                </button>
-            </div>
-
-            <!-- Status filter -->
-            <div class="flex gap-1">
-                <button @click="filterByStatus(null)"
-                    class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
-                    :class="!filters.status ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
-                    All Status
-                </button>
-                <button v-for="s in ['Submitted', 'Confirmed', 'Completed']" :key="s"
-                    @click="filterByStatus(s)"
-                    class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
-                    :class="filters.status === s ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
-                    {{ s }}
                 </button>
             </div>
 

@@ -91,6 +91,26 @@ Route::inertia('/exam-guide/digital-exams', 'ExamGuideDigital')->name('exam-guid
 Route::inertia('/exam-guide/grades-explained', 'ExamGuideGrades')->name('exam-guide.grades');
 Route::inertia('/exam-guide/syllabuses', 'ExamGuideSyllabuses')->name('exam-guide.syllabuses');
 Route::inertia('/exam-fees', 'ExamFees')->name('exam-fees');
+/**
+ * Short redirect targets for print QR codes (exam-day poster, thank-you card).
+ * Keeping the QR pointed at a URL WE own means the destination can be repointed
+ * later without reprinting, and the UTM tags let GA4 attribute each scan.
+ * Returns 302 (not 301) so browsers never permanently cache the destination.
+ * NEVER point these at a Trinity booking URL (project rule #3) — and a
+ * Trinity-owned URL could change in the Aug 2026 digital migration, which
+ * would silently break every printed code. Add new keys as more prints ship.
+ */
+Route::get('/go/{key}', function (string $key) {
+    $targets = [
+        'exam-day' => '/?utm_source=poster&utm_medium=print&utm_campaign=f2f_examday',
+        'thank-you' => '/?utm_source=card&utm_medium=print&utm_campaign=f2f_thankyou',
+    ];
+
+    abort_unless(isset($targets[$key]), 404);
+
+    return redirect($targets[$key]);
+})->name('go');
+
 Route::inertia('/contact', 'Contact')->name('contact');
 Route::inertia('/incentives', 'Incentives')->name('incentives');
 Route::inertia('/about', 'About')->name('about');

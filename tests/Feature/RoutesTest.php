@@ -125,6 +125,23 @@ test('GET /for-teachers/faber-discounts redirects to /books', function () {
         ->assertRedirect('/books');
 });
 
+test('GET /go/exam-day redirects (302) to the homepage with poster UTM tags', function () {
+    $this->get('/go/exam-day')
+        ->assertStatus(302)
+        ->assertRedirect('/?utm_source=poster&utm_medium=print&utm_campaign=f2f_examday');
+});
+
+test('GET /go/thank-you redirects (302) to the homepage with card UTM tags', function () {
+    $this->get('/go/thank-you')
+        ->assertStatus(302)
+        ->assertRedirect('/?utm_source=card&utm_medium=print&utm_campaign=f2f_thankyou');
+});
+
+test('GET /go/{unknown} returns 404', function () {
+    $this->get('/go/does-not-exist')
+        ->assertStatus(404);
+});
+
 test('GET /for-teachers/awards returns 200', function () {
     $this->get('/for-teachers/awards')
         ->assertStatus(200);
