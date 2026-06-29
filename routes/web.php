@@ -103,6 +103,7 @@ Route::inertia('/exam-fees', 'ExamFees')->name('exam-fees');
 Route::get('/go/{key}', function (string $key) {
     $targets = [
         'exam-day' => '/?utm_source=poster&utm_medium=print&utm_campaign=f2f_examday',
+        'thank-you' => '/?utm_source=card&utm_medium=print&utm_campaign=f2f_thankyou',
     ];
 
     abort_unless(isset($targets[$key]), 404);
