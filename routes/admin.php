@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PageMaintenanceController;
 use App\Http\Controllers\Admin\PendingResultsController;
+use App\Http\Controllers\Admin\QuarterComparisonController;
 use App\Http\Controllers\Admin\QuarterEndController;
 use App\Http\Controllers\Admin\QuickRepliesController;
 use App\Http\Controllers\Admin\ReconciliationController;
@@ -69,6 +70,9 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
 
         // Pending Results — candidates awaiting exam scores
         Route::get('pending-results', [PendingResultsController::class, 'index'])->name('pending-results.index');
+
+        // Quarter Comparison — side-by-side quarterly performance
+        Route::get('quarter-comparison', [QuarterComparisonController::class, 'index'])->name('quarter-comparison.index');
 
         // Exam Entries — imported raw candidate/result data
         Route::get('exam-entries', [ExamEntryController::class, 'index'])->name('exam-entries.index');

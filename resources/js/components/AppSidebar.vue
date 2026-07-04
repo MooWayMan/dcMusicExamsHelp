@@ -124,6 +124,11 @@ const adminExamsNavItems: NavItem[] = [
         icon: AlertCircle,
     },
     {
+        title: 'Quarter Comparison',
+        href: '/admin/quarter-comparison',
+        icon: BarChart3,
+    },
+    {
         title: 'Certificates',
         href: '/admin/certificates',
         icon: Award,

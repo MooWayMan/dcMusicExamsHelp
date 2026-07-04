@@ -300,6 +300,13 @@ test('GET /admin/reconciliation returns 200 for an authenticated admin', functio
         ->assertStatus(200);
 });
 
+test('GET /admin/quarter-comparison returns 200 for an authenticated admin', function () {
+    $admin = \App\Models\User::factory()->create(['role' => 'admin']);
+    $this->actingAs($admin)
+        ->get('/admin/quarter-comparison')
+        ->assertStatus(200);
+});
+
 // ──────────────────────────────────────────
 // Meta tags in global layout
 // ──────────────────────────────────────────
