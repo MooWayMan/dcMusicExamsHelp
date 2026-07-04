@@ -5,6 +5,7 @@ namespace App\Actions\Fortify;
 use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
 use App\Models\ExamContact;
+use App\Models\Subscriber;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
@@ -37,6 +38,7 @@ class CreateNewUser implements CreatesNewUsers
             ...$this->profileRules(),
             'role' => ['required', 'string', 'in:'.implode(',', $assignableRoles)],
             'password' => $this->passwordRules(),
+            'marketing_consent' => ['nullable', 'boolean'],
         ])->validate();
 
         $user = User::create([
@@ -45,6 +47,8 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $input['password'],
             'role' => $input['role'],
         ]);
+
+        $this->linkSubscriber($input);
 
         // Best-effort link to the wider exam_contacts people system. If no
         // match exists the user simply lands on the holding-message dashboard;
@@ -59,5 +63,45 @@ class CreateNewUser implements CreatesNewUsers
         }
 
         return $user;
+    }
+
+    /**
+     * Mirror a newly registered user into the subscribers table so account
+     * holders and marketing subscribers live in one place.
+     *
+     * GDPR: `marketing_consent_at` is stamped ONLY when the opt-in box was
+     * ticked — an account signup on its own is not consent to marketing. If a
+     * subscriber row already exists (e.g. from the lead magnet) we never wipe
+     * an existing consent timestamp, and we re-activate a previously
+     * unsubscribed row since signing up implies current interest.
+     *
+     * @param  array<string, mixed>  $input
+     */
+    protected function linkSubscriber(array $input): void
+    {
+        $wantsMarketing = (bool) ($input['marketing_consent'] ?? false);
+
+        $subscriber = Subscriber::firstOrNew(['email' => $input['email']]);
+        $subscriber->name = $input['name'];
+
+        if (! $subscriber->exists) {
+            $subscriber->source = 'account_registration';
+            $subscriber->subscribed_at = now();
+        }
+
+        if (in_array($input['role'], ['teacher', 'parent'], true)) {
+            $subscriber->role = $input['role'];
+        }
+
+        if ($subscriber->unsubscribed_at) {
+            $subscriber->unsubscribed_at = null;
+            $subscriber->subscribed_at = now();
+        }
+
+        if ($wantsMarketing && ! $subscriber->marketing_consent_at) {
+            $subscriber->marketing_consent_at = now();
+        }
+
+        $subscriber->save();
     }
 }
