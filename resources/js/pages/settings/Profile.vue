@@ -14,6 +14,7 @@ import { send } from '@/routes/verification';
 type Props = {
     mustVerifyEmail: boolean;
     status?: string;
+    marketingConsent: boolean;
 };
 
 defineProps<Props>();
@@ -103,6 +104,55 @@ const user = computed(() => page.props.auth.user);
                 <Button :disabled="processing" data-test="update-profile-button"
                     >Save</Button
                 >
+
+                <Transition
+                    enter-active-class="transition ease-in-out"
+                    enter-from-class="opacity-0"
+                    leave-active-class="transition ease-in-out"
+                    leave-to-class="opacity-0"
+                >
+                    <p
+                        v-show="recentlySuccessful"
+                        class="text-sm text-neutral-600"
+                    >
+                        Saved.
+                    </p>
+                </Transition>
+            </div>
+        </Form>
+    </div>
+
+    <div class="mt-6 flex flex-col space-y-6">
+        <Heading
+            variant="small"
+            title="Email preferences"
+            description="Choose whether we can email you about new apps, tools and updates"
+        />
+
+        <Form
+            action="/settings/email-preferences"
+            method="patch"
+            class="space-y-6"
+            v-slot="{ processing, recentlySuccessful }"
+        >
+            <label class="flex cursor-pointer items-start gap-3">
+                <input
+                    type="checkbox"
+                    name="marketing_consent"
+                    value="1"
+                    :checked="marketingConsent"
+                    class="mt-1 h-4 w-4 shrink-0 accent-brand-accent"
+                />
+                <span class="text-sm text-muted-foreground">
+                    Email me occasionally about new apps, tools and Trinity exam updates. We&rsquo;ll never
+                    share your address, and you can opt out any time.
+                </span>
+            </label>
+
+            <div class="flex items-center gap-4">
+                <Button :disabled="processing" data-test="update-email-preferences-button">
+                    Save preferences
+                </Button>
 
                 <Transition
                     enter-active-class="transition ease-in-out"

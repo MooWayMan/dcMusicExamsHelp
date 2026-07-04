@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\ExamContact;
+use App\Models\Subscriber;
 use App\Models\User;
 use Laravel\Fortify\Features;
 
@@ -166,6 +167,69 @@ test('email must be unique', function () {
         'password' => 'password123',
         'password_confirmation' => 'password123',
     ])->assertSessionHasErrors('email');
+});
+
+// ──────────────────────────────────────────
+// Marketing consent — registrant mirrored into subscribers, consent only
+// stamped when the opt-in box is ticked (silence is not consent).
+// ──────────────────────────────────────────
+
+test('registering with the opt-in ticked stamps subscriber marketing consent', function () {
+    $this->skipUnlessFortifyHas(Features::registration());
+
+    $this->post(route('register.store'), [
+        'name' => 'Connie Consent',
+        'email' => 'connie@example.com',
+        'role' => 'teacher',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+        'marketing_consent' => true,
+    ])->assertRedirect();
+
+    $sub = Subscriber::where('email', 'connie@example.com')->first();
+    expect($sub)->not->toBeNull();
+    expect($sub->source)->toBe('account_registration');
+    expect($sub->role)->toBe('teacher');
+    expect($sub->marketing_consent_at)->not->toBeNull();
+});
+
+test('registering without the opt-in creates a subscriber but no marketing consent', function () {
+    $this->skipUnlessFortifyHas(Features::registration());
+
+    $this->post(route('register.store'), [
+        'name' => 'Nora NoThanks',
+        'email' => 'nora@example.com',
+        'role' => 'teacher',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+    ])->assertRedirect();
+
+    $sub = Subscriber::where('email', 'nora@example.com')->first();
+    expect($sub)->not->toBeNull();
+    expect($sub->marketing_consent_at)->toBeNull();
+});
+
+test('registering never wipes an existing subscriber consent and de-duplicates by email', function () {
+    $this->skipUnlessFortifyHas(Features::registration());
+
+    Subscriber::create([
+        'name' => 'Early Bird',
+        'email' => 'early@example.com',
+        'source' => 'trinity_checklist',
+        'subscribed_at' => now()->subMonth(),
+        'marketing_consent_at' => now()->subMonth(),
+    ]);
+
+    $this->post(route('register.store'), [
+        'name' => 'Early Bird',
+        'email' => 'early@example.com',
+        'role' => 'teacher',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+    ])->assertRedirect();
+
+    expect(Subscriber::where('email', 'early@example.com')->count())->toBe(1);
+    expect(Subscriber::where('email', 'early@example.com')->first()->marketing_consent_at)->not->toBeNull();
 });
 
 // ──────────────────────────────────────────

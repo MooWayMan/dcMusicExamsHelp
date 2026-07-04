@@ -137,6 +137,31 @@ const visibleRoles = roleOptions.filter((opt) => props.roles.includes(opt.value)
                 <p v-if="errors.password_confirmation" class="mt-1 text-sm text-brand-danger">{{ errors.password_confirmation }}</p>
             </div>
 
+            <div>
+                <label
+                    class="flex cursor-pointer items-start gap-3 rounded-lg border border-brand-border bg-brand-surface p-3 transition-colors hover:border-brand-accent has-[:checked]:border-brand-accent has-[:checked]:bg-brand-accent/5"
+                >
+                    <input
+                        type="checkbox"
+                        name="marketing_consent"
+                        value="1"
+                        class="mt-1 h-4 w-4 shrink-0 accent-brand-accent"
+                    />
+                    <span class="flex flex-col">
+                        <span class="text-base font-semibold text-brand-text">Keep me in the loop</span>
+                        <span class="text-sm text-brand-text-soft">
+                            We&rsquo;re building lots of useful new apps and tools for music teachers &mdash; tick to be
+                            the first to hear about them. Occasional emails only, and you can change this any time in
+                            your account settings.
+                        </span>
+                    </span>
+                </label>
+                <p class="mt-1 text-sm text-brand-text-soft">
+                    We&rsquo;ll never share your email address &mdash; see our
+                    <a href="/privacy" class="text-brand-accent hover:underline">privacy policy</a>.
+                </p>
+            </div>
+
             <MyButtonConstructor
                 type="submit"
                 variant="primary"
