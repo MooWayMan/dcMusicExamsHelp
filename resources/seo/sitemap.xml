@@ -31,6 +31,11 @@
         <priority>0.8</priority>
     </url>
     <url>
+        <loc>https://musicexams.help/top-ten</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
         <loc>https://musicexams.help/for-teachers/awards</loc>
         <changefreq>monthly</changefreq>
         <priority>0.7</priority>

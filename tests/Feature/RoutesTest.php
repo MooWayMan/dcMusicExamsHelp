@@ -64,6 +64,16 @@ test('GET /syllabus with filter params returns 200', function () {
         ->assertStatus(200);
 });
 
+test('GET /top-ten returns 200', function () {
+    $this->get('/top-ten')
+        ->assertStatus(200);
+});
+
+test('GET /top-ten with filter params returns 200', function () {
+    $this->get('/top-ten?stream=Classical+%26+Jazz&instrument=Piano&grade=Grade+3')
+        ->assertStatus(200);
+});
+
 test('GET /privacy returns 200', function () {
     $this->get('/privacy')
         ->assertStatus(200);

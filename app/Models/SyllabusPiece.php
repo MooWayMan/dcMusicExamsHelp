@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SyllabusPiece extends Model
 {
@@ -49,6 +50,15 @@ class SyllabusPiece extends Model
     {
         // Explicit FK: the column is syllabus_book_id, not the belongsTo default (book_id).
         return $this->belongsTo(SyllabusBook::class, 'syllabus_book_id');
+    }
+
+    /**
+     * Teacher votes that power the public Top Ten chart (star ratings + how many
+     * of each teacher's students have used the piece in an exam).
+     */
+    public function votes(): HasMany
+    {
+        return $this->hasMany(PieceVote::class);
     }
 
     /**

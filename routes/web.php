@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SyllabusController;
+use App\Http\Controllers\TopTenController;
 use App\Http\Controllers\SubscriberController;
 use App\Http\Controllers\ThankYouController;
 use Illuminate\Support\Facades\Route;
@@ -83,6 +84,7 @@ Route::inertia('/for-parents', 'ForParents')->name('for-parents');
 Route::inertia('/for-students', 'ForStudents')->name('for-students');
 Route::inertia('/books', 'Books')->name('books');
 Route::get('/syllabus', [SyllabusController::class, 'index'])->name('syllabus');
+Route::get('/top-ten', [TopTenController::class, 'index'])->name('top-ten');
 Route::get('/recognition', ThankYouController::class)->name('recognition');
 Route::inertia('/exam-guide', 'ExamGuide')->name('exam-guide');
 Route::inertia('/exam-guide/ucas-points', 'ExamGuideUcas')->name('exam-guide.ucas');
@@ -138,6 +140,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('dashboard.link-request');
     Route::post('dashboard/entries/{entry}/correction-request', [DashboardController::class, 'correctionRequest'])
         ->name('dashboard.correction-request');
+
+    // Top Ten piece voting — controller enforces teacher/admin-only (403 otherwise).
+    Route::post('/top-ten/vote', [TopTenController::class, 'vote'])
+        ->middleware('throttle:30,1')
+        ->name('top-ten.vote');
 
     // Leave impersonation — must live outside the admin middleware because
     // the currently-authenticated user is the non-admin being impersonated.

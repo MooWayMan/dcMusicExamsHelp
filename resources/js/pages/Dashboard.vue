@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, Form, router, usePage } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
-import { LayoutDashboard, ClipboardList, Users, GraduationCap, CheckSquare, Award, AlertCircle, Home, LogOut, Mail, MessageCircle, Info, ChevronDown, ChevronRight, Gift, Ticket } from 'lucide-vue-next'
+import { LayoutDashboard, ClipboardList, Users, GraduationCap, CheckSquare, Award, AlertCircle, Home, LogOut, Mail, MessageCircle, Info, ChevronDown, ChevronRight, Gift, Ticket, Trophy } from 'lucide-vue-next'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyInputConstructor from '@/components/reusables/MyInputConstructor.vue'
@@ -54,6 +54,7 @@ const handleLogout = () => {
 const page = usePage()
 const user = computed(() => (page.props.auth as any)?.user)
 const isAdmin = computed(() => user.value?.role === 'admin')
+const canVote = computed(() => ['teacher', 'admin'].includes(user.value?.role))
 const flashSuccess = computed(() => (page.props.flash as any)?.success)
 
 const showLinkForm = ref(false)
@@ -276,6 +277,25 @@ defineOptions({
             <p class="text-base text-brand-text-soft sm:text-lg">
                 Centre 120 — Trinity College London
             </p>
+        </div>
+
+        <!-- Top Ten pieces — teachers vote on the pieces their students use -->
+        <div v-if="canVote" class="mt-8 w-full max-w-5xl">
+            <Link
+                href="/top-ten"
+                class="group flex items-center gap-4 rounded-xl border border-brand-accent/30 bg-brand-accent/5 p-5 transition-all hover:border-brand-accent hover:shadow-md"
+            >
+                <div class="rounded-lg bg-brand-accent/10 p-3 transition-colors group-hover:bg-brand-accent/20">
+                    <Trophy class="h-6 w-6 text-brand-accent" />
+                </div>
+                <div class="flex-1">
+                    <p class="text-base font-semibold text-brand-text">Vote in the Top Ten</p>
+                    <p class="text-sm text-brand-text-soft">
+                        Rate the Trinity exam pieces your students use and record how often — help build the teachers&rsquo; Top Ten for every instrument and grade.
+                    </p>
+                </div>
+                <ChevronRight class="h-5 w-5 shrink-0 text-brand-accent" />
+            </Link>
         </div>
 
         <!-- Quick links grid (admin only) -->

@@ -48,11 +48,21 @@ class FortifyServiceProvider extends ServiceProvider
      */
     private function configureViews(): void
     {
-        Fortify::loginView(fn (Request $request) => Inertia::render('auth/Login', [
-            'canResetPassword' => Features::enabled(Features::resetPasswords()),
-            'canRegister' => Features::enabled(Features::registration()),
-            'status' => $request->session()->get('status'),
-        ]));
+        Fortify::loginView(function (Request $request) {
+            // Honour a ?redirect=/path sent by "Log in to vote" links (e.g. from
+            // /top-ten) so Fortify's post-login redirect()->intended() returns the
+            // user to where they were. Only accept safe, same-site relative paths.
+            $redirect = $request->query('redirect');
+            if (is_string($redirect) && str_starts_with($redirect, '/') && ! str_starts_with($redirect, '//')) {
+                $request->session()->put('url.intended', $redirect);
+            }
+
+            return Inertia::render('auth/Login', [
+                'canResetPassword' => Features::enabled(Features::resetPasswords()),
+                'canRegister' => Features::enabled(Features::registration()),
+                'status' => $request->session()->get('status'),
+            ]);
+        });
 
         Fortify::resetPasswordView(fn (Request $request) => Inertia::render('auth/ResetPassword', [
             'email' => $request->email,
