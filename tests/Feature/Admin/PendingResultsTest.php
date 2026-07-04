@@ -2,6 +2,7 @@
 
 // tests/Feature/Admin/PendingResultsTest.php
 
+use App\Models\ExamContact;
 use App\Models\ExamEntry;
 use App\Models\Order;
 use App\Models\User;
@@ -158,6 +159,78 @@ test('entries with null exam_date fall back to order requested_start_date', func
         ->assertInertia(fn ($page) => $page
             ->where('summary.pending', 1)
             ->where('entries.0.candidate_name', 'Legacy Q1'));
+});
+
+// ──────────────────────────────────────────
+// Applicant column (display-only)
+// ──────────────────────────────────────────
+// The pending list shows WHO BOOKED the order (the order's submitter /
+// createdByContact), NOT the confirmed teacher on the entry — that's still
+// blank pre-results. This is display-only: nothing is written to the entry,
+// so it can't feed the teacher role-confirmation flow or the prize draw.
+
+test('applicant column shows the order submitter (createdByContact)', function () {
+    $submitter = ExamContact::create(['name' => 'Megan Price']);
+    $order = makePendingOrder(Carbon::create(2026, 4, 15));
+    $order->update(['created_by_contact_id' => $submitter->id]);
+
+    makePendingEntry([
+        'candidate_name' => 'Iris McBride',
+        'exam_date' => Carbon::create(2026, 4, 15),
+        'order' => $order,
+        // Entry's own teacher stays blank pre-results.
+        'teacher_name' => null,
+        'teacher_contact_id' => null,
+    ]);
+
+    $this->actingAs($this->admin)
+        ->get('/admin/pending-results')
+        ->assertInertia(fn ($page) => $page
+            ->where('entries.0.applicant', 'Megan Price')
+            ->where('entries.0.applicant_contact_id', $submitter->id)
+            // Display-only: the entry's teacher fields are untouched.
+            ->where('entries.0.teacher_name', '—')
+            ->where('entries.0.teacher_contact_id', null));
+});
+
+test('applicant falls back to order applicant_name when no contact is linked', function () {
+    $order = makePendingOrder(Carbon::create(2026, 4, 15));
+    $order->update(['created_by_contact_id' => null, 'applicant_name' => 'Booked By Parent']);
+
+    makePendingEntry([
+        'candidate_name' => 'No Contact',
+        'exam_date' => Carbon::create(2026, 4, 15),
+        'order' => $order,
+    ]);
+
+    $this->actingAs($this->admin)
+        ->get('/admin/pending-results')
+        ->assertInertia(fn ($page) => $page
+            ->where('entries.0.applicant', 'Booked By Parent')
+            ->where('entries.0.applicant_contact_id', null));
+});
+
+test('search matches the order submitter name', function () {
+    $submitter = ExamContact::create(['name' => 'Megan Price']);
+    $matching = makePendingOrder(Carbon::create(2026, 4, 15));
+    $matching->update(['created_by_contact_id' => $submitter->id]);
+    makePendingEntry([
+        'candidate_name' => 'Iris McBride',
+        'exam_date' => Carbon::create(2026, 4, 15),
+        'order' => $matching,
+    ]);
+
+    // A second, unrelated pending entry that must be filtered OUT.
+    makePendingEntry([
+        'candidate_name' => 'Someone Else',
+        'exam_date' => Carbon::create(2026, 4, 16),
+    ]);
+
+    $this->actingAs($this->admin)
+        ->get('/admin/pending-results?search=Megan')
+        ->assertInertia(fn ($page) => $page
+            ->where('summary.pending', 1)
+            ->where('entries.0.candidate_name', 'Iris McBride'));
 });
 
 // ──────────────────────────────────────────

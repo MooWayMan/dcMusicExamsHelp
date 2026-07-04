@@ -18,6 +18,8 @@ interface PendingEntry {
     delivery_method: string
     subject_area: string
     teacher_name: string
+    applicant: string
+    applicant_contact_id: number | null
     school_name: string
     fee: string
     order_number: string
@@ -86,7 +88,7 @@ const columns = [
     { key: 'instrument', title: 'Instrument', sortable: true },
     { key: 'grade', title: 'Grade', sortable: true },
     { key: 'delivery_method', title: 'Method', sortable: true },
-    { key: 'teacher_name', title: 'Teacher', sortable: true },
+    { key: 'applicant', title: 'Applicant', sortable: true },
     { key: 'order_date', title: 'Order Date', sortable: true },
 ]
 
@@ -179,7 +181,7 @@ const awaitingColumns = [
                     <input
                         v-model="search"
                         type="text"
-                        placeholder="Search by name, candidate number, teacher..."
+                        placeholder="Search by name, candidate number, applicant..."
                         class="w-full rounded-lg border border-brand-border bg-brand-surface py-2 pl-10 pr-4 text-sm text-brand-text placeholder:text-brand-text-soft focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
                     />
                 </div>
@@ -241,13 +243,13 @@ const awaitingColumns = [
                 <template #cell-delivery_method="{ row }">
                     <span class="text-sm text-brand-text-soft">{{ row.delivery_method }}</span>
                 </template>
-                <template #cell-teacher_name="{ row }">
-                    <Link v-if="row.teacher_contact_id"
-                        :href="`/admin/contacts/${row.teacher_contact_id}`"
+                <template #cell-applicant="{ row }">
+                    <Link v-if="row.applicant_contact_id"
+                        :href="`/admin/contacts/${row.applicant_contact_id}`"
                         class="text-brand-accent hover:underline">
-                        {{ row.teacher_name }}
+                        {{ row.applicant }}
                     </Link>
-                    <span v-else class="text-brand-text">{{ row.teacher_name }}</span>
+                    <span v-else class="text-brand-text">{{ row.applicant }}</span>
                 </template>
                 <template #cell-order_date="{ row }">
                     <span class="text-sm text-brand-text-soft">{{ row.order_date }}</span>
