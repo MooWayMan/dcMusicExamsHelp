@@ -20,7 +20,7 @@ class PieceVoteFactory extends Factory
             'user_id' => User::factory()->state(['role' => 'teacher']),
             'syllabus_piece_id' => SyllabusPiece::factory(),
             'rating' => fake()->numberBetween(1, 4),
-            'used_count' => fake()->numberBetween(0, 12),
+            'used_band' => fake()->numberBetween(1, 3),
         ];
     }
 }

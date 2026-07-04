@@ -37,13 +37,15 @@ class TopTenController extends Controller
         $canVote = $this->canVote($request);
 
         // Voted pieces (the chart itself) with their aggregate scores.
+        // Ranking signals are deliberately teacher-count led so the chart is
+        // hard to game: one account can add at most a single capped usage band.
         $voted = SyllabusPiece::query()
             ->whereHas('votes')
             ->when($stream !== '', fn ($x) => $x->where('exam_stream', $stream))
             ->when($instrument !== '', fn ($x) => $x->where('instrument', $instrument))
             ->when($grade !== '', fn ($x) => $x->where('grade', $grade))
-            ->withSum('votes as times_used', 'used_count')
-            ->withCount(['votes as teachers_using' => fn ($q) => $q->where('used_count', '>', 0)])
+            ->withCount(['votes as teachers_using' => fn ($q) => $q->whereNotNull('used_band')])
+            ->withSum('votes as usage_score', 'used_band')
             ->withAvg('votes as avg_rating', 'rating')
             ->withCount(['votes as rating_count' => fn ($q) => $q->whereNotNull('rating')])
             ->get()
@@ -55,8 +57,8 @@ class TopTenController extends Controller
                 'grade' => $p->grade,
                 'composer' => $p->composer,
                 'title' => $p->title,
-                'times_used' => (int) $p->times_used,
                 'teachers_using' => (int) $p->teachers_using,
+                'usage_score' => (int) $p->usage_score,
                 'avg_rating' => $p->avg_rating !== null ? round((float) $p->avg_rating, 2) : null,
                 'rating_count' => (int) $p->rating_count,
             ]);
@@ -68,7 +70,7 @@ class TopTenController extends Controller
             ? PieceVote::query()->where('user_id', $request->user()->id)->get()
                 ->mapWithKeys(fn (PieceVote $v) => [$v->syllabus_piece_id => [
                     'rating' => $v->rating,
-                    'used_count' => $v->used_count,
+                    'used_band' => $v->used_band,
                 ]])
             : collect();
 
@@ -121,11 +123,11 @@ class TopTenController extends Controller
         $data = $request->validate([
             'syllabus_piece_id' => ['required', 'integer', 'exists:syllabus_pieces,id'],
             'rating' => ['nullable', 'integer', 'between:1,4'],
-            'used_count' => ['nullable', 'integer', 'min:0', 'max:100000'],
+            'used_band' => ['nullable', 'integer', 'between:1,3'],
         ]);
 
         $rating = $data['rating'] ?? null;
-        $used = $data['used_count'] ?? 0;
+        $band = $data['used_band'] ?? null;
 
         $existing = PieceVote::query()
             ->where('user_id', $request->user()->id)
@@ -133,7 +135,7 @@ class TopTenController extends Controller
             ->first();
 
         // Nothing meaningful set → treat as "clear my vote".
-        if ($rating === null && $used === 0) {
+        if ($rating === null && $band === null) {
             $existing?->delete();
 
             return back()->with('success', 'Your vote was removed.');
@@ -141,7 +143,7 @@ class TopTenController extends Controller
 
         PieceVote::query()->updateOrCreate(
             ['user_id' => $request->user()->id, 'syllabus_piece_id' => $data['syllabus_piece_id']],
-            ['rating' => $rating, 'used_count' => $used],
+            ['rating' => $rating, 'used_band' => $band],
         );
 
         return back()->with('success', 'Thanks — your vote has been counted.');
@@ -169,19 +171,20 @@ class TopTenController extends Controller
         $grouped = $voted->groupBy(fn ($p) => $p['stream'].'|'.$p['instrument'].'|'.$p['grade']);
 
         $groups = $grouped->map(function (Collection $rows) {
-            // Order: most used → best average stars → most ratings → title.
+            // Order: most teachers using → higher usage band total → best
+            // average stars → most ratings → title.
             $ordered = $rows->sort(function ($a, $b) {
-                return [$b['times_used'], $b['avg_rating'] ?? -1, $b['rating_count'], $a['title']]
-                    <=> [$a['times_used'], $a['avg_rating'] ?? -1, $a['rating_count'], $b['title']];
+                return [$b['teachers_using'], $b['usage_score'], $b['avg_rating'] ?? -1, $b['rating_count'], $a['title']]
+                    <=> [$a['teachers_using'], $a['usage_score'], $a['avg_rating'] ?? -1, $a['rating_count'], $b['title']];
             })->values();
 
-            // Competition ranking — equal (times_used, avg stars) share a position.
+            // Competition ranking — equal (teachers, usage, avg stars) share a position.
             $rank = 0;
             $seen = 0;
             $prevKey = null;
             $ordered = $ordered->map(function ($p) use (&$rank, &$seen, &$prevKey) {
                 $seen++;
-                $key = $p['times_used'].'|'.($p['avg_rating'] !== null ? number_format($p['avg_rating'], 2) : 'na');
+                $key = $p['teachers_using'].'|'.$p['usage_score'].'|'.($p['avg_rating'] !== null ? number_format($p['avg_rating'], 2) : 'na');
                 if ($key !== $prevKey) {
                     $rank = $seen;
                     $prevKey = $key;

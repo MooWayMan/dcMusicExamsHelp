@@ -18,8 +18,8 @@ interface ChartPiece {
   grade: string
   composer: string
   title: string
-  times_used: number
   teachers_using: number
+  usage_score: number
   avg_rating: number | null
   rating_count: number
   position: number
@@ -32,7 +32,7 @@ interface Group {
   top_ten: ChartPiece[]
   others: ChartPiece[]
 }
-interface MyVote { rating: number | null; used_count: number }
+interface MyVote { rating: number | null; used_band: number | null }
 
 const props = defineProps<{
   groups: Group[]
@@ -62,6 +62,35 @@ const RATING_LABELS: Record<number, string> = {
   2: 'It’s OK',
   3: 'Quite a good piece',
   4: 'Love this piece',
+}
+
+// How often the teacher's students use the piece in exams (capped bands).
+const USAGE_LABELS: Record<number, string> = {
+  1: 'A few times',
+  2: 'Regularly',
+  3: 'Loads',
+}
+// Chart-facing phrasing for the aggregate usage across all teachers.
+const USAGE_PHRASES: Record<number, string> = {
+  1: 'Used a few times',
+  2: 'Used regularly',
+  3: 'Used loads',
+}
+function usagePhrase(p: ChartPiece): string {
+  if (!p.teachers_using) return ''
+  const avg = Math.round(p.usage_score / p.teachers_using)
+  return USAGE_PHRASES[Math.min(3, Math.max(1, avg))] ?? ''
+}
+
+function hasVoted(pieceId: number): boolean {
+  return !!props.myVotes[pieceId]
+}
+// Colour of the Vote/Edit button: solid while editing, tinted once voted,
+// outline when not yet voted.
+function voteBtnClass(pieceId: number): string {
+  if (openVoteFor.value === pieceId) return 'border-brand-accent bg-brand-accent text-brand-text-inverse'
+  if (hasVoted(pieceId)) return 'border-brand-accent bg-brand-accent/20 text-brand-accent hover:bg-brand-accent hover:text-brand-text-inverse'
+  return 'border-brand-accent text-brand-accent hover:bg-brand-accent hover:text-brand-text-inverse'
 }
 
 const stream = ref(props.active.stream)
@@ -140,22 +169,23 @@ const hasGroups = computed(() => props.groups.length > 0)
 
 // ── Inline voting ──────────────────────────────────────────────
 const openVoteFor = ref<number | null>(null)
-const draft = reactive<{ rating: number | null; used: number }>({ rating: null, used: 0 })
+const draft = reactive<{ rating: number | null; band: number | null }>({ rating: null, band: null })
 
 function openVote(pieceId: number) {
   if (!props.canVote) return
   const mine = props.myVotes[pieceId]
   draft.rating = mine?.rating ?? null
-  draft.used = mine?.used_count ?? 0
+  draft.band = mine?.used_band ?? null
   openVoteFor.value = openVoteFor.value === pieceId ? null : pieceId
 }
 function setRating(n: number) { draft.rating = draft.rating === n ? null : n }
+function setBand(n: number) { draft.band = draft.band === n ? null : n }
 
 const saving = ref(false)
 function submitVote(pieceId: number) {
   saving.value = true
   router.post('/top-ten/vote',
-    { syllabus_piece_id: pieceId, rating: draft.rating, used_count: draft.used },
+    { syllabus_piece_id: pieceId, rating: draft.rating, used_band: draft.band },
     {
       preserveScroll: true,
       onFinish: () => { saving.value = false },
@@ -167,7 +197,7 @@ function submitVote(pieceId: number) {
 // ── Rate a piece not yet on the chart ──────────────────────────
 const ratePieceId = ref<number | ''>('')
 const rateRating = ref<number | null>(null)
-const rateUsed = ref<number>(0)
+const rateBand = ref<number | null>(null)
 const rateSearch = ref('')
 const showList = ref(false)
 
@@ -195,11 +225,11 @@ function submitNewRating() {
   if (ratePieceId.value === '') return
   saving.value = true
   router.post('/top-ten/vote',
-    { syllabus_piece_id: ratePieceId.value, rating: rateRating.value, used_count: rateUsed.value },
+    { syllabus_piece_id: ratePieceId.value, rating: rateRating.value, used_band: rateBand.value },
     {
       preserveScroll: true,
       onFinish: () => { saving.value = false },
-      onSuccess: () => { ratePieceId.value = ''; rateRating.value = null; rateUsed.value = 0; rateSearch.value = ''; showList.value = false },
+      onSuccess: () => { ratePieceId.value = ''; rateRating.value = null; rateBand.value = null; rateSearch.value = ''; showList.value = false },
     },
   )
 }
@@ -330,9 +360,14 @@ function submitNewRating() {
                       <span class="mt-1 block h-4 text-sm text-white/80">{{ rateRating ? RATING_LABELS[rateRating] : '' }}</span>
                     </div>
                     <div>
-                      <label class="mb-1 block text-xs font-semibold tracking-wide text-white/70 uppercase">Students who used it in an exam</label>
-                      <input v-model.number="rateUsed" type="number" min="0"
-                        class="w-40 rounded-xl border border-white/20 bg-white/10 px-3 py-2.5 text-base text-white focus:border-brand-accent focus:outline-none" />
+                      <span class="mb-1 block text-xs font-semibold tracking-wide text-white/70 uppercase">Used in exams</span>
+                      <div class="flex flex-wrap gap-2">
+                        <button v-for="n in 3" :key="n" type="button" @click="rateBand = rateBand === n ? null : n"
+                          class="rounded-lg border px-3 py-2 text-sm font-semibold transition"
+                          :class="rateBand === n ? 'border-brand-accent bg-brand-accent text-brand-text-inverse' : 'border-white/20 bg-white/10 text-white hover:border-brand-accent'">
+                          {{ USAGE_LABELS[n] }}
+                        </button>
+                      </div>
                     </div>
                     <button type="button" :disabled="saving" @click="submitNewRating"
                       class="rounded-xl bg-brand-accent px-5 py-2.5 text-sm font-bold text-brand-text-inverse transition hover:opacity-90 disabled:opacity-40">
@@ -365,7 +400,8 @@ function submitNewRating() {
 
               <!-- Top Ten -->
               <ul class="divide-y divide-white/10">
-                <li v-for="p in g.top_ten" :key="p.id" class="px-4 py-3 sm:px-6">
+                <li v-for="p in g.top_ten" :key="p.id" class="px-4 py-3 transition-colors sm:px-6"
+                  :class="openVoteFor === p.id ? 'bg-brand-accent/10' : (hasVoted(p.id) ? 'bg-brand-accent/5' : '')">
                   <div class="flex items-center gap-3 sm:gap-4">
                     <div class="flex h-9 w-11 shrink-0 items-center justify-center rounded-lg bg-brand-accent text-sm font-extrabold text-brand-text-inverse">
                       <span v-if="sharedPositions(g.top_ten).has(p.position)" class="mr-0.5 text-xs">=</span>{{ p.position }}
@@ -373,6 +409,7 @@ function submitNewRating() {
                     <div class="min-w-0 flex-1">
                       <p class="truncate text-sm font-bold text-white sm:text-base">{{ p.title }}</p>
                       <p class="truncate text-xs text-white/70 sm:text-sm">{{ p.composer }}</p>
+                      <p v-if="usagePhrase(p)" class="mt-0.5 text-xs font-semibold text-brand-accent">{{ usagePhrase(p) }}</p>
                     </div>
                     <div class="shrink-0 text-right">
                       <div class="flex items-center justify-end gap-1">
@@ -385,17 +422,18 @@ function submitNewRating() {
                       </p>
                     </div>
                     <div class="hidden shrink-0 text-right sm:block">
-                      <p class="inline-flex items-center gap-1 text-sm font-bold text-white"><Users class="h-4 w-4 text-brand-accent" />{{ p.times_used }}</p>
-                      <p class="text-xs text-white/60">used in exams</p>
+                      <p class="inline-flex items-center gap-1 text-sm font-bold text-white"><Users class="h-4 w-4 text-brand-accent" />{{ p.teachers_using }}</p>
+                      <p class="text-xs text-white/60">{{ p.teachers_using === 1 ? 'teacher uses it' : 'teachers use it' }}</p>
                     </div>
                     <button v-if="props.canVote" type="button" @click="openVote(p.id)"
-                      class="shrink-0 rounded-lg border border-brand-accent px-3 py-1.5 text-xs font-semibold text-brand-accent transition hover:bg-brand-accent hover:text-brand-text-inverse">
-                      {{ props.myVotes[p.id] ? 'Your vote' : 'Vote' }}
+                      class="shrink-0 rounded-lg border px-3 py-1.5 text-xs font-semibold transition"
+                      :class="voteBtnClass(p.id)">
+                      {{ hasVoted(p.id) ? 'Edit' : 'Vote' }}
                     </button>
                   </div>
 
                   <!-- Mobile "used" line -->
-                  <p class="mt-1 pl-14 text-xs text-white/60 sm:hidden">{{ p.times_used }} used in exams</p>
+                  <p class="mt-1 pl-14 text-xs text-white/60 sm:hidden">Used by {{ p.teachers_using }} {{ p.teachers_using === 1 ? 'teacher' : 'teachers' }}</p>
 
                   <!-- Inline vote editor -->
                   <div v-if="openVoteFor === p.id" class="mt-3 ml-14 rounded-xl border border-white/20 bg-black/40 p-4">
@@ -410,14 +448,19 @@ function submitNewRating() {
                         </div>
                       </div>
                       <div>
-                        <label class="mb-1 block text-xs font-semibold tracking-wide text-white/70 uppercase">Students used it in an exam</label>
-                        <input v-model.number="draft.used" type="number" min="0"
-                          class="w-36 rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-base text-white focus:border-brand-accent focus:outline-none" />
+                        <span class="mb-1 block text-xs font-semibold tracking-wide text-white/70 uppercase">Used in exams</span>
+                        <div class="flex flex-wrap gap-2">
+                          <button v-for="n in 3" :key="n" type="button" @click="setBand(n)"
+                            class="rounded-lg border px-3 py-1.5 text-sm font-semibold transition"
+                            :class="draft.band === n ? 'border-brand-accent bg-brand-accent text-brand-text-inverse' : 'border-white/20 bg-white/10 text-white hover:border-brand-accent'">
+                            {{ USAGE_LABELS[n] }}
+                          </button>
+                        </div>
                       </div>
                       <button type="button" :disabled="saving" @click="submitVote(p.id)"
                         class="rounded-xl bg-brand-accent px-4 py-2 text-sm font-bold text-brand-text-inverse transition hover:opacity-90 disabled:opacity-40">Save</button>
                     </div>
-                    <p class="mt-2 text-xs text-white/50">Set both to zero / no stars and save to remove your vote.</p>
+                    <p class="mt-2 text-xs text-white/50">Clear the stars and usage, then save, to remove your vote.</p>
                   </div>
                 </li>
               </ul>
@@ -430,7 +473,8 @@ function submitNewRating() {
                   {{ g.others.length }} more piece{{ g.others.length === 1 ? '' : 's' }} outside the Top Ten
                 </summary>
                 <ul class="divide-y divide-white/5">
-                  <li v-for="p in g.others" :key="p.id" class="px-5 py-2.5 sm:px-6">
+                  <li v-for="p in g.others" :key="p.id" class="px-5 py-2.5 transition-colors sm:px-6"
+                    :class="openVoteFor === p.id ? 'bg-brand-accent/10' : (hasVoted(p.id) ? 'bg-brand-accent/5' : '')">
                     <div class="flex items-center gap-3">
                       <div class="w-11 shrink-0 text-center text-xs font-bold text-white/50">
                         <span v-if="sharedPositions(g.others).has(p.position)">=</span>{{ p.position }}
@@ -438,15 +482,17 @@ function submitNewRating() {
                       <div class="min-w-0 flex-1">
                         <p class="truncate text-sm font-semibold text-white/90">{{ p.title }}</p>
                         <p class="truncate text-xs text-white/60">{{ p.composer }}</p>
+                        <p v-if="usagePhrase(p)" class="mt-0.5 text-xs font-medium text-brand-accent">{{ usagePhrase(p) }}</p>
                       </div>
                       <div class="flex shrink-0 items-center gap-1">
                         <Star v-for="n in 4" :key="n" class="h-3.5 w-3.5"
                           :class="p.avg_rating !== null && n <= Math.round(p.avg_rating) ? 'fill-brand-accent text-brand-accent' : 'text-white/25'" />
                       </div>
-                      <div class="w-16 shrink-0 text-right text-xs text-white/60">{{ p.times_used }} used</div>
+                      <div class="w-20 shrink-0 text-right text-xs text-white/60">{{ p.teachers_using }} {{ p.teachers_using === 1 ? 'teacher' : 'teachers' }}</div>
                       <button v-if="props.canVote" type="button" @click="openVote(p.id)"
-                        class="shrink-0 rounded-lg border border-brand-accent px-2.5 py-1 text-xs font-semibold text-brand-accent transition hover:bg-brand-accent hover:text-brand-text-inverse">
-                        {{ props.myVotes[p.id] ? 'Edit' : 'Vote' }}
+                        class="shrink-0 rounded-lg border px-2.5 py-1 text-xs font-semibold transition"
+                        :class="voteBtnClass(p.id)">
+                        {{ hasVoted(p.id) ? 'Edit' : 'Vote' }}
                       </button>
                     </div>
 
@@ -463,14 +509,19 @@ function submitNewRating() {
                           <span class="mt-1 block h-4 text-sm text-white/80">{{ draft.rating ? RATING_LABELS[draft.rating] : '' }}</span>
                         </div>
                         <div>
-                          <label class="mb-1 block text-xs font-semibold tracking-wide text-white/70 uppercase">Students used it in an exam</label>
-                          <input v-model.number="draft.used" type="number" min="0"
-                            class="w-36 rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-base text-white focus:border-brand-accent focus:outline-none" />
+                          <span class="mb-1 block text-xs font-semibold tracking-wide text-white/70 uppercase">Used in exams</span>
+                          <div class="flex flex-wrap gap-2">
+                            <button v-for="n in 3" :key="n" type="button" @click="setBand(n)"
+                              class="rounded-lg border px-3 py-1.5 text-sm font-semibold transition"
+                              :class="draft.band === n ? 'border-brand-accent bg-brand-accent text-brand-text-inverse' : 'border-white/20 bg-white/10 text-white hover:border-brand-accent'">
+                              {{ USAGE_LABELS[n] }}
+                            </button>
+                          </div>
                         </div>
                         <button type="button" :disabled="saving" @click="submitVote(p.id)"
                           class="rounded-xl bg-brand-accent px-4 py-2 text-sm font-bold text-brand-text-inverse transition hover:opacity-90 disabled:opacity-40">Save</button>
                       </div>
-                      <p class="mt-2 text-xs text-white/50">Set both to zero / no stars and save to remove your vote.</p>
+                      <p class="mt-2 text-xs text-white/50">Clear the stars and usage, then save, to remove your vote.</p>
                     </div>
                   </li>
                 </ul>

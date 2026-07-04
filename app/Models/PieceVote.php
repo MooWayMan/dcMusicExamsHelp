@@ -16,12 +16,12 @@ class PieceVote extends Model
         'user_id',
         'syllabus_piece_id',
         'rating',
-        'used_count',
+        'used_band',
     ];
 
     protected $casts = [
         'rating' => 'integer',
-        'used_count' => 'integer',
+        'used_band' => 'integer',
     ];
 
     public function user(): BelongsTo

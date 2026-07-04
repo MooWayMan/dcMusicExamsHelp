@@ -13,6 +13,7 @@ return new class extends Migration
         // Teacher votes that drive the public "Top Ten" chart. Each row is one
         // teacher's opinion of one syllabus piece: a 1-4 star rating and/or a
         // running total of how many of their students have used it in an exam.
+        // (used_count is swapped for a banded used_band in a later migration.)
         // One row per (user, piece) — re-voting updates the same row.
         Schema::create('piece_votes', function (Blueprint $table) {
             $table->id();
