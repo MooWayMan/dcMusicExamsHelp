@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, Form, router, usePage } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
-import { LayoutDashboard, ClipboardList, Users, GraduationCap, CheckSquare, Award, AlertCircle, Home, LogOut, Mail, MessageCircle, Info, ChevronDown, ChevronRight, Gift, Ticket } from 'lucide-vue-next'
+import { LayoutDashboard, ClipboardList, Users, GraduationCap, CheckSquare, Award, AlertCircle, Home, LogOut, Mail, MessageCircle, Info, ChevronDown, ChevronRight, Gift, Ticket, Trophy, Search } from 'lucide-vue-next'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyInputConstructor from '@/components/reusables/MyInputConstructor.vue'
@@ -54,6 +54,7 @@ const handleLogout = () => {
 const page = usePage()
 const user = computed(() => (page.props.auth as any)?.user)
 const isAdmin = computed(() => user.value?.role === 'admin')
+const canVote = computed(() => ['teacher', 'admin'].includes(user.value?.role))
 const flashSuccess = computed(() => (page.props.flash as any)?.success)
 
 const showLinkForm = ref(false)
@@ -172,16 +173,72 @@ const resultSummary = computed(() => {
 type ResultFilter = 'all' | 'Distinction' | 'Merit' | 'Pass' | 'Pending'
 const activeFilter = ref<ResultFilter>('all')
 
+// ─── Search ───────────────────────────────────────────────────────────────
+// Client-side (all entries are already loaded). Only surfaces once the list
+// is long enough to be worth it, so small rosters stay clean.
+const search = ref('')
+const showSearch = computed(() => groupedCandidates.value.length >= 8)
+
+// DOB only arrives with the per-candidate results triple, so enrolment-only
+// candidates show a blank "—" until then — that's expected, the column stays.
+
+// ─── Sorting ────────────────────────────────────────────────────────────────
+// Only candidate-level columns are sortable (per-exam fields are ambiguous for
+// a grouped multi-exam candidate). Date-of-birth / exam-date are parsed from
+// the "d M Y" strings the controller sends so they sort chronologically.
+type SortKey = 'name' | 'dob' | 'date'
+const sortKey = ref<SortKey>('name')
+const sortDir = ref<'asc' | 'desc'>('asc')
+function toggleSort(key: SortKey) {
+    if (sortKey.value === key) {
+        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
+    } else {
+        sortKey.value = key
+        sortDir.value = 'asc'
+    }
+}
+const MONTHS: Record<string, number> = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 }
+function parseDmy(s: string | null): number {
+    if (!s) return 0
+    const [d, m, y] = s.split(' ')
+    const month = MONTHS[m] ?? 0
+    return Date.UTC(Number(y) || 0, month, Number(d) || 1)
+}
+function latestExamDate(g: CandidateGroup): number {
+    return Math.max(0, ...g.entries.map((e) => parseDmy(e.exam_date)))
+}
+function sortArrow(key: SortKey): string {
+    if (sortKey.value !== key) return ''
+    return sortDir.value === 'asc' ? ' ↑' : ' ↓'
+}
+
 // A candidate is included in a filter if ANY of their exam entries match.
 // "Pending" matches entries where result is null (waiting on Trinity scores).
 const filteredCandidates = computed<CandidateGroup[]>(() => {
-    if (activeFilter.value === 'all') return groupedCandidates.value
+    let list = groupedCandidates.value
+
     if (activeFilter.value === 'Pending') {
-        return groupedCandidates.value.filter((g) => g.entries.some((e) => e.result === null))
+        list = list.filter((g) => g.entries.some((e) => e.result === null))
+    } else if (activeFilter.value !== 'all') {
+        list = list.filter((g) => g.entries.some((e) => e.result === activeFilter.value))
     }
-    return groupedCandidates.value.filter((g) =>
-        g.entries.some((e) => e.result === activeFilter.value),
-    )
+
+    const term = search.value.trim().toLowerCase()
+    if (term) {
+        list = list.filter((g) =>
+            (g.candidate_name ?? '').toLowerCase().includes(term) ||
+            (g.candidate_number ?? '').toLowerCase().includes(term),
+        )
+    }
+
+    const dir = sortDir.value === 'asc' ? 1 : -1
+    return [...list].sort((a, b) => {
+        let cmp = 0
+        if (sortKey.value === 'name') cmp = (a.candidate_name ?? '').localeCompare(b.candidate_name ?? '')
+        else if (sortKey.value === 'dob') cmp = parseDmy(a.date_of_birth) - parseDmy(b.date_of_birth)
+        else if (sortKey.value === 'date') cmp = latestExamDate(a) - latestExamDate(b)
+        return cmp * dir
+    })
 })
 
 // For the parent row inline summary: when a candidate has 1 exam, show that
@@ -276,6 +333,25 @@ defineOptions({
             <p class="text-base text-brand-text-soft sm:text-lg">
                 Centre 120 — Trinity College London
             </p>
+        </div>
+
+        <!-- Top Ten pieces — teachers vote on the pieces their students use -->
+        <div v-if="canVote" class="mt-8 w-full max-w-5xl">
+            <Link
+                href="/top-ten"
+                class="group flex items-center gap-4 rounded-xl border border-brand-accent/30 bg-brand-accent/5 p-5 transition-all hover:border-brand-accent hover:shadow-md"
+            >
+                <div class="rounded-lg bg-brand-accent/10 p-3 transition-colors group-hover:bg-brand-accent/20">
+                    <Trophy class="h-6 w-6 text-brand-accent" />
+                </div>
+                <div class="flex-1">
+                    <p class="text-base font-semibold text-brand-text">Vote in the Top Ten</p>
+                    <p class="text-sm text-brand-text-soft">
+                        Rate the Trinity exam pieces your students use and record how often — help build the teachers&rsquo; Top Ten for every instrument and grade.
+                    </p>
+                </div>
+                <ChevronRight class="h-5 w-5 shrink-0 text-brand-accent" />
+            </Link>
         </div>
 
         <!-- Quick links grid (admin only) -->
@@ -441,6 +517,18 @@ defineOptions({
                             </span>
                         </div>
                     </div>
+                    <!-- Search — only once the list is long enough to warrant it. -->
+                    <div v-if="showSearch" class="mt-4">
+                        <label class="relative block max-w-sm">
+                            <Search class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-brand-accent" />
+                            <input
+                                v-model="search"
+                                type="search"
+                                placeholder="Search by name or candidate number…"
+                                class="w-full rounded-lg border border-brand-border bg-brand-surface py-2 pr-3 pl-9 text-sm text-brand-text placeholder:text-brand-text-soft focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                            />
+                        </label>
+                    </div>
                     <!-- Filter pills — match the /admin/users pattern. Only
                          shown when there are at least 2 candidates AND the
                          results are mixed enough to warrant filtering. -->
@@ -496,13 +584,19 @@ defineOptions({
                     <table class="min-w-[800px] w-full text-left text-sm">
                         <thead class="border-b border-brand-border bg-brand-surface-soft text-brand-text-soft">
                             <tr>
-                                <th class="px-4 py-3 font-semibold">Candidate</th>
-                                <th class="px-4 py-3 font-semibold">DOB</th>
+                                <th class="px-4 py-3 font-semibold">
+                                    <button type="button" class="inline-flex cursor-pointer items-center gap-1 hover:text-brand-text" @click="toggleSort('name')">Candidate{{ sortArrow('name') }}</button>
+                                </th>
+                                <th class="px-4 py-3 font-semibold">
+                                    <button type="button" class="inline-flex cursor-pointer items-center gap-1 hover:text-brand-text" @click="toggleSort('dob')">DOB{{ sortArrow('dob') }}</button>
+                                </th>
                                 <th class="px-4 py-3 font-semibold">Instrument</th>
                                 <th class="px-4 py-3 font-semibold">Grade</th>
                                 <th class="px-4 py-3 font-semibold">Subject</th>
                                 <th class="px-4 py-3 font-semibold">Delivery</th>
-                                <th class="px-4 py-3 font-semibold">Exam date</th>
+                                <th class="px-4 py-3 font-semibold">
+                                    <button type="button" class="inline-flex cursor-pointer items-center gap-1 hover:text-brand-text" @click="toggleSort('date')">Exam date{{ sortArrow('date') }}</button>
+                                </th>
                                 <th class="px-4 py-3 font-semibold">Result</th>
                                 <th class="px-4 py-3 text-center font-semibold">Score</th>
                                 <th class="px-4 py-3 text-right font-semibold">Actions</th>
@@ -741,6 +835,11 @@ defineOptions({
                                     </template>
                                 </template>
                             </template>
+                            <tr v-if="filteredCandidates.length === 0">
+                                <td colspan="10" class="px-4 py-6 text-center text-sm text-brand-text-soft">
+                                    No candidates match your search.
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -751,13 +850,14 @@ defineOptions({
                 <div class="flex flex-col items-start gap-4">
                     <h2 class="text-2xl font-semibold text-brand-text">No candidates linked yet</h2>
                     <p class="text-base text-brand-text-soft">
-                        We couldn&rsquo;t find any Trinity exam entries under your registered email
-                        (<span class="font-medium text-brand-text">{{ user?.email }}</span>).
+                        We couldn&rsquo;t find any exams booked with musicExams.help (Trinity centre 120) under your
+                        registered email (<span class="font-medium text-brand-text">{{ user?.email }}</span>).
                     </p>
                     <p class="text-base text-brand-text-soft">
-                        If you used a different email when applying through Trinity, the easiest fix is to log out and
-                        sign up again with that email. Or, tell us which email you used on Trinity and we&rsquo;ll
-                        link your account.
+                        This dashboard only shows exams entered through us at centre 120 &mdash; if your students sit
+                        Trinity exams with a different centre, they won&rsquo;t appear here. If you booked with centre 120
+                        under another email, the easiest fix is to log out and sign up again with that email. Or tell us
+                        which email you used below and we&rsquo;ll link your account.
                     </p>
 
                     <div class="mt-2 flex flex-wrap gap-3">
@@ -767,7 +867,7 @@ defineOptions({
                             @click="showLinkForm = !showLinkForm"
                         >
                             <Mail class="h-4 w-4" />
-                            {{ showLinkForm ? 'Hide form' : 'Tell us your Trinity email' }}
+                            {{ showLinkForm ? 'Hide form' : 'Tell us the email you booked with' }}
                         </button>
                         <Link
                             href="/"
@@ -798,8 +898,8 @@ defineOptions({
                         <MyInputConstructor
                             type="email"
                             name="alternative_email"
-                            label="Email used on your Trinity application"
-                            placeholder="trinity-email@example.com"
+                            label="Email you used when booking with centre 120"
+                            placeholder="you@example.com"
                             size="small"
                             required
                             :error="errors.alternative_email"

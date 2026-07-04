@@ -20,6 +20,13 @@ const page = usePage()
 const user = computed(() => (page.props.auth as any)?.user)
 const isAdmin = computed(() => user.value?.role === 'admin')
 
+/* Clear Inertia's cached pages on logout so a previous user's data can't
+   flash back from cache after sign-out. */
+const handleLogout = () => {
+  isOpen.value = false
+  router.flushAll()
+}
+
 const isOpen = ref(false)
 
 /* Lock body scroll when mobile nav is open */
@@ -60,6 +67,7 @@ const navigation = computed<NavItem[]>(() => {
         { name: 'For Students', href: '/for-students' },
         { name: 'Books', href: '/books' },
         { name: 'Piece Finder', href: '/syllabus' },
+        { name: 'Top Ten Pieces', href: '/top-ten' },
         { name: '---', href: '#divider-thankyou' },
         { name: '★ Recognition (click here)', href: '/recognition', highlight: true },
         { name: 'Incentives', href: '/incentives' },
@@ -260,6 +268,14 @@ const navClasses = computed(() =>
             </Link>
           </template>
 
+          <!-- Log out — shown to any signed-in user (kept out of the auth
+               v-if/else-if/else chain above so it doesn't break it). -->
+          <Link v-if="user" href="/logout" method="post" as="button" class="transition hover:opacity-70" @click="handleLogout">
+            <MyTextConstructor variant="button" textColor="text-slate-700" spacing="none">
+              <template #myTitle>Log out</template>
+            </MyTextConstructor>
+          </Link>
+
           <!-- Social icons (desktop only) -->
           <MySocials
             size="small"
@@ -374,6 +390,12 @@ const navClasses = computed(() =>
             </MyTextConstructor>
           </Link>
         </template>
+
+        <Link v-if="user" href="/logout" method="post" as="button" class="block w-full rounded-xl px-3 py-3 text-left hover:bg-slate-50" @click="handleLogout">
+          <MyTextConstructor variant="button" textColor="text-slate-700" spacing="none">
+            <template #myTitle>Log out</template>
+          </MyTextConstructor>
+        </Link>
 
         <div class="mt-3">
           <MyButtonConstructor variant="primary" size="medium" fullWidth @click="showBookingModal = true; isOpen = false">

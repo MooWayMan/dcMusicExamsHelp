@@ -81,6 +81,7 @@ const sections: SitemapSection[] = [
     title: 'Resources',
     links: [
       { name: 'Piece Finder', href: '/syllabus' },
+      { name: 'Top Ten Pieces', href: '/top-ten' },
       { name: 'Books', href: '/books' },
       { name: 'FAQ', href: '/faq' },
     ],
