@@ -58,7 +58,8 @@ class PendingResultsController extends Controller
         // can use the exam_date ?? order.requested_start_date fallback (the
         // same approach QuarterEnd uses).
         $candidates = ExamEntry::with([
-                'order:id,trinity_order_number,delivery_method,requested_start_date',
+                'order:id,trinity_order_number,delivery_method,requested_start_date,created_by_contact_id,applicant_name',
+                'order.createdByContact:id,name',
                 'instrument:id,name',
                 'student:id,first_name,last_name',
             ])
@@ -70,7 +71,9 @@ class PendingResultsController extends Controller
                 $q->where('candidate_name', 'ilike', "%{$search}%")
                     ->orWhere('candidate_number', 'ilike', "%{$search}%")
                     ->orWhere('teacher_name', 'ilike', "%{$search}%")
-                    ->orWhere('school_name', 'ilike', "%{$search}%");
+                    ->orWhere('school_name', 'ilike', "%{$search}%")
+                    ->orWhereHas('order.createdByContact', fn ($cq) => $cq->where('name', 'ilike', "%{$search}%"))
+                    ->orWhereHas('order', fn ($oq) => $oq->where('applicant_name', 'ilike', "%{$search}%"));
             });
         }
 
@@ -108,6 +111,15 @@ class PendingResultsController extends Controller
             'delivery_method' => $e->delivery_method,
             'subject_area' => $e->subject_area,
             'teacher_name' => $e->teacher_name ?? '—',
+            // Who booked/submitted the order. Display-only: sourced from the
+            // order's submitter (createdByContact), NOT the confirmed teacher
+            // on the entry. Nothing is written, so this never touches the
+            // role-confirmation flow or the teacher prize-draw pool (which key
+            // off teacher_name / teacher contacts, not this field).
+            'applicant' => $e->order?->createdByContact?->name
+                ?? $e->order?->applicant_name
+                ?? '—',
+            'applicant_contact_id' => $e->order?->created_by_contact_id,
             'school_name' => $e->school_name ?? '—',
             'fee' => $e->fee ? number_format($e->fee, 2) : '—',
             'order_number' => $e->order->trinity_order_number ?? '—',
