@@ -16,9 +16,10 @@ const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
 
 const pageMeta = {
-  title: 'What to Expect on Exam Day — musicExams.help',
+  title: 'What to Expect on Exam Day',
   description:
-    'A friendly, step-by-step guide to what happens on Trinity music exam day. What to bring, what happens in the room, and tips for staying calm.',
+    'A step-by-step guide to a face-to-face Trinity music exam day: what to bring, what happens in the room, how long it lasts and simple tips for calming nerves.',
+  canonicalUrl: 'https://musicexams.help/exam-guide/what-to-expect',
 }
 
 const breadcrumbPages = [
@@ -178,7 +179,7 @@ const faqs = [
 </script>
 
 <template>
-  <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" />
 
   <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
@@ -202,6 +203,7 @@ const faqs = [
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            titleTag="h1"
             class="mt-3 md:!text-3xl lg:!text-4xl"
           >
             <template #myTitle>What to Expect — Face-to-Face</template>

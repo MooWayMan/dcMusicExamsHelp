@@ -16,9 +16,10 @@ const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
 
 const pageMeta = {
-  title: 'Digital Exams Guide — musicExams.help',
+  title: 'Trinity Digital Music Exams',
   description:
-    'How Trinity digital music exams work. Record anywhere, submit online, and receive the same qualification as a face-to-face exam.',
+    'How Trinity digital music exams work: record anywhere, re-record until happy, submit online and earn the same qualification as face-to-face. Plus kit and tips.',
+  canonicalUrl: 'https://musicexams.help/exam-guide/digital-exams',
 }
 
 const breadcrumbPages = [
@@ -183,7 +184,7 @@ const faqs = [
 </script>
 
 <template>
-  <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" />
 
   <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
@@ -207,6 +208,7 @@ const faqs = [
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            titleTag="h1"
             class="mt-3 md:!text-3xl lg:!text-4xl"
           >
             <template #myTitle>Digital Exams</template>

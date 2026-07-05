@@ -18,9 +18,10 @@ const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
 
 const pageMeta = {
-  title: 'Exam Guide — musicExams.help',
+  title: 'Trinity Music Exam Guide',
   description:
-    'Your friendly guide to Trinity College London music exams. Understand Classical & Jazz vs Rock & Pop, UCAS points, what to expect on exam day and more.',
+    'A clear guide to Trinity music exams. Compare Classical & Jazz, Rock & Pop and Theory, explore grades, UCAS points, digital exams and what to expect on the day.',
+  canonicalUrl: 'https://musicexams.help/exam-guide',
 }
 
 const breadcrumbPages = [
@@ -155,7 +156,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
 </script>
 
 <template>
-  <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" />
 
   <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
@@ -179,6 +180,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            titleTag="h1"
             class="mt-3 md:!text-3xl lg:!text-4xl"
           >
             <template #myTitle>Which exam is right for you?</template>

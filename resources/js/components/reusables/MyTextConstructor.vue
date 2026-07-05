@@ -22,6 +22,7 @@ interface Props {
   fontFamily?: 'default' | 'display' | 'asap-condensed'
   subTitleVariant?: 'body' | 'muted' | 'subheading'
   bodyVariant?: 'body' | 'muted'
+  titleTag?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -35,6 +36,7 @@ const props = withDefaults(defineProps<Props>(), {
   fontFamily: 'default',
   subTitleVariant: 'muted',
   bodyVariant: 'body',
+  titleTag: 'div',
 })
 
 const slots = useSlots()
@@ -146,9 +148,9 @@ const hasDefaultSlot = computed(() => Boolean(slots.default))
       <slot name="myEyebrow" />
     </div>
 
-    <div v-if="hasTitleSlot" :class="titleClasses">
+    <component :is="titleTag" v-if="hasTitleSlot" :class="titleClasses">
       <slot name="myTitle" />
-    </div>
+    </component>
 
     <div v-if="showUnderline" :class="underlineClasses" />
 

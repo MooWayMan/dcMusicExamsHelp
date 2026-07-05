@@ -232,8 +232,9 @@ const resultBadgeClass = (result: string) => {
 // Scroll listeners removed — global ScrollToTop component handles this
 
 const pageMeta = {
-  title: 'Recognition — musicExams.help',
-  description: 'Every student who enters a Trinity exam through centre 120 gets recognised here. Thank you for your hard work.',
+  title: 'Recognition',
+  description: 'Every student who sits a Trinity exam through centre 120 is celebrated here. See top scorers, certificates and awards each quarter — every entry counts.',
+  canonicalUrl: 'https://musicexams.help/recognition',
 }
 
 const breadcrumbPages = [{ name: 'Recognition', href: '/recognition', current: true }]
@@ -252,7 +253,7 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
 
 <template>
   <PageMaintenance pageSlug="recognition" pageTitle="Recognition">
-  <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" />
 
   <div class="min-h-screen bg-brand-bg text-brand-text">
     <Navbar />
@@ -270,6 +271,8 @@ const thankYouHero = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/music
             class="h-auto w-full object-contain"
           />
         </div>
+
+        <h1 class="sr-only">Recognition for Trinity exam candidates</h1>
 
         <div v-if="hasSelected" :class="animClass('fade-up', 2)" class="mt-4 text-center">
           <span class="inline-flex items-center gap-2 rounded-full bg-brand-accent/10 px-4 py-2 ring-1 ring-brand-accent/20">

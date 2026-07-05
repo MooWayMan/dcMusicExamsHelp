@@ -34,9 +34,10 @@ const props = defineProps<{
 const { animClass } = usePageAnimation()
 
 const pageMeta = {
-  title: 'Piece Finder — Trinity exam pieces | musicExams.help',
+  title: 'Piece Finder — Trinity exam pieces',
   description:
-    'Search Trinity College London exam repertoire by instrument, grade and exam type. Find each piece, the book it is in, listen on YouTube, and buy the official exam book.',
+    'Search Trinity College London exam repertoire by instrument, grade and exam type. See the book each piece is in, listen on YouTube, and buy the exam book.',
+  canonicalUrl: 'https://musicexams.help/syllabus',
 }
 const breadcrumbPages = [{ name: 'Piece Finder', href: '/syllabus', current: true }]
 
@@ -104,7 +105,7 @@ function instrumentLabel(p: Piece): string {
 </script>
 
 <template>
-  <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" />
 
   <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
@@ -120,7 +121,7 @@ function instrumentLabel(p: Piece): string {
             </MyTextConstructor>
           </div>
           <div :class="animClass('fade-up', 1)">
-            <MyTextConstructor variant="heading" fontFamily="display" alignment="center" spacing="tight" class="mt-3 md:!text-3xl lg:!text-4xl">
+            <MyTextConstructor variant="heading" fontFamily="display" alignment="center" spacing="tight" titleTag="h1" class="mt-3 md:!text-3xl lg:!text-4xl">
               <template #myTitle>Find your exam pieces</template>
             </MyTextConstructor>
           </div>

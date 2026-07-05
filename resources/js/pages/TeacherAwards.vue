@@ -17,9 +17,10 @@ const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
 
 const pageMeta = {
-  title: 'Teacher & School Awards — musicExams.help',
+  title: 'Trinity Teacher & School Awards',
   description:
-    'Earn recognition for your exam entries through centre 120. Bronze, Silver, Gold and Top Award tiers for teachers and schools.',
+    'Earn Bronze, Silver, Gold and Top Award recognition for the Trinity exams you enter through centre 120. Every entry counts, whatever the result.',
+  canonicalUrl: 'https://musicexams.help/for-teachers/awards',
 }
 
 const breadcrumbPages = [
@@ -139,7 +140,7 @@ const faqs = [
 </script>
 
 <template>
-  <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" />
 
   <div class="min-h-screen text-brand-text">
     <Navbar />
@@ -163,6 +164,7 @@ const faqs = [
               fontFamily="display"
               alignment="center"
               spacing="tight"
+              titleTag="h1"
               class="mt-3 md:!text-3xl lg:!text-4xl"
             >
               <template #myTitle>Every entry earns recognition</template>

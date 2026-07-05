@@ -17,9 +17,10 @@ const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
 
 const pageMeta = {
-  title: 'Grades Explained — musicExams.help',
+  title: 'Trinity Music Grades Explained',
   description:
-    'What each Trinity music exam grade means, from Initial to Grade 8 and beyond. How results are scored, what Pass, Merit and Distinction mean, and where diplomas fit in.',
+    'What each Trinity music grade means, from Initial to Grade 8. How Pass, Merit and Distinction are scored, plus ATCL, LTCL and FTCL diplomas explained.',
+  canonicalUrl: 'https://musicexams.help/exam-guide/grades-explained',
 }
 
 const breadcrumbPages = [
@@ -145,7 +146,7 @@ const faqs = [
 </script>
 
 <template>
-  <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" />
 
   <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
@@ -169,6 +170,7 @@ const faqs = [
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            titleTag="h1"
             class="mt-3 md:!text-3xl lg:!text-4xl"
           >
             <template #myTitle>Grades Explained</template>

@@ -24,9 +24,10 @@ const page = usePage()
 const user = computed(() => (page.props.auth as any)?.user)
 
 const pageMeta = {
-  title: 'For Teachers — musicExams.help',
+  title: 'For Teachers — Trinity centre 120',
   description:
-    'How musicExams.help supports music teachers with a clear booking route, recognition, certificates and more through Trinity centre 120.',
+    'A clear route to booking Trinity exams for music teachers, plus recognition awards, digital badges, student certificates and prize draws through centre 120.',
+  canonicalUrl: 'https://musicexams.help/for-teachers',
 }
 
 const breadcrumbPages = [
@@ -124,7 +125,7 @@ const faqs = [
 </script>
 
 <template>
-  <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" />
 
   <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
@@ -148,6 +149,7 @@ const faqs = [
               fontFamily="display"
               alignment="center"
               spacing="tight"
+              titleTag="h1"
               class="mt-3 md:!text-3xl lg:!text-4xl"
             >
               <template #myTitle>A clear route to booking exams — and getting recognised for it</template>

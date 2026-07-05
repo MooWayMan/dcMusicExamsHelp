@@ -70,9 +70,10 @@ watch(activeTab, (tab) => {
 })
 
 const pageMeta = {
-  title: 'Exam Fees 2026 — musicExams.help',
+  title: 'Trinity Exam Fees & Dates 2026',
   description:
-    'Trinity College London exam fees for 2026. Face-to-face, digital and theory prices for all grades from Initial to Grade 8, plus diploma fees.',
+    'Trinity College London exam fees for 2026 — face-to-face, digital and theory prices for every grade from Initial to Grade 8, plus diplomas and exam dates.',
+  canonicalUrl: 'https://musicexams.help/exam-fees',
 }
 
 const breadcrumbPages = computed(() => [
@@ -226,7 +227,7 @@ const faqs = [
 
 <template>
   <PageMaintenance pageSlug="exam-fees" pageTitle="Exam Fees & Dates">
-  <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" />
 
   <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
@@ -254,6 +255,7 @@ const faqs = [
               fontFamily="display"
               alignment="center"
               spacing="tight"
+              titleTag="h1"
               class="mt-3 md:!text-3xl lg:!text-4xl"
             >
               <template #myTitle>{{ pageTitle }}</template>

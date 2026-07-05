@@ -23,9 +23,10 @@ import MyFooter from '@/components/layouts/MyFooter.vue'
 const { animClass } = usePageAnimation()
 
 const pageMeta = {
-  title: 'Sitemap — musicExams.help',
+  title: 'Sitemap',
   description:
-    'Every public page on musicExams.help — Trinity exam guidance, recognition, prize draws and more — grouped by topic.',
+    'Browse every public page on musicExams.help, grouped by topic: Trinity exam guidance, teacher and parent info, exam guide, fees, recognition and resources.',
+  canonicalUrl: 'https://musicexams.help/sitemap',
 }
 
 const breadcrumbPages = [
@@ -105,7 +106,7 @@ const sections: SitemapSection[] = [
 </script>
 
 <template>
-  <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" />
 
   <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
@@ -130,6 +131,7 @@ const sections: SitemapSection[] = [
               fontFamily="display"
               alignment="center"
               spacing="tight"
+              titleTag="h1"
               class="mt-3 md:!text-3xl lg:!text-4xl"
             >
               <template #myTitle>Sitemap</template>

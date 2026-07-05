@@ -17,9 +17,10 @@ const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
 
 const pageMeta = {
-  title: 'For Students — musicExams.help',
+  title: 'For Students — get recognised',
   description:
-    'Your hard work deserves to be celebrated. See how students get recognised through musicExams.help centre 120 — Hall of Fame, certificates, prize draws and more.',
+    'Sit a Trinity exam through centre 120 and get celebrated. See how students earn certificates, a Hall of Fame place and prize draw entries for their hard work.',
+  canonicalUrl: 'https://musicexams.help/for-students',
 }
 
 const breadcrumbPages = [
@@ -81,7 +82,7 @@ const resultsBands = [
 </script>
 
 <template>
-  <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" />
 
   <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
@@ -105,6 +106,7 @@ const resultsBands = [
               fontFamily="display"
               alignment="center"
               spacing="tight"
+              titleTag="h1"
               class="mt-3 md:!text-3xl lg:!text-4xl"
             >
               <template #myTitle>Your hard work deserves to be celebrated</template>

@@ -19,9 +19,10 @@ const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
 
 const pageMeta = {
-  title: 'Booking a Trinity Music Exam — Centre 120 | musicExams.help',
+  title: 'Book a Trinity Music Exam via Centre 120',
   description:
-    'How to book a Trinity College London music exam through Centre 120. Same exam, same fee — just enter 120 at booking. A registered Trinity exam centre.',
+    'How to book a Trinity College London music exam through Centre 120 in three steps. Same exam, same fee — just enter 120 at booking. A registered Trinity centre.',
+  canonicalUrl: 'https://musicexams.help/trinity-exam-information',
 }
 
 const breadcrumbPages = [
@@ -158,7 +159,7 @@ const moreInfoLinks = [
 </script>
 
 <template>
-  <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" />
 
   <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
@@ -264,6 +265,7 @@ const moreInfoLinks = [
               fontFamily="display"
               alignment="center"
               spacing="tight"
+              titleTag="h1"
               class="mt-3 md:!text-3xl lg:!text-4xl"
             >
               <template #myTitle>Booking a Trinity music exam? Here's how to do it through Centre 120.</template>

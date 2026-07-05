@@ -19,9 +19,10 @@ const breadcrumbPages = [
 ]
 
 const pageMeta = {
-  title: 'FAQ — musicExams.help',
+  title: 'Trinity Music Exam FAQ',
   description:
-    'Frequently asked questions about booking Trinity music exams through Centre 120. Guidance for teachers, parents and students.',
+    'Answers to common questions about booking Trinity music exams through centre 120: digital, face-to-face and theory exams, results, certificates and benefits.',
+  canonicalUrl: 'https://musicexams.help/faq',
 }
 
 const faqs = [
@@ -112,7 +113,7 @@ const faqJsonLd = JSON.stringify({
 </script>
 
 <template>
-  <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" />
   <component is="script" type="application/ld+json" v-text="faqJsonLd" />
 
   <div class="min-h-screen bg-black text-brand-text">
@@ -137,6 +138,7 @@ const faqJsonLd = JSON.stringify({
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            titleTag="h1"
             class="mt-3 md:!text-3xl lg:!text-4xl"
           >
             <template #myTitle>Frequently Asked Questions</template>

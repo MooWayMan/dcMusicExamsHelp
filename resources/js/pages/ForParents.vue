@@ -17,9 +17,10 @@ const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
 
 const pageMeta = {
-  title: 'For Parents — musicExams.help',
+  title: 'For Parents — Trinity music exam guide',
   description:
-    'A parent\'s guide to Trinity music exams. What to expect, how booking works, and how your child gets recognised through centre 120.',
+    'A parent\'s guide to Trinity music exams: what to expect on exam day, what it costs, how booking works, and how your child gets recognised through centre 120.',
+  canonicalUrl: 'https://musicexams.help/for-parents',
 }
 
 const breadcrumbPages = [
@@ -99,7 +100,7 @@ const faqs = [
 </script>
 
 <template>
-  <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" />
 
   <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
@@ -123,6 +124,7 @@ const faqs = [
               fontFamily="display"
               alignment="center"
               spacing="tight"
+              titleTag="h1"
               class="mt-3 md:!text-3xl lg:!text-4xl"
             >
               <template #myTitle>Your child's exam journey — step by step</template>

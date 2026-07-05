@@ -17,9 +17,10 @@ import { Mail, Clock, MessageCircle } from 'lucide-vue-next'
 const { animClass } = usePageAnimation()
 
 const pageMeta = {
-  title: 'Contact Us — musicExams.help',
+  title: 'Contact Us',
   description:
-    'Get in touch with musicExams.help. Questions about Trinity music exams, booking through centre 120, or anything else — we\'re here to help.',
+    'Contact musicExams.help with questions about Trinity music exams or booking through centre 120. Teachers, parents and students welcome; we reply fast.',
+  canonicalUrl: 'https://musicexams.help/contact',
 }
 
 const breadcrumbPages = [
@@ -91,7 +92,7 @@ const faqs = [
 </script>
 
 <template>
-  <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" />
 
   <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
@@ -115,6 +116,7 @@ const faqs = [
               fontFamily="display"
               alignment="center"
               spacing="tight"
+              titleTag="h1"
               class="mt-3 md:!text-3xl lg:!text-4xl"
             >
               <template #myTitle>How can we help?</template>

@@ -16,9 +16,10 @@ const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
 
 const pageMeta = {
-  title: 'About — musicExams.help',
+  title: 'About — run by a teacher',
   description:
-    'musicExams.help is run by Paul Sheridan — a music teacher with 35 years of experience working with Trinity College London. Supporting teachers, students and parents across Liverpool, Wirral and beyond.',
+    'musicExams.help is run by Paul Sheridan, a music teacher with 35 years of Trinity experience, supporting teachers, students and parents in Liverpool and Wirral.',
+  canonicalUrl: 'https://musicexams.help/about',
 }
 
 const breadcrumbPages = [
@@ -50,7 +51,7 @@ const highlights = [
 </script>
 
 <template>
-  <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" />
 
   <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
@@ -74,6 +75,7 @@ const highlights = [
               fontFamily="display"
               alignment="center"
               spacing="tight"
+              titleTag="h1"
               class="mt-3 md:!text-3xl lg:!text-4xl"
             >
               <template #myTitle>Run by a teacher, for teachers</template>
