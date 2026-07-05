@@ -12,16 +12,17 @@ import { Search, Monitor, BookOpen } from 'lucide-vue-next'
 const { animClass } = usePageAnimation()
 
 const pageMeta = {
-  title: 'Buy your Trinity exam books — musicExams.help',
+  title: 'Buy Your Trinity Exam Book',
   description:
-    'Find the exact Trinity exam book for your grade and instrument in our Piece Finder — digital ebooks (10% off) from Trinity College London Press, or print via Amazon.',
+    'Find the exact Trinity exam book for your grade and instrument in our Piece Finder. Buy it as a digital ebook at 10% off, or in print via Amazon.',
+  canonicalUrl: 'https://musicexams.help/books',
 }
 
 const breadcrumbPages = [{ name: 'Books', href: '/books', current: true }]
 </script>
 
 <template>
-  <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" />
 
   <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
@@ -37,7 +38,7 @@ const breadcrumbPages = [{ name: 'Books', href: '/books', current: true }]
             </MyTextConstructor>
           </div>
           <div :class="animClass('fade-up', 1)">
-            <MyTextConstructor variant="heading" fontFamily="display" alignment="center" spacing="tight" class="mt-3 md:!text-3xl lg:!text-4xl">
+            <MyTextConstructor variant="heading" fontFamily="display" alignment="center" spacing="tight" titleTag="h1" class="mt-3 md:!text-3xl lg:!text-4xl">
               <template #myTitle>Buy your exam book</template>
             </MyTextConstructor>
           </div>

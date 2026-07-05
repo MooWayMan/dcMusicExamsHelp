@@ -16,16 +16,17 @@ const breadcrumbPages = [
 ]
 
 const pageMeta = {
-  title: 'Cookie Policy — musicExams.help',
+  title: 'Cookie Policy',
   description:
-    'How musicExams.help uses cookies and similar technologies. Details on essential and analytics cookies.',
+    'How musicExams.help uses cookies: essential session cookies plus optional Google Analytics. Set your preference here; no advertising or marketing cookies.',
+  canonicalUrl: 'https://musicexams.help/cookies',
 }
 
 const lastUpdated = '4 April 2026'
 </script>
 
 <template>
-  <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" />
 
   <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
@@ -49,6 +50,7 @@ const lastUpdated = '4 April 2026'
               fontFamily="display"
               alignment="center"
               spacing="tight"
+              titleTag="h1"
               class="mt-3 md:!text-3xl lg:!text-4xl"
             >
               <template #myTitle>Cookie Policy</template>

@@ -21,9 +21,10 @@ const { isSubscribed } = useSubscription()
 const { showBookingModal } = useBookingModal()
 
 const pageMeta = {
-  title: 'musicExams.help — Your Guide to Trinity Music Exams',
+  title: 'Your Guide to Trinity Music Exams',
   description:
-    'Free guidance for teachers, parents and students booking Trinity music exams through Centre 120. Incentives, recognition and support.',
+    'Free guidance for teachers, parents and students booking Trinity College London music exams through centre 120. Incentives, recognition and support, all free.',
+  canonicalUrl: 'https://musicexams.help/',
 }
 
 const jsonLd = JSON.stringify({
@@ -213,7 +214,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
 </script>
 
 <template>
-  <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" />
   <component is="script" type="application/ld+json" v-text="jsonLd" />
 
   <div class="min-h-screen bg-black text-brand-text">
@@ -237,6 +238,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
               alignment="left"
               fontFamily="display"
               spacing="tight"
+              titleTag="h1"
               class="mt-6 max-w-xl md:!text-4xl lg:!text-5xl xl:!text-6xl"
             >
               <template #myTitle>

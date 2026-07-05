@@ -14,16 +14,17 @@ const breadcrumbPages = [
 ]
 
 const pageMeta = {
-  title: 'Privacy Policy — musicExams.help',
+  title: 'Privacy Policy',
   description:
-    'How musicExams.help collects, uses and protects your personal data. GDPR-compliant privacy policy for teachers, parents and students.',
+    'How musicExams.help (centre 120) collects, uses and protects your data under UK GDPR: newsletter sign-ups, teacher records, student exam data and your rights.',
+  canonicalUrl: 'https://musicexams.help/privacy',
 }
 
 const lastUpdated = '10 May 2026'
 </script>
 
 <template>
-  <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" />
 
   <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
@@ -47,6 +48,7 @@ const lastUpdated = '10 May 2026'
               fontFamily="display"
               alignment="center"
               spacing="tight"
+              titleTag="h1"
               class="mt-3 md:!text-3xl lg:!text-4xl"
             >
               <template #myTitle>Privacy Policy</template>

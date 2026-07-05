@@ -23,9 +23,10 @@ const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
 
 const pageMeta = {
-  title: 'Switch to Centre 120 — Trinity exams with recognition | musicExams.help',
+  title: 'Switch to Centre 120 for Trinity Exams',
   description:
-    'Already booking Trinity digital exams? Enter centre 120 at checkout — same exam, same price — and your students unlock the Hall of Fame, prize draws and certificates. Free, takes seconds.',
+    'Already booking Trinity digital exams? Enter centre 120 at checkout, same exam and price, and your students unlock the Hall of Fame and prize draws.',
+  canonicalUrl: 'https://musicexams.help/switch-to-centre-120',
 }
 
 const breadcrumbPages = [
@@ -166,7 +167,7 @@ const faqItems = [
 </script>
 
 <template>
-  <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" />
 
   <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
@@ -191,6 +192,7 @@ const faqItems = [
               fontFamily="display"
               alignment="center"
               spacing="tight"
+              titleTag="h1"
               class="mt-3 md:!text-3xl lg:!text-4xl"
             >
               <template #myTitle>Already booking Trinity digital exams? You're leaving recognition on the table.</template>

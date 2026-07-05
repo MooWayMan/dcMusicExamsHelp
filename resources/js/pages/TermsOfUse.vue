@@ -14,16 +14,17 @@ const breadcrumbPages = [
 ]
 
 const pageMeta = {
-  title: 'Terms of Use — musicExams.help',
+  title: 'Terms of Use',
   description:
-    'Terms of use for the musicExams.help website. Information accuracy disclaimer, acceptable use, and intellectual property.',
+    'Terms of use for musicExams.help (centre 120): information accuracy disclaimer, our independent relationship with Trinity College London, acceptable use and IP.',
+  canonicalUrl: 'https://musicexams.help/terms',
 }
 
 const lastUpdated = '10 April 2026'
 </script>
 
 <template>
-  <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" />
 
   <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
@@ -47,6 +48,7 @@ const lastUpdated = '10 April 2026'
               fontFamily="display"
               alignment="center"
               spacing="tight"
+              titleTag="h1"
               class="mt-3 md:!text-3xl lg:!text-4xl"
             >
               <template #myTitle>Terms of Use</template>

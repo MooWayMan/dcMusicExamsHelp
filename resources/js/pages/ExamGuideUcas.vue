@@ -17,9 +17,10 @@ const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
 
 const pageMeta = {
-  title: 'UCAS Points for Music Exams — musicExams.help',
+  title: 'UCAS Points for Music Exams',
   description:
-    'How many UCAS points do Trinity music exams earn? Full table for Grades 6–8 with deadlines and everything you need to know.',
+    'How many UCAS points do Trinity music exams earn? Full points tables for Grades 6–8 performance and theory, plus the June deadline and how results reach UCAS.',
+  canonicalUrl: 'https://musicexams.help/exam-guide/ucas-points',
 }
 
 const breadcrumbPages = [
@@ -81,7 +82,7 @@ const faqs = [
 </script>
 
 <template>
-  <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" />
 
   <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
@@ -105,6 +106,7 @@ const faqs = [
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            titleTag="h1"
             class="mt-3 md:!text-3xl lg:!text-4xl"
           >
             <template #myTitle>UCAS Points</template>

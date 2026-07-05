@@ -17,9 +17,10 @@ const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
 
 const pageMeta = {
-  title: 'Syllabuses — musicExams.help',
+  title: 'Trinity Music Exam Syllabuses',
   description:
-    'Find the right Trinity College London syllabus for your instrument. Direct links to every instrument syllabus — Classical & Jazz, Rock & Pop and diplomas.',
+    'Find the right Trinity syllabus for your instrument. Direct links to every Classical & Jazz, Rock & Pop and diploma syllabus, plus how to use it to prepare.',
+  canonicalUrl: 'https://musicexams.help/exam-guide/syllabuses',
 }
 
 const breadcrumbPages = [
@@ -152,7 +153,7 @@ const faqs = [
 </script>
 
 <template>
-  <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" />
 
   <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
@@ -176,6 +177,7 @@ const faqs = [
             fontFamily="display"
             alignment="center"
             spacing="tight"
+            titleTag="h1"
             class="mt-3 md:!text-3xl lg:!text-4xl"
           >
             <template #myTitle>Syllabuses</template>

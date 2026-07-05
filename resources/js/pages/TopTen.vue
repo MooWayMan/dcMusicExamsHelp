@@ -51,9 +51,10 @@ const flashSuccess = computed(() => (page.props as { flash?: { success?: string 
 const { animClass } = usePageAnimation()
 
 const pageMeta = {
-  title: 'Top Ten — teachers’ favourite Trinity exam pieces | musicExams.help',
+  title: 'Top Ten — teachers’ favourite pieces',
   description:
-    'The Top Ten Trinity exam pieces for each instrument and grade, voted for by music teachers. See which pieces are used most and best loved. Teachers can log in to add their own votes.',
+    'The Top Ten Trinity exam pieces for every instrument and grade, voted for by music teachers. See which pieces are most loved, and log in to add your own votes.',
+  canonicalUrl: 'https://musicexams.help/top-ten',
 }
 const breadcrumbPages = [{ name: 'Top Ten', href: '/top-ten', current: true }]
 
@@ -236,7 +237,7 @@ function submitNewRating() {
 </script>
 
 <template>
-  <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" />
 
   <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
@@ -252,7 +253,7 @@ function submitNewRating() {
             </MyTextConstructor>
           </div>
           <div :class="animClass('fade-up', 1)">
-            <MyTextConstructor variant="heading" fontFamily="display" alignment="center" spacing="tight" class="mt-3 md:!text-3xl lg:!text-4xl">
+            <MyTextConstructor variant="heading" fontFamily="display" alignment="center" spacing="tight" titleTag="h1" class="mt-3 md:!text-3xl lg:!text-4xl">
               <template #myTitle>The pieces teachers love most</template>
             </MyTextConstructor>
           </div>

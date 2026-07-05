@@ -18,9 +18,10 @@ const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
 
 const pageMeta = {
-  title: 'Incentives — musicExams.help',
+  title: 'Trinity Exam Incentives & Rewards',
   description:
     'Every student entered through centre 120 gets recognised. Certificates, Hall of Fame, gift tokens, prize draws and teacher badges — all at no extra cost.',
+  canonicalUrl: 'https://musicexams.help/incentives',
 }
 
 const breadcrumbPages = [
@@ -128,7 +129,7 @@ const faqs = [
 
 <template>
   <PageMaintenance pageSlug="incentives" pageTitle="Incentives & Awards">
-  <Head :title="pageMeta.title" :description="pageMeta.description" />
+  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" />
 
   <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
@@ -152,6 +153,7 @@ const faqs = [
               fontFamily="display"
               alignment="center"
               spacing="tight"
+              titleTag="h1"
               class="mt-3 md:!text-3xl lg:!text-4xl"
             >
               <template #myTitle>More than just an exam</template>
