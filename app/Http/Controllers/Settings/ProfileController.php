@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
+use App\Jobs\SyncSubscriberToHubSpot;
 use App\Models\Subscriber;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
@@ -59,6 +60,11 @@ class ProfileController extends Controller
             : null;
 
         $subscriber->save();
+
+        // Mirror the change into HubSpot — opt-in adds them to the marketing
+        // list, opt-out removes them. The job self-guards (only touches HubSpot
+        // when there's something to sync).
+        SyncSubscriberToHubSpot::dispatch($subscriber);
 
         return to_route('profile.edit');
     }

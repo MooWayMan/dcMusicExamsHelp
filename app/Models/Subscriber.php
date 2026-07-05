@@ -16,6 +16,8 @@ class Subscriber extends Model
         'subscribed_at',
         'unsubscribed_at',
         'marketing_consent_at',
+        'hubspot_contact_id',
+        'hubspot_synced_at',
     ];
 
     protected function casts(): array
@@ -24,6 +26,7 @@ class Subscriber extends Model
             'subscribed_at' => 'datetime',
             'unsubscribed_at' => 'datetime',
             'marketing_consent_at' => 'datetime',
+            'hubspot_synced_at' => 'datetime',
         ];
     }
 

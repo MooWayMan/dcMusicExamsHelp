@@ -4,6 +4,7 @@ namespace App\Actions\Fortify;
 
 use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
+use App\Jobs\SyncSubscriberToHubSpot;
 use App\Models\ExamContact;
 use App\Models\Subscriber;
 use App\Models\User;
@@ -103,5 +104,11 @@ class CreateNewUser implements CreatesNewUsers
         }
 
         $subscriber->save();
+
+        // Opting in at signup pushes the consented contact into HubSpot so the
+        // marketing list picks them up without a manual CSV import.
+        if ($wantsMarketing) {
+            SyncSubscriberToHubSpot::dispatch($subscriber);
+        }
     }
 }

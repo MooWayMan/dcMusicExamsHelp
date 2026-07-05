@@ -128,10 +128,12 @@ test('can mass assign fillable fields', function () {
         ->and($subscriber->source)->toBe('landing');
 });
 
-test('fillable includes the expected 7 fields', function () {
+test('fillable includes the expected 9 fields', function () {
     $subscriber = new Subscriber();
 
-    expect($subscriber->getFillable())->toHaveCount(7);
+    expect($subscriber->getFillable())
+        ->toHaveCount(9)
+        ->toContain('hubspot_contact_id', 'hubspot_synced_at');
 });
 
 // ──────────────────────────────────────────
