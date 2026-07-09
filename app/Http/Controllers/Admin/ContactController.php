@@ -4,10 +4,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ContactMergeDismissal;
 use App\Models\ExamContact;
+use App\Services\ContactMergeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class ContactController extends Controller
@@ -164,7 +167,7 @@ class ContactController extends Controller
         return 'unknown';
     }
 
-    public function show(ExamContact $contact)
+    public function show(ExamContact $contact, ContactMergeService $merges)
     {
         $contact->load([
             'emails',
@@ -202,7 +205,30 @@ class ContactController extends Controller
             })
             ->values();
 
+        // Likely duplicates (fuzzy name), for the merge banner. Plus a light
+        // list of every other contact for the manual "merge another contact
+        // into this one" picker (catches aliases with a different surname).
+        $possibleDuplicates = $merges->possibleDuplicatesFor($contact)
+            ->map(fn ($row) => [
+                'id' => $row['contact']->id,
+                'name' => $row['contact']->name,
+                'email' => $row['contact']->primary_email,
+                'types' => $row['contact']->types,
+                'score' => $row['score'],
+            ]);
+
+        $mergeCandidates = ExamContact::where('id', '!=', $contact->id)
+            ->orderBy('name')
+            ->get(['id', 'name', 'email'])
+            ->map(fn ($c) => [
+                'id' => $c->id,
+                'name' => $c->name,
+                'email' => $c->email,
+            ]);
+
         return Inertia::render('admin/Contacts/Show', [
+            'possibleDuplicates' => $possibleDuplicates,
+            'mergeCandidates' => $mergeCandidates,
             'contact' => [
                 'id' => $contact->id,
                 'name' => $contact->name,
@@ -264,6 +290,43 @@ class ContactController extends Controller
                 ]),
             ],
         ]);
+    }
+
+    /**
+     * Merge another contact INTO this one. $contact survives (its primary
+     * email is kept); the other is folded in and soft-deleted.
+     */
+    public function merge(Request $request, ExamContact $contact, ContactMergeService $merges): RedirectResponse
+    {
+        $validated = $request->validate([
+            'drop_id' => ['required', 'integer', Rule::notIn([$contact->id]), 'exists:exam_contacts,id'],
+        ]);
+
+        $drop = ExamContact::findOrFail($validated['drop_id']);
+        $dropName = $drop->name;
+
+        $merges->merge($contact, $drop);
+
+        return redirect()
+            ->route('admin.contacts.show', $contact)
+            ->with('success', "Merged {$dropName} into {$contact->name}.");
+    }
+
+    /**
+     * Record a "not the same person" decision so the pair is never flagged
+     * as a possible duplicate again.
+     */
+    public function dismissDuplicate(Request $request, ExamContact $contact): RedirectResponse
+    {
+        $validated = $request->validate([
+            'other_id' => ['required', 'integer', Rule::notIn([$contact->id]), 'exists:exam_contacts,id'],
+        ]);
+
+        ContactMergeDismissal::dismiss($contact->id, $validated['other_id']);
+
+        return redirect()
+            ->route('admin.contacts.show', $contact)
+            ->with('success', 'Dismissed — these two won\'t be flagged as duplicates again.');
     }
 
     public function edit(ExamContact $contact)
