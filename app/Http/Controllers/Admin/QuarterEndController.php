@@ -58,7 +58,16 @@ class QuarterEndController extends Controller
         // and every credit name falls straight through to teacher_name, so the
         // existing teacher behaviour is byte-for-byte unchanged.
         [$schoolNameByContactId, $schoolMetaByNameLower] = $this->schoolCreditMaps();
-        $creditName = fn ($e) => $this->creditNameFor($e, $schoolNameByContactId);
+
+        // Parent/self bookings carry no teacher_name, but once the parent is
+        // linked at results-import (submitter_contact_id) we can name their
+        // group after them instead of dumping them in the catch-all bucket.
+        $submitterNameById = ExamContact::whereIn(
+            'id',
+            $allEntries->pluck('submitter_contact_id')->filter()->unique()->values()
+        )->pluck('name', 'id')->all();
+
+        $creditName = fn ($e) => $this->creditNameFor($e, $schoolNameByContactId, $submitterNameById);
 
         // Parents and self-bookers stamped as teacher_name during import need
         // the same Copy Email + Open Gmail workflow as teachers — they just
@@ -993,12 +1002,21 @@ class QuarterEndController extends Controller
      *
      * @param  array<int,string>  $schoolNameByContactId
      */
-    private function creditNameFor(ExamEntry $e, array $schoolNameByContactId): ?string
+    private function creditNameFor(ExamEntry $e, array $schoolNameByContactId, array $submitterNameById = []): ?string
     {
         if ($e->booking_role === 'school_admin'
             && $e->teacher_contact_id
             && isset($schoolNameByContactId[$e->teacher_contact_id])) {
             return $schoolNameByContactId[$e->teacher_contact_id];
+        }
+
+        // Parent/self booking with no teacher_name but a linked submitter:
+        // credit the submitter (the parent) so they get their own named group
+        // rather than falling into "Parent Bookings (no teacher assigned)".
+        if (trim((string) $e->teacher_name) === ''
+            && $e->submitter_contact_id
+            && isset($submitterNameById[$e->submitter_contact_id])) {
+            return $submitterNameById[$e->submitter_contact_id];
         }
 
         return $e->teacher_name;

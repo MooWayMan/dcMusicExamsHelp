@@ -149,11 +149,11 @@ const examColumns = [
                 <p class="mt-4 text-sm text-brand-text-soft">Created {{ order.created_at }}</p>
             </div>
 
-            <!-- Teacher -->
+            <!-- Applicant (order submitter — may be a teacher, parent or self-booker) -->
             <div class="rounded-xl border border-brand-border bg-brand-surface p-5">
                 <div class="flex items-center gap-2">
                     <User class="h-5 w-5 text-brand-text-soft" />
-                    <h2 class="text-xl font-semibold text-brand-text">Teacher</h2>
+                    <h2 class="text-xl font-semibold text-brand-text">Applicant</h2>
                 </div>
                 <div v-if="order.teacher" class="mt-4">
                     <Link v-if="order.teacher.id" :href="`/admin/contacts/${order.teacher.id}`" class="text-xl font-semibold text-brand-accent hover:underline">
@@ -163,7 +163,7 @@ const examColumns = [
                     <p class="mt-1 truncate text-base text-brand-text-soft">{{ order.teacher.email }}</p>
                     <p v-if="order.teacher.phone" class="text-base text-brand-text-soft">{{ order.teacher.phone }}</p>
                 </div>
-                <p v-else class="mt-4 text-base text-brand-text-soft">Teacher removed or unlinked</p>
+                <p v-else class="mt-4 text-base text-brand-text-soft">Applicant removed or unlinked</p>
             </div>
 
             <!-- School -->

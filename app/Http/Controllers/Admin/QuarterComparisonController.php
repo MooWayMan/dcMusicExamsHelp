@@ -65,6 +65,14 @@ class QuarterComparisonController extends Controller
         ksort($yearMap);
         $availableYears = array_values($yearMap);
 
+        // Delivery-method filter — Q1 had F2F but Q2 didn't, so restricting to
+        // Digital (or F2F) makes the quarters comparable like-for-like.
+        // '' = all methods.
+        $methodFilter = strtolower((string) $request->query('method', ''));
+        if (! in_array($methodFilter, ['digital', 'f2f'], true)) {
+            $methodFilter = '';
+        }
+
         // Resolve the selection: a specific year (default = current), or 'all'.
         $yearParam = strtolower((string) $request->query('year', (string) $currentYear));
         $isAll = $yearParam === 'all';
@@ -102,6 +110,15 @@ class QuarterComparisonController extends Controller
 
             $method = $entry->delivery_method ?? $entry->order?->delivery_method ?? '';
             $isDigital = str_starts_with(strtolower((string) $method), 'digital');
+
+            // Apply the method filter (skip the entries we're not comparing).
+            if ($methodFilter === 'digital' && ! $isDigital) {
+                continue;
+            }
+            if ($methodFilter === 'f2f' && $isDigital) {
+                continue;
+            }
+
             $fee = (float) ($entry->fee ?? 0);
             $rate = $this->commissionRate($method);
             $isRockPop = str_contains(strtolower((string) $entry->subject_area), 'rock and pop');
@@ -160,6 +177,7 @@ class QuarterComparisonController extends Controller
             'quarters' => $quarters,
             'year' => $isAll ? 'all' : (int) $selectedYear,
             'availableYears' => $availableYears,
+            'method' => $methodFilter,
         ]);
     }
 

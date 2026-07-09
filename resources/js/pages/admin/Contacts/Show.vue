@@ -30,6 +30,7 @@ interface ExamEntry {
     score: number | null
     exam_date: string | null
     fee: string | null
+    relationship?: 'teacher' | 'submitted'
 }
 
 interface StudentLink {
@@ -379,8 +380,12 @@ const visibleOrders = computed(() =>
                             {{ row.order_number }}
                         </Link>
                     </template>
-                    <template #cell-candidate_name="{ value }">
+                    <template #cell-candidate_name="{ value, row }">
                         <span class="text-base text-brand-text">{{ value ?? '—' }}</span>
+                        <span v-if="row.relationship === 'submitted'"
+                            class="ml-2 rounded-full bg-brand-surface-soft px-2 py-0.5 text-xs text-brand-text-soft">
+                            submitted
+                        </span>
                     </template>
                     <template #cell-candidate_number="{ value }">
                         <span class="select-all text-sm text-brand-text-soft" @click.stop>{{ value ?? '—' }}</span>

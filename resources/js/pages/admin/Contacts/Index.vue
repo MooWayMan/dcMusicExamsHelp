@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3'
 import { ref, watch } from 'vue'
-import { Search, Users, GraduationCap, UserCheck, Music, ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { Search, Users, GraduationCap, UserCheck, Music, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-vue-next'
 import PageHeader from '@/components/reusables/PageHeader.vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
 
@@ -25,6 +25,7 @@ interface Contact {
     exam_entries_count: number
     students_count: number
     orders_count: number
+    has_duplicate: boolean
 }
 
 interface PaginatedData {
@@ -310,6 +311,12 @@ const filterPills: { value: string | null; label: string }[] = [
                             @click="router.visit(`/admin/contacts/${contact.id}`)">
                             <td class="px-4 py-3">
                                 <span class="font-medium text-brand-accent hover:underline">{{ contact.name }}</span>
+                                <span v-if="contact.has_duplicate"
+                                    title="Looks like a duplicate — open to review and merge"
+                                    class="ml-2 inline-flex items-center gap-1 rounded-full bg-brand-purple-soft px-2 py-0.5 text-xs font-medium text-brand-purple">
+                                    <AlertTriangle class="h-3 w-3" />
+                                    possible duplicate
+                                </span>
                             </td>
                             <td class="px-4 py-3"><span class="text-sm text-brand-text-soft">{{ contact.email ?? '—' }}</span></td>
                             <td class="px-4 py-3"><span class="text-sm text-brand-text-soft">{{ contact.phone ?? '—' }}</span></td>

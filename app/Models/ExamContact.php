@@ -287,4 +287,29 @@ class ExamContact extends Model
             ?? $this->emails->first()?->email
             ?? $this->email;
     }
+
+    /**
+     * Resolve a contact by ANY of its emails — the primary `email` column OR
+     * a secondary in `contact_emails`. Use this everywhere the importer matches
+     * an applicant/submitter by email, so a person who books under a second
+     * address (e.g. Daniel Rogers using exams@… as well as rogers@…) resolves
+     * to their existing record instead of spawning a duplicate.
+     */
+    public static function findByEmail(?string $email): ?self
+    {
+        $email = trim((string) $email);
+        if ($email === '') {
+            return null;
+        }
+        $lower = mb_strtolower($email);
+
+        $contact = static::whereRaw('LOWER(email) = ?', [$lower])->first();
+        if ($contact) {
+            return $contact;
+        }
+
+        $row = ContactEmail::whereRaw('LOWER(email) = ?', [$lower])->first();
+
+        return $row ? static::find($row->exam_contact_id) : null;
+    }
 }

@@ -515,3 +515,44 @@ test('per-entry booking_role override wins over contact-type inference', functio
         ->where('summary.top_scorers.initial_5.distinction.0.is_parent_booking', false)
         ->where('summary.top_scorers.initial_5.distinction.0.booking_role', 'teacher'));
 });
+
+// ── Parent bookings group under the linked submitter ──────────────────────
+// A parent booking carries no teacher_name, but once the parent is linked at
+// results-import (submitter_contact_id) their group is named after them
+// instead of falling into "Parent Bookings (no teacher assigned)".
+
+test('a parent booking is grouped under the linked submitter, not the no-teacher bucket', function () {
+    $parent = App\Models\ExamContact::create(['name' => 'Michael Hazell', 'email' => 'm@example.test']);
+    $parent->addType('parent');
+
+    tsEntry([
+        'candidate_name' => 'Jim Hazell',
+        'grade' => '4',
+        'score' => 81,
+        'result' => 'Merit',
+        'teacher_name' => null,
+        'booking_role' => 'parent',
+        'submitter_contact_id' => $parent->id,
+    ]);
+
+    $this->actingAs($this->admin)->get(TS_URL)
+        ->assertInertia(fn ($p) => $p
+            ->where('teachers', fn ($teachers) => collect($teachers)->pluck('teacher_name')->contains('Michael Hazell')
+                && ! collect($teachers)->pluck('teacher_name')->contains('Parent Bookings (no teacher assigned)')));
+});
+
+test('a parent booking with NO linked submitter still falls into the catch-all bucket', function () {
+    tsEntry([
+        'candidate_name' => 'Orphan Candidate',
+        'grade' => '2',
+        'score' => 80,
+        'result' => 'Merit',
+        'teacher_name' => null,
+        'booking_role' => 'parent',
+        'submitter_contact_id' => null,
+    ]);
+
+    $this->actingAs($this->admin)->get(TS_URL)
+        ->assertInertia(fn ($p) => $p
+            ->where('teachers', fn ($teachers) => collect($teachers)->pluck('teacher_name')->contains('Parent Bookings (no teacher assigned)')));
+});
