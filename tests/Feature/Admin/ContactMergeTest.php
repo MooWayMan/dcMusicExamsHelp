@@ -188,6 +188,30 @@ test('show payload includes possible duplicates', function () {
             ->has('possibleDuplicates', 1));
 });
 
+test('the contacts list flags rows that have a likely duplicate', function () {
+    contact('Maria Nielsen', 'a@example.test');
+    contact('Maria Nielsen', 'b@example.test');
+    contact('Solo Person', 'solo@example.test');
+
+    $this->actingAs(mergeAdmin())
+        ->get('/admin/contacts')
+        ->assertInertia(fn ($page) => $page
+            ->component('admin/Contacts/Index')
+            ->where('contacts.data', fn ($rows) => collect($rows)
+                ->every(fn ($r) => $r['name'] === 'Solo Person' ? $r['has_duplicate'] === false : $r['has_duplicate'] === true)));
+});
+
+test('a dismissed pair is not flagged in the contacts list', function () {
+    $a = contact('Maria Nielsen', 'a@example.test');
+    $b = contact('Maria Nielsen', 'b@example.test');
+    ContactMergeDismissal::dismiss($a->id, $b->id);
+
+    $this->actingAs(mergeAdmin())
+        ->get('/admin/contacts')
+        ->assertInertia(fn ($page) => $page
+            ->where('contacts.data', fn ($rows) => collect($rows)->every(fn ($r) => $r['has_duplicate'] === false)));
+});
+
 test('non-admin cannot merge contacts', function () {
     $keep = contact('X');
     $drop = contact('Y');

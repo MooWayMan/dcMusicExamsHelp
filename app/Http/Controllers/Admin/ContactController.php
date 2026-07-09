@@ -15,8 +15,11 @@ use Inertia\Inertia;
 
 class ContactController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, ContactMergeService $merges)
     {
+        // IDs with a likely duplicate, so the list can flag them. One pass.
+        $duplicateIds = $merges->duplicateContactIds();
+
         $search = $request->input('search');
         $type = $request->input('type');
         $family = $request->input('family');
@@ -77,7 +80,7 @@ class ContactController extends Controller
         // `instruments` is the chips data — distinct instruments derived from
         // the contact's exam entries (only meaningful for teachers / school
         // admins who have a teacher_contact_id link to entries).
-        $contacts->through(function ($contact) {
+        $contacts->through(function ($contact) use ($duplicateIds) {
             // Union of persisted (contact_instrument) + derived (from current
             // entries), distinct by id — so the chips survive entry deletion
             // but also show instruments from entries not yet backfilled.
@@ -102,6 +105,7 @@ class ContactController extends Controller
                 'exam_entries_count' => $contact->exam_entries_count,
                 'students_count' => $contact->students_count,
                 'orders_count' => $contact->orders_count,
+                'has_duplicate' => isset($duplicateIds[$contact->id]),
             ];
         });
 

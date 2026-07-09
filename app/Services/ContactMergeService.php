@@ -52,6 +52,47 @@ class ContactMergeService
     }
 
     /**
+     * IDs of every contact that has at least one non-dismissed fuzzy duplicate,
+     * computed in a single pass (for the contacts-list "possible duplicate"
+     * flag). O(n²) name comparisons, fine for the low-hundreds of contacts.
+     *
+     * @return array<int, true> keyed by contact id for O(1) lookup
+     */
+    public function duplicateContactIds(int $threshold = 80): array
+    {
+        $rows = ExamContact::get(['id', 'name'])
+            ->map(fn ($c) => ['id' => $c->id, 'norm' => $this->normalizeName($c->name)])
+            ->filter(fn ($c) => $c['norm'] !== '')
+            ->values()
+            ->all();
+
+        $dismissed = [];
+        foreach (ContactMergeDismissal::get(['low_contact_id', 'high_contact_id']) as $d) {
+            $dismissed[$d->low_contact_id.'-'.$d->high_contact_id] = true;
+        }
+
+        $flagged = [];
+        $count = count($rows);
+        for ($i = 0; $i < $count; $i++) {
+            for ($j = $i + 1; $j < $count; $j++) {
+                $percent = 0.0;
+                similar_text($rows[$i]['norm'], $rows[$j]['norm'], $percent);
+                if ($percent < $threshold) {
+                    continue;
+                }
+                [$low, $high] = ContactMergeDismissal::pair($rows[$i]['id'], $rows[$j]['id']);
+                if (isset($dismissed[$low.'-'.$high])) {
+                    continue;
+                }
+                $flagged[$rows[$i]['id']] = true;
+                $flagged[$rows[$j]['id']] = true;
+            }
+        }
+
+        return $flagged;
+    }
+
+    /**
      * Merge $drop INTO $keep. $keep survives; $drop is soft-deleted after all
      * its references are repointed. Runs in a transaction — all or nothing.
      */
