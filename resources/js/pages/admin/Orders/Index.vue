@@ -35,9 +35,15 @@ interface PaginatedData {
     links: Array<{ url: string | null; label: string; active: boolean }>
 }
 
+interface PeriodOption {
+    value: string
+    label: string
+}
+
 const props = defineProps<{
     orders: PaginatedData
     summary: { total_orders: number; total_commission: string; total_candidates: number; total_paid: string; total_unpaid: string }
+    periodOptions: { quarters: PeriodOption[]; years: PeriodOption[] }
     filters: { search: string | null; method: string | null; status: string | null; paid: string | null; period: string | null; sort: string; direction: string }
 }>()
 
@@ -172,8 +178,10 @@ const { animClass } = usePageAnimation()
                 </button>
             </div>
 
-            <!-- Time period filter -->
-            <div class="flex flex-wrap gap-1">
+            <!-- Time period filter — quick relative pills PLUS a dropdown for
+                 specific quarters/years (the list that grows over time). Both
+                 drive the same `period` param, so they stay in sync. -->
+            <div class="flex flex-wrap items-center gap-1">
                 <button v-for="p in [
                     { label: 'All Time', value: null },
                     { label: 'This Quarter', value: 'this_quarter' },
@@ -186,6 +194,26 @@ const { animClass } = usePageAnimation()
                     :class="(filters.period ?? null) === p.value ? 'bg-brand-success text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
                     {{ p.label }}
                 </button>
+
+                <select
+                    :value="filters.period ?? ''"
+                    @change="filterByPeriod(($event.target as HTMLSelectElement).value || null)"
+                    class="ml-1 cursor-pointer rounded-full border border-brand-border bg-brand-surface px-3 py-1.5 text-sm font-medium text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                >
+                    <option value="">Jump to…</option>
+                    <optgroup label="Relative">
+                        <option value="this_quarter">This Quarter</option>
+                        <option value="last_quarter">Last Quarter</option>
+                        <option value="this_year">This Year</option>
+                        <option value="last_12">Last 12 Months</option>
+                    </optgroup>
+                    <optgroup v-if="periodOptions.quarters.length" label="By quarter">
+                        <option v-for="q in periodOptions.quarters" :key="q.value" :value="q.value">{{ q.label }}</option>
+                    </optgroup>
+                    <optgroup v-if="periodOptions.years.length" label="By year">
+                        <option v-for="y in periodOptions.years" :key="y.value" :value="y.value">{{ y.label }}</option>
+                    </optgroup>
+                </select>
             </div>
         </div>
 

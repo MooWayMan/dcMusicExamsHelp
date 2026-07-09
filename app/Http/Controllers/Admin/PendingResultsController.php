@@ -189,6 +189,11 @@ class PendingResultsController extends Controller
             'filters' => [
                 'search' => $search,
                 'method' => $method,
+                // Sort lives in the URL so the chosen column/direction survives
+                // a click-through-and-back (client-side table state is lost on
+                // remount, mirroring how the Orders page keeps its sort).
+                'sort' => $request->input('sort'),
+                'direction' => $request->input('direction', 'asc'),
             ],
             'quarter' => $quarter,
             'year' => $year,

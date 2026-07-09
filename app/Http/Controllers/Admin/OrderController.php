@@ -55,20 +55,10 @@ class OrderController extends Controller
         // Time period filter — use the exam date (requested_start_date), not
         // created_at. A March exam that was imported in April belongs to Q1
         // because it happened in Q1, regardless of when the row was inserted.
+        // Handles both the relative pills (this_quarter, …) and the specific
+        // quarter/year values from the dropdown (q-2026-2, y-2026).
         $period = $request->input('period');
-        if ($period) {
-            $now = Carbon::now();
-            match ($period) {
-                'this_quarter' => $query->whereBetween('requested_start_date', [$now->copy()->startOfQuarter(), $now->copy()->endOfQuarter()]),
-                'last_quarter' => $query->whereBetween('requested_start_date', [
-                    $now->copy()->subQuarter()->startOfQuarter(),
-                    $now->copy()->subQuarter()->endOfQuarter(),
-                ]),
-                'this_year' => $query->whereBetween('requested_start_date', [$now->copy()->startOfYear(), $now->copy()->endOfYear()]),
-                'last_12' => $query->where('requested_start_date', '>=', $now->copy()->subMonths(12)),
-                default => null,
-            };
-        }
+        $this->applyPeriod($query, $period);
 
         $sortBy = $request->input('sort', 'created_at');
         $sortDir = $request->input('direction', 'desc');
@@ -132,19 +122,7 @@ class OrderController extends Controller
         if ($status) $summaryQuery->where('order_status', $status);
         if ($paid === 'paid') $summaryQuery->paid();
         if ($paid === 'unpaid') $summaryQuery->unpaid();
-        if ($period) {
-            $now = Carbon::now();
-            match ($period) {
-                'this_quarter' => $summaryQuery->whereBetween('requested_start_date', [$now->copy()->startOfQuarter(), $now->copy()->endOfQuarter()]),
-                'last_quarter' => $summaryQuery->whereBetween('requested_start_date', [
-                    $now->copy()->subQuarter()->startOfQuarter(),
-                    $now->copy()->subQuarter()->endOfQuarter(),
-                ]),
-                'this_year' => $summaryQuery->whereBetween('requested_start_date', [$now->copy()->startOfYear(), $now->copy()->endOfYear()]),
-                'last_12' => $summaryQuery->where('requested_start_date', '>=', $now->copy()->subMonths(12)),
-                default => null,
-            };
-        }
+        $this->applyPeriod($summaryQuery, $period);
 
         // Clone so we don't mutate the main summary with extra wheres
         $paidSummaryQuery = (clone $summaryQuery)->paid();
@@ -161,6 +139,7 @@ class OrderController extends Controller
         return Inertia::render('admin/Orders/Index', [
             'orders' => $orders,
             'summary' => $summary,
+            'periodOptions' => $this->periodOptions(),
             'filters' => [
                 'search' => $search,
                 'method' => $method,
@@ -171,6 +150,74 @@ class OrderController extends Controller
                 'direction' => $sortDir,
             ],
         ]);
+    }
+
+    /**
+     * Apply the period filter to a query. Accepts the relative pill values
+     * (this_quarter / last_quarter / this_year / last_12) AND the dropdown's
+     * specific values: `q-YYYY-Q` (one quarter) and `y-YYYY` (one year).
+     * Anything unrecognised is a no-op, so a stale value never hides the list.
+     */
+    private function applyPeriod($query, ?string $period): void
+    {
+        if (! $period) {
+            return;
+        }
+
+        if (preg_match('/^q-(\d{4})-([1-4])$/', $period, $m)) {
+            $start = Carbon::create((int) $m[1], (((int) $m[2]) - 1) * 3 + 1, 1)->startOfDay();
+            $end = $start->copy()->addMonths(3)->subDay()->endOfDay();
+            $query->whereBetween('requested_start_date', [$start, $end]);
+
+            return;
+        }
+
+        if (preg_match('/^y-(\d{4})$/', $period, $m)) {
+            $query->whereBetween('requested_start_date', [
+                Carbon::create((int) $m[1], 1, 1)->startOfDay(),
+                Carbon::create((int) $m[1], 12, 31)->endOfDay(),
+            ]);
+
+            return;
+        }
+
+        $now = Carbon::now();
+        match ($period) {
+            'this_quarter' => $query->whereBetween('requested_start_date', [$now->copy()->startOfQuarter(), $now->copy()->endOfQuarter()]),
+            'last_quarter' => $query->whereBetween('requested_start_date', [
+                $now->copy()->subQuarter()->startOfQuarter(),
+                $now->copy()->subQuarter()->endOfQuarter(),
+            ]),
+            'this_year' => $query->whereBetween('requested_start_date', [$now->copy()->startOfYear(), $now->copy()->endOfYear()]),
+            'last_12' => $query->where('requested_start_date', '>=', $now->copy()->subMonths(12)),
+            default => null,
+        };
+    }
+
+    /**
+     * Build the specific quarter + year options for the period dropdown,
+     * derived from the actual order dates (newest first). This is the list
+     * that grows over time, unlike the fixed relative pills.
+     */
+    private function periodOptions(): array
+    {
+        $dates = Order::whereNotNull('requested_start_date')->pluck('requested_start_date');
+
+        $quarters = $dates
+            ->map(fn ($d) => ['year' => (int) $d->year, 'q' => (int) ceil($d->month / 3)])
+            ->unique(fn ($x) => $x['year'].'-'.$x['q'])
+            ->sortByDesc(fn ($x) => $x['year'] * 10 + $x['q'])
+            ->map(fn ($x) => ['value' => "q-{$x['year']}-{$x['q']}", 'label' => "Q{$x['q']} {$x['year']}"])
+            ->values();
+
+        $years = $dates
+            ->map(fn ($d) => (int) $d->year)
+            ->unique()
+            ->sortDesc()
+            ->map(fn ($y) => ['value' => "y-{$y}", 'label' => (string) $y])
+            ->values();
+
+        return ['quarters' => $quarters, 'years' => $years];
     }
 
     public function create(): Response
