@@ -234,6 +234,44 @@ test('search matches the order submitter name', function () {
 });
 
 // ──────────────────────────────────────────
+// Order # column + sort persistence
+// ──────────────────────────────────────────
+// The pending list carries each entry's Trinity order number (and order id for
+// the link) so Paul can read it straight off for the results-import CSV triple.
+// Sort choice is echoed into filters so it can be seeded back into the table
+// after a click-through-and-back.
+
+test('each pending entry carries its order number and order id', function () {
+    $order = makePendingOrder(Carbon::create(2026, 4, 15));
+    $order->update(['trinity_order_number' => '1-ORDER-XYZ']);
+
+    makePendingEntry([
+        'candidate_name' => 'Grace Kennedy',
+        'exam_date' => Carbon::create(2026, 4, 15),
+        'order' => $order,
+    ]);
+
+    $this->actingAs($this->admin)
+        ->get('/admin/pending-results')
+        ->assertInertia(fn ($page) => $page
+            ->where('entries.0.order_number', '1-ORDER-XYZ')
+            ->where('entries.0.order_id', $order->id));
+});
+
+test('sort and direction are echoed back into filters', function () {
+    makePendingEntry([
+        'candidate_name' => 'Anyone',
+        'exam_date' => Carbon::create(2026, 4, 15),
+    ]);
+
+    $this->actingAs($this->admin)
+        ->get('/admin/pending-results?sort=applicant&direction=desc')
+        ->assertInertia(fn ($page) => $page
+            ->where('filters.sort', 'applicant')
+            ->where('filters.direction', 'desc'));
+});
+
+// ──────────────────────────────────────────
 // Orders awaiting candidate import
 // ──────────────────────────────────────────
 // Orders booked via bulk import but with NO per-candidate triple imported

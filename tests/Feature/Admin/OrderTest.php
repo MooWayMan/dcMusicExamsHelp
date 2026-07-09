@@ -219,6 +219,50 @@ test('period filter passes through to frontend filters', function () {
         );
 });
 
+test('orders can be filtered by a specific quarter via the dropdown', function () {
+    $admin = orderAdmin();
+
+    // Q2 2026 (Apr–Jun) — the target.
+    Order::factory()->create(['requested_start_date' => '2026-05-20']);
+    // Q1 2026 — different quarter, must NOT show.
+    Order::factory()->create(['requested_start_date' => '2026-02-10']);
+    // Same quarter, different year — must NOT show.
+    Order::factory()->create(['requested_start_date' => '2025-05-20']);
+
+    $this->actingAs($admin)
+        ->get(route('admin.orders.index', ['period' => 'q-2026-2']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->has('orders.data', 1));
+});
+
+test('orders can be filtered by a specific year via the dropdown', function () {
+    $admin = orderAdmin();
+
+    Order::factory()->count(2)->create(['requested_start_date' => '2026-02-10']);
+    Order::factory()->create(['requested_start_date' => '2025-11-01']);
+
+    $this->actingAs($admin)
+        ->get(route('admin.orders.index', ['period' => 'y-2026']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->has('orders.data', 2));
+});
+
+test('period dropdown options list the quarters and years present in the data', function () {
+    $admin = orderAdmin();
+
+    Order::factory()->create(['requested_start_date' => '2026-05-20']); // Q2 2026
+    Order::factory()->create(['requested_start_date' => '2025-11-01']); // Q4 2025
+
+    $this->actingAs($admin)
+        ->get(route('admin.orders.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            // Newest first.
+            ->where('periodOptions.quarters.0.value', 'q-2026-2')
+            ->where('periodOptions.quarters.0.label', 'Q2 2026')
+            ->where('periodOptions.years.0.value', 'y-2026'));
+});
+
 // ──────────────────────────────────────────
 // Show
 // ──────────────────────────────────────────

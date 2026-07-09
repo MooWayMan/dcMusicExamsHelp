@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
-import { ArrowLeft, Mail, Phone, User, Music, ShoppingCart, Tag, Pencil, ChevronDown, ChevronUp } from 'lucide-vue-next'
+import { ArrowLeft, Mail, Phone, User, Music, ShoppingCart, Tag, Pencil, ChevronDown, ChevronUp, AlertTriangle, GitMerge, Search } from 'lucide-vue-next'
 import MyTableConstructor from '@/components/reusables/MyTableConstructor.vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
 
@@ -67,7 +67,53 @@ interface Contact {
     orders: OrderLink[]
 }
 
-const props = defineProps<{ contact: Contact }>()
+interface DuplicateContact {
+    id: number
+    name: string
+    email: string | null
+    types: string[]
+    score: number
+}
+
+interface MergeCandidate {
+    id: number
+    name: string
+    email: string | null
+}
+
+const props = defineProps<{
+    contact: Contact
+    possibleDuplicates: DuplicateContact[]
+    mergeCandidates: MergeCandidate[]
+}>()
+
+// Merge / dismiss. Merging keeps THIS record and folds the other in, so to
+// keep a particular email as primary you open the contact that has it.
+const confirmingMergeId = ref<number | null>(null)
+const showManualMerge = ref(false)
+const manualSearch = ref('')
+
+const filteredCandidates = computed(() => {
+    const q = manualSearch.value.trim().toLowerCase()
+    const list = q
+        ? props.mergeCandidates.filter(c =>
+            c.name.toLowerCase().includes(q) || (c.email ?? '').toLowerCase().includes(q))
+        : props.mergeCandidates
+    return list.slice(0, 25)
+})
+
+function mergeIn(dropId: number) {
+    router.post(`/admin/contacts/${props.contact.id}/merge`, { drop_id: dropId }, {
+        preserveScroll: true,
+        onFinish: () => { confirmingMergeId.value = null },
+    })
+}
+
+function dismiss(otherId: number) {
+    router.post(`/admin/contacts/${props.contact.id}/dismiss-duplicate`, { other_id: otherId }, {
+        preserveScroll: true,
+    })
+}
 
 function goBack() { window.history.back() }
 
@@ -156,6 +202,98 @@ const visibleOrders = computed(() =>
                 <Pencil class="h-4 w-4" />
                 Edit
             </Link>
+        </div>
+
+        <!-- Possible duplicates — same person under a different email. Merging
+             folds the other record into THIS one and keeps this email primary. -->
+        <div v-if="possibleDuplicates.length" class="mb-6 rounded-xl border border-brand-border bg-brand-purple-soft p-4">
+            <div class="flex items-center gap-2">
+                <AlertTriangle class="h-5 w-5 text-brand-purple" />
+                <h2 class="text-base font-semibold text-brand-purple">
+                    Possible duplicate{{ possibleDuplicates.length > 1 ? 's' : '' }}
+                </h2>
+            </div>
+            <p class="mt-1 text-sm text-brand-text-soft">
+                These look like the same person as {{ contact.name }}. Merging combines every entry, order, email and role onto this record.
+            </p>
+            <ul class="mt-3 space-y-2">
+                <li v-for="dup in possibleDuplicates" :key="dup.id" class="rounded-lg border border-brand-border bg-brand-surface p-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="min-w-0">
+                            <Link :href="`/admin/contacts/${dup.id}`" class="font-medium text-brand-accent hover:underline">{{ dup.name }}</Link>
+                            <span class="ml-2 text-sm text-brand-text-soft">{{ dup.email ?? 'no email' }}</span>
+                            <span class="ml-2 text-xs text-brand-text-soft">{{ dup.score }}% match</span>
+                        </div>
+                        <div v-if="confirmingMergeId === dup.id" class="flex items-center gap-2">
+                            <span class="text-sm text-brand-text">Merge into {{ contact.name }}?</span>
+                            <button @click="mergeIn(dup.id)"
+                                class="cursor-pointer rounded-lg bg-brand-danger px-3 py-1.5 text-sm font-semibold text-brand-text-inverse hover:opacity-90">
+                                Confirm merge
+                            </button>
+                            <button @click="confirmingMergeId = null"
+                                class="cursor-pointer rounded-lg border border-brand-border px-3 py-1.5 text-sm text-brand-text-soft hover:text-brand-text">
+                                Cancel
+                            </button>
+                        </div>
+                        <div v-else class="flex items-center gap-2">
+                            <button @click="confirmingMergeId = dup.id"
+                                class="cursor-pointer rounded-lg bg-brand-accent px-3 py-1.5 text-sm font-semibold text-brand-text-inverse hover:opacity-90">
+                                Merge in
+                            </button>
+                            <button @click="dismiss(dup.id)"
+                                class="cursor-pointer rounded-lg border border-brand-border px-3 py-1.5 text-sm text-brand-text-soft hover:text-brand-text">
+                                Not the same
+                            </button>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Manual merge — for aliases the fuzzy match won't catch (e.g. a
+             different surname). Always available. -->
+        <div :class="['mb-6', animClass('fade-up', 0)]">
+            <button @click="showManualMerge = !showManualMerge"
+                class="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-brand-text-soft hover:text-brand-accent">
+                <GitMerge class="h-4 w-4" />
+                Merge another contact into this one
+                <ChevronDown v-if="!showManualMerge" class="h-4 w-4" />
+                <ChevronUp v-else class="h-4 w-4" />
+            </button>
+            <div v-if="showManualMerge" class="mt-3 rounded-xl border border-brand-border bg-brand-surface p-4">
+                <p class="mb-3 text-sm text-brand-text-soft">
+                    Pick the record to fold into {{ contact.name }}. That record is retired and everything moves here.
+                </p>
+                <div class="relative mb-3">
+                    <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-text-soft" />
+                    <input v-model="manualSearch" type="text" placeholder="Search contacts by name or email…"
+                        class="w-full rounded-lg border border-brand-border bg-brand-surface py-2 pl-10 pr-4 text-sm text-brand-text placeholder:text-brand-text-soft focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent" />
+                </div>
+                <ul class="max-h-72 space-y-1 overflow-y-auto">
+                    <li v-for="cand in filteredCandidates" :key="cand.id"
+                        class="flex items-center justify-between gap-2 rounded-lg border border-brand-border px-3 py-2">
+                        <div class="min-w-0">
+                            <span class="font-medium text-brand-text">{{ cand.name }}</span>
+                            <span class="ml-2 text-sm text-brand-text-soft">{{ cand.email ?? 'no email' }}</span>
+                        </div>
+                        <div v-if="confirmingMergeId === cand.id" class="flex items-center gap-2">
+                            <button @click="mergeIn(cand.id)"
+                                class="cursor-pointer rounded-lg bg-brand-danger px-3 py-1.5 text-sm font-semibold text-brand-text-inverse hover:opacity-90">
+                                Confirm
+                            </button>
+                            <button @click="confirmingMergeId = null"
+                                class="cursor-pointer rounded-lg border border-brand-border px-3 py-1.5 text-sm text-brand-text-soft hover:text-brand-text">
+                                Cancel
+                            </button>
+                        </div>
+                        <button v-else @click="confirmingMergeId = cand.id"
+                            class="cursor-pointer rounded-lg border border-brand-border px-3 py-1.5 text-sm font-medium text-brand-accent hover:bg-brand-surface-soft">
+                            Merge in
+                        </button>
+                    </li>
+                    <li v-if="!filteredCandidates.length" class="px-3 py-2 text-sm text-brand-text-soft">No contacts match.</li>
+                </ul>
+            </div>
         </div>
 
         <!-- Info cards -->

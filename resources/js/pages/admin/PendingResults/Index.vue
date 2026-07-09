@@ -39,7 +39,7 @@ const props = defineProps<{
     entries: PendingEntry[]
     awaitingImport: AwaitingOrder[]
     summary: { pending: number; with_results: number; total: number; awaiting_import: number }
-    filters: { search: string | null; method: string | null }
+    filters: { search: string | null; method: string | null; sort: string | null; direction: string | null }
     quarter: number
     year: number
     quarterLabel: string
@@ -47,18 +47,31 @@ const props = defineProps<{
 
 const search = ref(props.filters.search ?? '')
 const method = ref(props.filters.method ?? '')
+// Sort state is held in the URL so it persists across a click-into-a-row and
+// back. The table itself sorts client-side; these just seed it and remember.
+const sortKey = ref(props.filters.sort ?? '')
+const sortDir = ref<'asc' | 'desc'>(props.filters.direction === 'desc' ? 'desc' : 'asc')
 let searchTimeout: ReturnType<typeof setTimeout>
 
-// Always include the active quarter/year on every navigation so a search
-// inside Q2 doesn't accidentally bounce the page back to the default Q.
+// Always include the active quarter/year (and the current sort) on every
+// navigation so a search inside Q2 doesn't bounce the page back to the default
+// Q or drop the teacher grouping.
 function navigate(overrides: Record<string, string | number | undefined> = {}) {
     router.get('/admin/pending-results', {
         search: search.value || undefined,
         method: method.value || undefined,
+        sort: sortKey.value || undefined,
+        direction: sortKey.value ? sortDir.value : undefined,
         quarter: props.quarter,
         year: props.year,
         ...overrides,
     }, { preserveState: true, replace: true })
+}
+
+function onSort({ key, dir }: { key: string | null; dir: 'asc' | 'desc' }) {
+    sortKey.value = key ?? ''
+    sortDir.value = dir
+    navigate()
 }
 
 watch(search, (value) => {
@@ -77,6 +90,8 @@ function changeQuarter(q: number, y: number) {
     router.get('/admin/pending-results', {
         search: search.value || undefined,
         method: method.value || undefined,
+        sort: sortKey.value || undefined,
+        direction: sortKey.value ? sortDir.value : undefined,
         quarter: q,
         year: y,
     }, { preserveState: false })
@@ -85,6 +100,7 @@ function changeQuarter(q: number, y: number) {
 const columns = [
     { key: 'candidate_name', title: 'Candidate', sortable: true },
     { key: 'candidate_number', title: 'Candidate #', sortable: true },
+    { key: 'order_number', title: 'Order #', sortable: true },
     { key: 'instrument', title: 'Instrument', sortable: true },
     { key: 'grade', title: 'Grade', sortable: true },
     { key: 'delivery_method', title: 'Method', sortable: true },
@@ -220,8 +236,11 @@ const awaitingColumns = [
                 :striped="true"
                 :bordered="true"
                 size="medium"
+                :default-sort-key="sortKey || null"
+                :default-sort-dir="sortDir"
                 title="Pending Results"
-                subtitle="Copy candidate numbers to search in MOB Candidates & Contacts"
+                subtitle="Copy candidate or order numbers to search in MOB Candidates & Contacts"
+                @sort="onSort"
             >
                 <template #cell-candidate_name="{ row }">
                     <Link v-if="row.student_id"
@@ -233,6 +252,14 @@ const awaitingColumns = [
                 </template>
                 <template #cell-candidate_number="{ row }">
                     <span class="select-all text-sm text-brand-text-soft">{{ row.candidate_number }}</span>
+                </template>
+                <template #cell-order_number="{ row }">
+                    <Link v-if="row.order_id"
+                        :href="`/admin/orders/${row.order_id}`"
+                        class="select-all text-sm font-medium text-brand-accent hover:underline">
+                        {{ row.order_number }}
+                    </Link>
+                    <span v-else class="select-all text-sm text-brand-text-soft">{{ row.order_number }}</span>
                 </template>
                 <template #cell-instrument="{ row }">
                     <span class="text-sm text-brand-text-soft">{{ row.instrument }}</span>
