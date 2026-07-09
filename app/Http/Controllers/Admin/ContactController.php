@@ -169,29 +169,57 @@ class ContactController extends Controller
 
     public function show(ExamContact $contact, ContactMergeService $merges)
     {
+        $entrySelect = fn ($q) => $q->select(
+            'id', 'order_id', 'candidate_name', 'candidate_number',
+            'grade', 'subject_area', 'delivery_method', 'result',
+            'score', 'exam_date', 'teacher_contact_id', 'submitter_contact_id', 'fee', 'student_id'
+        )
+            ->with([
+                'order:id,trinity_order_number,requested_start_date',
+                'student:id,first_name,last_name',
+            ])
+            ->latest('exam_date');
+
         $contact->load([
             'emails',
             'students' => fn ($q) => $q->select('id', 'first_name', 'last_name', 'teacher_contact_id'),
-            'examEntries' => fn ($q) => $q->select(
-                'id', 'order_id', 'candidate_name', 'candidate_number',
-                'grade', 'subject_area', 'delivery_method', 'result',
-                'score', 'exam_date', 'teacher_contact_id', 'fee', 'student_id'
-            )
-                ->with([
-                    'order:id,trinity_order_number,requested_start_date',
-                    'student:id,first_name,last_name',
-                ])
-                ->latest('exam_date'),
+            // Entries where this contact is the TEACHER…
+            'examEntries' => $entrySelect,
+            // …and entries they merely SUBMITTED (parents / self-bookers). A
+            // parent isn't a teacher, so without this their page reads blank.
+            'submittedExamEntries' => $entrySelect,
+            // Orders via the role pivot…
             'orders' => fn ($q) => $q->select(
                 'orders.id', 'trinity_order_number', 'delivery_method',
                 'subject_area', 'candidates', 'order_status', 'requested_start_date'
             ),
+            // …and orders they SUBMITTED (created_by), which the pivot often
+            // doesn't carry — this is why an applicant's Orders read 0.
+            'createdOrders' => fn ($q) => $q->select(
+                'id', 'created_by_contact_id', 'trinity_order_number', 'delivery_method',
+                'subject_area', 'candidates', 'order_status', 'requested_start_date'
+            ),
         ]);
 
-        $contact->loadCount(['examEntries', 'students']);
+        $contact->loadCount('students');
 
-        // Count UNIQUE orders, not pivot rows. A contact can appear on the
-        // same order in multiple roles (applicant + teacher); we want one row per order.
+        // Entries: union of taught + submitted, one row per entry. Tag how the
+        // contact relates to each so the UI can label parent-submitted rows.
+        $allEntries = $contact->examEntries
+            ->concat($contact->submittedExamEntries)
+            ->unique('id')
+            ->map(function ($entry) use ($contact) {
+                $entry->setAttribute(
+                    'relationship',
+                    $entry->teacher_contact_id === $contact->id ? 'teacher' : 'submitted',
+                );
+
+                return $entry;
+            })
+            ->values();
+
+        // Orders: union of pivot-linked + submitted (created_by), one row per
+        // order, collecting every role the contact holds on it.
         $uniqueOrders = $contact->orders
             ->groupBy('id')
             ->map(function ($rows) {
@@ -202,8 +230,22 @@ class ContactController extends Controller
                 );
 
                 return $first;
-            })
-            ->values();
+            });
+
+        foreach ($contact->createdOrders as $order) {
+            if ($uniqueOrders->has($order->id)) {
+                $roles = $uniqueOrders->get($order->id)->getAttribute('roles_in_order');
+                $uniqueOrders->get($order->id)->setAttribute(
+                    'roles_in_order',
+                    array_values(array_unique([...$roles, 'applicant'])),
+                );
+            } else {
+                $order->setAttribute('roles_in_order', ['applicant']);
+                $uniqueOrders->put($order->id, $order);
+            }
+        }
+
+        $uniqueOrders = $uniqueOrders->values();
 
         // Likely duplicates (fuzzy name), for the merge banner. Plus a light
         // list of every other contact for the manual "merge another contact
@@ -246,12 +288,15 @@ class ContactController extends Controller
                     'is_primary' => $e->is_primary,
                 ]),
                 'students_count' => $contact->students_count,
-                'exam_entries_count' => $contact->exam_entries_count,
+                'exam_entries_count' => $allEntries->count(),
                 'orders_count' => $uniqueOrders->count(),
-                'exam_entries' => $contact->examEntries->map(fn ($entry) => [
+                'exam_entries' => $allEntries->map(fn ($entry) => [
                     'id' => $entry->id,
                     'order_id' => $entry->order_id,
                     'order_number' => $entry->order?->trinity_order_number ?? '—',
+                    // 'teacher' = they taught it, 'submitted' = they booked it
+                    // (parent / self-booker). Lets the UI flag parent rows.
+                    'relationship' => $entry->getAttribute('relationship'),
                     // Fall back to the linked student's name when the per-entry
                     // candidate_name string is empty (e.g. older imports that
                     // didn't stamp it). Trinity always provides one on real

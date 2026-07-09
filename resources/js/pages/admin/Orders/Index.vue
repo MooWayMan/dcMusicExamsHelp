@@ -255,7 +255,7 @@ const { animClass } = usePageAnimation()
                                 Date{{ sortIcon('requested_start_date') }}
                             </th>
                             <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('teacher')">
-                                Teacher{{ sortIcon('teacher') }}
+                                Applicant{{ sortIcon('teacher') }}
                             </th>
                             <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('school')">
                                 School{{ sortIcon('school') }}
