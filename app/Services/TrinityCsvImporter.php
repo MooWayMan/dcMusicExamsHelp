@@ -715,7 +715,7 @@ class TrinityCsvImporter
             $submitterName = trim((string) ($candidates[0]['submitter_name'] ?? ''));
             $submitterContact = null;
             if ($submitterEmail !== '') {
-                $submitterContact = ExamContact::whereRaw('LOWER(email) = ?', [strtolower($submitterEmail)])->first();
+                $submitterContact = ExamContact::findByEmail($submitterEmail);
                 if (! $submitterContact) {
                     $submitterContact = ExamContact::create([
                         'name' => $submitterName ?: $submitterEmail,
@@ -941,7 +941,7 @@ class TrinityCsvImporter
             // the human-confirmed role.
             $submitterContact = null;
             if ($enrol['submitter_email'] !== '') {
-                $submitterContact = ExamContact::whereRaw('LOWER(email) = ?', [strtolower($enrol['submitter_email'])])->first();
+                $submitterContact = ExamContact::findByEmail($enrol['submitter_email']);
                 if (! $submitterContact) {
                     $submitterContact = ExamContact::create([
                         'name' => $enrol['submitter_name'] ?: $enrol['submitter_email'],
@@ -958,7 +958,7 @@ class TrinityCsvImporter
             if ($role === 'parent' && $enrol['applicant_name'] !== $enrol['submitter_name']) {
                 $email = $preview['derivedEmail'] ?: $applicantEmail;
                 $applicantContact = $email
-                    ? ExamContact::whereRaw('LOWER(email) = ?', [strtolower($email)])->first()
+                    ? ExamContact::findByEmail($email)
                     : ExamContact::whereRaw('LOWER(name) = ?', [strtolower($enrol['applicant_name'])])->first();
                 if (! $applicantContact) {
                     $applicantContact = ExamContact::create([
@@ -1048,7 +1048,7 @@ class TrinityCsvImporter
                     $teacherContact = ExamContact::find($explicitId);
                 } elseif ($explicitName !== '') {
                     if ($explicitEmail !== '') {
-                        $teacherContact = ExamContact::whereRaw('LOWER(email) = ?', [strtolower($explicitEmail)])->first();
+                        $teacherContact = ExamContact::findByEmail($explicitEmail);
                     }
                     if (! $teacherContact) {
                         $teacherContact = ExamContact::whereRaw('LOWER(name) = ?', [strtolower($explicitName)])->first();
@@ -1406,7 +1406,7 @@ class TrinityCsvImporter
 
             $email = trim((string) ($probe['email'] ?? ''));
             if ($email !== '') {
-                $contact = ExamContact::whereRaw('LOWER(email) = ?', [strtolower($email)])->first();
+                $contact = ExamContact::findByEmail($email);
                 if ($contact) {
                     $by = 'email';
                 }
@@ -1568,7 +1568,7 @@ class TrinityCsvImporter
         // 3. Contact lookup
         $contact = null;
         if ($derivedEmail) {
-            $contact = ExamContact::whereRaw('LOWER(email) = ?', [strtolower($derivedEmail)])->first();
+            $contact = ExamContact::findByEmail($derivedEmail);
         }
         if (! $contact && $applicantName !== '') {
             $contact = ExamContact::whereRaw('LOWER(name) = ?', [strtolower(trim($applicantName))])->first();
