@@ -34,6 +34,7 @@ const props = defineProps<{
     quarters: Quarter[]
     year: number | string
     availableYears: number[]
+    method: string
 }>()
 
 // ── Y-axis / scaling helpers ──────────────────────────────
@@ -94,8 +95,18 @@ const totals = computed(() => ({
 const hasData = computed(() => totals.value.candidates > 0)
 
 function selectYear(year: number | string): void {
-    router.get('/admin/quarter-comparison', { year }, { preserveScroll: true, preserveState: true })
+    router.get('/admin/quarter-comparison', { year, method: props.method || undefined }, { preserveScroll: true, preserveState: true })
 }
+
+function selectMethod(method: string): void {
+    router.get('/admin/quarter-comparison', { year: props.year, method: method || undefined }, { preserveScroll: true, preserveState: true })
+}
+
+const methodOptions = [
+    { value: '', label: 'All' },
+    { value: 'digital', label: 'Digital' },
+    { value: 'f2f', label: 'F2F' },
+] as const
 </script>
 
 <template>
@@ -107,6 +118,21 @@ function selectYear(year: number | string): void {
             size="compact"
         >
             <template #actions>
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="inline-flex overflow-hidden rounded-lg border border-brand-border">
+                        <button
+                            v-for="opt in methodOptions"
+                            :key="opt.value"
+                            type="button"
+                            class="border-r border-brand-border px-3 py-1.5 text-sm font-medium transition-colors last:border-r-0"
+                            :class="(method || '') === opt.value
+                                ? 'bg-brand-accent text-white'
+                                : 'bg-brand-surface text-brand-text-soft hover:bg-brand-surface-soft'"
+                            @click="selectMethod(opt.value)"
+                        >
+                            {{ opt.label }}
+                        </button>
+                    </div>
                 <div class="inline-flex flex-wrap overflow-hidden rounded-lg border border-brand-border">
                     <button
                         v-for="yr in availableYears"
@@ -130,6 +156,7 @@ function selectYear(year: number | string): void {
                     >
                         All years
                     </button>
+                </div>
                 </div>
             </template>
         </PageHeader>

@@ -174,6 +174,47 @@ test('available years include data years plus the current year', function () {
         ->assertInertia(fn ($page) => $page->where('availableYears', [2025, 2026]));
 });
 
+test('the method filter restricts the comparison to one delivery method', function () {
+    comparisonEntry(['delivery_method' => 'Digital', 'subject_area' => 'Music', 'fee' => 100]);
+    comparisonEntry(['delivery_method' => 'Default', 'subject_area' => 'Music', 'fee' => 100]);
+
+    // Default → both methods counted.
+    $this->actingAs($this->admin)
+        ->get('/admin/quarter-comparison')
+        ->assertInertia(fn ($page) => $page
+            ->where('method', '')
+            ->where('quarters.0.dg_candidates', 1)
+            ->where('quarters.0.f2f_candidates', 1));
+
+    // Digital only → F2F dropped, commission = 20% of 100.
+    $this->actingAs($this->admin)
+        ->get('/admin/quarter-comparison?method=digital')
+        ->assertInertia(fn ($page) => $page
+            ->where('method', 'digital')
+            ->where('quarters.0.dg_candidates', 1)
+            ->where('quarters.0.f2f_candidates', 0)
+            ->where('quarters.0.total_commission', fn ($v) => (float) $v === 20.0));
+
+    // F2F only → Digital dropped, commission = 28% of 100.
+    $this->actingAs($this->admin)
+        ->get('/admin/quarter-comparison?method=f2f')
+        ->assertInertia(fn ($page) => $page
+            ->where('method', 'f2f')
+            ->where('quarters.0.dg_candidates', 0)
+            ->where('quarters.0.f2f_candidates', 1)
+            ->where('quarters.0.total_commission', fn ($v) => (float) $v === 28.0));
+});
+
+test('an unknown method value falls back to all', function () {
+    comparisonEntry(['delivery_method' => 'Digital', 'fee' => 10]);
+
+    $this->actingAs($this->admin)
+        ->get('/admin/quarter-comparison?method=banana')
+        ->assertInertia(fn ($page) => $page
+            ->where('method', '')
+            ->where('quarters.0.dg_candidates', 1));
+});
+
 test('non-admin cannot reach quarter comparison', function () {
     $teacher = User::factory()->create(['role' => 'teacher']);
 
