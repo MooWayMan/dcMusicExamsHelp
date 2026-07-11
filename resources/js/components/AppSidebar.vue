@@ -21,6 +21,7 @@ import {
     Mail as MailIcon,
     Upload,
     Receipt,
+    Tags,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
@@ -137,6 +138,11 @@ const adminExamsNavItems: NavItem[] = [
         title: 'Quarter End',
         href: '/admin/quarter-end',
         icon: Gift,
+    },
+    {
+        title: 'Address Labels',
+        href: '/admin/labels',
+        icon: Tags,
     },
 ];
 
