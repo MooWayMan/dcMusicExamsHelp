@@ -36,22 +36,24 @@ test('clean removes a repeated street line', function () {
     expect($out)->toBe(['Anthony John Bearon', '186 Prescot Road', 'Aughton', 'L39 5AG']);
 });
 
-test('clean drops the split repeat of a combined line', function () {
-    // "Willow Cottage, 4 The Ridgeway" then "4 The Ridgeway" again.
+test('clean splits a combined line and drops the split repeat', function () {
+    // "Willow Cottage, 4 The Ridgeway" is split, and Trinity's separate
+    // "4 The Ridgeway" line collapses into it — one part per line.
     $out = (new AddressLabelParser())->clean([
         'Jennifer KENT', 'Willow Cottage, 4 The Ridgeway', '4 The Ridgeway', 'Heswall', 'Wirral', 'CH60 8NB', 'United Kingdom',
     ]);
 
-    expect($out)->toBe(['Jennifer KENT', 'Willow Cottage, 4 The Ridgeway', 'Heswall', 'Wirral', 'CH60 8NB']);
+    expect($out)->toBe(['Jennifer KENT', 'Willow Cottage', '4 The Ridgeway', 'Heswall', 'Wirral', 'CH60 8NB']);
 });
 
-test('clean handles the multi-part combined-then-split pattern', function () {
-    // "Woodhollow, 7 Low Wood Grove, Wirral" then each part split out.
+test('clean breaks up a long multi-part combined line so it fits a label', function () {
+    // "Woodhollow, 7 Low Wood Grove, Wirral" → one part per line; Trinity's
+    // separate split lines collapse in.
     $out = (new AddressLabelParser())->clean([
         'Kaan Aslan Yalcinkaya', 'Woodhollow, 7 Low Wood Grove, Wirral', 'Woodhollow', '7 Low Wood Grove', 'Wirral', 'CH61 1AN', 'United Kingdom',
     ]);
 
-    expect($out)->toBe(['Kaan Aslan Yalcinkaya', 'Woodhollow, 7 Low Wood Grove, Wirral', 'CH61 1AN']);
+    expect($out)->toBe(['Kaan Aslan Yalcinkaya', 'Woodhollow', '7 Low Wood Grove', 'Wirral', 'CH61 1AN']);
 });
 
 // ──────────────────────────────────────────────────────────────────
@@ -97,6 +99,9 @@ test('dedupe keeps but flags a near-duplicate with a typo name', function () {
 
     expect($out)->toHaveCount(2);
     expect($out[1]['flag'])->toContain('Christopher Jones');
+    // Both share a group key so the grid can highlight them together.
+    expect($out[0]['dupeKey'])->not->toBe('');
+    expect($out[1]['dupeKey'])->toBe($out[0]['dupeKey']);
 });
 
 test('dedupe flags an inserted middle name as a possible duplicate', function () {

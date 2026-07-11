@@ -139,11 +139,6 @@ const adminExamsNavItems: NavItem[] = [
         href: '/admin/quarter-end',
         icon: Gift,
     },
-    {
-        title: 'Address Labels',
-        href: '/admin/labels',
-        icon: Tags,
-    },
 ];
 
 const adminToolsNavItems: NavItem[] = [
@@ -165,6 +160,11 @@ const adminToolsNavItems: NavItem[] = [
         title: 'Quick Replies',
         href: '/admin/quick-replies',
         icon: MessageSquareText,
+    },
+    {
+        title: 'Address Labels',
+        href: '/admin/labels',
+        icon: Tags,
     },
     {
         title: 'Page Maintenance',

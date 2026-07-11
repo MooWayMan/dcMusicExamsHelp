@@ -68,6 +68,7 @@ class AddressLabelParser
                     'postcode' => $this->postcode($lines),
                     'source' => $name,
                     'flag' => '',
+                    'dupeKey' => '',
                 ];
             }
         }
@@ -253,37 +254,34 @@ class AddressLabelParser
      */
     public function clean(array $lines): array
     {
-        // Trim, drop blanks and the trailing "United Kingdom".
-        $lines = array_values(array_filter(array_map('trim', $lines), static function (string $l): bool {
-            return $l !== '' && strcasecmp($l, 'United Kingdom') !== 0;
-        }));
+        // Split any combined "A, B, C" line into one part per line, and drop
+        // the trailing "United Kingdom". This keeps single lines short enough
+        // to fit a label, and collapses Trinity's "combined then split"
+        // duplicates cleanly in the next step.
+        $expanded = [];
+        foreach ($lines as $line) {
+            foreach (explode(',', (string) $line) as $part) {
+                $part = trim($part);
+                if ($part !== '' && strcasecmp($part, 'United Kingdom') !== 0) {
+                    $expanded[] = $part;
+                }
+            }
+        }
 
-        // Collapse consecutive duplicate lines (e.g. "Liverpool" / "Liverpool").
+        // Collapse consecutive duplicate lines (e.g. "Liverpool" / "Liverpool",
+        // or a part that Trinity also printed on its own after the combined line).
         $step = [];
-        foreach ($lines as $l) {
+        foreach ($expanded as $l) {
             if ($step !== [] && strcasecmp(end($step), $l) === 0) {
                 continue;
             }
             $step[] = $l;
         }
 
-        // Drop a line that just repeats a comma-part of the previous combined
-        // line (e.g. "Willow Cottage, 4 The Ridgeway" then "4 The Ridgeway").
-        $split = [];
-        foreach ($step as $l) {
-            if ($split !== [] && str_contains(end($split), ',')) {
-                $parts = array_map(static fn (string $p): string => strtolower(trim($p)), explode(',', end($split)));
-                if (in_array(strtolower($l), $parts, true)) {
-                    continue;
-                }
-            }
-            $split[] = $l;
-        }
-
         // Remove any remaining exact duplicate line anywhere (keep first).
         $seen = [];
         $out = [];
-        foreach ($split as $l) {
+        foreach ($step as $l) {
             $key = strtolower($l);
             if (isset($seen[$key])) {
                 continue;
@@ -309,8 +307,10 @@ class AddressLabelParser
     public function dedupe(array $labels): array
     {
         $kept = [];
+        $group = 0;
 
         foreach ($labels as $label) {
+            $label['dupeKey'] = $label['dupeKey'] ?? '';
             $name = $this->normaliseName($label['name']);
             $body = $this->body($label['lines']);
             $postcode = $label['postcode'];
@@ -326,12 +326,18 @@ class AddressLabelParser
                 continue;
             }
 
-            foreach ($kept as $k) {
+            foreach ($kept as $i => $k) {
                 $kName = $this->normaliseName($k['name']);
                 $samePostcode = $postcode !== '' && $k['postcode'] === $postcode;
                 $closeName = levenshtein($kName, $name) <= 2;
                 $sameEnds = $this->nameEnds($k['name']) === $this->nameEnds($label['name']);
                 if ($samePostcode || $closeName || $sameEnds) {
+                    // Give this near-dup and the label it matched a shared key
+                    // so the grid can highlight them together on hover.
+                    if (($kept[$i]['dupeKey'] ?? '') === '') {
+                        $kept[$i]['dupeKey'] = 'g'.(++$group);
+                    }
+                    $label['dupeKey'] = $kept[$i]['dupeKey'];
                     $label['flag'] = 'Possible duplicate of '.$k['name'].' ('.$k['source'].')';
                     break;
                 }
@@ -371,6 +377,7 @@ class AddressLabelParser
                 'postcode' => $this->postcode($lines),
                 'source' => $source,
                 'flag' => '',
+                'dupeKey' => '',
             ];
         }
 

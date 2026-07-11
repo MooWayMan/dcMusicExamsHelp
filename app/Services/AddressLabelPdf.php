@@ -88,12 +88,17 @@ class AddressLabelPdf
                 $w = self::LABEL_W - self::TEXT_INSET_X * 2;
 
                 $body = implode('<br>', array_map(static fn (string $l): string => e($l), $lines));
+                $fontSize = $this->fontSizeFor($lines);
+                // Hard height cap so a label can never bleed into the one below.
+                $h = self::LABEL_H - self::TEXT_INSET_Y - 2.0;
 
                 $labelsHtml .= sprintf(
-                    '<div class="label" style="left:%.2fmm; top:%.2fmm; width:%.2fmm;">%s</div>',
+                    '<div class="label" style="left:%.2fmm; top:%.2fmm; width:%.2fmm; height:%.2fmm; font-size:%.1fpt;">%s</div>',
                     $x,
                     $y,
                     $w,
+                    $h,
+                    $fontSize,
                     $body,
                 );
             }
@@ -119,9 +124,9 @@ class AddressLabelPdf
     .label {
         position: absolute;
         font-family: DejaVu Sans, Helvetica, Arial, sans-serif;
-        font-size: 11pt;
-        line-height: 1.3;
+        line-height: 1.25;
         color: #000;
+        overflow: hidden;
     }
 </style>
 </head>
@@ -135,6 +140,33 @@ HTML;
     private function mm(float $value): string
     {
         return sprintf('%.2fmm', $value);
+    }
+
+    /**
+     * Shrink-to-fit font size (pt) for a label: 11pt normally, dropping toward
+     * 8pt when there are many lines or a very long line, so the text fits the
+     * sticker. The label's fixed height + overflow:hidden are the hard backstop.
+     *
+     * @param  array<int, string>  $lines
+     */
+    private function fontSizeFor(array $lines): float
+    {
+        $count = max(1, count($lines));
+        $longest = 0;
+        foreach ($lines as $l) {
+            $longest = max($longest, mb_strlen($l));
+        }
+
+        $mmPerPt = 0.352778;
+        $lineFactor = 1.25;
+        $availH = self::LABEL_H - self::TEXT_INSET_Y - 2.0;   // ~49mm of usable height
+        $availW = self::LABEL_W - self::TEXT_INSET_X * 2;     // ~89mm of usable width
+
+        $byHeight = $availH / ($count * $lineFactor * $mmPerPt);
+        // ~0.52 = average glyph width as a fraction of font size for DejaVu Sans.
+        $byWidth = $longest > 0 ? $availW / ($longest * 0.52 * $mmPerPt) : 11.0;
+
+        return max(8.0, min(11.0, $byHeight, $byWidth));
     }
 
     /**
