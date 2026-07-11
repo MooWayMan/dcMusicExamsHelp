@@ -21,6 +21,7 @@ import {
     Mail as MailIcon,
     Upload,
     Receipt,
+    Tags,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
@@ -159,6 +160,11 @@ const adminToolsNavItems: NavItem[] = [
         title: 'Quick Replies',
         href: '/admin/quick-replies',
         icon: MessageSquareText,
+    },
+    {
+        title: 'Address Labels',
+        href: '/admin/labels',
+        icon: Tags,
     },
     {
         title: 'Page Maintenance',

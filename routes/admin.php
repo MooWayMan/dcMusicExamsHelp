@@ -2,6 +2,7 @@
 
 // routes/admin.php
 
+use App\Http\Controllers\Admin\AddressLabelController;
 use App\Http\Controllers\Admin\CertificateController;
 use App\Http\Controllers\Admin\ContactController;
 use App\Http\Controllers\Admin\ContactLogController;
@@ -103,6 +104,12 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
         Route::get('reconciliation', [ReconciliationController::class, 'index'])->name('reconciliation.index');
         Route::post('reconciliation/preview', [ReconciliationController::class, 'preview'])->name('reconciliation.preview');
         Route::post('reconciliation/commit', [ReconciliationController::class, 'commit'])->name('reconciliation.commit');
+
+        // Address Labels — turn Trinity's messy 8-up label PDFs/CSV into a
+        // clean, de-duplicated, print-ready Avery L7173 10-up sheet.
+        Route::get('labels', [AddressLabelController::class, 'index'])->name('labels.index');
+        Route::post('labels/preview', [AddressLabelController::class, 'preview'])->name('labels.preview');
+        Route::post('labels/pdf', [AddressLabelController::class, 'pdf'])->name('labels.pdf');
 
         // Quarter End — step-by-step workflow for sending certs, badges and emails
         Route::get('quarter-end', [QuarterEndController::class, 'index'])->name('quarter-end.index');
