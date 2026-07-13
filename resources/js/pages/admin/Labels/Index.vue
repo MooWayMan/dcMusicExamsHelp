@@ -1,15 +1,21 @@
 <!-- resources/js/pages/admin/Labels/Index.vue -->
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Tags, FileText, UploadCloud, Plus, Trash2, AlertTriangle, Loader2, X, Printer, Table, Save, FolderOpen } from 'lucide-vue-next'
+import { Tags, FileText, UploadCloud, Plus, Trash2, AlertTriangle, Loader2, X, Printer, Table, Save, FolderOpen, ArrowDownAZ, Layers, Copy } from 'lucide-vue-next'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 
 interface GridLabel {
+    id: number
     text: string
     source: string
     flag: string
     dupeKey: string
 }
+
+type SortMode = 'added' | 'first' | 'last' | 'pdf'
+
+let labelSeq = 0
+const nextId = () => labelSeq++
 
 interface ApiLabel {
     name: string
@@ -25,6 +31,10 @@ const LABELS_PER_SHEET = 10
 const pdfFiles = ref<File[]>([])
 const csvFile = ref<File | null>(null)
 const labels = ref<GridLabel[]>([])
+// Optional line added to the bottom of every label at print time (e.g. a
+// website or return address). Kept separate from the grid so it isn't repeated
+// in each editable box.
+const footer = ref('')
 const error = ref<string | null>(null)
 const busy = ref(false)
 const downloading = ref(false)
@@ -98,13 +108,16 @@ async function convert() {
             return
         }
         const incoming: GridLabel[] = (data.labels as ApiLabel[]).map((l) => ({
+            id: nextId(),
             text: l.lines.join('\n'),
             source: l.source,
             flag: l.flag,
             dupeKey: l.dupeKey ?? '',
         }))
-        // Keep any hand-added labels already in the grid, append the parsed set.
+        // Keep any hand-added labels already in the grid, append the parsed set,
+        // then re-apply the current sort so the new ones slot into place.
         labels.value = [...labels.value, ...incoming]
+        applySort()
         pdfFiles.value = []
         csvFile.value = null
     } catch (err: unknown) {
@@ -115,7 +128,73 @@ async function convert() {
 }
 
 function addBlank() {
-    labels.value.push({ text: '', source: 'typed', flag: '', dupeKey: '' })
+    // Always drop a new blank at the end so it stays where you can type in it,
+    // regardless of the active sort.
+    labels.value.push({ id: nextId(), text: '', source: 'typed', flag: '', dupeKey: '' })
+}
+
+// Duplicate one label so it fills a whole 10-up sheet (handy for a page of the
+// same return-address / promo label). Inserts copies right after the original.
+function fillSheet(label: GridLabel) {
+    const i = labels.value.indexOf(label)
+    if (i === -1) return
+    const copies = Math.max(0, LABELS_PER_SHEET - 1)
+    const dupes: GridLabel[] = Array.from({ length: copies }, () => ({
+        id: nextId(),
+        text: label.text,
+        source: label.source,
+        flag: '',
+        dupeKey: '',
+    }))
+    labels.value.splice(i + 1, 0, ...dupes)
+}
+
+// ── Sort / group the grid. Sorting reorders the real labels array, so the
+// print order follows what you see. "As added" restores the original order
+// via each label's stable id. ──
+const sortMode = ref<SortMode>('added')
+
+function firstLine(label: GridLabel): string {
+    return (label.text.split('\n')[0] ?? '').trim()
+}
+
+// Surname = the last whitespace-separated token of the name line.
+function surname(label: GridLabel): string {
+    const tokens = firstLine(label).split(/\s+/).filter(Boolean)
+    return (tokens.length ? tokens[tokens.length - 1] : '').toLowerCase()
+}
+
+function byName(a: GridLabel, b: GridLabel): number {
+    return firstLine(a).toLowerCase().localeCompare(firstLine(b).toLowerCase())
+}
+
+function applySort() {
+    const sorters: Record<SortMode, (a: GridLabel, b: GridLabel) => number> = {
+        added: (a, b) => a.id - b.id,
+        first: (a, b) => byName(a, b) || a.id - b.id,
+        last: (a, b) => surname(a).localeCompare(surname(b)) || byName(a, b),
+        pdf: (a, b) => a.source.localeCompare(b.source) || byName(a, b),
+    }
+    labels.value = [...labels.value].sort(sorters[sortMode.value])
+}
+
+function setSort(mode: SortMode) {
+    sortMode.value = mode
+    applySort()
+}
+
+const sortOptions: { mode: SortMode; label: string }[] = [
+    { mode: 'first', label: 'First name' },
+    { mode: 'last', label: 'Last name' },
+    { mode: 'pdf', label: 'By PDF' },
+    { mode: 'added', label: 'As added' },
+]
+
+// In grouped-by-PDF mode, show a source heading before the first card of each
+// group (the array is already sorted by source when this runs).
+function showSourceHeader(i: number): boolean {
+    if (sortMode.value !== 'pdf') return false
+    return i === 0 || labels.value[i - 1].source !== labels.value[i].source
 }
 
 // Highlight linked possible-duplicates: hovering (or tapping) one lights up
@@ -199,9 +278,11 @@ function clearAll() {
 const stamp = () => new Date().toISOString().slice(0, 10)
 
 function gridPayload(): string[][] {
+    const foot = footer.value.trim()
     return labels.value
         .map((l) => l.text.split('\n').map((s) => s.trim()).filter(Boolean))
         .filter((lines) => lines.length > 0)
+        .map((lines) => (foot ? [...lines, foot] : lines))
 }
 
 // Ask the server to render the L7173 PDF and hand back the blob (or null on
@@ -282,7 +363,7 @@ function saveWorkingFile() {
         error.value = 'There are no labels to save yet.'
         return
     }
-    const data = JSON.stringify({ version: 1, savedAt: new Date().toISOString(), labels: labels.value }, null, 2)
+    const data = JSON.stringify({ version: 1, savedAt: new Date().toISOString(), footer: footer.value, labels: labels.value }, null, 2)
     const blob = new Blob([data], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -307,11 +388,14 @@ function openWorkingFile(e: Event) {
             const incoming = Array.isArray(parsed) ? parsed : parsed.labels
             if (!Array.isArray(incoming)) throw new Error('Not a labels file.')
             labels.value = incoming.map((l: Partial<GridLabel>) => ({
+                id: nextId(),
                 text: String(l.text ?? ''),
                 source: String(l.source ?? 'saved'),
                 flag: String(l.flag ?? ''),
                 dupeKey: String(l.dupeKey ?? ''),
             }))
+            footer.value = typeof parsed.footer === 'string' ? parsed.footer : ''
+            sortMode.value = 'added'
             error.value = null
         } catch {
             error.value = "That doesn't look like a saved labels file."
@@ -413,7 +497,25 @@ function openWorkingFile(e: Event) {
                     </h2>
                     <p class="text-sm text-brand-text-soft">Edit any address, delete the ones you don't need, then download. One box = one sticker.</p>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="mr-1 inline-flex items-center overflow-hidden rounded-lg border border-brand-border">
+                        <span class="flex items-center gap-1 border-r border-brand-border bg-brand-surface-soft px-2.5 py-1.5 text-xs font-medium text-brand-text-soft">
+                            <component :is="sortMode === 'pdf' ? Layers : ArrowDownAZ" class="h-4 w-4" /> Sort
+                        </span>
+                        <button
+                            v-for="opt in sortOptions"
+                            :key="opt.mode"
+                            type="button"
+                            :aria-pressed="sortMode === opt.mode"
+                            :class="[
+                                'px-2.5 py-1.5 text-xs font-medium transition',
+                                sortMode === opt.mode
+                                    ? 'bg-brand-accent text-white'
+                                    : 'text-brand-text hover:bg-brand-surface-soft',
+                            ]"
+                            @click="setSort(opt.mode)"
+                        >{{ opt.label }}</button>
+                    </div>
                     <MyButtonConstructor size="small" variant="ghost" @click="clearAll">Clear all</MyButtonConstructor>
                     <MyButtonConstructor size="small" variant="outline" @click="addBlank">
                         <span class="inline-flex items-center gap-1"><Plus class="h-4 w-4" /> Add</span>
@@ -427,9 +529,14 @@ function openWorkingFile(e: Event) {
             </div>
 
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <template v-for="(label, i) in labels" :key="label.id">
+                <h3
+                    v-if="showSourceHeader(i)"
+                    class="col-span-full mt-2 flex items-center gap-2 border-b border-brand-border pb-1 text-sm font-semibold text-brand-text"
+                >
+                    <Layers class="h-4 w-4 text-brand-accent" /> {{ label.source }}
+                </h3>
                 <div
-                    v-for="(label, i) in labels"
-                    :key="i"
                     :class="[
                         'flex flex-col rounded-lg border bg-brand-surface p-3 transition',
                         label.flag ? 'border-brand-accent/60' : 'border-brand-border',
@@ -446,9 +553,14 @@ function openWorkingFile(e: Event) {
                 >
                     <div class="mb-2 flex items-center justify-between">
                         <span class="rounded-full bg-brand-surface-soft px-2 py-0.5 text-xs text-brand-text-soft">{{ label.source }}</span>
-                        <button type="button" class="text-brand-text-soft hover:text-brand-danger" :aria-label="`Delete label ${i + 1}`" @click.stop="removeLabel(i)">
-                            <Trash2 class="h-4 w-4" />
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button type="button" class="text-brand-text-soft hover:text-brand-accent" :aria-label="`Fill a whole sheet with label ${i + 1}`" title="Fill a whole sheet with this label" @click.stop="fillSheet(label)">
+                                <Copy class="h-4 w-4" />
+                            </button>
+                            <button type="button" class="text-brand-text-soft hover:text-brand-danger" :aria-label="`Delete label ${i + 1}`" @click.stop="removeLabel(i)">
+                                <Trash2 class="h-4 w-4" />
+                            </button>
+                        </div>
                     </div>
                     <textarea
                         v-model="label.text"
@@ -472,9 +584,27 @@ function openWorkingFile(e: Event) {
                         </div>
                     </div>
                 </div>
+                </template>
             </div>
 
-            <div class="mt-6 flex flex-wrap items-center gap-3">
+            <div class="mt-6 flex items-start gap-2 rounded-lg border border-brand-accent/40 bg-brand-accent/10 px-4 py-3 text-sm font-medium text-brand-accent">
+                <Printer class="mt-0.5 h-4 w-4 shrink-0" />
+                <span>Print this sheet at <strong>100% / Actual Size</strong> — turn off "Fit to page" or "Scale to fit", or the labels won't line up with the Avery&nbsp;L7173 stickers.</span>
+            </div>
+
+            <div class="mt-6 max-w-md">
+                <label for="label-footer" class="block text-sm font-medium text-brand-text">Footer line on every label <span class="font-normal text-brand-text-soft">(optional)</span></label>
+                <input
+                    id="label-footer"
+                    v-model="footer"
+                    type="text"
+                    placeholder="e.g. musicExams.help"
+                    class="mt-1 w-full rounded-md border border-brand-border bg-brand-surface px-3 py-2 text-sm text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                />
+                <p class="mt-1 text-xs text-brand-text-soft">Added as the last line of every label when you preview or print.</p>
+            </div>
+
+            <div class="mt-4 flex flex-wrap items-center gap-3">
                 <MyButtonConstructor size="large" variant="primary" :disabled="downloading" @click="downloadPdf">
                     <span class="inline-flex items-center gap-2">
                         <Loader2 v-if="downloading" class="h-5 w-5 animate-spin" />
@@ -493,7 +623,7 @@ function openWorkingFile(e: Event) {
                     <span class="inline-flex items-center gap-2"><Save class="h-5 w-5" /> Save working file</span>
                 </MyButtonConstructor>
                 <p class="w-full text-sm text-brand-text-soft sm:w-auto">
-                    Print at Actual&nbsp;Size / 100% — turn off "fit to page". Save a working file to reopen and edit later without re-uploading.
+                    Save a working file to reopen and edit later without re-uploading.
                 </p>
             </div>
         </section>
