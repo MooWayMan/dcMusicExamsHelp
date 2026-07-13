@@ -324,6 +324,13 @@ test('GET /admin/labels returns 200 for an authenticated admin', function () {
         ->assertStatus(200);
 });
 
+test('GET /admin/results-scan returns 200 for an authenticated admin', function () {
+    $admin = \App\Models\User::factory()->create(['role' => 'admin']);
+    $this->actingAs($admin)
+        ->get('/admin/results-scan')
+        ->assertStatus(200);
+});
+
 // ──────────────────────────────────────────
 // Meta tags in global layout
 // ──────────────────────────────────────────

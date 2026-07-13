@@ -57,7 +57,7 @@ class DashboardController extends Controller
             ->select([
                 'id', 'student_id', 'instrument_id', 'candidate_number', 'candidate_name', 'date_of_birth',
                 'grade', 'subject_area', 'delivery_method',
-                'result', 'score', 'exam_date',
+                'result', 'score', 'exam_date', 'report',
             ])
             ->with('instrument:id,name')
             ->where(function ($q) use ($user, $contact) {
@@ -117,6 +117,10 @@ class DashboardController extends Controller
             'score' => $e->score,
             'exam_date' => $e->exam_date?->format('d M Y'),
             'pending_correction' => $correctionMap[$e->id] ?? null,
+            // The deciphered F2F report (piece names, marks, examiner comments)
+            // when this candidate's paper report has been scanned in. Null for
+            // digital exams and anything not yet captured.
+            'report' => $e->report,
         ]);
 
         return Inertia::render('Dashboard', [

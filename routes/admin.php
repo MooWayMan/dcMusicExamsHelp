@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\QuarterComparisonController;
 use App\Http\Controllers\Admin\QuarterEndController;
 use App\Http\Controllers\Admin\QuickRepliesController;
 use App\Http\Controllers\Admin\ReconciliationController;
+use App\Http\Controllers\Admin\ResultsScanController;
 use App\Http\Controllers\Admin\RoadmapController;
 use App\Http\Controllers\Admin\SchoolController;
 use App\Http\Controllers\Admin\SessionLogController;
@@ -110,6 +111,13 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
         Route::get('labels', [AddressLabelController::class, 'index'])->name('labels.index');
         Route::post('labels/preview', [AddressLabelController::class, 'preview'])->name('labels.preview');
         Route::post('labels/pdf', [AddressLabelController::class, 'pdf'])->name('labels.pdf');
+
+        // Results Scan — check handwritten F2F exam-report scans (sum vs
+        // examiner total, max bounds, band) then fill verified results onto
+        // the matching exam entries.
+        Route::get('results-scan', [ResultsScanController::class, 'index'])->name('results-scan.index');
+        Route::post('results-scan/preview', [ResultsScanController::class, 'preview'])->name('results-scan.preview');
+        Route::post('results-scan/commit', [ResultsScanController::class, 'commit'])->name('results-scan.commit');
 
         // Quarter End — step-by-step workflow for sending certs, badges and emails
         Route::get('quarter-end', [QuarterEndController::class, 'index'])->name('quarter-end.index');
