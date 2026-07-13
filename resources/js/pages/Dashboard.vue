@@ -1,12 +1,30 @@
 <script setup lang="ts">
 import { Head, Link, Form, router, usePage } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
-import { LayoutDashboard, ClipboardList, Users, GraduationCap, CheckSquare, Award, AlertCircle, Home, LogOut, Mail, MessageCircle, Info, ChevronDown, ChevronRight, Gift, Ticket, Trophy, Search } from 'lucide-vue-next'
+import { LayoutDashboard, ClipboardList, Users, GraduationCap, CheckSquare, Award, AlertCircle, Home, LogOut, Mail, MessageCircle, Info, ChevronDown, ChevronRight, Gift, Ticket, Trophy, Search, FileText } from 'lucide-vue-next'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyInputConstructor from '@/components/reusables/MyInputConstructor.vue'
 import { Spinner } from '@/components/ui/spinner'
 import { dashboard, logout } from '@/routes'
+
+interface ReportSection {
+    label: string
+    mark: number | null
+    max: number | null
+    comment: string
+}
+
+interface ExamReport {
+    subject?: string
+    grade?: string | null
+    examiner_number?: string
+    exam_date?: string | null
+    total?: number | null
+    band?: string | null
+    general_comments?: string
+    sections?: ReportSection[]
+}
 
 interface ExamEntryRow {
     id: number
@@ -22,6 +40,7 @@ interface ExamEntryRow {
     score: number | null
     exam_date: string | null
     pending_correction: { submitted_at: string | null; note: string } | null
+    report: ExamReport | null
 }
 
 interface PrizeDrawQuarter {
@@ -101,6 +120,21 @@ function closeCorrectionView() {
 
 const viewedCorrectionEntry = computed<ExamEntryRow | null>(() =>
     entries.value.find((e) => e.id === viewingCorrectionFor.value) ?? null,
+)
+
+// Modal state: the entry whose deciphered exam report we're reading.
+const viewingReportFor = ref<number | null>(null)
+
+function openReport(entryId: number) {
+    viewingReportFor.value = entryId
+}
+
+function closeReport() {
+    viewingReportFor.value = null
+}
+
+const viewedReportEntry = computed<ExamEntryRow | null>(() =>
+    entries.value.find((e) => e.id === viewingReportFor.value) ?? null,
 )
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -641,6 +675,14 @@ defineOptions({
                                     <td class="px-4 py-3 text-right">
                                         <div class="flex flex-col items-end gap-1.5">
                                             <button
+                                                v-if="group.entries[0].report"
+                                                type="button"
+                                                class="cursor-pointer inline-flex items-center gap-1.5 rounded-lg border border-brand-accent/40 bg-brand-accent/5 px-3 py-1.5 text-xs font-medium text-brand-accent transition-colors hover:bg-brand-accent/15"
+                                                @click.stop="openReport(group.entries[0].id)"
+                                            >
+                                                <FileText class="h-3.5 w-3.5" /> View report
+                                            </button>
+                                            <button
                                                 v-if="group.entries[0].pending_correction"
                                                 type="button"
                                                 class="cursor-pointer inline-flex items-center gap-1.5 rounded-full bg-brand-accent/10 px-2.5 py-0.5 text-xs font-medium text-brand-accent transition-colors hover:bg-brand-accent/20"
@@ -768,6 +810,14 @@ defineOptions({
                                             </td>
                                             <td class="px-4 py-3 text-right">
                                                 <div class="flex flex-col items-end gap-1.5">
+                                                    <button
+                                                        v-if="row.report"
+                                                        type="button"
+                                                        class="inline-flex items-center gap-1.5 rounded-lg border border-brand-accent/40 bg-brand-accent/5 px-3 py-1.5 text-xs font-medium text-brand-accent transition-colors hover:bg-brand-accent/15"
+                                                        @click.stop="openReport(row.id)"
+                                                    >
+                                                        <FileText class="h-3.5 w-3.5" /> View report
+                                                    </button>
                                                     <!-- Correction-sent indicator: clickable to re-read submitted note -->
                                                     <button
                                                         v-if="row.pending_correction"
@@ -974,6 +1024,75 @@ defineOptions({
                     >
                         Close
                     </MyButtonConstructor>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exam report modal — the deciphered, typed-up copy of the examiner's
+             handwritten report (piece names, marks and comments). -->
+        <div
+            v-if="viewingReportFor !== null && viewedReportEntry?.report"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            role="dialog"
+            aria-modal="true"
+            @click.self="closeReport"
+        >
+            <div class="max-h-[88vh] w-full max-w-2xl overflow-auto rounded-xl bg-brand-surface p-6 shadow-xl">
+                <div class="mb-1 flex items-start justify-between gap-4">
+                    <div>
+                        <h3 class="text-xl font-semibold text-brand-text">{{ viewedReportEntry?.candidate_name }} — exam report</h3>
+                        <p class="text-sm text-brand-text-soft">
+                            {{ viewedReportEntry?.report?.subject ?? viewedReportEntry?.subject_area }}
+                            &middot; {{ viewedReportEntry?.grade }}
+                            <span v-if="viewedReportEntry?.report?.exam_date"> &middot; {{ viewedReportEntry?.report?.exam_date }}</span>
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        class="rounded-lg p-2 text-brand-text-soft transition-colors hover:bg-brand-surface-soft hover:text-brand-text"
+                        aria-label="Close"
+                        @click="closeReport"
+                    >
+                        ✕
+                    </button>
+                </div>
+
+                <div class="mb-4 flex items-center gap-3">
+                    <span
+                        v-if="viewedReportEntry?.report?.band"
+                        class="rounded-full bg-brand-surface-soft px-3 py-1 text-sm font-semibold text-brand-text"
+                    >{{ viewedReportEntry?.report?.band }}</span>
+                    <span v-if="viewedReportEntry?.report?.total !== undefined && viewedReportEntry?.report?.total !== null" class="text-sm text-brand-text-soft">
+                        Total <span class="font-semibold text-brand-text">{{ viewedReportEntry?.report?.total }}</span> / 100
+                    </span>
+                </div>
+
+                <div class="space-y-3">
+                    <div
+                        v-for="(s, si) in (viewedReportEntry?.report?.sections ?? [])"
+                        :key="si"
+                        class="rounded-lg border border-brand-border p-3"
+                    >
+                        <div class="flex items-baseline justify-between gap-3">
+                            <p class="font-medium text-brand-text">{{ s.label }}</p>
+                            <p class="shrink-0 text-sm font-semibold text-brand-text">{{ s.mark ?? '—' }}<span class="font-normal text-brand-text-soft"> / {{ s.max ?? '?' }}</span></p>
+                        </div>
+                        <p v-if="s.comment" class="mt-1 text-sm text-brand-text-soft">{{ s.comment }}</p>
+                    </div>
+                </div>
+
+                <div v-if="viewedReportEntry?.report?.general_comments" class="mt-3 rounded-lg border border-brand-border bg-brand-surface-soft/40 p-3">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-brand-text-soft">General comments</p>
+                    <p class="mt-1 text-sm text-brand-text">{{ viewedReportEntry?.report?.general_comments }}</p>
+                </div>
+
+                <div class="mt-4 flex items-start gap-2 rounded-lg border border-brand-border bg-brand-surface-soft/40 px-4 py-3 text-xs text-brand-text-soft">
+                    <Info class="mt-0.5 h-4 w-4 shrink-0 text-brand-accent" />
+                    <span>This is a typed‑up copy of your posted paper report, transcribed with AI to make the examiner's handwriting easier to read. The posted original is the official record, and marks are provisional until Trinity issue the certificate — if anything here looks wrong, use “Report correction”.</span>
+                </div>
+
+                <div class="mt-5 flex justify-end">
+                    <MyButtonConstructor type="button" variant="primary" size="small" @click="closeReport">Close</MyButtonConstructor>
                 </div>
             </div>
         </div>

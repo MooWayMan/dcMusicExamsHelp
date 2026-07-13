@@ -81,6 +81,7 @@ class ExamEntry extends Model
         'applicant_email',
         'submitter_contact_id',
         'certificate_sent_at',
+        'report',
     ];
 
     protected function casts(): array
@@ -92,6 +93,7 @@ class ExamEntry extends Model
             'show_full_name' => 'boolean',
             'show_on_thank_you' => 'boolean',
             'certificate_sent_at' => 'datetime',
+            'report' => 'array',
         ];
     }
 

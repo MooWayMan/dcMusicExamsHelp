@@ -22,6 +22,7 @@ import {
     Upload,
     Receipt,
     Tags,
+    ClipboardCheck,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
@@ -165,6 +166,11 @@ const adminToolsNavItems: NavItem[] = [
         title: 'Address Labels',
         href: '/admin/labels',
         icon: Tags,
+    },
+    {
+        title: 'Results Scan',
+        href: '/admin/results-scan',
+        icon: ClipboardCheck,
     },
     {
         title: 'Page Maintenance',

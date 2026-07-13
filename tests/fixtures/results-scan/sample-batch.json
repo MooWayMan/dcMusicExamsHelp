@@ -1,0 +1,114 @@
+[
+    {
+        "subject": "Piano",
+        "grade": "Grade 2",
+        "candidate_name": "Chloe Roberts",
+        "candidate_id": "1823317",
+        "order_number": "1-16044465651",
+        "examiner_number": "3300",
+        "exam_date": "2026-07-09",
+        "sections": [
+            { "label": "The Sewing Machine", "mark": 19, "max": 22, "comment": "Hand independence was well managed to start, and although there were small rhythm and coordination slips, much of the detail and style were captured here." },
+            { "label": "The Sheltering Sky", "mark": 15, "max": 22, "comment": "This began well, although the dynamics were a little bold for the style. Pulse and rhythm lost some assurance as it progressed, and although the tone was full, not all the articulation was fully grasped." },
+            { "label": "Hedwig's Theme", "mark": 15, "max": 22, "comment": "There was good flow initially, and although not all legato was managed, and there were some slips and hesitations, balance was good and some of the mood was captured." },
+            { "label": "Technical Work", "mark": 10, "max": 14, "comment": "Scales were prompt, but there were many errors and coordination was lost on occasion. The chromatic was well known, and the arpeggios mostly secure. There were only small slips and stumbles." },
+            { "label": "Test 1 (Musical Knowledge)", "mark": 6, "max": 10, "comment": "Time signature and interval partly correct; rall. incorrect, but others were good." },
+            { "label": "Test 2 (Aural)", "mark": 8, "max": 10, "comment": "Incorrect clapping, but otherwise very secure." }
+        ],
+        "examiner_total": 73,
+        "general_comments": ""
+    },
+    {
+        "subject": "Piano",
+        "grade": "Grade 3",
+        "candidate_name": "Isabelle Pover",
+        "candidate_id": "1823318",
+        "order_number": "1-16044465651",
+        "examiner_number": "3300",
+        "exam_date": "2026-07-09",
+        "sections": [
+            { "label": "Pierrot Sautille", "mark": 15, "max": 22, "comment": "This was musical at the outset and flowed well in the first section. Thereafter the playing became hesitant and unclear in pulse until the end, but there was some neat fingerwork and an overall sense of style." },
+            { "label": "Wild Mignonette", "mark": 15, "max": 22, "comment": "There was some neat coordination to start, although this was uncertain in rhythm and pulse at times, with not all articulation managed, losing some style. Details were lost, but despite errors it did keep going." },
+            { "label": "Mad World", "mark": 11, "max": 22, "comment": "The playing was clear in tone and well coordinated, despite slips in flow and rhythm. As it progressed there was much uncertainty and a restart was required. Errors in notes unsettled the performance and keyboard geography was challenging here." },
+            { "label": "Technical Work", "mark": 5, "max": 14, "comment": "The exercises kept going with glimpses of clarity, though pulse and articulation were uncertain. The scales were not offered." },
+            { "label": "Test 1 (Musical Knowledge)", "mark": 5, "max": 10, "comment": "Interval and accidental correct, and time partly so. There were errors elsewhere." },
+            { "label": "Test 2 (Aural)", "mark": 3, "max": 10, "comment": "Responses were prompt but all had significant errors." }
+        ],
+        "examiner_total": 54,
+        "general_comments": ""
+    },
+    {
+        "subject": "Piano",
+        "grade": "Grade 3",
+        "candidate_name": "Autumn Aurora Hunter-Deaves",
+        "candidate_id": "1823319",
+        "order_number": "1-16044465651",
+        "examiner_number": "3300",
+        "exam_date": "2026-07-09",
+        "sections": [
+            { "label": "Pierrot Sautille", "mark": 15, "max": 22, "comment": "The opening was accurate in the main and played with some delicacy. Rhythm, pulse and detail lost assurance later, impacting flow and style, but some of the articulation was well managed." },
+            { "label": "Mad World", "mark": 15, "max": 22, "comment": "This opened with clear pulse, and despite a slight tendency to hurry then slow down under challenge, there was some neat playing and a sense of overall style, despite missed dynamics." },
+            { "label": "Chord Etude", "mark": 15, "max": 22, "comment": "There was some full tone to start, although the pedalling caused some loss of clarity, and the rhythm and flow were somewhat hesitant. Some chords were neat, but detail and style were a little limited." },
+            { "label": "Technical Work", "mark": 11, "max": 14, "comment": "The approach was rather cautious and the rhythm uneven, but these were known, despite unclear dynamics. The arpeggios were only a little hesitant, and the exercises mostly kept going." },
+            { "label": "Test 1 (Musical Knowledge)", "mark": 3, "max": 10, "comment": "Accidental correct, and time partly so; there were errors elsewhere." },
+            { "label": "Test 2 (Aural)", "mark": 9, "max": 10, "comment": "The strong beat was missed; others were secure." }
+        ],
+        "examiner_total": 68,
+        "general_comments": ""
+    },
+    {
+        "subject": "Clarinet",
+        "grade": "Grade 3",
+        "candidate_name": "Penelope Hewitt",
+        "candidate_id": "1823320",
+        "order_number": "1-16044465651",
+        "examiner_number": "3300",
+        "exam_date": "2026-07-09",
+        "sections": [
+            { "label": "Bodiam Castle", "mark": 17, "max": 22, "comment": "This began well, with some clear tone and a sense of forward movement, despite slips in rhythm and some loss of centre in the tone. Some detail and character were shown." },
+            { "label": "Blue Ridge Mountain", "mark": 17, "max": 22, "comment": "The opening legato had a little insecurity and there was some musical contrast, despite unclear tone in places. Much of the intonation was secure and there was an overall sense of mood, with mostly secure accuracy." },
+            { "label": "Backspace Odyssey", "mark": 18, "max": 22, "comment": "There was good, full tone to start, and although there were blemishes later and some slips, there was good attention to detail, and much was secure overall." },
+            { "label": "Technical Work", "mark": 11, "max": 14, "comment": "Scales were prompt; although the tone lost some assurance and there were slips and hesitations, they were known overall. A minor arpeggio had only one octave, but C major was correct." },
+            { "label": "Test 1 (Musical Knowledge)", "mark": 4, "max": 10, "comment": "Time and crescendo were correct; there were errors elsewhere." },
+            { "label": "Test 2 (Aural)", "mark": 8, "max": 10, "comment": "Uncertainty in clapping and incorrect interval; others were good." }
+        ],
+        "examiner_total": 75,
+        "general_comments": ""
+    },
+    {
+        "subject": "Singing",
+        "grade": "Grade 2",
+        "candidate_name": "Maya Ghali",
+        "candidate_id": "1823321",
+        "order_number": "1-16044465651",
+        "examiner_number": "3300",
+        "exam_date": "2026-07-09",
+        "sections": [
+            { "label": "Pigs Could Fly", "mark": 18, "max": 22, "comment": "The diction was mostly clear and much was accurate; although there were some slips in pitching, the tone was secure and much of the character was grasped." },
+            { "label": "A Whole New World", "mark": 18, "max": 22, "comment": "There was some good engagement here, and although breathing was not wholly supportive of the text, and pitching slipped in places, the tone was mostly well founded and projected, and all was accurate." },
+            { "label": "Tomorrow", "mark": 17, "max": 22, "comment": "This began with a gentle tone and clear diction. Longer notes were not always sustained fully, and intonation slipped in places, but there was some good tone and engagement, even if the phrasing was a little fragmented." },
+            { "label": "Technical Work", "mark": 11, "max": 14, "comment": "(a) was mostly clear in pitching and tone, and (b) was neat in rhythm, despite slips in intonation. (c) was very cautious in tempo, lessening demand, but the diction was clear." },
+            { "label": "Test 1 (Musical Knowledge)", "mark": 3, "max": 10, "comment": "mf was known; there were errors elsewhere, although the time was partly correct." },
+            { "label": "Test 2 (Aural)", "mark": 10, "max": 10, "comment": "All were prompt and perceptive." }
+        ],
+        "examiner_total": 77,
+        "general_comments": ""
+    },
+    {
+        "subject": "Rock & Pop Guitar",
+        "grade": "Grade 6",
+        "candidate_name": "Kelson Kiafuca",
+        "candidate_id": "1-17538681134",
+        "order_number": "1-15549565825",
+        "examiner_number": "4063",
+        "exam_date": "2026-07-11",
+        "sections": [
+            { "label": "Song 1 — Adventure of a Lifetime", "mark": 16, "max": 25, "comment": "This was positively played and some idiomatic awareness was shown. More dynamic gradation was required, however, and quite a few timing and melodic errors as well as the odd hesitation affected flow. Tone was not fully centred and the octaves were untidy, but the mood was depicted adequately." },
+            { "label": "Song 2 — Riff Raff", "mark": 17, "max": 25, "comment": "A rudimentary understanding of the song's many rock characteristics was exhibited and a basic sound quality was achieved. Sync with the track was not always tight and picking precision was somewhat intermittent. Phrasing during the solo was a little directionless and frequent stumbles compromised continuity, but musical details were realised to a degree." },
+            { "label": "Song 3 (TF) — The Wind Cries Mary", "mark": 20, "max": 30, "comment": "The hammer-ons projected satisfactorily and the song's contemplative atmosphere was portrayed reasonably well. Glitches and the at-times insecure execution of the piece's more complex technical aspects in the stylistic solo, and more generally, hampered fluency, but tone was by and large balanced." },
+            { "label": "Session skills (Improvising)", "mark": 14, "max": 20, "comment": "Genre-specific details were partially understood, but the improvisation was somewhat limited in scope and lacked development and variation of the material." }
+        ],
+        "examiner_total": 67,
+        "general_comments": ""
+    }
+]
