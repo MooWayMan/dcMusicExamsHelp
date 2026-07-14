@@ -38,6 +38,13 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
         Route::put('contacts/{contact}', [ContactController::class, 'update'])->name('contacts.update');
         Route::post('contacts/{contact}/merge', [ContactController::class, 'merge'])->name('contacts.merge');
         Route::post('contacts/{contact}/dismiss-duplicate', [ContactController::class, 'dismissDuplicate'])->name('contacts.dismiss-duplicate');
+        // Read-only preview of the teacher dashboard AS this contact — renders
+        // the same Dashboard.vue keyed off the contact, so Paul can verify a
+        // teacher's reports before they've registered. Uses the non-admin
+        // DashboardController (the teacher-facing one), fully qualified to
+        // avoid the Admin\DashboardController import above.
+        Route::get('contacts/{contact}/preview-dashboard', [\App\Http\Controllers\DashboardController::class, 'previewForContact'])
+            ->name('contacts.preview-dashboard');
         Route::get('contacts/{contact}', [ContactController::class, 'show'])->name('contacts.show');
 
         // Users — registered accounts (auth side, not the wider exam_contacts list)

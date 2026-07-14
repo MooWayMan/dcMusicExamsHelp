@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
-import { ArrowLeft, Mail, Phone, User, Music, ShoppingCart, Tag, Pencil, ChevronDown, ChevronUp, AlertTriangle, GitMerge, Search } from 'lucide-vue-next'
+import { ArrowLeft, Mail, Phone, User, Music, ShoppingCart, Tag, Pencil, ChevronDown, ChevronUp, AlertTriangle, GitMerge, Search, Eye } from 'lucide-vue-next'
 import MyTableConstructor from '@/components/reusables/MyTableConstructor.vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
 
@@ -198,11 +198,18 @@ const visibleOrders = computed(() =>
                     unknown
                 </span>
             </div>
-            <Link :href="`/admin/contacts/${contact.id}/edit`"
-                class="ml-auto inline-flex items-center gap-2 rounded-lg bg-brand-accent px-3 py-2 text-sm font-semibold text-brand-text-inverse transition-colors hover:opacity-90">
-                <Pencil class="h-4 w-4" />
-                Edit
-            </Link>
+            <div class="ml-auto flex items-center gap-2">
+                <a v-if="contact.types?.includes('teacher')" :href="`/admin/contacts/${contact.id}/preview-dashboard`" target="_blank"
+                    class="inline-flex items-center gap-2 rounded-lg border border-brand-border px-3 py-2 text-sm font-semibold text-brand-text transition-colors hover:bg-brand-surface-soft">
+                    <Eye class="h-4 w-4" />
+                    Preview dashboard
+                </a>
+                <Link :href="`/admin/contacts/${contact.id}/edit`"
+                    class="inline-flex items-center gap-2 rounded-lg bg-brand-accent px-3 py-2 text-sm font-semibold text-brand-text-inverse transition-colors hover:opacity-90">
+                    <Pencil class="h-4 w-4" />
+                    Edit
+                </Link>
+            </div>
         </div>
 
         <!-- Possible duplicates — same person under a different email. Merging

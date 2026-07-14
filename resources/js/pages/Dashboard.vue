@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, Form, router, usePage } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
-import { LayoutDashboard, ClipboardList, Users, GraduationCap, CheckSquare, Award, AlertCircle, Home, LogOut, Mail, MessageCircle, Info, ChevronDown, ChevronRight, Gift, Ticket, Trophy, Search, FileText } from 'lucide-vue-next'
+import { LayoutDashboard, ClipboardList, Users, GraduationCap, CheckSquare, Award, AlertCircle, Home, LogOut, Mail, MessageCircle, Info, ChevronDown, ChevronRight, Gift, Ticket, Trophy, Search, FileText, Eye } from 'lucide-vue-next'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyInputConstructor from '@/components/reusables/MyInputConstructor.vue'
@@ -64,6 +64,9 @@ const props = defineProps<{
     examEntries?: ExamEntryRow[]
     hasLinkedContact?: boolean
     teacherPrizeDraw?: TeacherPrizeDrawPayload
+    // Set only when an admin is previewing this dashboard AS a contact
+    // (read-only). Drives the amber "preview" banner.
+    preview?: { contact_id: number; contact_name: string }
 }>()
 
 const handleLogout = () => {
@@ -345,6 +348,12 @@ defineOptions({
     <Head title="Dashboard" />
 
     <div class="flex h-full flex-1 flex-col items-center p-6 sm:p-8">
+        <!-- Admin preview banner — shown only when viewing AS a contact -->
+        <div v-if="preview" class="mb-4 flex w-full max-w-5xl items-center gap-2 rounded-lg border border-brand-accent bg-brand-accent/10 px-4 py-3 text-sm text-brand-text">
+            <Eye class="h-4 w-4 shrink-0 text-brand-accent" />
+            <span><strong>Admin preview</strong> — viewing as <strong>{{ preview.contact_name }}</strong> (read-only). This is what they'll see once they sign up.</span>
+        </div>
+
         <!-- Top bar with logout (visible to all logged-in users) -->
         <div class="mb-4 flex w-full max-w-5xl items-center justify-end">
             <Link
