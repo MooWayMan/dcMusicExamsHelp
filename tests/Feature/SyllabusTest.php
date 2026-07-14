@@ -112,6 +112,66 @@ test('search scope matches title, composer and book (case-insensitive)', functio
         ->and(SyllabusPiece::search('zzz-nothing')->count())->toBe(0);
 });
 
+// --- C&J Drum Kit seed data (database/seeders/data/drumkit.json + drumkit_books.json) ---
+// Guards the hand-parsed 2020 percussion syllabus: correct counts, correct stream,
+// and every piece's buy link resolving to one of the seven Drum Kit books.
+
+test('drum kit seed files are well-formed and self-consistent', function () {
+    $pieces = json_decode(file_get_contents(database_path('seeders/data/drumkit.json')), true, 512, JSON_THROW_ON_ERROR);
+    $books = json_decode(file_get_contents(database_path('seeders/data/drumkit_books.json')), true, 512, JSON_THROW_ON_ERROR);
+
+    // 118 pieces, all Classical & Jazz Drum Kit.
+    expect($pieces)->toHaveCount(118);
+    expect(collect($pieces)->every(fn ($p) => $p['exam_stream'] === 'Classical & Jazz' && $p['instrument'] === 'Drum Kit'))->toBeTrue();
+
+    // All nine grades are present.
+    $grades = collect($pieces)->pluck('grade')->unique()->values();
+    expect($grades)->toContain('Initial', 'Grade 1', 'Grade 5', 'Grade 8');
+
+    // Seven books, each with an ASIN and the affiliate tag.
+    expect($books)->toHaveCount(7);
+    expect(collect($books)->every(fn ($b) => strlen((string) $b['asin']) === 10 && str_contains($b['url'], 'musicexamshelp-21')))->toBeTrue();
+
+    // Every piece's buy ASIN maps to a known book (so the seeder can link it).
+    $bookAsins = collect($books)->pluck('asin')->all();
+    collect($pieces)->each(function ($p) use ($bookAsins) {
+        expect($p['buy_kind'])->toBe('exact');
+        preg_match('#/dp/([A-Z0-9]{10})#', $p['buy']['amazon'], $m);
+        expect($m[1] ?? null)->toBeIn($bookAsins);
+    });
+});
+
+test('seeding loads the C&J Drum Kit and links pieces to books', function () {
+    $this->seed(\Database\Seeders\SyllabusSeeder::class);
+
+    $drumKit = SyllabusPiece::where('exam_stream', 'Classical & Jazz')->where('instrument', 'Drum Kit');
+    expect($drumKit->count())->toBe(118);
+
+    // A sampled piece links to its book and carries an Amazon buy link.
+    $piece = SyllabusPiece::where('instrument', 'Drum Kit')->where('title', 'Broadway Bounce')->first();
+    expect($piece)->not->toBeNull()
+        ->and($piece->grade)->toBe('Grade 1')
+        ->and($piece->variant)->toBe('Group A')
+        ->and($piece->syllabus_book_id)->not->toBeNull()
+        ->and($piece->buy_url)->toContain('musicexamshelp-21');
+})->group('seed');
+
+test('the additive Drum Kit seeder adds 118 pieces without touching other pieces', function () {
+    // An existing non-Drum-Kit piece stands in for real finder data (and, by
+    // extension, the Top Ten votes that cascade-delete off syllabus_pieces).
+    $keeper = makePiece(makeBook());
+
+    $this->seed(\Database\Seeders\DrumKitSyllabusSeeder::class);
+
+    expect(SyllabusPiece::find($keeper->id))->not->toBeNull()
+        ->and(SyllabusPiece::where('instrument', 'Drum Kit')->count())->toBe(118);
+
+    // Running it again is idempotent — no duplicate Drum Kit rows.
+    $this->seed(\Database\Seeders\DrumKitSyllabusSeeder::class);
+    expect(SyllabusPiece::where('instrument', 'Drum Kit')->count())->toBe(118)
+        ->and(SyllabusPiece::find($keeper->id))->not->toBeNull();
+})->group('seed');
+
 // Mandatory scope-composition test (dev-rules.md): the search scope must
 // survive a join with a table that shares a column name (`title` exists on
 // both syllabus_pieces and syllabus_books). Asserting it runs is enough —
