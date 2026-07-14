@@ -192,13 +192,13 @@ class TrinityCsvImporter
     {
         return [
             // Digital R&P shorthands
-            'Drums' => 'Drum Kit',
+            'Drums' => 'Drums',
             'Guitar' => 'Guitar (Rock/Pop)',
             'Keyboards' => 'Electronic Keyboard',
             'Singing' => 'Singing (Classical)',
             'R&P Vocals' => 'Singing (Rock/Pop)',
             'R&P Guitar' => 'Guitar (Rock/Pop)',
-            'R&P Drums' => 'Drum Kit',
+            'R&P Drums' => 'Drums',
             // Trinity also exports just 'Vocals' for R&P singing entries.
             'Vocals' => 'Singing (Rock/Pop)',
             'Voice' => 'Singing (Classical)',

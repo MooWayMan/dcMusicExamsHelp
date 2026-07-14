@@ -52,7 +52,7 @@ class ImportQ1Results extends Command
             'Cornet' => 'Cornet',
             'R&P Vocals' => 'Singing (Rock/Pop)',
             'R&P Guitar' => 'Guitar (Rock/Pop)',
-            'R&P Drums' => 'Drum Kit',
+            'R&P Drums' => 'Drums',
         ];
     }
 
