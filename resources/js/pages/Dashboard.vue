@@ -77,6 +77,10 @@ const page = usePage()
 const user = computed(() => (page.props.auth as any)?.user)
 const isAdmin = computed(() => user.value?.role === 'admin')
 const canVote = computed(() => ['teacher', 'admin'].includes(user.value?.role))
+// In admin preview mode we render the TEACHER view (entries + reports) even
+// though the logged-in user is an admin — otherwise the admin quick-links home
+// hides the very reports we're trying to preview.
+const showAdminQuickLinks = computed(() => isAdmin.value && !props.preview)
 const flashSuccess = computed(() => (page.props.flash as any)?.success)
 
 const showLinkForm = ref(false)
@@ -371,7 +375,7 @@ defineOptions({
              top, so we don't repeat it here (was visually doubling up). -->
         <div class="mt-4 flex flex-col items-center gap-5 sm:mt-8">
             <MyTextConstructor variant="heading" alignment="center" spacing="none">
-                <template #myTitle>Welcome back, {{ user?.name?.split(' ')[0] }}</template>
+                <template #myTitle>Welcome back, {{ preview ? preview.contact_name : user?.name?.split(' ')[0] }}</template>
             </MyTextConstructor>
             <p class="text-base text-brand-text-soft sm:text-lg">
                 Centre 120 — Trinity College London
@@ -397,8 +401,8 @@ defineOptions({
             </Link>
         </div>
 
-        <!-- Quick links grid (admin only) -->
-        <div v-if="isAdmin" class="mt-10 w-full max-w-3xl">
+        <!-- Quick links grid (admin only, and not while previewing a teacher) -->
+        <div v-if="showAdminQuickLinks" class="mt-10 w-full max-w-3xl">
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <Link
                     v-for="link in quickLinks"
