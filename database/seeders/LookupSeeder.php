@@ -23,7 +23,8 @@ class LookupSeeder extends Seeder
             'Brass' => ['Trumpet', 'Cornet', 'Flugelhorn', 'French Horn', 'Tenor Horn', 'Trombone', 'Euphonium', 'Tuba'],
             'Woodwind' => ['Flute', 'Oboe', 'Clarinet', 'Bassoon', 'Saxophone', 'Recorder'],
             'Voice' => ['Singing (Classical)', 'Singing (Jazz)', 'Singing (Rock/Pop)', 'Musical Theatre'],
-            'Percussion' => ['Drum Kit', 'Tuned Percussion', 'Snare Drum', 'Timpani'],
+            // "Drums" = Rock & Pop drum kit; "Drum Kit" = Classical & Jazz percussion syllabus.
+            'Percussion' => ['Drums', 'Drum Kit', 'Tuned Percussion', 'Snare Drum', 'Timpani'],
         ];
 
         foreach ($instruments as $family => $names) {

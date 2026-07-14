@@ -38,7 +38,7 @@ class BackfillQ1Instruments extends Command
      *  - "R&P Guitar"        => Guitar (Rock/Pop)
      *  - "Singing" (no qualifier on classical order) => Singing (Classical)
      *  - "R&P Vocals"        => Singing (Rock/Pop)
-     *  - "R&P Drums"         => Drum Kit
+     *  - "R&P Drums"         => Drums
      *
      * "Acoustic Guitar" and "Tenor Horn" are added in LookupSeeder; run
      * `sail artisan db:seed --class=LookupSeeder` first to ensure they exist.
@@ -88,7 +88,7 @@ class BackfillQ1Instruments extends Command
         'Jacob Thomas Leslie'           => 'Guitar (Rock/Pop)',
         'Jasper Christian O\'Malley'    => 'Guitar (Rock/Pop)',
         'Jemima Claire Reed'            => 'Singing (Rock/Pop)',
-        'Daniel Carty'                  => 'Drum Kit',
+        'Daniel Carty'                  => 'Drums',
         'Philip Martin Gazdecki'        => 'Guitar (Rock/Pop)',
 
         // Extras that appeared in Clare Keeling's 13 Apr email but not
@@ -97,7 +97,7 @@ class BackfillQ1Instruments extends Command
         'Mira Ghali'                    => 'Piano',
         'George John Canning Yates'     => 'Piano',
         'Harrison John Burslem'         => 'Piano',
-        'George Ghali'                  => 'Drum Kit',
+        'George Ghali'                  => 'Drums',
     ];
 
     public function handle(): int

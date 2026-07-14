@@ -180,12 +180,15 @@ class ResultsScanParser
                 'guitar' => 'Guitar (Classical)',
                 'classical guitar' => 'Guitar (Classical)',
                 'acoustic guitar' => 'Guitar (Classical)',
+                // C&J percussion is "Drum Kit" (distinct from Rock & Pop "Drums").
+                'drums' => 'Drum Kit',
+                'drum kit' => 'Drum Kit',
             ]
             : [
                 'vocals' => 'Singing (Rock/Pop)',
                 'singing' => 'Singing (Rock/Pop)',
                 'guitar' => 'Guitar (Rock/Pop)',
-                'drums' => 'Drum Kit',
+                'drums' => 'Drums',
                 'keyboards' => 'Electronic Keyboard',
             ];
 

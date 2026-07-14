@@ -15,7 +15,7 @@ class ImportQ1Digital extends Command
     private function instrumentMap(): array
     {
         return [
-            'Drums' => 'Drum Kit',
+            'Drums' => 'Drums',
             'Guitar' => 'Guitar (Rock/Pop)',
             'Keyboards' => 'Electronic Keyboard',
             'Piano' => 'Piano',
