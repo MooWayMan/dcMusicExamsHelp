@@ -131,6 +131,68 @@ class DashboardController extends Controller
     }
 
     /**
+     * Admin-only, read-only preview of the teacher dashboard AS a given
+     * contact would see it — same page, same data resolution, but keyed off
+     * the contact instead of the logged-in user. Lets Paul verify a teacher's
+     * reports render correctly before that teacher has ever registered, with
+     * no throwaway accounts to create and delete. Guarded by admin middleware
+     * in routes/admin.php.
+     */
+    public function previewForContact(ExamContact $contact): Response
+    {
+        $emails = collect([$contact->email])
+            ->merge($contact->emails->pluck('email'))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $entriesCollection = ExamEntry::query()
+            ->select([
+                'id', 'student_id', 'instrument_id', 'candidate_number', 'candidate_name', 'date_of_birth',
+                'grade', 'subject_area', 'delivery_method',
+                'result', 'score', 'exam_date', 'report',
+            ])
+            ->with('instrument:id,name')
+            ->where(function ($q) use ($contact, $emails) {
+                $q->where('teacher_contact_id', $contact->id);
+                if (! empty($emails)) {
+                    $q->orWhereIn('applicant_email', $emails);
+                }
+            })
+            ->orderBy('candidate_name')
+            ->orderByDesc('exam_date')
+            ->get();
+
+        $entries = $entriesCollection->map(fn (ExamEntry $e) => [
+            'id' => $e->id,
+            'student_id' => $e->student_id,
+            'instrument' => $e->instrument?->name,
+            'candidate_number' => $e->candidate_number,
+            'candidate_name' => $e->candidate_name,
+            'date_of_birth' => $e->date_of_birth?->format('d M Y'),
+            'grade' => $e->grade,
+            'subject_area' => $e->subject_area,
+            'delivery_method' => $e->delivery_method,
+            'result' => $e->result,
+            'score' => $e->score,
+            'exam_date' => $e->exam_date?->format('d M Y'),
+            'pending_correction' => null,
+            'report' => $e->report,
+        ]);
+
+        return Inertia::render('Dashboard', [
+            'examEntries' => $entries,
+            'hasLinkedContact' => $entries->isNotEmpty(),
+            'teacherPrizeDraw' => $this->buildTeacherPrizeDrawPayload($contact),
+            'preview' => [
+                'contact_id' => $contact->id,
+                'contact_name' => $contact->name,
+            ],
+        ]);
+    }
+
+    /**
      * Payload for the "Quarterly Teacher Prize Draw" card on the teacher
      * dashboard. Returns:
      *
