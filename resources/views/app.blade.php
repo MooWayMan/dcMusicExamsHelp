@@ -76,8 +76,7 @@
                 // off-production. Added 15 Jul 2026 (roadmap: internal-traffic
                 // exclusion). Pair with the GA4 school-IP / hostname filters.
                 window.__TRACKING_ENABLED__ = @json(app()->isProduction());
-                if (!window.__TRACKING_ENABLED__) return;
-
+@production
                 var granted = localStorage.getItem('cookie-consent') === 'accepted';
                 var state = granted ? 'granted' : 'denied';
 
@@ -102,6 +101,7 @@
 
                 gtag('js', new Date());
                 gtag('config', 'G-TZJ8ZCZW3W');
+@endproduction
             })();
         </script>
 
