@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ExamEntry;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -119,6 +122,11 @@ class ExamEntryController extends Controller
                 'teacher_contact_id' => $entry->teacher_contact_id,
                 'school_name' => $entry->school_name,
                 'fee' => $entry->fee !== null ? number_format((float) $entry->fee, 2) : null,
+                // Editable via the inline edit modal (raw string, source of truth
+                // for teacher is teacher_contact_id — see update()).
+                'raw_teacher_name' => $entry->teacher_name,
+                'notes' => $entry->notes,
+                'show_full_name' => (bool) $entry->show_full_name,
             ]);
 
         // Summary stats — same filters applied so the cards reflect the visible table
@@ -156,5 +164,61 @@ class ExamEntryController extends Controller
                 'from' => $request->input('from'),
             ],
         ]);
+    }
+
+    /**
+     * Inline correction of a single imported exam entry — the admin-panel
+     * replacement for hopping into TablePlus to fix a wrong candidate name,
+     * a parent-in-the-teacher-field attribution, or a result/score Trinity
+     * reported wrong. Every change is written to the log with the before/after
+     * values and the admin who made it, so corrections are auditable.
+     *
+     * NOTE: editing `teacher_name` sets the denormalised string only. If this
+     * entry already has a confirmed `teacher_contact_id`, the list keeps
+     * showing the linked contact's name (source of truth); use the contact
+     * tools to re-point the FK. This edit is for the raw imported fields.
+     */
+    public function update(Request $request, ExamEntry $examEntry): RedirectResponse
+    {
+        $validated = $request->validate([
+            'candidate_name' => ['nullable', 'string', 'max:255'],
+            'teacher_name' => ['nullable', 'string', 'max:255'],
+            'result' => ['nullable', 'string', 'max:50'],
+            'score' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+            'show_full_name' => ['boolean'],
+        ]);
+
+        // Normalise blank text fields to null so we never store "" (and so the
+        // audit diff below doesn't report null -> "" as a change).
+        $blankToNull = fn (?string $v) => ($v === null || trim($v) === '') ? null : trim($v);
+
+        $changes = [
+            'candidate_name' => $blankToNull($validated['candidate_name'] ?? null),
+            'teacher_name' => $blankToNull($validated['teacher_name'] ?? null),
+            'result' => $blankToNull($validated['result'] ?? null),
+            'score' => $validated['score'] ?? null,
+            'notes' => $blankToNull($validated['notes'] ?? null),
+            'show_full_name' => (bool) ($validated['show_full_name'] ?? false),
+        ];
+
+        // Capture only the fields that actually changed, for the audit line.
+        $before = $examEntry->only(array_keys($changes));
+        $examEntry->update($changes);
+        $diff = collect($changes)
+            ->filter(fn ($new, $key) => $before[$key] != $new)
+            ->map(fn ($new, $key) => ['from' => $before[$key], 'to' => $new])
+            ->all();
+
+        if ($diff !== []) {
+            Log::info('admin.exam_entry.updated', [
+                'exam_entry_id' => $examEntry->id,
+                'admin_id' => Auth::id(),
+                'admin_email' => Auth::user()?->email,
+                'changes' => $diff,
+            ]);
+        }
+
+        return back()->with('success', 'Exam entry updated.');
     }
 }

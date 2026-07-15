@@ -87,6 +87,7 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
 
         // Exam Entries — imported raw candidate/result data
         Route::get('exam-entries', [ExamEntryController::class, 'index'])->name('exam-entries.index');
+        Route::put('exam-entries/{examEntry}', [ExamEntryController::class, 'update'])->name('exam-entries.update');
 
         // Students (read-only — managed via teacher profiles)
         Route::get('students', [StudentController::class, 'index'])->name('students.index');

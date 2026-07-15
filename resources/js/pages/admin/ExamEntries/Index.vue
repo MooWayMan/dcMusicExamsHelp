@@ -1,8 +1,8 @@
 <!-- resources/js/pages/admin/ExamEntries/Index.vue -->
 <script setup lang="ts">
-import { Link, router } from '@inertiajs/vue3'
+import { Link, router, useForm } from '@inertiajs/vue3'
 import { computed, ref, watch } from 'vue'
-import { Search, ArrowLeft, Award, Star, Trophy, ChevronLeft, ChevronRight, Clock, CheckCircle2 } from 'lucide-vue-next'
+import { Search, ArrowLeft, Award, Star, Trophy, ChevronLeft, ChevronRight, Clock, CheckCircle2, Pencil, X } from 'lucide-vue-next'
 import PageHeader from '@/components/reusables/PageHeader.vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
 
@@ -21,8 +21,12 @@ interface ExamEntryRow {
     score: number | null
     exam_date: string | null
     teacher_name: string | null
+    teacher_contact_id: number | null
     school_name: string | null
     fee: string | null
+    raw_teacher_name: string | null
+    notes: string | null
+    show_full_name: boolean
 }
 
 interface PaginationLink {
@@ -124,6 +128,42 @@ function resultBadgeClass(result: string): string {
         case 'Below Pass': return 'bg-brand-danger-soft text-brand-danger'
         default: return 'bg-brand-surface-soft text-brand-text-soft'
     }
+}
+
+// ── Inline edit modal ──────────────────────────────────────────────
+// Correct a single imported entry (wrong candidate name, parent-in-teacher
+// field, or a result/score Trinity reported wrong) without going to TablePlus.
+const editing = ref<ExamEntryRow | null>(null)
+const form = useForm({
+    candidate_name: '',
+    teacher_name: '',
+    result: '',
+    score: null as number | null,
+    notes: '',
+    show_full_name: false,
+})
+
+function openEdit(entry: ExamEntryRow) {
+    editing.value = entry
+    form.clearErrors()
+    form.candidate_name = entry.candidate_name ?? ''
+    form.teacher_name = entry.raw_teacher_name ?? ''
+    form.result = entry.result ?? ''
+    form.score = entry.score
+    form.notes = entry.notes ?? ''
+    form.show_full_name = entry.show_full_name
+}
+
+function closeEdit() {
+    editing.value = null
+}
+
+function submitEdit() {
+    if (!editing.value) return
+    form.put(`/admin/exam-entries/${editing.value.id}`, {
+        preserveScroll: true,
+        onSuccess: () => closeEdit(),
+    })
 }
 </script>
 
@@ -279,6 +319,7 @@ function resultBadgeClass(result: string): string {
                             <th class="cursor-pointer px-4 py-3 font-semibold text-brand-text hover:text-brand-accent" @click="sortBy('school_name')">
                                 School{{ sortIcon('school_name') }}
                             </th>
+                            <th class="px-4 py-3 text-right font-semibold text-brand-text">Edit</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-brand-border">
@@ -335,9 +376,16 @@ function resultBadgeClass(result: string): string {
                                 </button>
                                 <span v-else class="text-brand-text-soft">—</span>
                             </td>
+                            <td class="px-4 py-3 text-right">
+                                <button type="button" title="Edit entry"
+                                    class="inline-flex items-center rounded-lg p-1.5 text-brand-text-soft transition-colors hover:bg-brand-surface-soft hover:text-brand-accent"
+                                    @click="openEdit(entry)">
+                                    <Pencil class="h-4 w-4" />
+                                </button>
+                            </td>
                         </tr>
                         <tr v-if="!entries.data.length">
-                            <td colspan="11" class="px-4 py-8 text-center text-base text-brand-text-soft">No exam entries found.</td>
+                            <td colspan="12" class="px-4 py-8 text-center text-base text-brand-text-soft">No exam entries found.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -365,6 +413,77 @@ function resultBadgeClass(result: string): string {
                         <span v-else class="rounded px-3 py-1 text-base text-brand-border" v-html="link.label" />
                     </template>
                 </div>
+            </div>
+        </div>
+
+        <!-- Inline edit modal -->
+        <div v-if="editing" class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 sm:items-center"
+            @click.self="closeEdit">
+            <div class="w-full max-w-lg rounded-2xl border border-brand-border bg-brand-surface shadow-xl">
+                <div class="flex items-center justify-between border-b border-brand-border px-5 py-4">
+                    <h2 class="text-lg font-semibold text-brand-text">Edit exam entry</h2>
+                    <button type="button" class="rounded-lg p-1 text-brand-text-soft hover:bg-brand-surface-soft hover:text-brand-text" @click="closeEdit">
+                        <X class="h-5 w-5" />
+                    </button>
+                </div>
+
+                <form @submit.prevent="submitEdit" class="space-y-4 px-5 py-4">
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-brand-text">Candidate name</label>
+                        <input v-model="form.candidate_name" type="text"
+                            class="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent" />
+                        <p v-if="form.errors.candidate_name" class="mt-1 text-sm text-brand-danger">{{ form.errors.candidate_name }}</p>
+                    </div>
+
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-brand-text">Teacher name</label>
+                        <input v-model="form.teacher_name" type="text"
+                            class="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent" />
+                        <p v-if="editing.teacher_contact_id" class="mt-1 text-xs text-brand-text-soft">
+                            This entry is linked to a confirmed teacher contact, so the list keeps showing that contact's name. Editing here only changes the raw imported string.
+                        </p>
+                        <p v-if="form.errors.teacher_name" class="mt-1 text-sm text-brand-danger">{{ form.errors.teacher_name }}</p>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <label class="mb-1 block text-sm font-medium text-brand-text">Result</label>
+                            <input v-model="form.result" type="text" placeholder="Distinction / Merit / Pass…"
+                                class="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent" />
+                            <p v-if="form.errors.result" class="mt-1 text-sm text-brand-danger">{{ form.errors.result }}</p>
+                        </div>
+                        <div class="w-28">
+                            <label class="mb-1 block text-sm font-medium text-brand-text">Score</label>
+                            <input v-model.number="form.score" type="number" min="0" max="100"
+                                class="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent" />
+                            <p v-if="form.errors.score" class="mt-1 text-sm text-brand-danger">{{ form.errors.score }}</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-brand-text">Notes</label>
+                        <textarea v-model="form.notes" rows="2"
+                            class="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"></textarea>
+                        <p class="mt-1 text-xs text-brand-text-soft">CANCELLED or NO_SHOW here drive result-based filters — use them exactly.</p>
+                        <p v-if="form.errors.notes" class="mt-1 text-sm text-brand-danger">{{ form.errors.notes }}</p>
+                    </div>
+
+                    <label class="flex items-center gap-2">
+                        <input v-model="form.show_full_name" type="checkbox"
+                            class="h-4 w-4 rounded border-brand-border text-brand-accent focus:ring-brand-accent" />
+                        <span class="text-sm text-brand-text">Show full name publicly (consent given)</span>
+                    </label>
+
+                    <div class="flex justify-end gap-3 border-t border-brand-border pt-4">
+                        <button type="button" class="rounded-lg px-4 py-2 text-sm font-medium text-brand-text-soft hover:text-brand-text" @click="closeEdit">
+                            Cancel
+                        </button>
+                        <button type="submit" :disabled="form.processing"
+                            class="rounded-lg bg-brand-accent px-4 py-2 text-sm font-semibold text-brand-text-inverse transition-colors hover:opacity-90 disabled:opacity-50">
+                            {{ form.processing ? 'Saving…' : 'Save changes' }}
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
