@@ -20,6 +20,12 @@ uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 // These tests pin the server-rendered bootstrap so a future edit can't
 // silently revert to the old "only load on accept" hard gate.
 
+// Tracking (GA4 + Meta) is gated to production (15 Jul 2026 — internal-traffic
+// exclusion). Force the app env to production for the "it loads" assertions.
+beforeEach(function () {
+    $this->app['env'] = 'production';
+});
+
 test('the root view sets Consent Mode defaults before loading gtag', function () {
     $this->get('/')
         ->assertStatus(200)
@@ -54,4 +60,27 @@ test('the same GA4 measurement id is preserved (no property change)', function (
     $this->get('/')
         ->assertStatus(200)
         ->assertSee('G-TZJ8ZCZW3W', false);
+});
+
+// ──────────────────────────────────────────
+// Production-only gate — dev/staging never load tracking
+// ──────────────────────────────────────────
+// Internal-traffic exclusion (15 Jul 2026): off production, the gtag() shim is
+// still defined (so consumer JS stays safe) but the GA library + Meta Pixel are
+// never requested, so school WiFi / staging smoke-tests can't skew the data.
+
+test('outside production the GA library and Meta Pixel are NOT loaded', function () {
+    $this->app['env'] = 'staging';
+
+    $response = $this->get('/')->assertStatus(200);
+
+    // The external tags must not be requested off-production.
+    $response->assertDontSee('https://www.googletagmanager.com/gtag/js?id=G-TZJ8ZCZW3W', false);
+    $response->assertDontSee('connect.facebook.net/en_US/fbevents.js', false);
+    // Consent Mode defaults are part of the gated block, so they're absent too.
+    $response->assertDontSee("gtag('consent', 'default'", false);
+
+    // But the safe no-op gtag() shim is still present so calls never throw.
+    $response->assertSee('window.gtag = gtag', false)
+        ->assertSee('window.__TRACKING_ENABLED__', false);
 });

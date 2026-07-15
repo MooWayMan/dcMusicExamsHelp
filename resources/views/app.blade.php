@@ -68,6 +68,16 @@
                 function gtag(){dataLayer.push(arguments);}
                 window.gtag = gtag;
 
+                // Tracking network calls (GA4 + Meta Pixel) load in PRODUCTION
+                // ONLY, so dev + staging (*.laravel.cloud) never pollute the
+                // analytics/ads data or count internal traffic. The gtag() shim
+                // above is ALWAYS defined, so consumer JS (useAnalytics /
+                // useCookieConsent) can keep calling it as a harmless no-op
+                // off-production. Added 15 Jul 2026 (roadmap: internal-traffic
+                // exclusion). Pair with the GA4 school-IP / hostname filters.
+                window.__TRACKING_ENABLED__ = @json(app()->isProduction());
+                if (!window.__TRACKING_ENABLED__) return;
+
                 var granted = localStorage.getItem('cookie-consent') === 'accepted';
                 var state = granted ? 'granted' : 'denied';
 
@@ -98,6 +108,8 @@
         {{-- Meta Pixel - only loads when cookie consent given. --}}
         {{-- Pixel ID 2164549404093546 = musicExams.help website dataset --}}
         {{-- (live ad account 26629640546692642, NOT the personal one). --}}
+        {{-- Production only (like GA above) so dev/staging never fire the pixel. --}}
+        @production
         <script>
             (function() {
                 if (localStorage.getItem('cookie-consent') === 'accepted') {
@@ -117,6 +129,7 @@
         <noscript><img height="1" width="1" style="display:none"
         src="https://www.facebook.com/tr?id=2164549404093546&ev=PageView&noscript=1"
         /></noscript>
+        @endproduction
 
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
