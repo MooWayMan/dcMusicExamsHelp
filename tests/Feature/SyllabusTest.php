@@ -172,6 +172,91 @@ test('the additive Drum Kit seeder adds 118 pieces without touching other pieces
         ->and(SyllabusPiece::find($keeper->id))->not->toBeNull();
 })->group('seed');
 
+// --- C&J Electronic Keyboard + Organ seed data (ek_organ.json + ek_organ_books.json) ---
+// Guards the hand-parsed 2019 EK & Organ syllabus: correct counts, correct stream, the
+// Trinity core-book links, and the "no Amazon link" rule for alternative/organ pieces.
+
+test('EK + Organ seed files are well-formed and self-consistent', function () {
+    $pieces = json_decode(file_get_contents(database_path('seeders/data/ek_organ.json')), true, 512, JSON_THROW_ON_ERROR);
+    $books = json_decode(file_get_contents(database_path('seeders/data/ek_organ_books.json')), true, 512, JSON_THROW_ON_ERROR);
+
+    // 338 pieces total: 128 Electronic Keyboard + 210 Organ, all Classical & Jazz.
+    expect($pieces)->toHaveCount(338);
+    $ek = collect($pieces)->where('instrument', 'Electronic Keyboard');
+    $organ = collect($pieces)->where('instrument', 'Organ');
+    expect($ek)->toHaveCount(128);
+    expect($organ)->toHaveCount(210);
+    expect(collect($pieces)->every(fn ($p) => $p['exam_stream'] === 'Classical & Jazz'))->toBeTrue();
+    expect(collect($pieces)->every(fn ($p) => in_array($p['instrument'], ['Electronic Keyboard', 'Organ'], true)))->toBeTrue();
+
+    // EK spans Initial-Grade 8; Organ spans Grade 1-8 (no Initial).
+    expect($ek->pluck('grade')->unique()->values())->toContain('Initial', 'Grade 1', 'Grade 8');
+    expect($organ->pluck('grade')->unique()->values())->toContain('Grade 1', 'Grade 8')
+        ->not->toContain('Initial');
+
+    // Nine EK Trinity core books, each with a 10-char ASIN and the affiliate tag.
+    expect($books)->toHaveCount(9);
+    expect(collect($books)->every(fn ($b) => $b['instrument'] === 'Electronic Keyboard'
+        && strlen((string) $b['asin']) === 10
+        && str_contains($b['url'], 'musicexamshelp-21')))->toBeTrue();
+
+    // Every "Core repertoire" piece is EK, buys "exact", and its ASIN maps to a book.
+    $bookAsins = collect($books)->pluck('asin')->all();
+    $core = collect($pieces)->where('variant', 'Core repertoire');
+    expect($core)->toHaveCount(84);
+    $core->each(function ($p) use ($bookAsins) {
+        expect($p['instrument'])->toBe('Electronic Keyboard');
+        expect($p['buy_kind'])->toBe('exact');
+        preg_match('#/dp/([A-Z0-9]{10})#', $p['buy']['amazon'], $m);
+        expect($m[1] ?? null)->toBeIn($bookAsins);
+    });
+
+    // Everything else (EK alternative + all Organ) carries NO Amazon link.
+    collect($pieces)->where('variant', '!=', 'Core repertoire')->each(function ($p) {
+        expect($p['buy_kind'])->toBe('none');
+        expect($p['buy'])->toBeNull();
+    });
+});
+
+test('seeding loads EK + Organ and links only core pieces to books', function () {
+    $this->seed(\Database\Seeders\SyllabusSeeder::class);
+
+    expect(SyllabusPiece::where('instrument', 'Electronic Keyboard')->count())->toBe(128)
+        ->and(SyllabusPiece::where('instrument', 'Organ')->count())->toBe(210);
+
+    // A core EK piece links to its Trinity book and carries an Amazon buy link.
+    $ek = SyllabusPiece::where('instrument', 'Electronic Keyboard')->where('title', 'Lullaby (Wiegenlied)')->first();
+    expect($ek)->not->toBeNull()
+        ->and($ek->grade)->toBe('Initial')
+        ->and($ek->variant)->toBe('Core repertoire')
+        ->and($ek->syllabus_book_id)->not->toBeNull()
+        ->and($ek->buy_url)->toContain('musicexamshelp-21');
+
+    // An Organ piece has its book title + publisher code but no linked book / buy link.
+    $organ = SyllabusPiece::where('instrument', 'Organ')->where('title', 'Trumpet Piece')->first();
+    expect($organ)->not->toBeNull()
+        ->and($organ->variant)->toBe('Group A')
+        ->and($organ->publisher_code)->toContain('OUP')
+        ->and($organ->syllabus_book_id)->toBeNull()
+        ->and($organ->buy_url)->toBeNull();
+})->group('seed');
+
+test('the additive EK + Organ seeder adds 338 pieces without touching other pieces', function () {
+    // An existing non-EK/Organ piece stands in for real finder data (and the Top Ten
+    // votes that cascade-delete off syllabus_pieces).
+    $keeper = makePiece(makeBook());
+
+    $this->seed(\Database\Seeders\EkOrganSyllabusSeeder::class);
+
+    expect(SyllabusPiece::find($keeper->id))->not->toBeNull()
+        ->and(SyllabusPiece::whereIn('instrument', ['Electronic Keyboard', 'Organ'])->count())->toBe(338);
+
+    // Running it again is idempotent — no duplicate EK/Organ rows.
+    $this->seed(\Database\Seeders\EkOrganSyllabusSeeder::class);
+    expect(SyllabusPiece::whereIn('instrument', ['Electronic Keyboard', 'Organ'])->count())->toBe(338)
+        ->and(SyllabusPiece::find($keeper->id))->not->toBeNull();
+})->group('seed');
+
 // Mandatory scope-composition test (dev-rules.md): the search scope must
 // survive a join with a table that shares a column name (`title` exists on
 // both syllabus_pieces and syllabus_books). Asserting it runs is enough —
