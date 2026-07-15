@@ -124,7 +124,7 @@ class RoadmapController extends Controller
                     ['title' => 'Offer INSET/CPD training sessions to schools', 'done' => false],
                     ['title' => 'Quarterly prize draw system in admin panel', 'done' => true, 'description' => 'Built and used for Q1 2026. /admin/quarter-end manages the full quarterly cycle: top-scorer awards (4 per quarter, Showstopper + Centre Stage, with tie-splitting), student + teacher prize draws (audited PrizeDraw records), Hall of Fame publication, certificate generation, per-winner email templates with Open in Gmail buttons, and (added 8 May 2026) per-winner workflow tracking checkboxes (Bought / Sent / Cert) backed by top_scorer_workflow table. Q1 2026 closed out 8-9 May 2026 with all certs sent, all gift tokens paid (£130 across 7 winners + Thomas G prize draw winner), and rebrand announcement to teacher base.'],
                     ['title' => 'Social media content calendar', 'done' => true, 'description' => 'Weekly scheduled task (Mon 9am) drafts ready-to-post Twitter + Facebook closing-date reminders pulled from the Trinity Exams calendar; Paul posts them. Set up 23 May 2026.'],
-                    ['title' => 'Issue digital badges to teachers', 'done' => false],
+                    ['title' => 'Issue digital badges to teachers', 'done' => true],
                     ['title' => 'F2F exam day thank you cards (printed)', 'done' => true],
                     ['title' => 'Parent email follow-up flyers (digital candidates)', 'done' => false],
                     ['title' => 'Teacher dashboard content', 'done' => true, 'description' => 'Show teacher their students, results, entries, awards'],
