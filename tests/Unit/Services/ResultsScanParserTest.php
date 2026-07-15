@@ -56,7 +56,10 @@ test('maps instruments family-aware so singing and guitar resolve correctly', fu
 
     // Unambiguous instruments fall through the shared Trinity map.
     expect(ResultsScanParser::mapInstrument('Piano', 'C&J'))->toBe('Piano');
-    expect(ResultsScanParser::mapInstrument('Rock & Pop Drums', 'R&P'))->toBe('Drum Kit');
+
+    // Drums split by family: R&P = "Drums", C&J = "Drum Kit".
+    expect(ResultsScanParser::mapInstrument('Rock & Pop Drums', 'R&P'))->toBe('Drums');
+    expect(ResultsScanParser::mapInstrument('Drum Kit', 'C&J'))->toBe('Drum Kit');
 });
 
 // ──────────────────────────────────────────────────────────────────
