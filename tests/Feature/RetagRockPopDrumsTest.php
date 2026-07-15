@@ -15,7 +15,7 @@ function drumKitInstrument(): Instrument
     return Instrument::firstOrCreate(['name' => 'Drum Kit'], ['family' => 'Percussion']);
 }
 
-function makeEntry(Instrument $instrument, string $subjectArea, ?ExamContact $teacher = null): ExamEntry
+function makeDrumsEntry(Instrument $instrument, string $subjectArea, ?ExamContact $teacher = null): ExamEntry
 {
     return ExamEntry::create([
         'order_id' => Order::factory()->create()->id,
@@ -30,10 +30,10 @@ function makeEntry(Instrument $instrument, string $subjectArea, ?ExamContact $te
 
 test('it moves Rock & Pop drum entries (any spelling) to "Drums" and leaves C&J as "Drum Kit"', function () {
     $drumKit = drumKitInstrument();
-    $rpAnd = makeEntry($drumKit, 'Rock and Pop');
-    $rpAmp = makeEntry($drumKit, 'Rock & Pop');
-    $cjMusic = makeEntry($drumKit, 'Music');
-    $cjFull = makeEntry($drumKit, 'Classical & Jazz');
+    $rpAnd = makeDrumsEntry($drumKit, 'Rock and Pop');
+    $rpAmp = makeDrumsEntry($drumKit, 'Rock & Pop');
+    $cjMusic = makeDrumsEntry($drumKit, 'Music');
+    $cjFull = makeDrumsEntry($drumKit, 'Classical & Jazz');
 
     $this->artisan('exam:retag-rp-drums')->assertSuccessful();
 
@@ -48,7 +48,7 @@ test('it moves Rock & Pop drum entries (any spelling) to "Drums" and leaves C&J 
 test('it rebuilds the teacher instrument link off "Drum Kit" onto "Drums"', function () {
     $drumKit = drumKitInstrument();
     $teacher = ExamContact::create(['name' => 'Danny Drums', 'role' => 'teacher']);
-    makeEntry($drumKit, 'Rock and Pop', $teacher);
+    makeDrumsEntry($drumKit, 'Rock and Pop', $teacher);
 
     // Simulate the stale pre-split link (everything drum-related pointed at Drum Kit).
     $teacher->instruments()->syncWithoutDetaching([$drumKit->id]);
@@ -64,7 +64,7 @@ test('it rebuilds the teacher instrument link off "Drum Kit" onto "Drums"', func
 
 test('dry run changes nothing', function () {
     $drumKit = drumKitInstrument();
-    $rp = makeEntry($drumKit, 'Rock and Pop');
+    $rp = makeDrumsEntry($drumKit, 'Rock and Pop');
 
     $this->artisan('exam:retag-rp-drums --dry-run')->assertSuccessful();
 
@@ -74,7 +74,7 @@ test('dry run changes nothing', function () {
 
 test('running it twice is idempotent', function () {
     $drumKit = drumKitInstrument();
-    $rp = makeEntry($drumKit, 'Rock and Pop');
+    $rp = makeDrumsEntry($drumKit, 'Rock and Pop');
 
     $this->artisan('exam:retag-rp-drums')->assertSuccessful();
     $this->artisan('exam:retag-rp-drums')->assertSuccessful();
