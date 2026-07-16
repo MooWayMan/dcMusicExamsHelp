@@ -10,6 +10,7 @@ use App\Models\ImportRun;
 use App\Models\Instrument;
 use App\Models\Order;
 use App\Services\ResultsScanParser;
+use App\Services\ResultsScanTranscriber;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -37,7 +38,34 @@ class ResultsScanController extends Controller
 
     public function index(): InertiaResponse
     {
-        return Inertia::render('admin/ResultsScan/Index');
+        return Inertia::render('admin/ResultsScan/Index', [
+            'transcribeEnabled' => (new ResultsScanTranscriber())->enabled(),
+        ]);
+    }
+
+    /**
+     * Turn an uploaded handwritten Trinity report PDF into candidate records via
+     * the Anthropic vision pass, so Paul can upload the scan directly instead of
+     * transcribing it by hand first. Returns the same raw records the JSON upload
+     * produces; the page then runs them through preview() exactly as before.
+     * Writes nothing.
+     */
+    public function transcribe(Request $request, ResultsScanTranscriber $transcriber): JsonResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:pdf', 'max:'.(ResultsScanTranscriber::MAX_BYTES / 1024)],
+        ]);
+
+        try {
+            $candidates = $transcriber->transcribe($request->file('file'));
+        } catch (\RuntimeException $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
+
+        return response()->json([
+            'candidates' => $candidates,
+            'count' => count($candidates),
+        ]);
     }
 
     /**

@@ -46,6 +46,9 @@ function loadMetaPixel() {
   // Matches the inline script in app.blade.php for returning visitors;
   // the `if (w.fbq) return` guard inside the snippet prevents double init.
   const w = window as any
+  // Tracking is production-only (see app.blade.php). Off-production the pixel
+  // must never load, even on an explicit accept.
+  if (w.__TRACKING_ENABLED__ === false) return
   if (w.fbq) return
 
   const n = w.fbq = function (...args: any[]) {

@@ -4,6 +4,10 @@ import { ref, computed } from 'vue'
 import { ClipboardCheck, UploadCloud, AlertTriangle, CheckCircle2, Loader2, X, FileJson, Info, Save } from 'lucide-vue-next'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 
+// transcribeEnabled = the server has an Anthropic API key, so PDFs can be read
+// directly. When false the page stays JSON-only (staging/local without a key).
+const props = withDefaults(defineProps<{ transcribeEnabled?: boolean }>(), { transcribeEnabled: false })
+
 interface Section {
     label: string
     mark: number | null
@@ -87,13 +91,27 @@ function totalMatches(c: Candidate): boolean {
     return c.examiner_total !== null && c.examiner_total === sumOf(c)
 }
 
-// ── Load the transcription JSON (produced by the Cowork vision pass) ──
-function addJson(files: FileList | File[]) {
-    const file = Array.from(files).find((f) => /\.json$/i.test(f.name))
-    if (!file) {
-        error.value = 'Please choose the transcription .json file.'
+// ── Route a dropped/selected file: a Trinity report PDF goes to the server
+// vision pass; a transcription .json is read locally (as before). ──
+function addFiles(files: FileList | File[]) {
+    const arr = Array.from(files)
+    const pdf = arr.find((f) => /\.pdf$/i.test(f.name) || f.type === 'application/pdf')
+    if (pdf) {
+        uploadPdf(pdf)
         return
     }
+    const json = arr.find((f) => /\.json$/i.test(f.name))
+    if (json) {
+        addJson(json)
+        return
+    }
+    error.value = props.transcribeEnabled
+        ? 'Please choose a Trinity report PDF, or a transcription .json file.'
+        : 'Please choose the transcription .json file.'
+}
+
+// Load a transcription JSON (produced by the Cowork vision pass, or exported here).
+function addJson(file: File) {
     const reader = new FileReader()
     reader.onload = () => {
         try {
@@ -108,16 +126,52 @@ function addJson(files: FileList | File[]) {
     reader.readAsText(file)
 }
 
+// Send a report PDF to the server, which calls the Anthropic vision pass and
+// returns candidate records; those then flow through the same check as JSON.
+async function uploadPdf(file: File) {
+    if (!props.transcribeEnabled) {
+        error.value = 'Reading PDFs directly isn’t set up yet — upload the transcription JSON, or add the API key.'
+        return
+    }
+    busy.value = true
+    error.value = null
+    result.value = null
+    try {
+        const fd = new FormData()
+        fd.append('file', file)
+        const res = await fetch('/admin/results-scan/transcribe', {
+            method: 'POST',
+            headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf() },
+            body: fd,
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) {
+            error.value = data.error || data.message || `Couldn’t read that PDF (${res.status}).`
+            return
+        }
+        const rows = data.candidates
+        if (!Array.isArray(rows) || rows.length === 0) {
+            error.value = 'No candidates were found in that PDF.'
+            return
+        }
+        await checkOnServer(rows)
+    } catch (err: unknown) {
+        error.value = err instanceof Error ? err.message : 'Something went wrong reading the PDF.'
+    } finally {
+        busy.value = false
+    }
+}
+
 function onJsonSelected(e: Event) {
     const t = e.target as HTMLInputElement
-    if (t.files) addJson(t.files)
+    if (t.files) addFiles(t.files)
     if (t) t.value = ''
 }
 
 function onDrop(e: DragEvent) {
     e.preventDefault()
     dragOver.value = false
-    if (e.dataTransfer?.files?.length) addJson(e.dataTransfer.files)
+    if (e.dataTransfer?.files?.length) addFiles(e.dataTransfer.files)
 }
 
 // Send the raw records to the server, which runs the checks, maps the
@@ -254,7 +308,8 @@ async function importResults() {
         <section v-if="candidates.length === 0" class="rounded-xl border border-brand-border bg-brand-surface p-5">
             <div class="mb-4 flex items-start gap-2 rounded-lg border border-brand-accent/30 bg-brand-accent/5 px-4 py-3 text-sm text-brand-text-soft">
                 <Info class="mt-0.5 h-4 w-4 shrink-0 text-brand-accent" />
-                <span>The scans are transcribed to a small JSON file first (the identity block + each section mark + the examiner's total). Drop that file here — this screen does the checking and the import.</span>
+                <span v-if="transcribeEnabled">Drop a Trinity <strong>Examination Report PDF</strong> and it’s read for you — the identity block, each section mark and the examiner’s total — landing on the grid below to check. (A pre-made transcription <strong>.json</strong> works too.) Nothing is imported until you press Import.</span>
+                <span v-else>The scans are transcribed to a small JSON file first (the identity block + each section mark + the examiner's total). Drop that file here — this screen does the checking and the import.</span>
             </div>
 
             <div
@@ -272,10 +327,14 @@ async function importResults() {
                 @dragover.prevent="dragOver = true"
                 @dragleave="dragOver = false"
             >
-                <UploadCloud class="mb-2 h-8 w-8 text-brand-accent" />
-                <p class="text-sm font-medium text-brand-text">Drop the transcription JSON here, or click to browse</p>
+                <UploadCloud v-if="!busy" class="mb-2 h-8 w-8 text-brand-accent" />
+                <Loader2 v-else class="mb-2 h-8 w-8 animate-spin text-brand-accent" />
+                <p v-if="busy" class="text-sm font-medium text-brand-text">Reading the report…</p>
+                <p v-else class="text-sm font-medium text-brand-text">
+                    {{ transcribeEnabled ? 'Drop a Trinity report PDF (or transcription JSON) here, or click to browse' : 'Drop the transcription JSON here, or click to browse' }}
+                </p>
                 <p class="mt-1 text-xs text-brand-text-soft">One file per exam-type batch. Nothing is imported until you've checked the grid and pressed Import.</p>
-                <input ref="jsonInput" type="file" accept=".json,application/json" class="hidden" @change="onJsonSelected" />
+                <input ref="jsonInput" type="file" :accept="transcribeEnabled ? '.pdf,application/pdf,.json,application/json' : '.json,application/json'" class="hidden" @change="onJsonSelected" />
             </div>
         </section>
 
