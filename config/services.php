@@ -63,4 +63,20 @@ return [
         'consent_property' => env('HUBSPOT_CONSENT_PROPERTY'),
     ],
 
+    /*
+    | Anthropic (Claude) — vision transcription of the handwritten F2F Trinity
+    | "Examination Report" PDFs on /admin/results-scan. The app posts the PDF to
+    | the Messages API and Claude returns the same candidates JSON the checker
+    | grid already consumes (App\Services\ResultsScanTranscriber).
+    |
+    | `key` blank => the transcribe endpoint is disabled and returns a friendly
+    |                error (staging/local/test run blank, like the HubSpot token).
+    | `model` is env-overridable so the model can be updated without a deploy.
+    */
+    'anthropic' => [
+        'key' => env('ANTHROPIC_API_KEY'),
+        'model' => env('ANTHROPIC_SCAN_MODEL', 'claude-sonnet-4-20250514'),
+        'base_url' => env('ANTHROPIC_BASE_URL', 'https://api.anthropic.com'),
+    ],
+
 ];

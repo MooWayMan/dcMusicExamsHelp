@@ -124,6 +124,7 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
         // examiner total, max bounds, band) then fill verified results onto
         // the matching exam entries.
         Route::get('results-scan', [ResultsScanController::class, 'index'])->name('results-scan.index');
+        Route::post('results-scan/transcribe', [ResultsScanController::class, 'transcribe'])->name('results-scan.transcribe');
         Route::post('results-scan/preview', [ResultsScanController::class, 'preview'])->name('results-scan.preview');
         Route::post('results-scan/commit', [ResultsScanController::class, 'commit'])->name('results-scan.commit');
 
