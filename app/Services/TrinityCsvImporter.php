@@ -435,13 +435,21 @@ class TrinityCsvImporter
     private const MARKSHEET_HEADERS = ['Section #', 'Mark', 'Section', 'Max'];
 
     /**
-     * Parse the single-candidate Enrolment CSV. Skips the
-     * "Centre Commission - …" row that follows the candidate row
-     * (it has an empty Candidate Number).
+     * Parse the Enrolment CSV and return one candidate's row, skipping the
+     * "Centre Commission - …" rows (empty Candidate Number).
+     *
+     * Pass $candidateNumber (from the Summary/Marksheet) to pull that specific
+     * candidate out of a whole-order export — so the same order file can be
+     * reused for every candidate instead of exporting a one-candidate file each
+     * time. A single-candidate file still works. If the requested candidate
+     * isn't present it throws, which catches dragging in the wrong order.
      */
-    public function parseEnrolment(string $contents): array
+    public function parseEnrolment(string $contents, ?string $candidateNumber = null): array
     {
         [$headers, $rows] = $this->extractRows($contents, self::ENROLMENT_HEADERS);
+
+        $wanted = $candidateNumber !== null ? trim($candidateNumber) : null;
+        $first = null;
 
         foreach ($rows as $row) {
             $data = array_combine($headers, $row);
@@ -456,7 +464,7 @@ class TrinityCsvImporter
             $submitterFirst = trim((string) ($data['Submitter First Name'] ?? ''));
             $submitterLast = trim((string) ($data['Submitter Last Name'] ?? ''));
 
-            return [
+            $shaped = [
                 'examination' => trim((string) ($data['Examination'] ?? '')),
                 'subject' => trim((string) ($data['Subject'] ?? '')),
                 'candidate_number' => $candNumber,
@@ -472,6 +480,26 @@ class TrinityCsvImporter
                 'applicant_last' => $applicantLast,
                 'applicant_name' => trim($applicantFirst . ' ' . $applicantLast),
             ];
+
+            // Reuse the same whole-order enrolment export for every candidate:
+            // when the Summary tells us which candidate this is, return that one.
+            if ($wanted !== null && $candNumber === $wanted) {
+                return $shaped;
+            }
+
+            $first ??= $shaped;
+        }
+
+        // A specific candidate was requested but isn't in this file — most
+        // likely the wrong order export was dragged in.
+        if ($wanted !== null) {
+            throw new RuntimeException(
+                "Candidate {$wanted} was not found in the enrolment/order file — is this the right order export?"
+            );
+        }
+
+        if ($first !== null) {
+            return $first;
         }
 
         throw new RuntimeException('Enrolment CSV had no candidate row.');

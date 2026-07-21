@@ -215,11 +215,15 @@ class ImportController extends Controller
         $dob = $this->normaliseDob($validated['date_of_birth'] ?? null);
 
         try {
-            $enrol = $this->importer->parseEnrolment(
-                file_get_contents($validated['enrolment']->getRealPath())
-            );
             $summary = $this->importer->parseSummary(
                 file_get_contents($validated['summary']->getRealPath())
+            );
+            // Match the candidate inside the enrolment file by the Summary's
+            // candidate number — lets the same whole-order export be reused for
+            // every candidate instead of a one-candidate file each time.
+            $enrol = $this->importer->parseEnrolment(
+                file_get_contents($validated['enrolment']->getRealPath()),
+                $summary['candidate_number'],
             );
             $score = $this->importer->parseMarksheet(
                 file_get_contents($validated['marksheet']->getRealPath())
@@ -269,11 +273,15 @@ class ImportController extends Controller
         $dob = $this->normaliseDob($validated['date_of_birth'] ?? null);
 
         try {
-            $enrol = $this->importer->parseEnrolment(
-                file_get_contents($validated['enrolment']->getRealPath())
-            );
             $summary = $this->importer->parseSummary(
                 file_get_contents($validated['summary']->getRealPath())
+            );
+            // Match the candidate inside the enrolment file by the Summary's
+            // candidate number — lets the same whole-order export be reused for
+            // every candidate instead of a one-candidate file each time.
+            $enrol = $this->importer->parseEnrolment(
+                file_get_contents($validated['enrolment']->getRealPath()),
+                $summary['candidate_number'],
             );
             $score = $this->importer->parseMarksheet(
                 file_get_contents($validated['marksheet']->getRealPath())

@@ -150,6 +150,14 @@ const enrolPreview = ref<{
     warnings: string[]
 } | null>(null)
 const enrolError = ref<string | null>(null)
+
+// Instrument label for an enrolment-list preview row. Kept in the script (not
+// an inline `as { name?: string }` cast in the template) because vue-tsc can't
+// parse an object type literal inside a {{ }} interpolation.
+function enrolInstrumentName(c: Record<string, unknown>): string {
+    const inst = c.instrument as { name?: string } | null
+    return inst?.name || String(c.instrument_raw ?? '')
+}
 const enrolBusy = ref(false)
 const enrolDragOver = ref(false)
 const enrolInputRef = ref<HTMLInputElement | null>(null)
@@ -233,6 +241,21 @@ function commitEnrolList() {
 const enrolmentFile = ref<File | null>(null)
 const summaryFile = ref<File | null>(null)
 const marksheetFile = ref<File | null>(null)
+
+// "Reuse previous order file": keep the whole-order Enrolment CSV from the last
+// commit so the next candidate only needs the two new files (Summary +
+// Marksheet). The server matches the right candidate by candidate number.
+const reuseOrderFile = ref(false)
+const previousEnrolmentFile = ref<File | null>(null)
+// Submitter/teacher/applicant are constant across an order, so carry the
+// confirmed role + teacher + school + applicant email forward while reusing.
+const previousRole = ref<string | null>(null)
+const previousTeacherContactId = ref<number | null>(null)
+const previousTeacherName = ref<string>('')
+const previousTeacherEmail = ref<string>('')
+const previousSchoolName = ref<string>('')
+const previousSchoolId = ref<number | null>(null)
+const previousApplicantEmail = ref<string>('')
 const dob = ref<string>('')
 const applicantEmail = ref<string>('')
 // Tracks whether the user has manually typed in the email field, so we
@@ -555,13 +578,26 @@ const applicantEmailHelp = computed(() => {
     return ''
 })
 
+// When reuse is on and no fresh order file has been dropped, fall back to the
+// order file remembered from the last commit.
+const effectiveEnrolmentFile = computed(() =>
+    (reuseOrderFile.value && !enrolmentFile.value) ? previousEnrolmentFile.value : enrolmentFile.value
+)
+// True while we're actively reusing the stored order file — the form then
+// collapses from three slots to two.
+const reusingOrderFile = computed(() =>
+    reuseOrderFile.value && !!previousEnrolmentFile.value && !enrolmentFile.value
+)
+
 const allCandidateFilesPicked = computed(() =>
-    !!enrolmentFile.value && !!summaryFile.value && !!marksheetFile.value
+    !!effectiveEnrolmentFile.value && !!summaryFile.value && !!marksheetFile.value
 )
 
 async function submitCandidatePreview() {
     if (!allCandidateFilesPicked.value) {
-        candidateError.value = 'All three CSVs are required.'
+        candidateError.value = reusingOrderFile.value
+            ? 'The Summary and Marksheet are required.'
+            : 'All three CSVs are required.'
         return
     }
     candidateBusy.value = true
@@ -569,7 +605,7 @@ async function submitCandidatePreview() {
     candidatePreview.value = null
 
     const fd = new FormData()
-    fd.append('enrolment', enrolmentFile.value!)
+    fd.append('enrolment', effectiveEnrolmentFile.value!)
     fd.append('summary', summaryFile.value!)
     fd.append('marksheet', marksheetFile.value!)
     if (dob.value) fd.append('date_of_birth', dob.value)
@@ -587,26 +623,42 @@ async function submitCandidatePreview() {
         } else {
             candidatePreview.value = await res.json()
 
-            // Pre-fill the role selector from the suggestion (the human still
-            // confirms). When the suggestion matched an existing teacher /
-            // school admin, carry its id so we reuse that exact contact;
-            // otherwise pre-fill the teacher fields from the applicant.
-            const sug = candidatePreview.value?.roleSuggestion
-            chosenRole.value = sug?.role ?? null
-            const teacherish = sug?.role === 'teacher' || sug?.role === 'school_admin'
-            if (teacherish && sug?.matched_contact) {
-                teacherContactId.value = sug.matched_contact.id
-                teacherName.value = sug.matched_contact.name
-                teacherEmail.value = ''
+            // Reusing the same order → same submitter / teacher / applicant,
+            // so carry the confirmed role, teacher, school and applicant email
+            // forward instead of re-deriving from the suggestion each time. The
+            // fields stay editable in case one candidate needs a different role.
+            if (reusingOrderFile.value && previousRole.value) {
+                chosenRole.value = previousRole.value
+                teacherContactId.value = previousTeacherContactId.value
+                teacherName.value = previousTeacherName.value
+                teacherEmail.value = previousTeacherEmail.value
+                schoolName.value = previousSchoolName.value
+                schoolId.value = previousSchoolId.value
+                if (previousApplicantEmail.value && !applicantEmail.value) {
+                    applicantEmail.value = previousApplicantEmail.value
+                }
             } else {
-                teacherContactId.value = null
-                teacherName.value = candidatePreview.value?.candidate.applicant_name ?? ''
-                teacherEmail.value = candidatePreview.value?.derivedEmail ?? ''
+                // Pre-fill the role selector from the suggestion (the human still
+                // confirms). When the suggestion matched an existing teacher /
+                // school admin, carry its id so we reuse that exact contact;
+                // otherwise pre-fill the teacher fields from the applicant.
+                const sug = candidatePreview.value?.roleSuggestion
+                chosenRole.value = sug?.role ?? null
+                const teacherish = sug?.role === 'teacher' || sug?.role === 'school_admin'
+                if (teacherish && sug?.matched_contact) {
+                    teacherContactId.value = sug.matched_contact.id
+                    teacherName.value = sug.matched_contact.name
+                    teacherEmail.value = ''
+                } else {
+                    teacherContactId.value = null
+                    teacherName.value = candidatePreview.value?.candidate.applicant_name ?? ''
+                    teacherEmail.value = candidatePreview.value?.derivedEmail ?? ''
+                }
+                // School fields start from whatever Trinity gave us (usually
+                // blank on digital), to be confirmed for the school-admin role.
+                schoolName.value = candidatePreview.value?.school_name ?? ''
+                onSchoolInput()
             }
-            // School fields start from whatever Trinity gave us (usually blank
-            // on digital), to be confirmed for the school-admin role.
-            schoolName.value = candidatePreview.value?.school_name ?? ''
-            onSchoolInput()
         }
     } catch (err: unknown) {
         candidateError.value = err instanceof Error ? err.message : 'Preview failed.'
@@ -618,7 +670,7 @@ async function submitCandidatePreview() {
 function commitCandidate() {
     if (!allCandidateFilesPicked.value || !canCommit.value) return
     const form = useForm({
-        enrolment: enrolmentFile.value as File,
+        enrolment: effectiveEnrolmentFile.value as File,
         summary: summaryFile.value as File,
         marksheet: marksheetFile.value as File,
         date_of_birth: dob.value || null,
@@ -633,6 +685,18 @@ function commitCandidate() {
     form.post('/admin/imports/commit-candidate', {
         forceFormData: true,
         onSuccess: () => {
+            // Remember the order file so the next candidate can reuse it.
+            previousEnrolmentFile.value = effectiveEnrolmentFile.value
+            reuseOrderFile.value = true
+            // Carry the submitter-level choices forward for the next candidate
+            // of the same order (same submitter / teacher / applicant email).
+            previousRole.value = chosenRole.value
+            previousTeacherContactId.value = teacherContactId.value
+            previousTeacherName.value = teacherName.value
+            previousTeacherEmail.value = teacherEmail.value
+            previousSchoolName.value = schoolName.value
+            previousSchoolId.value = schoolId.value
+            previousApplicantEmail.value = applicantEmail.value
             enrolmentFile.value = null
             summaryFile.value = null
             marksheetFile.value = null
@@ -892,7 +956,7 @@ function formatRunSummary(run: { type: string; summary: Record<string, unknown> 
                     <summary class="cursor-pointer text-sm font-medium text-brand-accent">Show new candidates ({{ enrolPreview.toCreate.length }})</summary>
                     <ul class="mt-2 space-y-1 text-sm text-brand-text">
                         <li v-for="(c, i) in enrolPreview.toCreate" :key="i" class="font-mono">
-                            {{ c.candidate_name }} — {{ c.grade }} — {{ (c.instrument as { name?: string } | null)?.name || c.instrument_raw }}
+                            {{ c.candidate_name }} — {{ c.grade }} — {{ enrolInstrumentName(c) }}
                         </li>
                     </ul>
                 </details>
@@ -921,6 +985,21 @@ function formatRunSummary(run: { type: string; summary: Record<string, unknown> 
                         Clear all
                     </button>
                 </div>
+
+                <div v-if="previousEnrolmentFile" class="mb-3 flex items-start gap-2 rounded-lg border border-brand-border bg-brand-surface-soft px-3 py-2">
+                    <input
+                        id="reuseOrderFile"
+                        v-model="reuseOrderFile"
+                        type="checkbox"
+                        class="mt-0.5 h-4 w-4 rounded border-brand-border text-brand-accent focus:ring-brand-accent"
+                    />
+                    <label for="reuseOrderFile" class="text-sm text-brand-text">
+                        Reuse previous order file
+                        <span class="font-mono text-xs text-brand-text-soft">({{ previousEnrolmentFile?.name }})</span>
+                        — then just drop the Summary + Marksheet for each candidate.
+                    </label>
+                </div>
+
                 <div
                     role="button"
                     tabindex="0"
@@ -939,7 +1018,7 @@ function formatRunSummary(run: { type: string; summary: Record<string, unknown> 
                 >
                     <UploadCloud class="h-7 w-7 text-brand-accent" />
                     <p class="mt-2 text-sm text-brand-text">
-                        Drop up to 3 CSVs here, or <span class="font-semibold text-brand-accent">browse</span>
+                        Drop {{ reusingOrderFile ? 'the 2 result CSVs' : 'up to 3 CSVs' }} here, or <span class="font-semibold text-brand-accent">browse</span>
                     </p>
                     <p class="mt-1 text-xs text-brand-text-soft">Files are auto-classified into Enrolment, Summary, and Marksheet by their headers.</p>
                 </div>
@@ -952,8 +1031,12 @@ function formatRunSummary(run: { type: string; summary: Record<string, unknown> 
                     @change="onCandidateFilesSelected"
                 />
 
-                <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <p v-if="reusingOrderFile" class="mt-3 text-xs text-brand-success">
+                    Using previous order file: <span class="font-mono">{{ previousEnrolmentFile?.name }}</span> — drop just the Summary + Marksheet below.
+                </p>
+                <div class="mt-3 grid grid-cols-1 gap-2" :class="reusingOrderFile ? 'sm:grid-cols-2' : 'sm:grid-cols-3'">
                     <div
+                        v-if="!reusingOrderFile"
                         :class="[
                             'flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm',
                             enrolmentFile

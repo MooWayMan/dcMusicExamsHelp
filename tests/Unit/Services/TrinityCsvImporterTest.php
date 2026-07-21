@@ -181,3 +181,55 @@ test('parseOrdersCsv parses real bulk-orders sample', function () {
     expect($rows[1]['venue'])->toBe('Wirral School of Music');
     expect($rows[1]['candidates'])->toBe(11);
 });
+
+// ── parseEnrolment: reuse a whole-order file, match by candidate number ──
+
+test('parseEnrolment finds the matching candidate in a whole-order file', function () {
+    $csv = utf16Csv([
+        'Examination,Subject,Candidate Number,Candidate Name,Enrolment Date,Price,Submitter Last Name,Submitter First Name,Submitter Email Address,Applicant Id,Applicant Last Name,Applicant First Name',
+        'Rock and Pop Grade 1 (Digital),Drums,1-17521423974,Ben Kettle,04/06/2026 00:00:00,£55.00,Rogers,Daniel,exams@pulsemusicliverpool.com,1-4793151743,Rogers,Daniel',
+        'Centre Commission - Rock and Pop (Digital),,, ,04/06/2026 16:50:07,(£11.00),,,,,,',
+        'Rock and Pop Grade 2 (Digital),Drums,1-17521426524,Alfie Taylor,04/06/2026 00:00:00,£61.00,Rogers,Daniel,exams@pulsemusicliverpool.com,1-4793151743,Rogers,Daniel',
+        'Centre Commission - Rock and Pop (Digital),,, ,04/06/2026 16:50:07,(£12.20),,,,,,',
+    ]);
+
+    $row = (new TrinityCsvImporter())->parseEnrolment($csv, '1-17521426524');
+
+    expect($row['candidate_number'])->toBe('1-17521426524')
+        ->and($row['candidate_name'])->toBe('Alfie Taylor')
+        ->and($row['examination'])->toContain('Grade 2');
+});
+
+test('parseEnrolment still returns the single candidate when its number matches', function () {
+    $csv = utf16Csv([
+        'Examination,Subject,Candidate Number,Candidate Name,Enrolment Date,Price,Submitter Last Name,Submitter First Name,Submitter Email Address,Applicant Id,Applicant Last Name,Applicant First Name',
+        'Rock and Pop Grade 1 (Digital),Drums,1-17521423974,Ben Kettle,04/06/2026 00:00:00,£55.00,Rogers,Daniel,exams@pulsemusicliverpool.com,1-4793151743,Rogers,Daniel',
+        'Centre Commission - Rock and Pop (Digital),,, ,04/06/2026 16:50:07,(£11.00),,,,,,',
+    ]);
+
+    $row = (new TrinityCsvImporter())->parseEnrolment($csv, '1-17521423974');
+
+    expect($row['candidate_name'])->toBe('Ben Kettle');
+});
+
+test('parseEnrolment throws when the requested candidate is not in the order file', function () {
+    $csv = utf16Csv([
+        'Examination,Subject,Candidate Number,Candidate Name,Enrolment Date,Price,Submitter Last Name,Submitter First Name,Submitter Email Address,Applicant Id,Applicant Last Name,Applicant First Name',
+        'Rock and Pop Grade 1 (Digital),Drums,1-17521423974,Ben Kettle,04/06/2026 00:00:00,£55.00,Rogers,Daniel,exams@pulsemusicliverpool.com,1-4793151743,Rogers,Daniel',
+    ]);
+
+    expect(fn () => (new TrinityCsvImporter())->parseEnrolment($csv, '1-99999999999'))
+        ->toThrow(RuntimeException::class);
+});
+
+test('parseEnrolment with no candidate number still returns the first candidate (back-compat)', function () {
+    $csv = utf16Csv([
+        'Examination,Subject,Candidate Number,Candidate Name,Enrolment Date,Price,Submitter Last Name,Submitter First Name,Submitter Email Address,Applicant Id,Applicant Last Name,Applicant First Name',
+        'Rock and Pop Grade 1 (Digital),Drums,1-17521423974,Ben Kettle,04/06/2026 00:00:00,£55.00,Rogers,Daniel,exams@pulsemusicliverpool.com,1-4793151743,Rogers,Daniel',
+        'Rock and Pop Grade 2 (Digital),Drums,1-17521426524,Alfie Taylor,04/06/2026 00:00:00,£61.00,Rogers,Daniel,exams@pulsemusicliverpool.com,1-4793151743,Rogers,Daniel',
+    ]);
+
+    $row = (new TrinityCsvImporter())->parseEnrolment($csv);
+
+    expect($row['candidate_name'])->toBe('Ben Kettle');
+});
