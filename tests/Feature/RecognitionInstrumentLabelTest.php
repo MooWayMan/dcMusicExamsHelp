@@ -74,3 +74,32 @@ test('non-drum instruments are unchanged on the Recognition page', function () {
 
     expect($instruments)->toContain('Piano');
 });
+
+test('R&P Keyboards shows as "Keyboards (Rock/Pop)"', function () {
+    rilEntry('Keyboards', ['candidate_name' => 'Keys One']);
+
+    $payload = $this->get('/recognition')->viewData('page')['props'];
+    $q1 = collect($payload['allQuartersData'])->firstWhere('quarter', 1);
+
+    expect(collect($q1['thankYouEntries'])->pluck('instrument'))->toContain('Keyboards (Rock/Pop)');
+});
+
+test('R&P Bass (stored "Bass Guitar") shows as "Bass (Rock/Pop)"', function () {
+    rilEntry('Bass Guitar', ['candidate_name' => 'Bass One']);
+
+    $payload = $this->get('/recognition')->viewData('page')['props'];
+    $q1 = collect($payload['allQuartersData'])->firstWhere('quarter', 1);
+
+    expect(collect($q1['thankYouEntries'])->pluck('instrument'))->toContain('Bass (Rock/Pop)');
+});
+
+test('R&P Vocals (stored "Singing (Rock/Pop)") shows as "Vocals (Rock/Pop)"', function () {
+    rilEntry('Singing (Rock/Pop)', ['candidate_name' => 'Singer One']);
+
+    $payload = $this->get('/recognition')->viewData('page')['props'];
+    $q1 = collect($payload['allQuartersData'])->firstWhere('quarter', 1);
+
+    $instruments = collect($q1['thankYouEntries'])->pluck('instrument');
+    expect($instruments)->toContain('Vocals (Rock/Pop)')
+        ->and($instruments)->not->toContain('Singing (Rock/Pop)');
+});
