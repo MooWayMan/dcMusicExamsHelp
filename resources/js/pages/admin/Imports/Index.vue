@@ -233,6 +233,12 @@ function commitEnrolList() {
 const enrolmentFile = ref<File | null>(null)
 const summaryFile = ref<File | null>(null)
 const marksheetFile = ref<File | null>(null)
+
+// "Reuse previous order file": keep the whole-order Enrolment CSV from the last
+// commit so the next candidate only needs the two new files (Summary +
+// Marksheet). The server matches the right candidate by candidate number.
+const reuseOrderFile = ref(false)
+const previousEnrolmentFile = ref<File | null>(null)
 const dob = ref<string>('')
 const applicantEmail = ref<string>('')
 // Tracks whether the user has manually typed in the email field, so we
@@ -555,13 +561,26 @@ const applicantEmailHelp = computed(() => {
     return ''
 })
 
+// When reuse is on and no fresh order file has been dropped, fall back to the
+// order file remembered from the last commit.
+const effectiveEnrolmentFile = computed(() =>
+    (reuseOrderFile.value && !enrolmentFile.value) ? previousEnrolmentFile.value : enrolmentFile.value
+)
+// True while we're actively reusing the stored order file — the form then
+// collapses from three slots to two.
+const reusingOrderFile = computed(() =>
+    reuseOrderFile.value && !!previousEnrolmentFile.value && !enrolmentFile.value
+)
+
 const allCandidateFilesPicked = computed(() =>
-    !!enrolmentFile.value && !!summaryFile.value && !!marksheetFile.value
+    !!effectiveEnrolmentFile.value && !!summaryFile.value && !!marksheetFile.value
 )
 
 async function submitCandidatePreview() {
     if (!allCandidateFilesPicked.value) {
-        candidateError.value = 'All three CSVs are required.'
+        candidateError.value = reusingOrderFile.value
+            ? 'The Summary and Marksheet are required.'
+            : 'All three CSVs are required.'
         return
     }
     candidateBusy.value = true
@@ -569,7 +588,7 @@ async function submitCandidatePreview() {
     candidatePreview.value = null
 
     const fd = new FormData()
-    fd.append('enrolment', enrolmentFile.value!)
+    fd.append('enrolment', effectiveEnrolmentFile.value!)
     fd.append('summary', summaryFile.value!)
     fd.append('marksheet', marksheetFile.value!)
     if (dob.value) fd.append('date_of_birth', dob.value)
@@ -618,7 +637,7 @@ async function submitCandidatePreview() {
 function commitCandidate() {
     if (!allCandidateFilesPicked.value || !canCommit.value) return
     const form = useForm({
-        enrolment: enrolmentFile.value as File,
+        enrolment: effectiveEnrolmentFile.value as File,
         summary: summaryFile.value as File,
         marksheet: marksheetFile.value as File,
         date_of_birth: dob.value || null,
@@ -633,6 +652,9 @@ function commitCandidate() {
     form.post('/admin/imports/commit-candidate', {
         forceFormData: true,
         onSuccess: () => {
+            // Remember the order file so the next candidate can reuse it.
+            previousEnrolmentFile.value = effectiveEnrolmentFile.value
+            reuseOrderFile.value = true
             enrolmentFile.value = null
             summaryFile.value = null
             marksheetFile.value = null
@@ -921,6 +943,21 @@ function formatRunSummary(run: { type: string; summary: Record<string, unknown> 
                         Clear all
                     </button>
                 </div>
+
+                <div v-if="previousEnrolmentFile" class="mb-3 flex items-start gap-2 rounded-lg border border-brand-border bg-brand-surface-soft px-3 py-2">
+                    <input
+                        id="reuseOrderFile"
+                        v-model="reuseOrderFile"
+                        type="checkbox"
+                        class="mt-0.5 h-4 w-4 rounded border-brand-border text-brand-accent focus:ring-brand-accent"
+                    />
+                    <label for="reuseOrderFile" class="text-sm text-brand-text">
+                        Reuse previous order file
+                        <span class="font-mono text-xs text-brand-text-soft">({{ previousEnrolmentFile?.name }})</span>
+                        — then just drop the Summary + Marksheet for each candidate.
+                    </label>
+                </div>
+
                 <div
                     role="button"
                     tabindex="0"
@@ -939,7 +976,7 @@ function formatRunSummary(run: { type: string; summary: Record<string, unknown> 
                 >
                     <UploadCloud class="h-7 w-7 text-brand-accent" />
                     <p class="mt-2 text-sm text-brand-text">
-                        Drop up to 3 CSVs here, or <span class="font-semibold text-brand-accent">browse</span>
+                        Drop {{ reusingOrderFile ? 'the 2 result CSVs' : 'up to 3 CSVs' }} here, or <span class="font-semibold text-brand-accent">browse</span>
                     </p>
                     <p class="mt-1 text-xs text-brand-text-soft">Files are auto-classified into Enrolment, Summary, and Marksheet by their headers.</p>
                 </div>
@@ -952,8 +989,12 @@ function formatRunSummary(run: { type: string; summary: Record<string, unknown> 
                     @change="onCandidateFilesSelected"
                 />
 
-                <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <p v-if="reusingOrderFile" class="mt-3 text-xs text-brand-success">
+                    Using previous order file: <span class="font-mono">{{ previousEnrolmentFile?.name }}</span> — drop just the Summary + Marksheet below.
+                </p>
+                <div class="mt-3 grid grid-cols-1 gap-2" :class="reusingOrderFile ? 'sm:grid-cols-2' : 'sm:grid-cols-3'">
                     <div
+                        v-if="!reusingOrderFile"
                         :class="[
                             'flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm',
                             enrolmentFile
