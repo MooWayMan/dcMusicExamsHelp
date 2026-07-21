@@ -199,7 +199,7 @@ const visibleOrders = computed(() =>
                 </span>
             </div>
             <div class="ml-auto flex items-center gap-2">
-                <a v-if="contact.types?.includes('teacher')" :href="`/admin/contacts/${contact.id}/preview-dashboard`" target="_blank"
+                <a v-if="contact.types?.includes('teacher') || contact.exam_entries_count > 0" :href="`/admin/contacts/${contact.id}/preview-dashboard`" target="_blank"
                     class="inline-flex items-center gap-2 rounded-lg border border-brand-border px-3 py-2 text-sm font-semibold text-brand-text transition-colors hover:bg-brand-surface-soft">
                     <Eye class="h-4 w-4" />
                     Preview dashboard
