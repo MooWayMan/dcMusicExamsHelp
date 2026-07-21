@@ -18,7 +18,7 @@ class LookupSeeder extends Seeder
         // Instruments grouped by family
         // ──────────────────────────────────────────
         $instruments = [
-            'Keyboard' => ['Piano', 'Organ', 'Electronic Keyboard'],
+            'Keyboard' => ['Piano', 'Organ', 'Electronic Keyboard', 'Keyboards'],
             'Strings' => ['Violin', 'Viola', 'Cello', 'Double Bass', 'Harp', 'Guitar (Classical)', 'Guitar (Jazz)', 'Guitar (Acoustic)', 'Guitar (Rock/Pop)', 'Bass Guitar', 'Ukulele'],
             'Brass' => ['Trumpet', 'Cornet', 'Flugelhorn', 'French Horn', 'Tenor Horn', 'Trombone', 'Euphonium', 'Tuba'],
             'Woodwind' => ['Flute', 'Oboe', 'Clarinet', 'Bassoon', 'Saxophone', 'Recorder'],

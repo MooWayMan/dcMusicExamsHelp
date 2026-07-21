@@ -54,11 +54,13 @@ class ThankYouController extends Controller
     }
 
     /**
-     * Public-facing instrument label for the Recognition page. Rock & Pop
-     * drum kit is stored as the instrument "Drums" (Classical & Jazz
-     * percussion is "Drum Kit"), but this page tags genre in brackets for
-     * guitar and singing — so show "Drums (Rock/Pop)" here for consistency.
-     * Display-only: the stored instrument name is unchanged everywhere else.
+     * Public-facing instrument label for the Recognition page. The five Rock &
+     * Pop exams are tagged "(Rock/Pop)" for consistency, using Trinity's R&P
+     * names (Bass, Vocals) even where the stored instrument differs — the
+     * stored name for R&P vocals is "Singing (Rock/Pop)" and R&P bass is
+     * "Bass Guitar". Classical & Jazz names (e.g. "Electronic Keyboard",
+     * "Drum Kit") pass through unchanged. Display-only: stored instrument
+     * names are untouched everywhere else in the app.
      */
     private function publicInstrumentLabel(?string $name): string
     {
@@ -66,7 +68,13 @@ class ThankYouController extends Controller
             return '—';
         }
 
-        return $name === 'Drums' ? 'Drums (Rock/Pop)' : $name;
+        return [
+            'Drums' => 'Drums (Rock/Pop)',
+            'Guitar (Rock/Pop)' => 'Guitar (Rock/Pop)',
+            'Singing (Rock/Pop)' => 'Vocals (Rock/Pop)',
+            'Keyboards' => 'Keyboards (Rock/Pop)',
+            'Bass Guitar' => 'Bass (Rock/Pop)',
+        ][$name] ?? $name;
     }
 
     /**

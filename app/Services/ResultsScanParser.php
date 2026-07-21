@@ -189,7 +189,8 @@ class ResultsScanParser
                 'singing' => 'Singing (Rock/Pop)',
                 'guitar' => 'Guitar (Rock/Pop)',
                 'drums' => 'Drums',
-                'keyboards' => 'Electronic Keyboard',
+                'keyboards' => 'Keyboards',
+                'bass' => 'Bass Guitar',
             ];
 
         if (isset($familyOverrides[$token])) {

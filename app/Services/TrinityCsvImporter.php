@@ -194,11 +194,18 @@ class TrinityCsvImporter
             // Digital R&P shorthands
             'Drums' => 'Drums',
             'Guitar' => 'Guitar (Rock/Pop)',
-            'Keyboards' => 'Electronic Keyboard',
+            // Rock & Pop keyboard is its own exam ("Keyboards"); the Classical
+            // & Jazz keyboard exam is the separate "Electronic Keyboard".
+            'Keyboards' => 'Keyboards',
+            'Electronic Keyboard' => 'Electronic Keyboard',
+            'Bass' => 'Bass Guitar',
             'Singing' => 'Singing (Classical)',
             'R&P Vocals' => 'Singing (Rock/Pop)',
             'R&P Guitar' => 'Guitar (Rock/Pop)',
             'R&P Drums' => 'Drums',
+            'R&P Keyboards' => 'Keyboards',
+            'R&P Bass' => 'Bass Guitar',
+            'Bass Guitar' => 'Bass Guitar',
             // Trinity also exports just 'Vocals' for R&P singing entries.
             'Vocals' => 'Singing (Rock/Pop)',
             'Voice' => 'Singing (Classical)',
