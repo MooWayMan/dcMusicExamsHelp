@@ -150,6 +150,14 @@ const enrolPreview = ref<{
     warnings: string[]
 } | null>(null)
 const enrolError = ref<string | null>(null)
+
+// Instrument label for an enrolment-list preview row. Kept in the script (not
+// an inline `as { name?: string }` cast in the template) because vue-tsc can't
+// parse an object type literal inside a {{ }} interpolation.
+function enrolInstrumentName(c: Record<string, unknown>): string {
+    const inst = c.instrument as { name?: string } | null
+    return inst?.name || String(c.instrument_raw ?? '')
+}
 const enrolBusy = ref(false)
 const enrolDragOver = ref(false)
 const enrolInputRef = ref<HTMLInputElement | null>(null)
@@ -914,7 +922,7 @@ function formatRunSummary(run: { type: string; summary: Record<string, unknown> 
                     <summary class="cursor-pointer text-sm font-medium text-brand-accent">Show new candidates ({{ enrolPreview.toCreate.length }})</summary>
                     <ul class="mt-2 space-y-1 text-sm text-brand-text">
                         <li v-for="(c, i) in enrolPreview.toCreate" :key="i" class="font-mono">
-                            {{ c.candidate_name }} — {{ c.grade }} — {{ (c.instrument as { name?: string } | null)?.name || c.instrument_raw }}
+                            {{ c.candidate_name }} — {{ c.grade }} — {{ enrolInstrumentName(c) }}
                         </li>
                     </ul>
                 </details>
