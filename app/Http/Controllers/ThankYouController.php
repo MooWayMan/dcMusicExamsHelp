@@ -54,6 +54,22 @@ class ThankYouController extends Controller
     }
 
     /**
+     * Public-facing instrument label for the Recognition page. Rock & Pop
+     * drum kit is stored as the instrument "Drums" (Classical & Jazz
+     * percussion is "Drum Kit"), but this page tags genre in brackets for
+     * guitar and singing — so show "Drums (Rock/Pop)" here for consistency.
+     * Display-only: the stored instrument name is unchanged everywhere else.
+     */
+    private function publicInstrumentLabel(?string $name): string
+    {
+        if ($name === null) {
+            return '—';
+        }
+
+        return $name === 'Drums' ? 'Drums (Rock/Pop)' : $name;
+    }
+
+    /**
      * Build hall-of-fame + table entries + summary for a single quarter.
      */
     private function buildQuarterData(int $quarter, int $year): array
@@ -106,6 +122,7 @@ class ThankYouController extends Controller
                             $w['name'] = ($w['show_full_name'] ?? false)
                                 ? ($w['full_name'] ?? $w['name'])
                                 : ($w['name'] ?? $this->shortDisplayName($w['full_name'] ?? ''));
+                            $w['instrument'] = $this->publicInstrumentLabel($w['instrument'] ?? null);
                             // Don't leak full_name to the public payload
                             // unless the candidate opted in.
                             if (! ($w['show_full_name'] ?? false)) {
@@ -139,7 +156,7 @@ class ThankYouController extends Controller
 
             return [
                 'name' => $this->displayName($e),
-                'instrument' => $e->instrument?->name ?? '—',
+                'instrument' => $this->publicInstrumentLabel($e->instrument?->name),
                 'grade' => $e->grade,
                 'result' => $result,
                 'certificate' => $certificate,
@@ -235,7 +252,7 @@ class ThankYouController extends Controller
             ->get()
             ->mapWithKeys(fn ($d) => ["{$d->quarter}-{$d->year}" => [
                 'name' => $this->shortDisplayName($d->winner_name),
-                'instrument' => $d->winner_instrument,
+                'instrument' => $this->publicInstrumentLabel($d->winner_instrument),
                 'grade' => $d->winner_grade,
             ]])
             ->toArray();
