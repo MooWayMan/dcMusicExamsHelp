@@ -247,6 +247,15 @@ const marksheetFile = ref<File | null>(null)
 // Marksheet). The server matches the right candidate by candidate number.
 const reuseOrderFile = ref(false)
 const previousEnrolmentFile = ref<File | null>(null)
+// Submitter/teacher/applicant are constant across an order, so carry the
+// confirmed role + teacher + school + applicant email forward while reusing.
+const previousRole = ref<string | null>(null)
+const previousTeacherContactId = ref<number | null>(null)
+const previousTeacherName = ref<string>('')
+const previousTeacherEmail = ref<string>('')
+const previousSchoolName = ref<string>('')
+const previousSchoolId = ref<number | null>(null)
+const previousApplicantEmail = ref<string>('')
 const dob = ref<string>('')
 const applicantEmail = ref<string>('')
 // Tracks whether the user has manually typed in the email field, so we
@@ -614,26 +623,42 @@ async function submitCandidatePreview() {
         } else {
             candidatePreview.value = await res.json()
 
-            // Pre-fill the role selector from the suggestion (the human still
-            // confirms). When the suggestion matched an existing teacher /
-            // school admin, carry its id so we reuse that exact contact;
-            // otherwise pre-fill the teacher fields from the applicant.
-            const sug = candidatePreview.value?.roleSuggestion
-            chosenRole.value = sug?.role ?? null
-            const teacherish = sug?.role === 'teacher' || sug?.role === 'school_admin'
-            if (teacherish && sug?.matched_contact) {
-                teacherContactId.value = sug.matched_contact.id
-                teacherName.value = sug.matched_contact.name
-                teacherEmail.value = ''
+            // Reusing the same order → same submitter / teacher / applicant,
+            // so carry the confirmed role, teacher, school and applicant email
+            // forward instead of re-deriving from the suggestion each time. The
+            // fields stay editable in case one candidate needs a different role.
+            if (reusingOrderFile.value && previousRole.value) {
+                chosenRole.value = previousRole.value
+                teacherContactId.value = previousTeacherContactId.value
+                teacherName.value = previousTeacherName.value
+                teacherEmail.value = previousTeacherEmail.value
+                schoolName.value = previousSchoolName.value
+                schoolId.value = previousSchoolId.value
+                if (previousApplicantEmail.value && !applicantEmail.value) {
+                    applicantEmail.value = previousApplicantEmail.value
+                }
             } else {
-                teacherContactId.value = null
-                teacherName.value = candidatePreview.value?.candidate.applicant_name ?? ''
-                teacherEmail.value = candidatePreview.value?.derivedEmail ?? ''
+                // Pre-fill the role selector from the suggestion (the human still
+                // confirms). When the suggestion matched an existing teacher /
+                // school admin, carry its id so we reuse that exact contact;
+                // otherwise pre-fill the teacher fields from the applicant.
+                const sug = candidatePreview.value?.roleSuggestion
+                chosenRole.value = sug?.role ?? null
+                const teacherish = sug?.role === 'teacher' || sug?.role === 'school_admin'
+                if (teacherish && sug?.matched_contact) {
+                    teacherContactId.value = sug.matched_contact.id
+                    teacherName.value = sug.matched_contact.name
+                    teacherEmail.value = ''
+                } else {
+                    teacherContactId.value = null
+                    teacherName.value = candidatePreview.value?.candidate.applicant_name ?? ''
+                    teacherEmail.value = candidatePreview.value?.derivedEmail ?? ''
+                }
+                // School fields start from whatever Trinity gave us (usually
+                // blank on digital), to be confirmed for the school-admin role.
+                schoolName.value = candidatePreview.value?.school_name ?? ''
+                onSchoolInput()
             }
-            // School fields start from whatever Trinity gave us (usually blank
-            // on digital), to be confirmed for the school-admin role.
-            schoolName.value = candidatePreview.value?.school_name ?? ''
-            onSchoolInput()
         }
     } catch (err: unknown) {
         candidateError.value = err instanceof Error ? err.message : 'Preview failed.'
@@ -663,6 +688,15 @@ function commitCandidate() {
             // Remember the order file so the next candidate can reuse it.
             previousEnrolmentFile.value = effectiveEnrolmentFile.value
             reuseOrderFile.value = true
+            // Carry the submitter-level choices forward for the next candidate
+            // of the same order (same submitter / teacher / applicant email).
+            previousRole.value = chosenRole.value
+            previousTeacherContactId.value = teacherContactId.value
+            previousTeacherName.value = teacherName.value
+            previousTeacherEmail.value = teacherEmail.value
+            previousSchoolName.value = schoolName.value
+            previousSchoolId.value = schoolId.value
+            previousApplicantEmail.value = applicantEmail.value
             enrolmentFile.value = null
             summaryFile.value = null
             marksheetFile.value = null
