@@ -18,9 +18,14 @@ use Illuminate\Support\Str;
  *   - opted IN  (marketing_consent_at set)  => upsert the contact, consent
  *     property = true. Creates the contact if HubSpot has never seen them.
  *   - opted OUT (marketing_consent_at null) => only update if they were
- *     previously synced (hubspot_contact_id present); consent property = false
- *     so the "All Marketing Subscribers" smart list drops them. We never create
- *     a brand-new HubSpot contact for someone who has no consent.
+ *     previously synced (hubspot_contact_id present) OR they're service-eligible
+ *     (below); consent property = false so the "All Marketing Subscribers" smart
+ *     list drops them.
+ *
+ * Account holders (exam-admin relationship) are additionally flagged
+ * service-eligible via $serviceEligible, so a legitimate-interest "service/admin
+ * updates" list can reach them regardless of marketing consent. This is the one
+ * case where we create a HubSpot contact for someone with no marketing consent.
  *
  * No-ops entirely when no HubSpot token is configured (staging/local/test),
  * matching the blank-Mailchimp-keys convention.
@@ -29,7 +34,7 @@ class SyncSubscriberToHubSpot implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(public Subscriber $subscriber) {}
+    public function __construct(public Subscriber $subscriber, public bool $serviceEligible = false) {}
 
     public function handle(HubSpotClient $hubspot): void
     {
@@ -46,8 +51,9 @@ class SyncSubscriberToHubSpot implements ShouldQueue
 
         $hasConsent = ! is_null($subscriber->marketing_consent_at);
 
-        // Opted out and never synced => nothing to do in HubSpot.
-        if (! $hasConsent && ! $subscriber->hubspot_contact_id) {
+        // Nothing to do only when there's no marketing consent, this isn't a
+        // service-eligible account holder, and we've never synced them before.
+        if (! $hasConsent && ! $this->serviceEligible && ! $subscriber->hubspot_contact_id) {
             return;
         }
 
@@ -79,6 +85,12 @@ class SyncSubscriberToHubSpot implements ShouldQueue
         // Only mirror consent when a property has been configured in HubSpot.
         if ($property = config('services.hubspot.consent_property')) {
             $properties[$property] = $hasConsent ? 'true' : 'false';
+        }
+
+        // Flag account holders for the legitimate-interest service list. Only
+        // ever set true here — we never strip the flag off an existing contact.
+        if ($this->serviceEligible && $serviceProperty = config('services.hubspot.service_property')) {
+            $properties[$serviceProperty] = 'true';
         }
 
         return $properties;

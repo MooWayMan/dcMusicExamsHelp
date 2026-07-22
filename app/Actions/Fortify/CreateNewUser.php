@@ -105,10 +105,10 @@ class CreateNewUser implements CreatesNewUsers
 
         $subscriber->save();
 
-        // Opting in at signup pushes the consented contact into HubSpot so the
-        // marketing list picks them up without a manual CSV import.
-        if ($wantsMarketing) {
-            SyncSubscriberToHubSpot::dispatch($subscriber);
-        }
+        // Every account registration is an exam-admin relationship, so it syncs
+        // to HubSpot regardless of the marketing tick: service-eligible so the
+        // legitimate-interest service list catches them, while the marketing
+        // consent property still reflects whether they opted in.
+        SyncSubscriberToHubSpot::dispatch($subscriber, serviceEligible: true);
     }
 }

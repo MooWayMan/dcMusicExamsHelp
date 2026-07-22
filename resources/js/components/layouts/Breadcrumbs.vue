@@ -8,7 +8,7 @@ import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 interface BreadcrumbItem {
   name: string
   href: string
-  current: boolean
+  current?: boolean
 }
 
 interface Props {

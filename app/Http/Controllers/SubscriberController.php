@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SyncSubscriberToHubSpot;
 use App\Mail\LeadMagnetDelivery;
 use App\Models\Subscriber;
 use Illuminate\Http\JsonResponse;
@@ -123,6 +124,10 @@ class SubscriberController extends Controller
         }
 
         $subscriber->save();
+
+        if ($marketingConsent) {
+            SyncSubscriberToHubSpot::dispatch($subscriber);
+        }
 
         // Deliver the PDF. Failure is logged but doesn't block the
         // success response — Paul can re-trigger from the admin panel

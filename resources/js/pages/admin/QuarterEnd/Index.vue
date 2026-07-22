@@ -68,8 +68,7 @@ interface Summary {
   // Legacy single-winner fields — overall top across both groups.
   // Kept for the summary stat card; per-group winners live in top_scorers.
   showstopper: { name: string; full_name: string; score: number; instrument: string; winners?: { name: string; full_name: string; instrument: string; grade: string }[] } | null
-  centre_stage?: { name: string; full_name: string; score: number; instrument: string; winners?: { name: string; full_name: string; instrument: string; grade: string }[] } | null
-  centre_stage: { name: string; full_name: string; score: number; instrument: string } | null
+  centre_stage: { name: string; full_name: string; score: number; instrument: string; winners?: { name: string; full_name: string; instrument: string; grade: string }[] } | null
   // Awards split by grade group (matches the public Awards banner):
   //   • Initial–5  (Initial, Grades 1–5)
   //   • 6–8        (Grades 6–8)

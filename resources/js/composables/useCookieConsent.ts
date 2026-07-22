@@ -51,7 +51,7 @@ function loadMetaPixel() {
   if (w.__TRACKING_ENABLED__ === false) return
   if (w.fbq) return
 
-  const n = w.fbq = function (...args: any[]) {
+  const n: any = w.fbq = function (...args: any[]) {
     n.callMethod ? n.callMethod.apply(n, args) : n.queue.push(args)
   }
   if (!w._fbq) w._fbq = n

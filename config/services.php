@@ -56,11 +56,18 @@ return [
     |                   property we set to true/false to mirror marketing consent
     |                   so the "All Marketing Subscribers" smart list can filter on
     |                   it. Leave blank until the property exists in HubSpot.
+    | `service_property` is the INTERNAL NAME of a boolean HubSpot contact
+    |                   property we set to true for account holders (exam-admin
+    |                   relationship) so a legitimate-interest "service/admin
+    |                   updates" list can filter on it, independent of marketing
+    |                   consent. Leave blank until the property exists in HubSpot
+    |                   (the sync stays inert for service until it is set).
     */
     'hubspot' => [
         'token' => env('HUBSPOT_API_TOKEN'),
         'base_url' => env('HUBSPOT_BASE_URL', 'https://api.hubapi.com'),
         'consent_property' => env('HUBSPOT_CONSENT_PROPERTY'),
+        'service_property' => env('HUBSPOT_SERVICE_PROPERTY'),
     ],
 
     /*
