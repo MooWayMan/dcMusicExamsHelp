@@ -9,18 +9,21 @@ use Illuminate\Console\Command;
 
 /**
  * One-off backfill: push EXISTING account holders into HubSpot on the
- * legitimate-interest "service/admin updates" basis, so the service list
- * catches everyone who registered BEFORE the service sync went live. The live
- * sync only fires on new registrations / profile toggles from now on, so the
- * back-catalogue needs this nudge once.
+ * legitimate-interest "service/admin updates" basis, so the service list can
+ * reach everyone who holds a dashboard account — regardless of whether they
+ * ever opted into marketing.
  *
- * Targets active subscribers that are account holders — source
- * `account_registration` OR an email that matches a registered user (that
- * second clause also catches people who first arrived via the checklist and
- * later signed up, whose source stays `trinity_checklist`). Each is queued
- * through SyncSubscriberToHubSpot with serviceEligible = true; marketing
- * consent is mirrored separately and left untouched. Idempotent (upsert) —
- * safe to run more than once.
+ * Driven by the `users` table, because that IS the definition of an account
+ * holder. Reaching them via the `subscribers` table (the old approach) missed
+ * anyone who registered before the live sync existed and so never got a
+ * subscriber row. For each user we find-or-create their subscriber row, then
+ * queue SyncSubscriberToHubSpot with serviceEligible = true: that upserts the
+ * contact and stamps the service flag without touching marketing consent.
+ * Idempotent (upsert + firstOrCreate) — safe to run more than once.
+ *
+ * Internal `admin` accounts are skipped — they are the ones sending the
+ * notices, not customers who receive them. Soft-deleted users are excluded
+ * automatically.
  *
  *   php artisan hubspot:backfill-service-contacts --dry-run
  *   php artisan hubspot:backfill-service-contacts
@@ -48,24 +51,33 @@ class BackfillServiceContacts extends Command
             $this->warn('HUBSPOT_SERVICE_PROPERTY is not set — the service flag will not be written until it is. Queued jobs no-op safely in the meantime.');
         }
 
-        $query = Subscriber::query()
-            ->whereNull('unsubscribed_at')
-            ->where(function ($q) {
-                $q->where('source', 'account_registration')
-                    ->orWhereIn('email', fn ($sub) => $sub->from('users')->select('email'));
-            });
-
         $total = 0;
 
-        $query->chunkById(200, function ($subscribers) use ($dry, &$total) {
-            foreach ($subscribers as $subscriber) {
-                $total++;
+        User::query()
+            ->where(function ($q) {
+                $q->whereNull('role')->orWhere('role', '!=', 'admin');
+            })
+            ->chunkById(200, function ($users) use ($dry, &$total) {
+                foreach ($users as $user) {
+                    $total++;
 
-                if (! $dry) {
+                    if ($dry) {
+                        continue;
+                    }
+
+                    $subscriber = Subscriber::firstOrCreate(
+                        ['email' => $user->email],
+                        [
+                            'name' => $user->name,
+                            'role' => $user->role,
+                            'source' => 'account_registration',
+                            'subscribed_at' => now(),
+                        ],
+                    );
+
                     SyncSubscriberToHubSpot::dispatch($subscriber, serviceEligible: true);
                 }
-            }
-        });
+            });
 
         $this->info($dry
             ? "Dry run complete — {$total} account holder(s) would be queued for the service list."

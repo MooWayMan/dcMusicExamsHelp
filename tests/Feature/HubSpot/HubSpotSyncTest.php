@@ -217,24 +217,26 @@ test('withdrawal for a contact never synced to HubSpot does nothing', function (
     Http::assertNothingSent();
 });
 
-test('the backfill queues a service sync for existing account holders only', function () {
+test('the backfill queues a service sync for every account holder, creating a subscriber row where none exists', function () {
     Queue::fake();
 
-    Subscriber::create([
-        'name' => 'Amy Account',
-        'email' => 'amy@example.com',
-        'source' => 'account_registration',
-        'subscribed_at' => now(),
-    ]);
-
+    // Account holder who already has a subscriber row (from an earlier flow).
     User::factory()->create(['email' => 'ben@example.com', 'role' => 'teacher']);
     Subscriber::create([
         'name' => 'Ben Both',
         'email' => 'ben@example.com',
-        'source' => 'trinity_checklist',
+        'source' => 'account_registration',
         'subscribed_at' => now(),
     ]);
 
+    // Account holder with NO subscriber row yet — the backfill must create one
+    // and still queue the service sync (this is the case the old query missed).
+    User::factory()->create(['name' => 'Dan Dashboard', 'email' => 'dan@example.com', 'role' => 'teacher']);
+
+    // Internal admin — must be skipped, they send the notices, not receive them.
+    User::factory()->create(['email' => 'paul@example.com', 'role' => 'admin']);
+
+    // Marketing-only subscriber who never registered — not an account holder.
     Subscriber::create([
         'name' => 'Cara Checklist',
         'email' => 'cara@example.com',
@@ -244,13 +246,25 @@ test('the backfill queues a service sync for existing account holders only', fun
 
     $this->artisan('hubspot:backfill-service-contacts')->assertSuccessful();
 
+    // Ben + Dan only — admin and the marketing-only subscriber are excluded.
     Queue::assertPushed(SyncSubscriberToHubSpot::class, 2);
     Queue::assertPushed(
         SyncSubscriberToHubSpot::class,
-        fn ($job) => $job->subscriber->email === 'amy@example.com' && $job->serviceEligible === true
+        fn ($job) => $job->subscriber->email === 'ben@example.com' && $job->serviceEligible === true
+    );
+    Queue::assertPushed(
+        SyncSubscriberToHubSpot::class,
+        fn ($job) => $job->subscriber->email === 'dan@example.com' && $job->serviceEligible === true
+    );
+    Queue::assertNotPushed(
+        SyncSubscriberToHubSpot::class,
+        fn ($job) => $job->subscriber->email === 'paul@example.com'
     );
     Queue::assertNotPushed(
         SyncSubscriberToHubSpot::class,
         fn ($job) => $job->subscriber->email === 'cara@example.com'
     );
+
+    // The account holder who lacked a subscriber row now has one.
+    expect(Subscriber::where('email', 'dan@example.com')->exists())->toBeTrue();
 });
