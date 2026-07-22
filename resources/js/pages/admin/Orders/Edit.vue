@@ -58,7 +58,7 @@ const props = defineProps<{
 
 const { animClass } = usePageAnimation()
 
-function emptyEntry(): Entry {
+function emptyEntry() {
     return {
         id: null,
         candidate_name: '',

@@ -30,7 +30,7 @@ test('registering with the opt-in ticked queues a HubSpot sync', function () {
     Queue::assertPushed(SyncSubscriberToHubSpot::class, fn ($job) => $job->subscriber->email === 'connie@example.com');
 });
 
-test('registering without the opt-in does not queue a HubSpot sync', function () {
+test('registering without the opt-in still queues a HubSpot sync as service-eligible (no marketing consent)', function () {
     $this->skipUnlessFortifyHas(Features::registration());
     Queue::fake();
 
@@ -42,7 +42,12 @@ test('registering without the opt-in does not queue a HubSpot sync', function ()
         'password_confirmation' => 'password123',
     ])->assertRedirect();
 
-    Queue::assertNotPushed(SyncSubscriberToHubSpot::class);
+    Queue::assertPushed(
+        SyncSubscriberToHubSpot::class,
+        fn ($job) => $job->subscriber->email === 'nora@example.com'
+            && $job->serviceEligible === true
+            && is_null($job->subscriber->marketing_consent_at)
+    );
 });
 
 test('opting in from the profile page queues a HubSpot sync', function () {
@@ -114,6 +119,37 @@ test('the job upserts a consented subscriber and records the returned contact id
     expect($subscriber->hubspot_synced_at)->not->toBeNull();
 });
 
+test('a service-eligible subscriber with no marketing consent is upserted with the service flag on and marketing off', function () {
+    config([
+        'services.hubspot.token' => 'test-token',
+        'services.hubspot.base_url' => 'https://api.hubapi.com',
+        'services.hubspot.consent_property' => 'app_marketing_consent',
+        'services.hubspot.service_property' => 'service_admin_updates',
+    ]);
+    Http::fake([
+        'api.hubapi.com/*' => Http::response(['results' => [['id' => '99002']]], 200),
+    ]);
+
+    $subscriber = Subscriber::create([
+        'name' => 'Sam Service',
+        'email' => 'sam@example.com',
+        'source' => 'account_registration',
+        'subscribed_at' => now(),
+        'marketing_consent_at' => null,
+    ]);
+
+    (new SyncSubscriberToHubSpot($subscriber, serviceEligible: true))->handle(app(HubSpotClient::class));
+
+    Http::assertSent(function ($request) {
+        $body = $request->data()['inputs'][0];
+
+        return $body['properties']['app_marketing_consent'] === 'false'
+            && $body['properties']['service_admin_updates'] === 'true';
+    });
+
+    expect($subscriber->fresh()->hubspot_contact_id)->toBe('99002');
+});
+
 test('the job no-ops entirely when no HubSpot token is configured', function () {
     config([
         'services.hubspot.token' => null,
@@ -179,4 +215,42 @@ test('withdrawal for a contact never synced to HubSpot does nothing', function (
     (new SyncSubscriberToHubSpot($subscriber))->handle(app(HubSpotClient::class));
 
     Http::assertNothingSent();
+});
+
+test('the backfill queues a service sync for existing account holders only', function () {
+    Queue::fake();
+
+    Subscriber::create([
+        'name' => 'Amy Account',
+        'email' => 'amy@example.com',
+        'source' => 'account_registration',
+        'subscribed_at' => now(),
+    ]);
+
+    User::factory()->create(['email' => 'ben@example.com', 'role' => 'teacher']);
+    Subscriber::create([
+        'name' => 'Ben Both',
+        'email' => 'ben@example.com',
+        'source' => 'trinity_checklist',
+        'subscribed_at' => now(),
+    ]);
+
+    Subscriber::create([
+        'name' => 'Cara Checklist',
+        'email' => 'cara@example.com',
+        'source' => 'trinity_checklist',
+        'subscribed_at' => now(),
+    ]);
+
+    $this->artisan('hubspot:backfill-service-contacts')->assertSuccessful();
+
+    Queue::assertPushed(SyncSubscriberToHubSpot::class, 2);
+    Queue::assertPushed(
+        SyncSubscriberToHubSpot::class,
+        fn ($job) => $job->subscriber->email === 'amy@example.com' && $job->serviceEligible === true
+    );
+    Queue::assertNotPushed(
+        SyncSubscriberToHubSpot::class,
+        fn ($job) => $job->subscriber->email === 'cara@example.com'
+    );
 });

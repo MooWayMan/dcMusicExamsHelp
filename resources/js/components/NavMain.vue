@@ -38,10 +38,11 @@ function closeMobileSidebar() {
     }
 }
 
-function isActive(href: string): boolean {
+function isActive(href: NavItem['href']): boolean {
+    const target = typeof href === 'string' ? href : href.url;
     const current = currentPath.value;
-    if (href === '/admin' || href === '/dashboard') return current === href;
-    return current === href || current.startsWith(href + '/');
+    if (target === '/admin' || target === '/dashboard') return current === target;
+    return current === target || current.startsWith(target + '/');
 }
 
 function hasActiveChild(item: NavItem): boolean {

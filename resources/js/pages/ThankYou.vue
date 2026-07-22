@@ -137,7 +137,7 @@ const formatGrade = (g: unknown): string => {
   return `Grade ${normalised}`
 }
 const thankYouEntries = computed(() => activeData.value?.thankYouEntries ?? [])
-const summary = computed(() => activeData.value?.summary ?? { distinctions: 0, merits: 0, total: 0 })
+const summary = computed(() => activeData.value?.summary ?? { distinctions: 0, merits: 0, total: 0, pending_count: 0 })
 
 const prizeDrawWinner = computed(() => {
   if (!hasSelected.value) return null
@@ -169,8 +169,12 @@ const nudge = computed(() => {
   if ((activeData.value?.thankYouEntries.length ?? 0) >= 10) return null
 
   // Find the nearest quarter with data that comes before the active one
+  const ay = activeYear.value
+  const aq = activeQuarter.value
+  if (ay === null || aq === null) return null
+
   const prev = props.availableQuarters.find(
-    (q) => (q.year < activeYear.value) || (q.year === activeYear.value && q.quarter < activeQuarter.value)
+    (q) => (q.year < ay) || (q.year === ay && q.quarter < aq)
   )
   if (!prev) return null
 

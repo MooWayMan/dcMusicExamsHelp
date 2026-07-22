@@ -134,7 +134,11 @@ if (typeof window !== 'undefined') {
     // When the session expires, Inertia requests return a non-Inertia
     // response (419 CSRF mismatch or a redirect to /login). This catches
     // those and shows a clear message instead of silently failing.
-    router.on('invalid', (event) => {
+    const onInertiaEvent = router.on as unknown as (
+        name: string,
+        cb: (event: { detail: { response?: { status?: number } }; preventDefault: () => void }) => void,
+    ) => void
+    onInertiaEvent('invalid', (event) => {
         const status = event.detail.response?.status
 
         // 419 = CSRF token expired (session gone)

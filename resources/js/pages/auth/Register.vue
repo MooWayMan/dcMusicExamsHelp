@@ -27,7 +27,7 @@ const roleOptions: { value: string; label: string; description: string }[] = [
     {
         value: 'teacher',
         label: 'Teacher',
-        description: "I'm a music teacher with candidates entered through centre 120.",
+        description: "I'm a music teacher entering candidates through centre 120 — or planning to.",
     },
     {
         value: 'parent',
@@ -159,6 +159,11 @@ const visibleRoles = roleOptions.filter((opt) => props.roles.includes(opt.value)
                 <p class="mt-1 text-sm text-brand-text-soft">
                     We&rsquo;ll never share your email address &mdash; see our
                     <a href="/privacy" class="text-brand-accent hover:underline">privacy policy</a>.
+                </p>
+                <p class="mt-2 text-sm text-brand-text-soft">
+                    Creating an account also means we&rsquo;ll email you about your exams &mdash; results,
+                    reminders and account notices. Those aren&rsquo;t marketing, so you&rsquo;ll get them
+                    whether or not you tick the box above.
                 </p>
             </div>
 

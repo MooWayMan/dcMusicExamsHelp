@@ -13,7 +13,7 @@ type Column = {
 }
 
 interface Props {
-  data: Array<Record<string, unknown>>
+  data: any[]
   columns: Array<Column>
   rowKey?: string
   title?: string
@@ -54,8 +54,8 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  rowClick: [row: Record<string, unknown>, index: number]
-  cellClick: [value: unknown, row: Record<string, unknown>, column: Column, index: number]
+  rowClick: [row: any, index: number]
+  cellClick: [value: unknown, row: any, column: Column, index: number]
   sort: [{ key: string | null; dir: 'asc' | 'desc' }]
 }>()
 
@@ -156,7 +156,7 @@ function toggleSortFor(column: Column) {
 }
 
 function normalize(val: unknown) {
-  if (val === null || val === undefined) return { type: 'null', v: null }
+  if (val === null || val === undefined) return { type: 'null', v: 0 }
   if (typeof val === 'number') return { type: 'number', v: val }
   if (typeof val === 'boolean') return { type: 'number', v: val ? 1 : 0 }
   if (val instanceof Date) return { type: 'number', v: val.getTime() }
