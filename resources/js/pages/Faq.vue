@@ -103,7 +103,7 @@ const faqs = [
   {
     question: 'Can I order a paper certificate, and how much?',
     answer:
-      'Every Trinity exam comes with a free digital certificate that you can download and share online. If you would also like a printed paper certificate, you can order one directly from Trinity for £5 (UK delivery) at <a href="https://mycertificates.trinitycollege.com" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand-accent underline hover:opacity-70">mycertificates.trinitycollege.com</a> — use the “Paper certificates” option. The same page can also order a replacement if a certificate is ever lost or damaged.',
+      'Every Trinity exam comes with a free digital certificate that you can download and share online. A printed paper certificate is £5 (UK delivery), ordered directly from Trinity at <a href="https://mycertificates.trinitycollege.com" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand-accent underline hover:opacity-70">mycertificates.trinitycollege.com</a> using the “Paper certificates” option. <strong>Only the parent can order it</strong> — it uses the parent’s own email address (the one used on the entry the applicant made), because that is where Trinity sends the certificate. Teachers and centres cannot order one on a candidate’s behalf, so the parent has to do it themselves. The same page can also order a replacement if a certificate is ever lost or damaged.',
   },
 ]
 

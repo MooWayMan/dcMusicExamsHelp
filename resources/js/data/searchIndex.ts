@@ -185,10 +185,10 @@ export const searchEntries: SearchEntry[] = [
   {
     id: 'faq-15',
     title: 'Can I order a paper certificate, and how much?',
-    snippet: 'Every exam includes a free digital certificate. A printed paper certificate is £5 (UK delivery), ordered from Trinity at mycertificates.trinitycollege.com.',
+    snippet: 'Every exam includes a free digital certificate. A printed paper certificate is £5 (UK delivery) and can only be ordered by the parent — using the email they gave on the entry — from Trinity at mycertificates.trinitycollege.com.',
     url: '/faq#faq-15',
     section: 'FAQ',
-    keywords: ['paper certificate', 'printed certificate', 'physical certificate', 'certificate cost', 'order certificate', 'order a certificate', 'lost certificate', 'damaged certificate', 'replacement certificate', 'reprint certificate', 'get a certificate', '£5'],
+    keywords: ['paper certificate', 'printed certificate', 'physical certificate', 'certificate cost', 'order certificate', 'order a certificate', 'lost certificate', 'damaged certificate', 'replacement certificate', 'reprint certificate', 'get a certificate', 'parent order certificate', 'teacher order certificate', '£5'],
   },
   {
     id: 'topic-results-timing',
