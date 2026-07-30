@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { Link, usePage, router } from '@inertiajs/vue3'
-import { Bars3Icon, XMarkIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
+import { Bars3Icon, XMarkIcon, ChevronDownIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MySocials from '@/components/layouts/MySocials.vue'
@@ -28,6 +28,17 @@ const handleLogout = () => {
 }
 
 const isOpen = ref(false)
+
+const searchQuery = ref('')
+
+const submitSearch = () => {
+  const q = searchQuery.value.trim()
+  isOpen.value = false
+  openDropdown.value = null
+  openMobileDropdown.value = null
+  router.visit('/search' + (q ? '?q=' + encodeURIComponent(q) : ''))
+  searchQuery.value = ''
+}
 
 /* Lock body scroll when mobile nav is open */
 watch(isOpen, (open) => {
@@ -276,6 +287,15 @@ const navClasses = computed(() =>
             </MyTextConstructor>
           </Link>
 
+          <!-- Site search (desktop): icon opens the /search page -->
+          <Link
+            href="/search"
+            class="shrink-0 rounded-full p-2 text-slate-500 transition hover:bg-brand-surface-soft hover:text-brand-accent"
+            aria-label="Search the site"
+          >
+            <MagnifyingGlassIcon class="h-5 w-5" />
+          </Link>
+
           <!-- Social icons (desktop only) -->
           <MySocials
             size="small"
@@ -305,6 +325,18 @@ const navClasses = computed(() =>
     <!-- MOBILE NAV -->
     <div v-if="isOpen" class="max-h-[calc(100vh-5rem)] overflow-y-auto border-t border-slate-200 bg-white lg:hidden">
       <div class="space-y-1 px-4 py-4 sm:px-6">
+        <!-- Site search (mobile) -->
+        <form class="relative mb-3" role="search" @submit.prevent="submitSearch">
+          <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+          <input
+            v-model="searchQuery"
+            type="search"
+            placeholder="Search…"
+            aria-label="Search the site"
+            class="h-11 w-full rounded-xl border border-brand-border bg-brand-surface-soft pl-10 pr-3 text-base text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-accent"
+          />
+        </form>
+
         <template v-for="item in navigation" :key="item.name">
           <!-- Item WITH children — accordion style -->
           <div v-if="item.children">

@@ -2,6 +2,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick, Transition } from 'vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
+import { useAccordionHashOpen } from '@/composables/useAccordionHashOpen'
 import { useBookingModal } from '@/composables/useBookingModal'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
@@ -17,6 +18,7 @@ import { PoundSterling, Calendar, FileText } from 'lucide-vue-next'
 
 const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
+useAccordionHashOpen()
 const activeTab = ref<'fees' | 'dates'>('fees')
 const crossRefVisible = ref(true)
 const headerVisible = ref(true)
@@ -195,7 +197,7 @@ const faqs = [
   {
     id: 1,
     question: 'Are there any extra costs beyond the exam fee?',
-    answer: 'All fees include a digital certificate that can be downloaded or shared online. If you want a printed paper certificate, that costs an additional £5.00 for UK delivery. There are no other hidden charges.',
+    answer: 'All fees include a digital certificate that can be downloaded or shared online. If you want a printed paper certificate, that costs an additional £5.00 for UK delivery — order one directly from Trinity at <a href="https://mycertificates.trinitycollege.com" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand-accent underline hover:opacity-70">mycertificates.trinitycollege.com</a> using the “Paper certificates” option. There are no other hidden charges.',
   },
   {
     id: 2,

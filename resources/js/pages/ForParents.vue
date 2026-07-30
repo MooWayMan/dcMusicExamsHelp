@@ -1,6 +1,7 @@
 <!-- resources/js/pages/ForParents.vue -->
 <script setup lang="ts">
 import { usePageAnimation } from '@/composables/usePageAnimation'
+import { useAccordionHashOpen } from '@/composables/useAccordionHashOpen'
 import { useBookingModal } from '@/composables/useBookingModal'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
@@ -15,6 +16,7 @@ import { CheckCircle, Gift } from 'lucide-vue-next'
 
 const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
+useAccordionHashOpen()
 
 const pageMeta = {
   title: 'For Parents — Trinity music exam guide',
