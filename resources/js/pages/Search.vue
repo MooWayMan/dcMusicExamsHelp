@@ -46,7 +46,7 @@ const submit = () => {
 </script>
 
 <template>
-  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" />
+  <Head :title="pageMeta.title" :description="pageMeta.description" :canonical-url="pageMeta.canonicalUrl" robots="noindex, follow" />
 
   <div class="min-h-screen bg-black text-brand-text">
     <Navbar />
