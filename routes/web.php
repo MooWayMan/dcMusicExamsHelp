@@ -74,6 +74,7 @@ Route::get('/sitemap.xml', function () {
  */
 Route::inertia('/sitemap', 'Sitemap')->name('sitemap');
 
+Route::inertia('/search', 'Search')->name('search');
 Route::inertia('/faq', 'Faq')->name('faq');
 Route::inertia('/for-teachers', 'ForTeachers')->name('for-teachers');
 Route::redirect('/for-teachers/faber-discounts', '/books', 301);

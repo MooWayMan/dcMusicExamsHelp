@@ -53,7 +53,7 @@ createInertiaApp({
         const isAuthed = !!authUser
         const isAdmin = authUser?.role === 'admin'
 
-        if (['Welcome', 'ConstructorsDemo', 'Faq', 'ForTeachers', 'TeacherAwards', 'SwitchToCentre120', 'TrinityExamInformation', 'ForParents', 'ForStudents', 'Books', 'Syllabus', 'TopTen', 'ThankYou', 'ExamGuide', 'ExamGuideUcas', 'ExamGuideExpect', 'ExamGuideDigital', 'ExamGuideGrades', 'ExamGuideSyllabuses', 'ExamFees', 'Incentives', 'Contact', 'About', 'PrivacyPolicy', 'CookiePolicy', 'TermsOfUse', 'ComingSoonPage', 'Sitemap'].includes(name)) {
+        if (['Welcome', 'ConstructorsDemo', 'Search', 'Faq', 'ForTeachers', 'TeacherAwards', 'SwitchToCentre120', 'TrinityExamInformation', 'ForParents', 'ForStudents', 'Books', 'Syllabus', 'TopTen', 'ThankYou', 'ExamGuide', 'ExamGuideUcas', 'ExamGuideExpect', 'ExamGuideDigital', 'ExamGuideGrades', 'ExamGuideSyllabuses', 'ExamFees', 'Incentives', 'Contact', 'About', 'PrivacyPolicy', 'CookiePolicy', 'TermsOfUse', 'ComingSoonPage', 'Sitemap'].includes(name)) {
             // Public marketing pages → clean layout (no admin sidebar)
     page.default.layout = undefined
 

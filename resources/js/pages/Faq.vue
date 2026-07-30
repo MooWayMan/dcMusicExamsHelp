@@ -1,5 +1,9 @@
 <!-- resources/js/pages/Faq.vue -->
 <script setup lang="ts">
+import { ref } from 'vue'
+import { router } from '@inertiajs/vue3'
+import { MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
+import { useAccordionHashOpen } from '@/composables/useAccordionHashOpen'
 import { usePageAnimation } from '@/composables/usePageAnimation'
 import { useBookingModal } from '@/composables/useBookingModal'
 import Head from '@/components/layouts/Head.vue'
@@ -96,7 +100,20 @@ const faqs = [
     answer:
       'Yes. We offer face-to-face exam sessions in Liverpool and Wirral, as well as digital practical exams and digital theory exams that can be taken anywhere and submitted online. Centre 120 covers all three — for digital exams you enter the code when booking, and for face-to-face exams your entry is connected automatically.',
   },
+  {
+    question: 'Can I order a paper certificate, and how much?',
+    answer:
+      'Every Trinity exam comes with a free digital certificate that you can download and share online. If you would also like a printed paper certificate, you can order one directly from Trinity for £5 (UK delivery) at <a href="https://mycertificates.trinitycollege.com" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand-accent underline hover:opacity-70">mycertificates.trinitycollege.com</a> — use the “Paper certificates” option. The same page can also order a replacement if a certificate is ever lost or damaged.',
+  },
 ]
+
+useAccordionHashOpen()
+
+const searchQuery = ref('')
+const submitSearch = () => {
+  const q = searchQuery.value.trim()
+  router.visit('/search' + (q ? '?q=' + encodeURIComponent(q) : ''))
+}
 
 const faqJsonLd = JSON.stringify({
   '@context': 'https://schema.org',
@@ -150,6 +167,19 @@ const faqJsonLd = JSON.stringify({
             Everything you need to know about booking Trinity music exams through centre 120.
             Can't find your answer? Get in touch and we'll help.
           </p>
+        </div>
+
+        <div :class="animClass('fade-up', 3)" class="mx-auto mt-6 max-w-xl">
+          <form class="relative" role="search" @submit.prevent="submitSearch">
+            <MagnifyingGlassIcon class="pointer-events-none absolute left-4 top-1/2 h-6 w-6 -translate-y-1/2 text-slate-400" />
+            <input
+              v-model="searchQuery"
+              type="search"
+              placeholder="Search"
+              aria-label="Search the site"
+              class="h-14 w-full rounded-2xl border border-brand-border bg-white pl-12 pr-4 text-lg text-slate-800 shadow-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-accent"
+            />
+          </form>
         </div>
         </div>
       </div>
