@@ -52,6 +52,22 @@ class OrderController extends Controller
             $query->unpaid();
         }
 
+        // Half-imported orders: Section 1 (Bulk Orders) created the order from
+        // the orders CSV, but the Enrolment List has never been run against it,
+        // so it has no candidates of its own.
+        //
+        // These are easy to miss because the Cands column comes from a COLUMN
+        // IN THE ORDERS CSV, not from the entries — an order can read "1
+        // candidate" while holding none. The visible symptoms are Applicant "—"
+        // and £0.00 commission, since both are filled in by the enrolment-list
+        // import. Until it runs, those candidates exist nowhere: not on the
+        // teacher's dashboard, not in Pending Results, not in the prize draw.
+        // (James Worthington, order 1-18204862774, Q3 2026.)
+        $entries = $request->input('entries');
+        if ($entries === 'missing') {
+            $query->doesntHave('examEntries');
+        }
+
         // Time period filter — use the exam date (requested_start_date), not
         // created_at. A March exam that was imported in April belongs to Q1
         // because it happened in Q1, regardless of when the row was inserted.
@@ -122,6 +138,7 @@ class OrderController extends Controller
         if ($status) $summaryQuery->where('order_status', $status);
         if ($paid === 'paid') $summaryQuery->paid();
         if ($paid === 'unpaid') $summaryQuery->unpaid();
+        if ($entries === 'missing') $summaryQuery->doesntHave('examEntries');
         $this->applyPeriod($summaryQuery, $period);
 
         // Clone so we don't mutate the main summary with extra wheres
@@ -134,6 +151,10 @@ class OrderController extends Controller
             'total_candidates' => $summaryQuery->sum('candidates'),
             'total_paid' => number_format($paidSummaryQuery->sum('commission_paid_amount'), 2),
             'total_unpaid' => number_format($unpaidSummaryQuery->sum('commission_amount'), 2),
+            // How many orders in the CURRENT view still need their enrolment
+            // list running. Ignores the entries filter itself so the badge
+            // keeps showing a count while you're looking at the filtered list.
+            'needs_entries' => (clone $summaryQuery)->doesntHave('examEntries')->count(),
         ];
 
         return Inertia::render('admin/Orders/Index', [
@@ -145,6 +166,7 @@ class OrderController extends Controller
                 'method' => $method,
                 'status' => $status,
                 'paid' => $paid,
+                'entries' => $entries,
                 'period' => $period,
                 'sort' => $sortBy,
                 'direction' => $sortDir,
