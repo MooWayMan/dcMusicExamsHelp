@@ -33,6 +33,7 @@ interface Teacher {
   distinctions: number
   merits: number
   passes: number
+  below_pass: number
   badge_tier: string | null
   total_all_time: number
   students: Student[]
@@ -1342,6 +1343,7 @@ const topScorerAwardCount = computed(() => {
                   <span v-if="teacher.distinctions" class="font-semibold text-yellow-600">{{ teacher.distinctions }} Distinction{{ teacher.distinctions > 1 ? 's' : '' }}</span>
                   <span v-if="teacher.merits" class="font-semibold text-brand-accent">{{ teacher.merits }} Merit{{ teacher.merits > 1 ? 's' : '' }}</span>
                   <span v-if="teacher.passes" class="font-semibold text-brand-text">{{ teacher.passes }} Pass{{ teacher.passes > 1 ? 'es' : '' }}</span>
+                  <span v-if="teacher.below_pass" class="font-semibold text-brand-text-soft">{{ teacher.below_pass }} Below Pass</span>
                   <span v-if="teacher.badge_tier" class="font-semibold text-brand-success">🏆 {{ teacher.badge_tier }} Badge ({{ teacher.total_entries }} entries this quarter)</span>
                 </div>
 

@@ -218,8 +218,10 @@ class CertificateController extends Controller
                 'instrument:id,name',
                 'order:id,requested_start_date,delivery_method,applicant_name,applicant_email',
             ])
+            // Any scored entry is owed a certificate — a Below Pass gets a
+            // Bravo. CANCELLED / NO_SHOW are still excluded below: Trinity
+            // never issues a result for those, so there is nothing to award.
             ->whereNotNull('score')
-            ->where('score', '>=', 60)
             ->certNotSent()
             ->where(function ($q) {
                 $q->whereNull('notes')->orWhereNotIn('notes', ExamEntry::NOTES_NO_RESULT);
@@ -770,11 +772,14 @@ class CertificateController extends Controller
         $startDate = "{$year}-" . str_pad($startMonth, 2, '0', STR_PAD_LEFT) . '-01';
         $endDate = \Carbon\Carbon::parse($startDate)->addMonths(3)->subDay()->toDateString();
 
-        // Get all entries with PASSING scores in this quarter — drives the
-        // per-student certificate generation (every passing student gets a
-        // Bravo / Take a Bow / Standing Ovation cert based on their grade).
+        // Get all SCORED entries in this quarter — drives the per-student
+        // certificate generation. Every candidate who sat the exam gets a
+        // certificate based on their result: Standing Ovation for a
+        // Distinction, Take a Bow for a Merit, Bravo for a Pass OR a Below
+        // Pass. That last case is the point of the scheme — see ForTeachers
+        // ("even if they don't pass"). CANCELLED entries are excluded because
+        // no exam was sat.
         $entries = ExamEntry::whereNotNull('score')
-            ->where('score', '>=', 60)
             ->where(function ($q) {
                 $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
             })
@@ -1009,18 +1014,24 @@ class CertificateController extends Controller
             $distinctions = $sorted->filter(fn ($e) => $e->score >= 87)->count();
             $merits = $sorted->filter(fn ($e) => $e->score >= 75 && $e->score < 87)->count();
             $passes = $sorted->filter(fn ($e) => $e->score >= 60 && $e->score < 75)->count();
+            $belowPass = $sorted->filter(fn ($e) => $e->score < 60)->count();
 
             $tableRows = '';
             foreach ($sorted as $entry) {
+                // Mirrors ExamEntry::result_band — without the explicit Pass
+                // arm a Below Pass fell into the default and was printed as
+                // "Pass" on the teacher's report.
                 $band = match (true) {
                     $entry->score >= 87 => 'Distinction',
                     $entry->score >= 75 => 'Merit',
-                    default => 'Pass',
+                    $entry->score >= 60 => 'Pass',
+                    default => 'Below Pass',
                 };
                 $bandColour = match ($band) {
                     'Distinction' => '#7a1f3d',
                     'Merit' => '#2a6e7a',
-                    default => '#1e3a5f',
+                    'Pass' => '#1e3a5f',
+                    default => '#666666',
                 };
                 $tableRows .= '<tr>'
                     . '<td style="padding:8px 12px;border-bottom:1px solid #ddd;">' . e($entry->candidate_name) . '</td>'
@@ -1069,6 +1080,7 @@ class CertificateController extends Controller
                     <span class="summary-box" style="background:#f0e6ea;color:#7a1f3d;">' . $distinctions . ' Distinction' . ($distinctions !== 1 ? 's' : '') . '</span>
                     <span class="summary-box" style="background:#e6f0f2;color:#2a6e7a;">' . $merits . ' Merit' . ($merits !== 1 ? 's' : '') . '</span>
                     <span class="summary-box" style="background:#e8edf2;color:#1e3a5f;">' . $passes . ' Pass' . ($passes !== 1 ? 'es' : '') . '</span>
+                    ' . ($belowPass > 0 ? '<span class="summary-box" style="background:#f0f0f0;color:#666666;">' . $belowPass . ' Below Pass</span>' : '') . '
                     <span class="summary-box" style="background:#f5f5f5;color:#333;">' . $totalEntries . ' Total</span>
                     ' . ($pendingCount > 0 ? '<span class="summary-box" style="background:#fff8e1;color:#856404;">' . $pendingCount . ' Awaiting Results</span>' : '') . '
                 </div>
