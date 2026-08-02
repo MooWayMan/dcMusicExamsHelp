@@ -107,7 +107,13 @@ class QuarterEndController extends Controller
             // badge + email belong to the school, not an individual teacher.
             $schoolMeta = $schoolMetaByNameLower[strtolower(trim((string) $teacherName))] ?? null;
             $isSchool = $schoolMeta !== null;
-            $withScores = $entries->filter(fn ($e) => $e->score !== null && $e->score >= 60);
+            // Every scored entry earns a certificate — a Below Pass gets a
+            // Bravo, exactly as the public pages promise ("every single entry
+            // counts... even if they don't pass"). This used to require
+            // score >= 60, which silently dropped candidates like Iris McBride
+            // out of the cert list and the teacher's ZIP while the Recognition
+            // page still listed them as having a Bravo. (2 Aug 2026.)
+            $withScores = $entries->filter(fn ($e) => $e->score !== null);
             // "Pending" = unscored entries we're still waiting on. NO_SHOW
             // entries also have a null score but are NOT pending — Trinity
             // won't issue a result for them. They stay in $entries (so they
@@ -169,10 +175,13 @@ class QuarterEndController extends Controller
                 $teacherEmail = null;
             }
 
-            // Certificate breakdown
+            // Certificate breakdown. The four bands must sum to with_results,
+            // so Below Pass is counted too — otherwise the card reads "6 certs"
+            // above a line that only accounts for 5 of them.
             $distinctions = $withScores->filter(fn ($e) => $e->score >= 87)->count();
             $merits = $withScores->filter(fn ($e) => $e->score >= 75 && $e->score < 87)->count();
             $passes = $withScores->filter(fn ($e) => $e->score >= 60 && $e->score < 75)->count();
+            $belowPass = $withScores->filter(fn ($e) => $e->score < 60)->count();
 
             // Badges reset per-quarter — count only non-cancelled entries in the
             // selected quarter. A teacher who earned Gold in Q1 but has 3 in Q2
@@ -200,6 +209,7 @@ class QuarterEndController extends Controller
                 'distinctions' => $distinctions,
                 'merits' => $merits,
                 'passes' => $passes,
+                'below_pass' => $belowPass,
                 'badge_tier' => $badgeTier,
                 'total_all_time' => $quarterCount, // kept for prop-compat; now means quarter count
                 'students' => $withScores->map(fn ($e) => [
@@ -221,7 +231,7 @@ class QuarterEndController extends Controller
             && ! in_array($e->notes, ExamEntry::NOTES_NO_RESULT, true);
 
         $totalEntries = $allEntries->count();
-        $totalWithResults = $allEntries->filter(fn ($e) => $e->score !== null && $e->score >= 60)->count();
+        $totalWithResults = $allEntries->filter(fn ($e) => $e->score !== null)->count();
         $totalPending = $allEntries->filter($isStillPending)->count();
         $totalFees = $allEntries->sum('fee');
 
