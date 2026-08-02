@@ -221,6 +221,54 @@ test('the PDF renders with no candidates in range', function () {
         ->assertOk();
 });
 
+// ── Scoping / access ──────────────────────────────────────────────────────
+
+test('the teacher-facing export takes no contact id, so there is nothing to tamper with', function () {
+    // The whole GDPR guarantee rests on this: /dashboard/export/* resolves the
+    // owner from the authenticated user, never from the URL.
+    $mine = exportTeacher();
+    exportEntry($mine, ['candidate_name' => 'Mine Only']);
+
+    $other = ExamContact::create(['name' => 'Nosy Teacher', 'email' => 'nosy@example.com', 'source' => 'manual']);
+    $other->addType('teacher');
+
+    $csv = $this->actingAs(actingAsTeacher($other))
+        ->get("/dashboard/export/csv?contact={$mine->id}&contact_id={$mine->id}")
+        ->streamedContent();
+
+    expect($csv)->not->toContain('Mine Only');
+});
+
+test('a non-admin cannot use the contact-scoped export', function () {
+    $contact = exportTeacher();
+    exportEntry($contact, ['candidate_name' => 'Grace Kennedy']);
+
+    $teacher = User::factory()->create(['role' => 'teacher', 'email' => 'plain@example.com']);
+
+    $this->actingAs($teacher)
+        ->get("/admin/contacts/{$contact->id}/export/csv")
+        ->assertForbidden();
+});
+
+test('an admin export for a contact returns that contact candidates, not the admin own', function () {
+    // The preview-dashboard bug: its buttons pointed at /dashboard/export/*,
+    // which handed the admin their own candidates under the teacher's name.
+    $maria = exportTeacher();
+    exportEntry($maria, ['candidate_name' => 'Grace Kennedy']);
+
+    $admin = User::factory()->create(['role' => 'admin', 'email' => 'admin@example.com']);
+    $adminContact = ExamContact::create(['name' => 'Paul Sheridan', 'email' => $admin->email, 'source' => 'manual']);
+    $adminContact->addType('teacher');
+    exportEntry($adminContact, ['candidate_name' => 'Megan Roberts']);
+
+    $csv = $this->actingAs($admin)
+        ->get("/admin/contacts/{$maria->id}/export/csv")
+        ->streamedContent();
+
+    expect($csv)->toContain('Grace Kennedy')
+        ->and($csv)->not->toContain('Megan Roberts');
+});
+
 // ── The dashboard itself ──────────────────────────────────────────────────
 
 test('the dashboard filters by the same range and reports it back', function () {

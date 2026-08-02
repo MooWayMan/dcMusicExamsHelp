@@ -126,6 +126,14 @@ function resetRange() {
     applyRange()
 }
 
+// In admin preview mode the exports must come from the contact-scoped
+// admin routes. The teacher-facing /dashboard/export/* endpoints resolve the
+// owner from the signed-in user, so from a preview they'd hand the admin
+// their OWN candidates under the previewed teacher's name.
+const exportBase = computed(() =>
+    props.preview ? `/admin/contacts/${props.preview.contact_id}/export` : '/dashboard/export',
+)
+
 const exportQuery = computed(
     () => `?from=${encodeURIComponent(rangeFrom.value)}&to=${encodeURIComponent(rangeTo.value)}`,
 )
@@ -602,11 +610,11 @@ defineOptions({
                     </div>
 
                     <div class="flex flex-wrap items-center gap-2">
-                        <a :href="`/dashboard/export/csv${exportQuery}`"
+                        <a :href="`${exportBase}/csv${exportQuery}`"
                             class="inline-flex items-center gap-2 rounded-lg border border-brand-border px-4 py-2 text-sm font-semibold text-brand-text transition-colors hover:border-brand-accent hover:text-brand-accent">
                             <Download class="h-4 w-4" /> Download CSV
                         </a>
-                        <a :href="`/dashboard/export/pdf${exportQuery}`"
+                        <a :href="`${exportBase}/pdf${exportQuery}`"
                             class="inline-flex items-center gap-2 rounded-lg border border-brand-border px-4 py-2 text-sm font-semibold text-brand-text transition-colors hover:border-brand-accent hover:text-brand-accent">
                             <FileText class="h-4 w-4" /> Download PDF
                         </a>
