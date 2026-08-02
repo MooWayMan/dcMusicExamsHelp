@@ -97,6 +97,55 @@ test('an admin can edit notes and the show-full-name consent flag', function () 
         ->and($fresh->show_full_name)->toBeTrue();
 });
 
+test('an admin can correct a booking role the importer got wrong', function () {
+    // The Mark Vincent-Smith shape: a parent entering his own child, stamped
+    // 'teacher' by the importer's shape default, so Quarter End showed no
+    // "Parent booking" tag and he sat in the prize draw.
+    $entry = makeEditableEntry([
+        'candidate_name' => 'Jacob Vincent-Smith',
+        'teacher_name' => 'Mark Vincent-Smith',
+        'booking_role' => 'teacher',
+    ]);
+
+    $this->actingAs($this->admin)
+        ->put("/admin/exam-entries/{$entry->id}", [
+            'candidate_name' => $entry->candidate_name,
+            'booking_role' => 'parent',
+        ])
+        ->assertSessionHas('success');
+
+    expect($entry->fresh()->booking_role)->toBe('parent');
+});
+
+test('a blank booking role clears it back to contact-type inference', function () {
+    $entry = makeEditableEntry(['booking_role' => 'teacher']);
+
+    $this->actingAs($this->admin)
+        ->put("/admin/exam-entries/{$entry->id}", ['booking_role' => '']);
+
+    expect($entry->fresh()->booking_role)->toBeNull();
+});
+
+test('an edit that does not mention booking_role leaves it untouched', function () {
+    // Guard against a partial edit silently wiping an entry's attribution.
+    $entry = makeEditableEntry(['booking_role' => 'school_admin']);
+
+    $this->actingAs($this->admin)
+        ->put("/admin/exam-entries/{$entry->id}", ['candidate_name' => 'Someone Else']);
+
+    expect($entry->fresh()->booking_role)->toBe('school_admin');
+});
+
+test('booking role must be one of the four known roles', function () {
+    $entry = makeEditableEntry(['booking_role' => 'parent']);
+
+    $this->actingAs($this->admin)
+        ->put("/admin/exam-entries/{$entry->id}", ['booking_role' => 'headmaster'])
+        ->assertSessionHasErrors('booking_role');
+
+    expect($entry->fresh()->booking_role)->toBe('parent');
+});
+
 test('blank text fields are stored as null, not empty strings', function () {
     $entry = makeEditableEntry(['result' => 'Pass']);
 

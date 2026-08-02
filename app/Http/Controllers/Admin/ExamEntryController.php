@@ -127,6 +127,11 @@ class ExamEntryController extends Controller
                 'raw_teacher_name' => $entry->teacher_name,
                 'notes' => $entry->notes,
                 'show_full_name' => (bool) $entry->show_full_name,
+                // Who made this booking. Drives the prize draw and the
+                // "Parent booking" / "Self booking" tags on Quarter End, where
+                // a per-entry value OVERRIDES contact-type inference — so a
+                // wrong role has to be corrected here, not on the contact.
+                'booking_role' => $entry->booking_role,
             ]);
 
         // Summary stats — same filters applied so the cards reflect the visible table
@@ -177,6 +182,13 @@ class ExamEntryController extends Controller
      * entry already has a confirmed `teacher_contact_id`, the list keeps
      * showing the linked contact's name (source of truth); use the contact
      * tools to re-point the FK. This edit is for the raw imported fields.
+     *
+     * `booking_role` is the exception to "raw imported fields": it is the
+     * per-entry override QuarterEndController reads BEFORE contact-type
+     * inference, so correcting a mis-derived role (a parent stamped 'teacher'
+     * by the importer's shape default) has to happen on the entry. It is only
+     * written when the key is actually present in the request, so callers that
+     * post a partial edit never wipe an entry's attribution by omission.
      */
     public function update(Request $request, ExamEntry $examEntry): RedirectResponse
     {
@@ -187,6 +199,7 @@ class ExamEntryController extends Controller
             'score' => ['nullable', 'integer', 'min:0', 'max:100'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'show_full_name' => ['boolean'],
+            'booking_role' => ['nullable', 'in:teacher,school_admin,parent,self'],
         ]);
 
         // Normalise blank text fields to null so we never store "" (and so the
@@ -201,6 +214,10 @@ class ExamEntryController extends Controller
             'notes' => $blankToNull($validated['notes'] ?? null),
             'show_full_name' => (bool) ($validated['show_full_name'] ?? false),
         ];
+
+        if ($request->has('booking_role')) {
+            $changes['booking_role'] = $blankToNull($validated['booking_role'] ?? null);
+        }
 
         // Capture only the fields that actually changed, for the audit line.
         $before = $examEntry->only(array_keys($changes));
