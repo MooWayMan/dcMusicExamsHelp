@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, Form, router, usePage } from '@inertiajs/vue3'
-import { computed, ref } from 'vue'
-import { LayoutDashboard, ClipboardList, Users, GraduationCap, CheckSquare, Award, AlertCircle, Home, LogOut, Mail, MessageCircle, Info, ChevronDown, ChevronRight, Gift, Ticket, Trophy, Search, FileText, Eye } from 'lucide-vue-next'
+import { computed, ref, watch } from 'vue'
+import { LayoutDashboard, ClipboardList, Users, GraduationCap, CheckSquare, Award, AlertCircle, Home, LogOut, Mail, MessageCircle, Info, ChevronDown, ChevronRight, Gift, Ticket, Trophy, Search, FileText, Eye, Download, CalendarRange } from 'lucide-vue-next'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyInputConstructor from '@/components/reusables/MyInputConstructor.vue'
@@ -67,6 +67,9 @@ const props = defineProps<{
     // Set only when an admin is previewing this dashboard AS a contact
     // (read-only). Drives the amber "preview" banner.
     preview?: { contact_id: number; contact_name: string }
+    // Date range the server filtered on. Without one the candidate list grows
+    // without limit as the quarters go by.
+    filters?: { from: string; to: string; history_start: string }
 }>()
 
 const handleLogout = () => {
@@ -86,6 +89,46 @@ const flashSuccess = computed(() => (page.props.flash as any)?.success)
 const showLinkForm = ref(false)
 const entries = computed<ExamEntryRow[]>(() => props.examEntries ?? [])
 const hasEntries = computed(() => entries.value.length > 0)
+
+// ─── Date range + downloads ───────────────────────────────────────────────
+// The range is applied server-side, so it bounds the query as well as the
+// table. Both exports reuse whatever is selected here, which is why they're
+// plain links rather than a form post.
+const historyStart = computed(() => props.filters?.history_start ?? '2026-01-01')
+const rangeFrom = ref(props.filters?.from ?? historyStart.value)
+const rangeTo = ref(props.filters?.to ?? new Date().toISOString().slice(0, 10))
+
+// Keep the inputs honest if the server clamped or swapped what we sent.
+watch(
+    () => props.filters,
+    (f) => {
+        if (!f) return
+        rangeFrom.value = f.from
+        rangeTo.value = f.to
+    },
+)
+
+const rangeDirty = computed(
+    () => rangeFrom.value !== props.filters?.from || rangeTo.value !== props.filters?.to,
+)
+
+function applyRange() {
+    router.get(
+        props.preview ? `/admin/contacts/${props.preview.contact_id}/preview-dashboard` : '/dashboard',
+        { from: rangeFrom.value, to: rangeTo.value },
+        { preserveScroll: true, preserveState: true, replace: true },
+    )
+}
+
+function resetRange() {
+    rangeFrom.value = historyStart.value
+    rangeTo.value = new Date().toISOString().slice(0, 10)
+    applyRange()
+}
+
+const exportQuery = computed(
+    () => `?from=${encodeURIComponent(rangeFrom.value)}&to=${encodeURIComponent(rangeTo.value)}`,
+)
 
 // ─── Teacher prize draw card ──────────────────────────────────────────────
 // Defaults to the most recent quarter (quarters[] is sorted newest-first by
@@ -529,6 +572,51 @@ defineOptions({
                 </div>
             </div>
 
+            <!-- Date range + downloads.
+                 Sits OUTSIDE the candidates card on purpose: if a range comes
+                 back empty the table is hidden, and the controls have to stay
+                 reachable so the user can widen it again. -->
+            <div v-if="hasLinkedContact" class="mb-4 rounded-xl border border-brand-border bg-brand-surface p-5">
+                <div class="flex flex-wrap items-end justify-between gap-4">
+                    <div class="flex flex-wrap items-end gap-3">
+                        <div>
+                            <label for="rangeFrom" class="mb-1 flex items-center gap-1.5 text-sm font-medium text-brand-text">
+                                <CalendarRange class="h-4 w-4 text-brand-accent" /> From
+                            </label>
+                            <input id="rangeFrom" v-model="rangeFrom" type="date" :min="historyStart"
+                                class="rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent" />
+                        </div>
+                        <div>
+                            <label for="rangeTo" class="mb-1 block text-sm font-medium text-brand-text">To</label>
+                            <input id="rangeTo" v-model="rangeTo" type="date" :min="historyStart"
+                                class="rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent" />
+                        </div>
+                        <button type="button" :disabled="!rangeDirty" @click="applyRange"
+                            class="rounded-lg bg-brand-accent px-4 py-2 text-sm font-semibold text-brand-text-inverse transition-colors hover:opacity-90 disabled:opacity-40">
+                            Apply
+                        </button>
+                        <button type="button" @click="resetRange"
+                            class="rounded-lg px-3 py-2 text-sm font-medium text-brand-text-soft hover:text-brand-text">
+                            All time
+                        </button>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <a :href="`/dashboard/export/csv${exportQuery}`"
+                            class="inline-flex items-center gap-2 rounded-lg border border-brand-border px-4 py-2 text-sm font-semibold text-brand-text transition-colors hover:border-brand-accent hover:text-brand-accent">
+                            <Download class="h-4 w-4" /> Download CSV
+                        </a>
+                        <a :href="`/dashboard/export/pdf${exportQuery}`"
+                            class="inline-flex items-center gap-2 rounded-lg border border-brand-border px-4 py-2 text-sm font-semibold text-brand-text transition-colors hover:border-brand-accent hover:text-brand-accent">
+                            <FileText class="h-4 w-4" /> Download PDF
+                        </a>
+                    </div>
+                </div>
+                <p class="mt-3 text-xs text-brand-text-soft">
+                    Showing exams from {{ rangeFrom }} to {{ rangeTo }}. Downloads cover the same range, and include candidates still awaiting a result.
+                </p>
+            </div>
+
             <!-- Candidates table — when the user is linked and has entries -->
             <div v-if="hasEntries" class="rounded-xl border border-brand-border bg-brand-surface">
                 <div class="border-b border-brand-border px-5 py-4">
@@ -906,6 +994,17 @@ defineOptions({
                         </tbody>
                     </table>
                 </div>
+            </div>
+
+            <!-- Linked, but the chosen range is empty. Must come BEFORE the
+                 linkage card below, or narrowing the dates would wrongly tell
+                 a linked teacher we can't find their account. -->
+            <div v-else-if="hasLinkedContact" class="rounded-xl border border-brand-border bg-brand-surface p-6 text-center sm:p-8">
+                <MyTextConstructor variant="subheading">No candidates in this date range</MyTextConstructor>
+                <p class="mt-2 text-sm text-brand-text-soft">
+                    Nothing between {{ rangeFrom }} and {{ rangeTo }}. Try widening the dates, or use
+                    <button type="button" class="font-semibold text-brand-accent underline" @click="resetRange">All time</button>.
+                </p>
             </div>
 
             <!-- Linkage path — when no entries match the user's email -->
