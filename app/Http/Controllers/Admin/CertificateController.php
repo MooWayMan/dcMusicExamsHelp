@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ExamContact;
 use App\Models\ExamEntry;
+use App\Support\EntryCredit;
 use App\Support\TopScorers;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
@@ -794,8 +795,32 @@ class CertificateController extends Controller
             return back()->with('error', "No entries with results found for {$quarterLabel}.");
         }
 
+        // Credit-name resolution for the ZIP folders and the report PDFs.
+        //
+        // Entries created by the Section 1b enrolment-list import carry
+        // `teacher_name = null` on purpose — Trinity doesn't tell us the
+        // teacher until the per-candidate results triple arrives — and their
+        // only link to a person is `submitter_contact_id`. Grouping on the raw
+        // string alone therefore dropped every not-yet-resulted candidate out
+        // of their teacher's bucket, which is why the "Awaiting Results"
+        // section silently never rendered for them. (Penelope Jane Mitchell,
+        // Q2 2026 — Paul's report said 6 Total with no pending line, while
+        // Quarter End correctly showed 1 pending.)
+        //
+        // This mirrors the submitter fallback in
+        // QuarterEndController::creditNameFor(). It deliberately does NOT
+        // adopt that method's school-admin rollup: Quarter End rolls Daniel
+        // Rogers up into "Pulse Music School", but the ZIP is built per person
+        // (Daniel_Rogers_Report.pdf), and changing that here would rename
+        // existing folders.
+        //
+        // See App\Support\EntryCredit for the rule itself.
+        $submitterNameById = EntryCredit::submitterNames($entries);
+
+        $creditName = fn (ExamEntry $e) => EntryCredit::nameFor($e, $submitterNameById);
+
         // Group by teacher
-        $grouped = $entries->groupBy(fn ($e) => $e->teacher_name ?? 'Unassigned');
+        $grouped = $entries->groupBy($creditName);
 
         // ── Teacher badge volume counts ──────────────────────────────────────
         // The Bronze/Silver/Gold/Top-Award badge counts EVERY non-CANCELLED
@@ -954,16 +979,26 @@ class CertificateController extends Controller
                 $date = $entry->exam_date ?? $entry->order?->requested_start_date;
                 return $date && $date->between($startDate, $endDate);
             });
-        $allGrouped = $allQuarterEntries->groupBy(fn ($e) => $e->teacher_name ?? 'Unassigned');
+        // The pending rows are exactly the ones that need the submitter
+        // fallback, so resolve names across the full set before grouping.
+        $submitterNameById = EntryCredit::submitterNames($allQuarterEntries) + $submitterNameById;
+        $allCreditName = fn (ExamEntry $e) => EntryCredit::nameFor($e, $submitterNameById);
+
+        $allGrouped = $allQuarterEntries->groupBy($allCreditName);
 
         // Generate teacher report PDFs and CSV spreadsheets
         foreach ($grouped as $teacher => $teacherEntries) {
             $safeTeacher = preg_replace('/[^a-zA-Z0-9_-]/', '_', $teacher);
             $teacherDir = "{$outputDir}/{$safeTeacher}";
 
-            // Count pending entries for this teacher (entries without scores)
+            // Count pending entries for this teacher — unscored rows we're
+            // still waiting on. NO_SHOW and CANCELLED also have a null score
+            // but are NOT awaiting: Trinity never issues a result for them, so
+            // listing them under "Awaiting Results" would tell the teacher to
+            // expect something that will never arrive. Same rule as
+            // QuarterEndController's $isStillPending.
             $allTeacherEntries = $allGrouped->get($teacher, collect());
-            $pendingEntries = $allTeacherEntries->filter(fn ($e) => $e->score === null);
+            $pendingEntries = $allTeacherEntries->filter(EntryCredit::isAwaitingResult(...));
             $pendingCount = $pendingEntries->count();
 
             // --- CSV Spreadsheet ---
