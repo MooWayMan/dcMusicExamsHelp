@@ -1384,6 +1384,40 @@ class TrinityCsvImporter
     }
 
     /**
+     * Last name of a "First Last" / "First Middle Last" string, normalised.
+     * Returns '' when there is no separable surname (single-word names like
+     * "Madonna", or a blank field) so callers never match on nothing.
+     */
+    private function surnameOf(string $name): string
+    {
+        $norm = strtolower(trim(preg_replace('/\s+/', ' ', $name)));
+        if ($norm === '' || ! str_contains($norm, ' ')) {
+            return '';
+        }
+        $parts = explode(' ', $norm);
+        return (string) end($parts);
+    }
+
+    /**
+     * Do two people share a surname? The signal that separates a PARENT
+     * entering their own child from a TEACHER entering a student, when the
+     * CSV shape is otherwise identical (submitter == applicant != candidate).
+     *
+     * Mark Vincent-Smith → Jacob Vincent-Smith  = parent.
+     * Maria Nielsen      → Grace Kennedy        = teacher.
+     *
+     * Deliberately last-token only: hyphenated and double-barrelled surnames
+     * survive, and a teacher who happens to share a student's surname is
+     * caught earlier by the contact lookup (rule 3) or corrected by the human
+     * at import.
+     */
+    private function sharesSurname(string $a, string $b): bool
+    {
+        $surnameA = $this->surnameOf($a);
+        return $surnameA !== '' && $surnameA === $this->surnameOf($b);
+    }
+
+    /**
      * Implements the email rule from the spec:
      *   - Submitter name == Applicant name → use Submitter Email Address
      *   - Else use the Applicant Email the user typed in the form.
@@ -1412,7 +1446,8 @@ class TrinityCsvImporter
      *      submitter match.
      *   3. Summary CSV names a teacher who exists as a teacher contact
      *      → 'teacher'.
-     *   4. Otherwise null — no confident suggestion, the human must choose.
+     *   4. Applicant and candidate share a surname → 'parent'.
+     *   5. Otherwise null — no confident suggestion, the human must choose.
      *
      * @return array{role: ?string, reason: string, matched_contact: ?array{id:int,name:string,types:array<int,string>,matched_by:string,who:string}}
      */
@@ -1501,7 +1536,23 @@ class TrinityCsvImporter
             }
         }
 
-        // 4. No confident signal — the human must choose.
+        // 4. Nobody on file, but the applicant and candidate share a surname
+        //    — the family-name signal that separates a parent entering their
+        //    own child from a teacher entering a student.
+        if ($this->sharesSurname($enrol['applicant_name'] ?? '', $enrol['candidate_name'] ?? '')) {
+            // Display the surname as Trinity spelled it, not the normalised
+            // lower-case key sharesSurname() compares on.
+            $nameParts = explode(' ', trim(preg_replace('/\s+/', ' ', (string) ($enrol['candidate_name'] ?? ''))));
+            $surname = (string) end($nameParts);
+
+            return [
+                'role' => 'parent',
+                'reason' => "Applicant and candidate share the surname \"{$surname}\" — looks like a parent entering their own child.",
+                'matched_contact' => null,
+            ];
+        }
+
+        // 5. No confident signal — the human must choose.
         return [
             'role' => null,
             'reason' => 'No existing teacher, school or parent match — please choose the role.',
@@ -1576,12 +1627,18 @@ class TrinityCsvImporter
      *        type teacher / school_admin → 'teacher'
      *        type parent only            → 'parent'
      *        type trinity_admin AND Summary has separate teacher → 'teacher'
-     *   4. Shape-based default — submitter == applicant != candidate →
+     *   4. Applicant and candidate share a surname → 'parent' (a parent
+     *      entering their own child). This runs BEFORE the shape default
+     *      below because the two shapes are otherwise identical — see
+     *      sharesSurname(). Added 2 Aug 2026 after Mark Vincent-Smith →
+     *      Jacob Vincent-Smith was stamped 'teacher' and lost his
+     *      "Parent booking" tag on Quarter End.
+     *   5. Shape-based default — submitter == applicant != candidate →
      *      'teacher' (the dominant LAR-centre pattern: a teacher booking on
      *      behalf of a student). True 'parent' submitters (Adrian-O'Malley
-     *      shape) require an existing parent-tagged contact, or a manual
-     *      retag via the contacts admin.
-     *   5. Else default → 'parent'
+     *      shape) require an existing parent-tagged contact, a shared
+     *      surname, or a manual retag via the contacts admin.
+     *   6. Else default → 'parent'
      */
     private function deriveBookingRole(array $enrol, array $summary, ?string $derivedEmail): string
     {
@@ -1622,15 +1679,24 @@ class TrinityCsvImporter
             }
         }
 
-        // 4. Shape-based default: submitter == applicant, candidate is a
-        //    different person — submitter is acting as the teacher.
-        //    Resolves the Maria-Nielsen case (5 May 2026, Lily Jago).
+        // 4. Shared surname: the applicant is entering someone with the same
+        //    family name — a parent and their own child. Must be checked
+        //    BEFORE rule 5, which would otherwise read this exact shape as a
+        //    teacher booking. (Mark Vincent-Smith → Jacob Vincent-Smith.)
+        if ($this->sharesSurname($applicantName, $candidateName)) {
+            return 'parent';
+        }
+
+        // 5. Shape-based default: submitter == applicant, candidate is a
+        //    different person with a DIFFERENT surname — submitter is acting
+        //    as the teacher. Resolves the Maria-Nielsen case (5 May 2026,
+        //    Lily Jago).
         if ($this->namesMatch($submitterName, $applicantName)
             && ! $this->namesMatch($applicantName, $candidateName)) {
             return 'teacher';
         }
 
-        // 5. Default — parent
+        // 6. Default — parent
         return 'parent';
     }
 }

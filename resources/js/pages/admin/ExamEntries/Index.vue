@@ -27,6 +27,7 @@ interface ExamEntryRow {
     raw_teacher_name: string | null
     notes: string | null
     show_full_name: boolean
+    booking_role: string | null
 }
 
 interface PaginationLink {
@@ -141,7 +142,17 @@ const form = useForm({
     score: null as number | null,
     notes: '',
     show_full_name: false,
+    booking_role: '' as string,
 })
+
+// Same four roles the import page offers. Kept in this order so the two
+// draw-eligible roles sit together.
+const bookingRoleOptions = [
+    { value: 'teacher', label: 'Teacher — in the prize draw' },
+    { value: 'school_admin', label: 'School admin — in the prize draw' },
+    { value: 'parent', label: 'Parent — not in the draw' },
+    { value: 'self', label: 'Self — candidate entered themselves (not in draw)' },
+]
 
 function openEdit(entry: ExamEntryRow) {
     editing.value = entry
@@ -152,6 +163,7 @@ function openEdit(entry: ExamEntryRow) {
     form.score = entry.score
     form.notes = entry.notes ?? ''
     form.show_full_name = entry.show_full_name
+    form.booking_role = entry.booking_role ?? ''
 }
 
 function closeEdit() {
@@ -458,6 +470,21 @@ function submitEdit() {
                                 class="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent" />
                             <p v-if="form.errors.score" class="mt-1 text-sm text-brand-danger">{{ form.errors.score }}</p>
                         </div>
+                    </div>
+
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-brand-text">Booking role</label>
+                        <select v-model="form.booking_role"
+                            class="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent">
+                            <option value="">Not set — infer from the contact's type</option>
+                            <option v-for="role in bookingRoleOptions" :key="role.value" :value="role.value">
+                                {{ role.label }}
+                            </option>
+                        </select>
+                        <p class="mt-1 text-xs text-brand-text-soft">
+                            Set on this entry, this beats the contact's type on Quarter End — use it when the importer read a parent entering their own child as a teacher.
+                        </p>
+                        <p v-if="form.errors.booking_role" class="mt-1 text-sm text-brand-danger">{{ form.errors.booking_role }}</p>
                     </div>
 
                     <div>
