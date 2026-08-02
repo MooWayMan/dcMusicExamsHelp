@@ -63,7 +63,22 @@ class DashboardController extends Controller
             ->where(function ($q) use ($user, $contact) {
                 $q->where('applicant_email', $user->email);
                 if ($contact) {
-                    $q->orWhere('teacher_contact_id', $contact->id);
+                    $q->orWhere('teacher_contact_id', $contact->id)
+                        // Candidates whose results haven't come back yet.
+                        //
+                        // The Section 1b enrolment-list import creates the
+                        // entry as soon as the order is imported, with
+                        // teacher_contact_id AND applicant_email both null —
+                        // Trinity hasn't told us the teacher yet, so the only
+                        // link to a person is submitter_contact_id. Without
+                        // this clause the two conditions above can never match
+                        // a pre-result row, so a teacher's awaiting candidates
+                        // were invisible to them (the page even has a
+                        // "Pending" filter that could never match anything).
+                        //
+                        // Same credit rule as QuarterEndController and the
+                        // certificate reports — see App\Support\EntryCredit.
+                        ->orWhere('submitter_contact_id', $contact->id);
                 }
             })
             ->orderBy('candidate_name')
@@ -155,7 +170,11 @@ class DashboardController extends Controller
             ])
             ->with('instrument:id,name')
             ->where(function ($q) use ($contact, $emails) {
-                $q->where('teacher_contact_id', $contact->id);
+                $q->where('teacher_contact_id', $contact->id)
+                    // Pre-result entries are linked only by submitter — see
+                    // the note in index(). The preview has to match the real
+                    // dashboard exactly, or it stops being a preview.
+                    ->orWhere('submitter_contact_id', $contact->id);
                 if (! empty($emails)) {
                     $q->orWhereIn('applicant_email', $emails);
                 }
