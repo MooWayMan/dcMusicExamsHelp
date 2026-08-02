@@ -12,10 +12,13 @@ use App\Models\ExamContact;
 use App\Models\ExamEntry;
 use App\Models\PrizeDraw;
 use App\Models\Task;
+use App\Support\EntryCredit;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -38,6 +41,90 @@ use Inertia\Response;
  */
 class DashboardController extends Controller
 {
+    /**
+     * Earliest date the dashboard offers. Centre 120's exam history in this
+     * system starts in 2026 — the Quarter End email tells teachers they can
+     * see everything "from January 2026", so the two must not drift apart.
+     */
+    private const HISTORY_START = '2026-01-01';
+
+    /**
+     * Resolve the requested date range, falling back to the full history.
+     *
+     * Without a range the candidate list grows without limit — a teacher who
+     * has been with the centre for years would land on hundreds of rows.
+     *
+     * @return array{0: Carbon, 1: Carbon}
+     */
+    private function dateRange(Request $request): array
+    {
+        $parse = function (?string $value, Carbon $default): Carbon {
+            $value = trim((string) $value);
+            if ($value === '') {
+                return $default;
+            }
+            try {
+                return Carbon::parse($value);
+            } catch (\Throwable) {
+                return $default;
+            }
+        };
+
+        $from = $parse($request->query('from'), Carbon::parse(self::HISTORY_START))->startOfDay();
+        $to = $parse($request->query('to'), Carbon::now())->endOfDay();
+
+        // A backwards range returns nothing and looks like a bug to the user.
+        if ($from->greaterThan($to)) {
+            [$from, $to] = [$to->copy()->startOfDay(), $from->copy()->endOfDay()];
+        }
+
+        return [$from, $to];
+    }
+
+    /**
+     * Restrict a query to entries falling inside the range.
+     *
+     * Uses the order's requested start date when the entry has no exam_date of
+     * its own. That is the normal state for a candidate whose result hasn't
+     * come back yet — filtering on exam_date alone would silently drop exactly
+     * the pending rows the dashboard is meant to surface.
+     */
+    private function withinRange($query, Carbon $from, Carbon $to)
+    {
+        return $query
+            ->leftJoin('orders', 'exam_entries.order_id', '=', 'orders.id')
+            ->whereRaw(
+                'COALESCE(exam_entries.exam_date, orders.requested_start_date) BETWEEN ? AND ?',
+                [$from->toDateString(), $to->toDateString()]
+            );
+    }
+
+    /**
+     * The columns every view of a teacher's entries needs, qualified because
+     * withinRange() joins `orders` (which has overlapping column names).
+     *
+     * @return array<int,string>
+     */
+    private function entryColumns(): array
+    {
+        return [
+            'exam_entries.id',
+            'exam_entries.student_id',
+            'exam_entries.instrument_id',
+            'exam_entries.candidate_number',
+            'exam_entries.candidate_name',
+            'exam_entries.date_of_birth',
+            'exam_entries.grade',
+            'exam_entries.subject_area',
+            'exam_entries.delivery_method',
+            'exam_entries.result',
+            'exam_entries.score',
+            'exam_entries.exam_date',
+            'exam_entries.notes',
+            'exam_entries.report',
+        ];
+    }
+
     public function index(Request $request): Response
     {
         $user = $request->user();
@@ -53,17 +140,15 @@ class DashboardController extends Controller
         // is messy: contact match → entries via teacher_contact_id; falling
         // back to applicant_email; finally entries where their email appears
         // anywhere on the entry.
-        $entriesCollection = ExamEntry::query()
-            ->select([
-                'id', 'student_id', 'instrument_id', 'candidate_number', 'candidate_name', 'date_of_birth',
-                'grade', 'subject_area', 'delivery_method',
-                'result', 'score', 'exam_date', 'report',
-            ])
+        [$from, $to] = $this->dateRange($request);
+
+        $entriesCollection = $this->withinRange(ExamEntry::query(), $from, $to)
+            ->select($this->entryColumns())
             ->with('instrument:id,name')
             ->where(function ($q) use ($user, $contact) {
-                $q->where('applicant_email', $user->email);
+                $q->where('exam_entries.applicant_email', $user->email);
                 if ($contact) {
-                    $q->orWhere('teacher_contact_id', $contact->id)
+                    $q->orWhere('exam_entries.teacher_contact_id', $contact->id)
                         // Candidates whose results haven't come back yet.
                         //
                         // The Section 1b enrolment-list import creates the
@@ -78,11 +163,11 @@ class DashboardController extends Controller
                         //
                         // Same credit rule as QuarterEndController and the
                         // certificate reports — see App\Support\EntryCredit.
-                        ->orWhere('submitter_contact_id', $contact->id);
+                        ->orWhere('exam_entries.submitter_contact_id', $contact->id);
                 }
             })
-            ->orderBy('candidate_name')
-            ->orderByDesc('exam_date')
+            ->orderBy('exam_entries.candidate_name')
+            ->orderByDesc('exam_entries.exam_date')
             ->get();
 
         // Build a map of entry_id → existing pending correction task so the
@@ -142,6 +227,11 @@ class DashboardController extends Controller
             'examEntries' => $entries,
             'hasLinkedContact' => $contact !== null || $entries->isNotEmpty(),
             'teacherPrizeDraw' => $this->buildTeacherPrizeDrawPayload($contact),
+            'filters' => [
+                'from' => $from->toDateString(),
+                'to' => $to->toDateString(),
+                'history_start' => self::HISTORY_START,
+            ],
         ]);
     }
 
@@ -153,35 +243,11 @@ class DashboardController extends Controller
      * no throwaway accounts to create and delete. Guarded by admin middleware
      * in routes/admin.php.
      */
-    public function previewForContact(ExamContact $contact): Response
+    public function previewForContact(Request $request, ExamContact $contact): Response
     {
-        $emails = collect([$contact->email])
-            ->merge($contact->emails->pluck('email'))
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
+        [$from, $to] = $this->dateRange($request);
 
-        $entriesCollection = ExamEntry::query()
-            ->select([
-                'id', 'student_id', 'instrument_id', 'candidate_number', 'candidate_name', 'date_of_birth',
-                'grade', 'subject_area', 'delivery_method',
-                'result', 'score', 'exam_date', 'report',
-            ])
-            ->with('instrument:id,name')
-            ->where(function ($q) use ($contact, $emails) {
-                $q->where('teacher_contact_id', $contact->id)
-                    // Pre-result entries are linked only by submitter — see
-                    // the note in index(). The preview has to match the real
-                    // dashboard exactly, or it stops being a preview.
-                    ->orWhere('submitter_contact_id', $contact->id);
-                if (! empty($emails)) {
-                    $q->orWhereIn('applicant_email', $emails);
-                }
-            })
-            ->orderBy('candidate_name')
-            ->orderByDesc('exam_date')
-            ->get();
+        $entriesCollection = $this->contactEntries($contact, $from, $to)->get();
 
         $entries = $entriesCollection->map(fn (ExamEntry $e) => [
             'id' => $e->id,
@@ -204,11 +270,135 @@ class DashboardController extends Controller
             'examEntries' => $entries,
             'hasLinkedContact' => $entries->isNotEmpty(),
             'teacherPrizeDraw' => $this->buildTeacherPrizeDrawPayload($contact),
+            'filters' => [
+                'from' => $from->toDateString(),
+                'to' => $to->toDateString(),
+                'history_start' => self::HISTORY_START,
+            ],
             'preview' => [
                 'contact_id' => $contact->id,
                 'contact_name' => $contact->name,
             ],
         ]);
+    }
+
+    /**
+     * Every entry credited to a contact inside a date range, however it is
+     * linked: named teacher, applicant email, or — for candidates still
+     * awaiting a result — the person who submitted the booking.
+     */
+    private function contactEntries(ExamContact $contact, Carbon $from, Carbon $to)
+    {
+        $emails = collect([$contact->email])
+            ->merge($contact->emails->pluck('email'))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        return $this->withinRange(ExamEntry::query(), $from, $to)
+            ->select($this->entryColumns())
+            ->with('instrument:id,name')
+            ->where(function ($q) use ($contact, $emails) {
+                $q->where('exam_entries.teacher_contact_id', $contact->id)
+                    ->orWhere('exam_entries.submitter_contact_id', $contact->id);
+                if (! empty($emails)) {
+                    $q->orWhereIn('exam_entries.applicant_email', $emails);
+                }
+            })
+            ->orderBy('exam_entries.candidate_name')
+            ->orderByDesc('exam_entries.exam_date');
+    }
+
+    /**
+     * CSV of the signed-in teacher's candidates for the chosen range.
+     * Streamed straight back — nothing is written to disk, so this can't be
+     * affected by the container's storage being ephemeral.
+     */
+    public function exportCsv(Request $request): StreamedResponse
+    {
+        [$contact, $entries, $from, $to] = $this->exportData($request);
+
+        $filename = 'musicexams-results-' . $from->format('Y-m-d') . '-to-' . $to->format('Y-m-d') . '.csv';
+
+        return response()->streamDownload(function () use ($entries) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, [
+                'Candidate', 'Candidate #', 'Date of birth', 'Instrument',
+                'Grade', 'Subject', 'Delivery', 'Exam date', 'Result', 'Score', 'Certificate',
+            ]);
+
+            foreach ($entries as $e) {
+                fputcsv($out, [
+                    $e->candidate_name,
+                    $e->candidate_number,
+                    $e->date_of_birth?->format('d/m/Y'),
+                    $e->instrument?->name,
+                    $e->grade,
+                    $e->subject_area,
+                    $e->delivery_method,
+                    $e->exam_date?->format('d/m/Y'),
+                    EntryCredit::isAwaitingResult($e) ? 'Awaiting' : ($e->result_band ?? $e->result),
+                    $e->score,
+                    $e->certificate_name,
+                ]);
+            }
+
+            fclose($out);
+        }, $filename, ['Content-Type' => 'text/csv']);
+    }
+
+    /**
+     * PDF of the same data, for teachers who'd rather print or forward it.
+     */
+    public function exportPdf(Request $request)
+    {
+        [$contact, $entries, $from, $to] = $this->exportData($request);
+
+        $pdf = Pdf::loadView('exports.teacher-results', [
+            'contactName' => $contact?->name ?? $request->user()->name,
+            'entries' => $entries,
+            'from' => $from,
+            'to' => $to,
+        ])->setPaper('a4', 'portrait');
+
+        $filename = 'musicexams-results-' . $from->format('Y-m-d') . '-to-' . $to->format('Y-m-d') . '.pdf';
+
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Shared resolution for both exports: who is asking, and what falls in
+     * their chosen range. Scoped exactly like the dashboard itself, so an
+     * export can never contain a candidate the page wouldn't show.
+     *
+     * @return array{0: ?ExamContact, 1: \Illuminate\Support\Collection, 2: Carbon, 3: Carbon}
+     */
+    private function exportData(Request $request): array
+    {
+        $user = $request->user();
+        [$from, $to] = $this->dateRange($request);
+
+        $contact = ExamContact::query()
+            ->where('email', $user->email)
+            ->orWhereHas('emails', fn ($q) => $q->where('email', $user->email))
+            ->first();
+
+        if ($contact) {
+            return [$contact, $this->contactEntries($contact, $from, $to)->get(), $from, $to];
+        }
+
+        // No linked contact — fall back to the email on the entry, matching
+        // the dashboard's own fallback so the two never disagree.
+        $entries = $this->withinRange(ExamEntry::query(), $from, $to)
+            ->select($this->entryColumns())
+            ->with('instrument:id,name')
+            ->where('exam_entries.applicant_email', $user->email)
+            ->orderBy('exam_entries.candidate_name')
+            ->orderByDesc('exam_entries.exam_date')
+            ->get();
+
+        return [null, $entries, $from, $to];
     }
 
     /**

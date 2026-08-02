@@ -137,6 +137,17 @@ Route::middleware('throttle:5,1')->group(function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Dated exports of the signed-in teacher's own candidates. Both stream
+    // the file back rather than writing it to disk — these replaced the CSV
+    // and report PDF that used to be bundled into the Quarter End ZIP.
+    Route::get('dashboard/export/csv', [DashboardController::class, 'exportCsv'])
+        ->middleware('throttle:20,1')
+        ->name('dashboard.export.csv');
+    Route::get('dashboard/export/pdf', [DashboardController::class, 'exportPdf'])
+        ->middleware('throttle:20,1')
+        ->name('dashboard.export.pdf');
+
     Route::post('dashboard/link-request', [DashboardController::class, 'linkRequest'])
         ->name('dashboard.link-request');
     Route::post('dashboard/entries/{entry}/correction-request', [DashboardController::class, 'correctionRequest'])
