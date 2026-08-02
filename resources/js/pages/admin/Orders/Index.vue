@@ -42,9 +42,9 @@ interface PeriodOption {
 
 const props = defineProps<{
     orders: PaginatedData
-    summary: { total_orders: number; total_commission: string; total_candidates: number; total_paid: string; total_unpaid: string }
+    summary: { total_orders: number; total_commission: string; total_candidates: number; total_paid: string; total_unpaid: string; needs_entries: number }
     periodOptions: { quarters: PeriodOption[]; years: PeriodOption[] }
-    filters: { search: string | null; method: string | null; status: string | null; paid: string | null; period: string | null; sort: string; direction: string }
+    filters: { search: string | null; method: string | null; status: string | null; paid: string | null; entries: string | null; period: string | null; sort: string; direction: string }
 }>()
 
 const search = ref(props.filters.search ?? '')
@@ -56,6 +56,7 @@ function currentFilters(overrides: Record<string, string | undefined> = {}) {
         method: props.filters.method || undefined,
         status: props.filters.status || undefined,
         paid: props.filters.paid || undefined,
+        entries: props.filters.entries || undefined,
         period: props.filters.period || undefined,
         ...overrides,
     }
@@ -74,6 +75,16 @@ function filterByMethod(method: string | null) {
 
 function filterByPaid(paid: string | null) {
     router.get('/admin/orders', currentFilters({ paid: paid || undefined }), { preserveState: true, replace: true })
+}
+
+// Orders that exist but have no candidates — Section 1 was run, the Enrolment
+// List wasn't. Toggles, so a second click clears it.
+function toggleNeedsEntries() {
+    router.get(
+        '/admin/orders',
+        currentFilters({ entries: props.filters.entries === 'missing' ? undefined : 'missing' }),
+        { preserveState: true, replace: true },
+    )
 }
 
 function filterByPeriod(period: string | null) {
@@ -175,6 +186,18 @@ const { animClass } = usePageAnimation()
                     class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
                     :class="filters.paid === 'unpaid' ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
                     Unpaid
+                </button>
+            </div>
+
+            <!-- Half-imported orders: Section 1 ran, the Enrolment List didn't,
+                 so the order holds no candidates. Only offered when there are
+                 some, so it stays out of the way the rest of the time. -->
+            <div v-if="summary.needs_entries > 0 || filters.entries === 'missing'" class="flex gap-1">
+                <button @click="toggleNeedsEntries"
+                    class="cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
+                    :class="filters.entries === 'missing' ? 'bg-brand-accent text-brand-text-inverse' : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'">
+                    Needs enrolment list
+                    <span v-if="summary.needs_entries > 0" class="ml-1 font-bold">{{ summary.needs_entries }}</span>
                 </button>
             </div>
 
@@ -309,7 +332,17 @@ const { animClass } = usePageAnimation()
                                 </span>
                             </td>
                             <td class="px-4 py-3"><span class="text-sm text-brand-text-soft">{{ order.subject_area }}</span></td>
-                            <td class="px-4 py-3 text-center"><span class="text-sm text-brand-text-soft">{{ order.candidates }}</span></td>
+                            <!-- `candidates` is a column from the ORDERS CSV, not a
+                                 count of rows we hold. An order can read "1" while
+                                 holding none, so flag when nothing has been imported. -->
+                            <td class="px-4 py-3 text-center">
+                                <span class="text-sm text-brand-text-soft">{{ order.candidates }}</span>
+                                <span v-if="order.exam_entries_count === 0"
+                                    class="mt-0.5 block text-xs font-semibold text-brand-accent"
+                                    title="Section 1 has run but the Enrolment List hasn't — these candidates aren't in the system yet">
+                                    none imported
+                                </span>
+                            </td>
                             <td class="px-4 py-3 text-right">
                                 <div class="font-medium text-brand-text">&pound;{{ order.commission_amount }}</div>
                                 <div v-if="order.is_paid" class="mt-0.5 inline-flex items-center gap-1 text-xs text-brand-success">
