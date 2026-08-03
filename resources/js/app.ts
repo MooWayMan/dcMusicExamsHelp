@@ -87,8 +87,23 @@ createInertiaApp({
             page.default.layout = isAdmin ? AppLayout : UserLayout
 
         } else {
-            // Default app pages
-            page.default.layout = page.default.layout || AppLayout
+            // Default app pages → AppLayout (the full admin sidebar).
+            //
+            // ⚠️ defineOptions({ layout: { breadcrumbs: [...] } }) sets
+            // page.default.layout to a plain CONFIG OBJECT, not a component.
+            // That object is truthy, so `layout || AppLayout` keeps it, Inertia
+            // finds nothing to render, and the page loads with NO layout at all
+            // — no sidebar, no header. That is exactly what happened to
+            // /admin/re-entry-permits (spotted 3 Aug 2026). The settings and
+            // Dashboard branches above already defend against it; this one has
+            // to as well, or the next page to add breadcrumbs loses its nav.
+            const opt = page.default.layout
+            const isRealLayout = Array.isArray(opt)
+                || (typeof opt === 'function')
+                || (!!opt && typeof opt === 'object'
+                    && ('setup' in opt || 'render' in opt || '__name' in opt || '__file' in opt))
+
+            page.default.layout = isRealLayout ? opt : AppLayout
         }
 
         return page

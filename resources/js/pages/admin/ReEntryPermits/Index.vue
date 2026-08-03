@@ -105,10 +105,6 @@ const statusChip: Record<Row['status'], { label: string; cls: string }> = {
     not_found: { label: 'No matching entry', cls: 'bg-brand-danger-soft text-brand-danger' },
     not_a_permit: { label: 'Not a permit', cls: 'bg-brand-danger-soft text-brand-danger' },
 }
-
-defineOptions({
-    layout: { breadcrumbs: [{ title: 'Re-entry permits', href: '/admin/re-entry-permits' }] },
-})
 </script>
 
 <template>
