@@ -5,6 +5,7 @@ import { LayoutDashboard, ClipboardList, Users, GraduationCap, CheckSquare, Awar
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyInputConstructor from '@/components/reusables/MyInputConstructor.vue'
+import DashboardCharts from '@/components/dashboard/DashboardCharts.vue'
 import { Spinner } from '@/components/ui/spinner'
 import { dashboard, logout } from '@/routes'
 
@@ -624,6 +625,16 @@ defineOptions({
                     Showing exams from {{ rangeFrom }} to {{ rangeTo }}. Downloads cover the same range, and include candidates still awaiting a result.
                 </p>
             </div>
+
+            <!-- Charts. Same range as the table below and the downloads above,
+                 so all three always agree. Rendered from the entries already
+                 on the page — no extra request. -->
+            <DashboardCharts
+                v-if="hasEntries"
+                :entries="entries"
+                :from="filters?.from ?? rangeFrom"
+                :to="filters?.to ?? rangeTo"
+            />
 
             <!-- Candidates table — when the user is linked and has entries -->
             <div v-if="hasEntries" class="rounded-xl border border-brand-border bg-brand-surface">

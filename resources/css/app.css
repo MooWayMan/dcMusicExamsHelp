@@ -74,6 +74,12 @@
     --color-brand-purple: var(--brand-purple);
     --color-brand-purple-soft: var(--brand-purple-soft);
 
+    --color-chart-distinction: var(--chart-distinction);
+    --color-chart-merit: var(--chart-merit);
+    --color-chart-pass: var(--chart-pass);
+    --color-chart-below: var(--chart-below);
+    --color-chart-awaiting: var(--chart-awaiting);
+
     /* SIDEBAR */
     --color-sidebar: var(--sidebar);
     --color-sidebar-foreground: var(--sidebar-foreground);
@@ -168,6 +174,19 @@
     --brand-purple: hsl(265 60% 50%);
     --brand-purple-soft: hsl(265 70% 96%);
 
+    /* CHART SERIES — result bands on the teacher dashboard.
+       Same hue families as the badges so the charts and the chips speak one
+       language, but stepped to clear the colourblind-safety checks: the plain
+       --brand-teal sits just under the chroma floor and reads grey once
+       simulated. Distinction/Merit/Below Pass are the brand tokens unchanged.
+       Awaiting is a NEUTRAL on purpose — it isn't a result band, so it must
+       not compete with the four that are. Validated light + dark. */
+    --chart-distinction: hsl(350 65% 35%);
+    --chart-merit: hsl(217 91% 60%);
+    --chart-pass: hsl(175 85% 30%);
+    --chart-below: hsl(0 72% 50%);
+    --chart-awaiting: hsl(215 16% 55%);
+
     /* SIDEBAR */
     --sidebar: hsl(0 0% 100%);
     --sidebar-foreground: hsl(222 47% 11%);
@@ -222,6 +241,15 @@
     --brand-danger-soft: hsl(0 35% 18%);
     --brand-purple: hsl(265 70% 70%);
     --brand-purple-soft: hsl(265 35% 20%);
+
+    /* CHART SERIES DARK — re-stepped against the dark surface, not flipped.
+       Distinction lifts (the light step drops under 3:1 on the dark card) and
+       Pass darkens (the light step overshoots the dark lightness band). */
+    --chart-distinction: hsl(350 70% 52%);
+    --chart-merit: hsl(217 91% 60%);
+    --chart-pass: hsl(175 62% 38%);
+    --chart-below: hsl(0 84% 65%);
+    --chart-awaiting: hsl(215 20% 55%);
 
     /* SIDEBAR DARK */
     --sidebar: hsl(224 36% 14%);
