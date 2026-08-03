@@ -122,6 +122,7 @@ class ExamEntryController extends Controller
                 'teacher_contact_id' => $entry->teacher_contact_id,
                 'school_name' => $entry->school_name,
                 'fee' => $entry->fee !== null ? number_format((float) $entry->fee, 2) : null,
+                're_entry_code' => $entry->re_entry_code,
                 // Editable via the inline edit modal (raw string, source of truth
                 // for teacher is teacher_contact_id — see update()).
                 'raw_teacher_name' => $entry->teacher_name,
@@ -198,6 +199,7 @@ class ExamEntryController extends Controller
             'result' => ['nullable', 'string', 'max:50'],
             'score' => ['nullable', 'integer', 'min:0', 'max:100'],
             'notes' => ['nullable', 'string', 'max:1000'],
+            're_entry_code' => ['nullable', 'string', 'max:100'],
             'show_full_name' => ['boolean'],
             'booking_role' => ['nullable', 'in:teacher,school_admin,parent,self'],
         ]);
@@ -212,6 +214,7 @@ class ExamEntryController extends Controller
             'result' => $blankToNull($validated['result'] ?? null),
             'score' => $validated['score'] ?? null,
             'notes' => $blankToNull($validated['notes'] ?? null),
+            're_entry_code' => $blankToNull($validated['re_entry_code'] ?? null),
             'show_full_name' => (bool) ($validated['show_full_name'] ?? false),
         ];
 
