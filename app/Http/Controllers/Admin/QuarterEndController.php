@@ -732,7 +732,20 @@ class QuarterEndController extends Controller
         // registered (always eligible). Empty when no school entries exist,
         // so the plain-teacher path is unchanged.
         [$schoolNameByContactId, $schoolMetaByNameLower] = $this->schoolCreditMaps();
-        $creditName = fn ($e) => $this->creditNameFor($e, $schoolNameByContactId);
+
+        // ⚠️ This map is why the draw and the page it sits on used to disagree.
+        // index() credits a parent/self booking to its submitter; runDraw()
+        // called creditNameFor() WITHOUT this third argument, so it defaulted
+        // to [] and the submitter fallback never fired. Those entries returned
+        // an empty teacher_name and were then discarded by the "credit name is
+        // not blank" filter below — so a teacher could be listed as holding
+        // tickets and yet have none in the pool that actually gets drawn.
+        $submitterNameById = ExamContact::whereIn(
+            'id',
+            $allEntries->pluck('submitter_contact_id')->filter()->unique()->values()
+        )->pluck('name', 'id')->all();
+
+        $creditName = fn ($e) => $this->creditNameFor($e, $schoolNameByContactId, $submitterNameById);
         $schoolCreditNamesLower = array_keys($schoolMetaByNameLower);
 
         $registeredTeacherNames = ExamContact::withType('teacher')

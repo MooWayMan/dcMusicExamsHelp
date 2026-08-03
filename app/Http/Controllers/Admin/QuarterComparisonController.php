@@ -45,7 +45,7 @@ class QuarterComparisonController extends Controller
 
         // Non-cancelled entries only (CANCELLED = refunded, earned nothing).
         // NO_SHOW stays in — the booking happened, fee + commission were real.
-        $entries = ExamEntry::with(['instrument:id,name', 'order:id,requested_start_date,delivery_method'])
+        $entries = ExamEntry::with(['instrument:id,name', 'order:id,requested_start_date,delivery_method,commission_amount'])
             ->where(function ($query) {
                 $query->whereNull('notes')->orWhere('notes', '!=', ExamEntry::NOTE_CANCELLED);
             })
@@ -123,9 +123,39 @@ class QuarterComparisonController extends Controller
             $rate = $this->commissionRate($method);
             $isRockPop = str_contains(strtolower((string) $entry->subject_area), 'rock and pop');
 
+            // Where the money actually lives. Face-to-face commission is
+            // recorded ONCE on the order (orders.commission_amount) — that is
+            // what Trinity remits, what reconciliation marks as paid, and what
+            // every other money page in the app reads. This page was the only
+            // one deriving commission per entry from exam_entries.fee, so the
+            // July 2026 F2F session — 53 entries carrying no fee, against
+            // £1,519.56 booked across their four orders — rendered here as a
+            // collapse to £342 while being correct everywhere else.
+            //
+            // Credit an order's commission to the quarter of its OWN requested
+            // start date and key it by order id, so an order whose entries
+            // straddle a quarter boundary is still counted exactly once.
+            $orderCommission = (float) ($entry->order?->commission_amount ?? 0);
+            if ($orderCommission > 0 && $entry->order?->requested_start_date) {
+                $od = $entry->order->requested_start_date;
+                $orderKey = "{$od->year}-".(int) ceil($od->month / 3);
+                if (isset($buckets[$orderKey])) {
+                    $buckets[$orderKey]['commission_orders'][$entry->order->id] = $orderCommission;
+                }
+            }
+
             $b = &$buckets[$key];
             $b['total_fees'] += $fee;
-            $b['total_commission'] += $fee * $rate;
+
+            // Only derive per entry when the order carries no recorded figure.
+            if ($orderCommission <= 0) {
+                $b['total_commission'] += $fee * $rate;
+            }
+
+            // Surfaced so an in-progress quarter can't be misread as a bad one.
+            if ($fee <= 0) {
+                $b['unpriced_entries']++;
+            }
 
             if ($isDigital) {
                 $b['dg_candidates']++;
@@ -163,7 +193,8 @@ class QuarterComparisonController extends Controller
                 'f2f_candidates' => $b['f2f_candidates'],
                 'total_candidates' => $b['dg_candidates'] + $b['f2f_candidates'],
                 'total_fees' => round($b['total_fees'], 2),
-                'total_commission' => round($b['total_commission'], 2),
+                'total_commission' => round($b['total_commission'] + array_sum($b['commission_orders']), 2),
+                'unpriced_entries' => $b['unpriced_entries'],
                 'teacher_count' => count($b['teacher_set']),
                 'exam_types' => $b['exam_types'],
                 'instruments' => collect($b['instruments'])
@@ -206,6 +237,10 @@ class QuarterComparisonController extends Controller
             'f2f_candidates' => 0,
             'total_fees' => 0.0,
             'total_commission' => 0.0,
+            // orderId => commission_amount, so one order counts once however
+            // many of its entries land in this quarter.
+            'commission_orders' => [],
+            'unpriced_entries' => 0,
             'teacher_set' => [],
             'instruments' => [],
             'exam_types' => [

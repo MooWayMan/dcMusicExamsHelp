@@ -104,3 +104,47 @@ test('a teacher cannot see the orders list at all', function () {
         ->get('/admin/orders?entries=missing')
         ->assertForbidden();
 });
+
+test('an order that only PART imported is flagged too', function () {
+    // The July 2026 F2F session: four orders holding 53 of 59 candidates. Each
+    // held entries, so a doesntHave('examEntries') check passed every one of
+    // them while six children existed in no system at all.
+    $order = orderNeedingEntries(['candidates' => 3]);
+
+    ExamEntry::create([
+        'order_id' => $order->id,
+        'candidate_name' => 'Only One Of Three',
+        'grade' => '4',
+        'subject_area' => 'Rock and Pop',
+        'delivery_method' => 'Digital',
+    ]);
+
+    $this->actingAs($this->admin)
+        ->get('/admin/orders?entries=missing')
+        ->assertOk()
+        ->assertInertia(fn ($p) => $p
+            ->has('orders.data', 1)
+            ->where('orders.data.0.trinity_order_number', $order->trinity_order_number));
+
+    $this->actingAs($this->admin)
+        ->get('/admin/orders')
+        ->assertInertia(fn ($p) => $p->where('summary.needs_entries', 1));
+});
+
+test('a fully imported order is not flagged', function () {
+    $order = orderNeedingEntries(['candidates' => 2]);
+
+    foreach (['First', 'Second'] as $name) {
+        ExamEntry::create([
+            'order_id' => $order->id,
+            'candidate_name' => $name,
+            'grade' => '4',
+            'subject_area' => 'Rock and Pop',
+            'delivery_method' => 'Digital',
+        ]);
+    }
+
+    $this->actingAs($this->admin)
+        ->get('/admin/orders')
+        ->assertInertia(fn ($p) => $p->where('summary.needs_entries', 0));
+});

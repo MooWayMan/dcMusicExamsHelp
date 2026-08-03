@@ -560,7 +560,21 @@ class DashboardController extends Controller
 
         return ExamEntry::query()
             ->with('order:id,requested_start_date')
-            ->whereRaw('LOWER(TRIM(teacher_name)) = ?', [strtolower(trim((string) $contact->name))])
+            ->where(function ($q) use ($contact) {
+                // Matching teacher_name alone told a teacher "you have 0
+                // tickets" while the candidate list directly below showed
+                // their pending entries: the enrolment-list import writes
+                // teacher_name = null, because Trinity doesn't name a teacher
+                // until results arrive. Same blind spot as App\Support\
+                // EntryCredit, in the one place where it costs a prize.
+                //
+                // Counting rows, not summing conditions — a teacher who is
+                // both the named teacher and the submitter on one entry still
+                // holds a single ticket for it.
+                $q->whereRaw('LOWER(TRIM(teacher_name)) = ?', [strtolower(trim((string) $contact->name))])
+                    ->orWhere('teacher_contact_id', $contact->id)
+                    ->orWhere('submitter_contact_id', $contact->id);
+            })
             ->whereResultPossible()
             ->get()
             ->filter(function (ExamEntry $e) use ($start, $end) {
