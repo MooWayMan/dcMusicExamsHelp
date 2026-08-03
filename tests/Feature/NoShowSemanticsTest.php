@@ -203,18 +203,46 @@ test('Pending Results page hides NO_SHOW entries (they will never get a score)',
 
 // ── Teacher prize-draw eligibility ────────────────────────────────────────
 
-test('NO_SHOW entries do not earn the teacher a prize-draw ticket', function () {
+test('NO_SHOW entries DO earn the teacher a prize-draw ticket', function () {
+    // RULE CHANGED 3 Aug 2026. This test previously asserted 1 ticket, on the
+    // reasoning that a candidate who didn't turn up shouldn't win anything.
+    // That is right for the STUDENT draw and wrong for the teacher's: Trinity
+    // charged the fee and paid commission whether or not the candidate sat, so
+    // the teacher earned their ticket by making the entry. Paul's call —
+    // "i dont mind the teacher going in the draw, the money was paid".
+    //
+    // The two draws now read different pools in runDraw(): $paidEntries
+    // (everything but CANCELLED) for teachers, results-only for students.
+    // CANCELLED is a refund and stays out of both — covered below.
     $admin = User::factory()->create(['role' => 'admin']);
 
-    // Teacher with one valid + one NO_SHOW entry. Only the valid one
-    // should count toward their ticket pool. Teacher needs ≥2 entries
-    // OR registered teacher type to be eligible — register them so the
-    // single valid entry is enough.
     $contact = ExamContact::create(['name' => 'Helen Hodgkiss']);
     $contact->addType('teacher');
 
     nsEntry(['teacher_name' => 'Helen Hodgkiss']);
     nsEntry(['teacher_name' => 'Helen Hodgkiss', 'notes' => ExamEntry::NOTE_NO_SHOW]);
+
+    $response = $this->actingAs($admin)->postJson('/admin/quarter-end/draw', [
+        'type' => 'teacher',
+        'quarter' => 1,
+        'year' => 2026,
+        'mode' => 'test',
+    ]);
+
+    $response->assertOk();
+    expect($response->json('total_tickets'))->toBe(2);
+});
+
+test('a CANCELLED entry earns the teacher nothing — it was refunded', function () {
+    // The boundary of the rule above. No-shows and withdrawals were paid for;
+    // a cancellation was refunded, so no money, no ticket.
+    $admin = User::factory()->create(['role' => 'admin']);
+
+    $contact = ExamContact::create(['name' => 'Helen Hodgkiss']);
+    $contact->addType('teacher');
+
+    nsEntry(['teacher_name' => 'Helen Hodgkiss']);
+    nsEntry(['teacher_name' => 'Helen Hodgkiss', 'notes' => ExamEntry::NOTE_CANCELLED]);
 
     $response = $this->actingAs($admin)->postJson('/admin/quarter-end/draw', [
         'type' => 'teacher',

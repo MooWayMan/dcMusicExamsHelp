@@ -395,13 +395,17 @@ class QuarterEndController extends Controller
         // beyond `teacher_name !== null`:
         //   - Reject empty/whitespace-only names (otherwise they group
         //     under a blank key and surface as a "blank applicant" row).
-        //   - Drop NO_SHOW entries — the candidate didn't take the exam,
-        //     so no draw ticket. (NO_SHOW still flows into $allEntries
-        //     because line 44 only filters CANCELLED — that's deliberate
-        //     so teacher VOLUME tallies still count NO_SHOW.)
+        //   - KEEP NO_SHOW and RE_ENTRY. The teacher draw follows the MONEY,
+        //     not the outcome: Trinity charged the fee and paid commission
+        //     whether or not the candidate turned up, so the teacher earned
+        //     their ticket by making the entry. (Paul's rule, 3 Aug 2026 —
+        //     "i dont mind the teacher going in the draw, the money was
+        //     paid".) The candidate side is the opposite and follows the
+        //     EXAM: no sitting, no certificate and no student-draw ticket.
+        //     CANCELLED is refunded, so it is out of both — filtered at
+        //     line 44 before this runs.
         $applicantEntries = $allEntries
             ->filter(fn ($e) => $creditName($e) !== null && trim((string) $creditName($e)) !== '')
-            ->reject(fn ($e) => $e->notes === ExamEntry::NOTE_NO_SHOW)
             ->reject(fn ($e) => in_array(strtolower(trim((string) $creditName($e))), $selfExcludedNames, true))
             ->groupBy(fn ($e) => $creditName($e));
 
@@ -678,13 +682,25 @@ class QuarterEndController extends Controller
         // earn a ticket. The candidate didn't take the exam; the teacher's
         // VOLUME tally still credits them elsewhere, but draw eligibility
         // is per-exam-actually-taken.
-        $allEntries = ExamEntry::with(['instrument:id,name', 'order:id,requested_start_date,applicant_name', 'student:id,first_name,last_name'])
-            ->whereResultPossible()
+        // Everything the centre was PAID for this quarter — CANCELLED is a
+        // refund, so it is the only thing excluded outright.
+        $paidEntries = ExamEntry::with(['instrument:id,name', 'order:id,requested_start_date,applicant_name', 'student:id,first_name,last_name'])
+            ->where(function ($q) {
+                $q->whereNull('notes')->orWhere('notes', '!=', ExamEntry::NOTE_CANCELLED);
+            })
             ->get()
             ->filter(function ($entry) use ($startDate, $endDate) {
                 $date = $entry->exam_date ?? $entry->order?->requested_start_date;
                 return $date && $date->between($startDate, $endDate);
             });
+
+        // The STUDENT draw needs an exam that was actually sat — a no-show or
+        // a withdrawal can't win a prize for a performance that never
+        // happened. The TEACHER draw uses $paidEntries instead: the entry was
+        // made and the commission earned either way.
+        $allEntries = $paidEntries->reject(
+            fn ($e) => in_array($e->notes, ExamEntry::NOTES_NO_RESULT, true)
+        );
 
         if ($validated['type'] === 'student') {
             // Every entry = one ticket, pick one at random
@@ -740,9 +756,12 @@ class QuarterEndController extends Controller
         // an empty teacher_name and were then discarded by the "credit name is
         // not blank" filter below — so a teacher could be listed as holding
         // tickets and yet have none in the pool that actually gets drawn.
+        // Built from $paidEntries, not $allEntries — the teacher pool below is
+        // the paid set, so a no-show or withdrawal credited only by submitter
+        // would otherwise be missing a name and get filtered out.
         $submitterNameById = ExamContact::whereIn(
             'id',
-            $allEntries->pluck('submitter_contact_id')->filter()->unique()->values()
+            $paidEntries->pluck('submitter_contact_id')->filter()->unique()->values()
         )->pluck('name', 'id')->all();
 
         $creditName = fn ($e) => $this->creditNameFor($e, $schoolNameByContactId, $submitterNameById);
@@ -780,7 +799,7 @@ class QuarterEndController extends Controller
             ->map(fn ($n) => strtolower(trim($n)))
             ->toArray();
 
-        $applicantEntries = $allEntries
+        $applicantEntries = $paidEntries
             ->filter(fn ($e) => $creditName($e) !== null && trim((string) $creditName($e)) !== '')
             ->filter(fn ($e) => ! in_array($e->teacher_contact_id, $excludedContactIds, true))
             ->filter(fn ($e) => ! in_array(strtolower(trim((string) $creditName($e))), $excludedNamesLower, true))
