@@ -29,20 +29,33 @@ beforeEach(function (): void {
  * It needs a real xref table and startxref offset — smalot/pdfparser walks
  * those, and a PDF without them parses to an empty string, which the
  * controller correctly reports as "not a permit".
+ *
+ * ⚠️ The line order below is the REAL permit's, not a tidy one. Trinity
+ * positions the fields absolutely, so both candidate labels are written
+ * before either value — "Candidate Name:", "Candidate Id: ", then the name,
+ * then the number. Verified against all three July 2026 permits: this
+ * generator's smalot extraction matches Trinity's character for character.
+ * The earlier version emitted "Candidate Name: Sam Dobie" on one line, which
+ * never happens in production, and that is why this suite stayed green while
+ * every real permit was rejected.
  */
 function permitPdf(string $name, string $candidateNumber, string $code, string $exam = 'Rock and Pop Guitar Grade 4'): UploadedFile
 {
     $lines = [
         'Re-entry Permit',
-        'Date of issue: 14/07/2026',
-        "Candidate Name: {$name}",
-        "Candidate Id: {$candidateNumber}",
-        'Subject: Rock and Pop',
-        "Exam: {$exam}",
-        'Valid Until: 14/07/2027',
-        'Status: Valid',
+        'Date of issue:  14/07/2026',
+        'Candidate Name:',
+        'Candidate Id: ',
+        $name,
+        $candidateNumber,
+        'Subject:                Rock and Pop',
+        "Exam:                   {$exam}",
+        'Valid Until:            14/07/2027',
+        'Status:                   Valid',
+        'This candidate is permitted to re-enter for the examination until the "Valid Until" date shown above.',
         "Code: {$code}",
         'Credit Discount: 100%',
+        'Issued by Central Operations',
     ];
 
     $stream = '';
