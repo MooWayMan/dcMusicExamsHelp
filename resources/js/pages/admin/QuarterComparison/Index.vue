@@ -20,6 +20,10 @@ interface Quarter {
     total_candidates: number
     total_fees: number
     total_commission: number
+    // Entries in this quarter with no fee recorded. Commission now comes from
+    // orders.commission_amount where present, so these no longer suppress the
+    // figure — but they still mean the quarter's entry data is incomplete.
+    unpriced_entries: number
     teacher_count: number
     exam_types: {
         cj_dg: number
@@ -250,9 +254,21 @@ const methodOptions = [
                                 <div class="w-full max-w-[64px] rounded-t-md bg-brand-success transition-all duration-500" :style="{ height: pct(q.total_commission, commissionMax) }"></div>
                                 <p class="mt-2 text-xs font-bold text-brand-success sm:text-sm">{{ moneyShort(q.total_commission) }}</p>
                                 <p class="text-[10px] text-brand-text-soft sm:text-xs">{{ q.short_label }}</p>
+                                <p
+                                    v-if="q.unpriced_entries"
+                                    :title="`${q.unpriced_entries} of this quarter's entries have no fee recorded. Commission is taken from the order where available, so the total above still stands — but the per-entry data is incomplete, usually a part-finished enrolment-list import.`"
+                                    class="mt-0.5 text-[10px] text-brand-text-soft underline decoration-dotted underline-offset-2 sm:text-xs"
+                                >
+                                    {{ q.unpriced_entries }} unpriced
+                                </p>
                             </div>
                         </div>
                     </div>
+                    <p v-if="quarters.some((q) => q.unpriced_entries)" class="mt-3 text-xs text-brand-text-soft">
+                        &ldquo;Unpriced&rdquo; means an entry carries no fee of its own. Commission is read from the
+                        order where it has one, so those quarters are not understated &mdash; but the missing fees
+                        usually point at an enrolment list that only part-imported.
+                    </p>
                 </div>
 
                 <!-- Exam-types chart (grouped bars) -->
