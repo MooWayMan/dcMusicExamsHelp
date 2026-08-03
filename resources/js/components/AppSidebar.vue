@@ -23,6 +23,7 @@ import {
     Receipt,
     Tags,
     ClipboardCheck,
+    TicketCheck,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
@@ -114,6 +115,11 @@ const adminExamsNavItems: NavItem[] = [
         title: 'Reconciliation',
         href: '/admin/reconciliation',
         icon: Receipt,
+    },
+    {
+        title: 'Re-entry Permits',
+        href: '/admin/re-entry-permits',
+        icon: TicketCheck,
     },
     {
         title: 'Exam Entries',
