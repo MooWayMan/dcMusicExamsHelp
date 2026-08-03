@@ -56,45 +56,114 @@ class ReEntryPermitParser
         return $this->parseText($this->extractText($path));
     }
 
-    /** Split out so tests can exercise the parsing without a real PDF. */
+    /**
+     * Split out so tests can exercise the parsing without a real PDF.
+     *
+     * ⚠️ The permit is laid out by ABSOLUTE POSITION, not reading order, and
+     * that changes everything. Trinity writes the labels and the values as
+     * separate text operators, and for the candidate it emits BOTH labels
+     * before EITHER value:
+     *
+     *     (Candidate Name:)Tj
+     *     (Candidate Id: )Tj
+     *     (Sam Dobie)Tj
+     *     (1-17563392237)Tj
+     *
+     * pdftotext -layout rebuilds that by coordinates and looks tidy. smalot,
+     * which is what we actually run, reads stream order — so "Candidate Id:"
+     * is followed by "Sam Dobie", and every label-adjacent regex returns the
+     * wrong thing or nothing. That is why all three real permits came back as
+     * "not a permit" on 3 Aug 2026 while the unit tests passed.
+     *
+     * So: pair a RUN of bare labels with the RUN of values that follows it,
+     * which handles both that case and the ordinary "Label: value" lines.
+     */
     public function parseText(string $text): array
     {
-        // Normalise the whitespace the extractor leaves between label and
-        // value — it varies with the PDF's internal spacing.
-        $flat = preg_replace('/[ \t]+/', ' ', str_replace(["\r\n", "\r"], "\n", $text));
+        $lines = preg_split('/\R+/', str_replace(["\r\n", "\r"], "\n", (string) $text)) ?: [];
+        $lines = array_values(array_filter(
+            array_map(fn ($l) => trim(preg_replace('/[ \t]+/', ' ', (string) $l)), $lines),
+            fn ($l) => $l !== ''
+        ));
 
-        $grab = function (string $label) use ($flat): ?string {
-            // Value runs to end of line; permits put one field per line.
-            if (preg_match('/'.preg_quote($label, '/').'\s*:?\s*(.+)/i', $flat, $m)) {
-                return trim($m[1]) !== '' ? trim($m[1]) : null;
+        $isBareLabel = fn (string $l) => (bool) preg_match('/^(.{2,40}?):\s*$/', $l);
+
+        $fields = [];
+        $i = 0;
+        $count = count($lines);
+
+        while ($i < $count) {
+            $line = $lines[$i];
+
+            // "Label: value" on one line — Date of issue, Code, Credit Discount.
+            if (preg_match('/^(.{2,40}?):\s*(\S.*)$/', $line, $m)) {
+                $fields[mb_strtolower(trim($m[1]))] = trim($m[2]);
+                $i++;
+                continue;
             }
 
-            return null;
-        };
+            // A run of bare labels, then the run of values belonging to them.
+            if ($isBareLabel($line)) {
+                $labels = [];
+                while ($i < $count && preg_match('/^(.{2,40}?):\s*$/', $lines[$i], $m)) {
+                    $labels[] = mb_strtolower(trim($m[1]));
+                    $i++;
+                }
 
-        // "Code" is deliberately matched last and anchored, because the
-        // candidate id and the voucher code share the 1-XXXXXXXX shape.
+                $values = [];
+                while ($i < $count
+                    && count($values) < count($labels)
+                    && ! $isBareLabel($lines[$i])
+                    && ! preg_match('/^(.{2,40}?):\s*\S/', $lines[$i])) {
+                    $values[] = $lines[$i];
+                    $i++;
+                }
+
+                foreach ($labels as $k => $label) {
+                    if (isset($values[$k])) {
+                        $fields[$label] = $values[$k];
+                    }
+                }
+                continue;
+            }
+
+            $i++;
+        }
+
+        $flat = implode("\n", $lines);
+
+        // The code is reliably inline ("Code: 1-18154879067").
         $code = null;
-        if (preg_match('/\bCode\s*:\s*(1-\d{6,})\b/i', $flat, $m)) {
+        if (preg_match('/\b(1-\d{6,})\b/', (string) ($fields['code'] ?? ''), $m)) {
+            $code = $m[1];
+        } elseif (preg_match('/\bCode\s*:\s*(1-\d{6,})\b/i', $flat, $m)) {
             $code = $m[1];
         }
 
         $candidateNumber = null;
-        if (preg_match('/Candidate\s+Id\s*:?\s*(1-\d{6,})\b/i', $flat, $m)) {
+        if (preg_match('/\b(1-\d{6,})\b/', (string) ($fields['candidate id'] ?? ''), $m)) {
             $candidateNumber = $m[1];
+        } else {
+            // Safety net: the candidate id is the other 1-XXXXXXXX in the file.
+            foreach (array_unique(preg_match_all('/\b(1-\d{6,})\b/', $flat, $all) ? $all[1] : []) as $found) {
+                if ($found !== $code) {
+                    $candidateNumber = $found;
+                    break;
+                }
+            }
         }
 
         return [
             'is_permit' => stripos($flat, 'Re-entry Permit') !== false,
-            'candidate_name' => $grab('Candidate Name'),
+            'candidate_name' => $fields['candidate name'] ?? null,
             'candidate_number' => $candidateNumber,
-            'subject' => $grab('Subject'),
-            'exam' => $grab('Exam'),
+            'subject' => $fields['subject'] ?? null,
+            'exam' => $fields['exam'] ?? null,
             'code' => $code,
-            'status' => $grab('Status'),
-            'issued_at' => $this->date($grab('Date of issue')),
-            'valid_until' => $this->date($grab('Valid Until')),
-            'credit_discount' => $grab('Credit Discount'),
+            'status' => $fields['status'] ?? null,
+            'issued_at' => $this->date($fields['date of issue'] ?? null),
+            'valid_until' => $this->date($fields['valid until'] ?? null),
+            'credit_discount' => $fields['credit discount'] ?? null,
         ];
     }
 
