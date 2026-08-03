@@ -19,6 +19,28 @@ use Inertia\Response;
 
 class OrderController extends Controller
 {
+    /**
+     * Orders holding FEWER entries than Trinity says they have candidates.
+     *
+     * This began as doesntHave('examEntries') — orders holding nothing at all.
+     * That misses a PARTIAL import, which is the more dangerous shape: the
+     * July 2026 face-to-face session imported 53 of 59 candidates across four
+     * orders, so every one of them passed a zero-entries check while six
+     * children existed in no system at all — no dashboard, no Pending Results,
+     * no draw ticket, no certificate — and Trinity had already paid commission
+     * on all 59.
+     *
+     * GREATEST(..., 1) keeps an order with a blank or zero `candidates` in the
+     * net: holding no entries is always incomplete, whatever the CSV claims.
+     */
+    private function applyIncompleteFilter($query)
+    {
+        return $query->whereRaw(
+            '(SELECT COUNT(*) FROM exam_entries WHERE exam_entries.order_id = orders.id)'
+            .' < GREATEST(COALESCE(orders.candidates, 0), 1)'
+        );
+    }
+
     public function index(Request $request): Response
     {
         $query = Order::with(['createdByContact:id,name', 'school:id,name'])
@@ -65,7 +87,7 @@ class OrderController extends Controller
         // (James Worthington, order 1-18204862774, Q3 2026.)
         $entries = $request->input('entries');
         if ($entries === 'missing') {
-            $query->doesntHave('examEntries');
+            $this->applyIncompleteFilter($query);
         }
 
         // Time period filter — use the exam date (requested_start_date), not
@@ -138,7 +160,7 @@ class OrderController extends Controller
         if ($status) $summaryQuery->where('order_status', $status);
         if ($paid === 'paid') $summaryQuery->paid();
         if ($paid === 'unpaid') $summaryQuery->unpaid();
-        if ($entries === 'missing') $summaryQuery->doesntHave('examEntries');
+        if ($entries === 'missing') $this->applyIncompleteFilter($summaryQuery);
         $this->applyPeriod($summaryQuery, $period);
 
         // Clone so we don't mutate the main summary with extra wheres
@@ -154,7 +176,7 @@ class OrderController extends Controller
             // How many orders in the CURRENT view still need their enrolment
             // list running. Ignores the entries filter itself so the badge
             // keeps showing a count while you're looking at the filtered list.
-            'needs_entries' => (clone $summaryQuery)->doesntHave('examEntries')->count(),
+            'needs_entries' => $this->applyIncompleteFilter(clone $summaryQuery)->count(),
         ];
 
         return Inertia::render('admin/Orders/Index', [
