@@ -326,6 +326,23 @@ export const searchEntries: SearchEntry[] = [
     section: 'FAQ',
     keywords: ['face to face', 'in person', 'liverpool', 'wirral', 'venue', 'practical exam'],
   },
+  {
+    id: 'faq-17',
+    title: 'My child was ill and missed their exam — what happens?',
+    snippet: 'Trinity can issue a re-entry permit to sit the same exam again. Tell us as soon as you can — a medical certificate covering the exam date has to reach Trinity within 30 days.',
+    url: '/faq#faq-17',
+    section: 'FAQ',
+    // Deliberately wide: a worried parent types any of these, and until now
+    // every one of them returned "No matches found".
+    keywords: [
+      'ill', 'illness', 'unwell', 'sick', 'poorly', 'missed exam', 'missed the exam',
+      'not well', 'cannot attend', 'could not attend', 'did not attend', 'absent',
+      'absence', 're-entry', 're entry', 'reentry', 'permit', 'voucher',
+      'medical certificate', 'doctors note', 'doctor note', 'sick note',
+      'cancel', 'cancelled', 'cancellation', 'postpone', 'reschedule', 'refund',
+      'emergency', 'exceptional circumstances',
+    ],
+  },
 ]
 
 const STOP_WORDS = new Set([

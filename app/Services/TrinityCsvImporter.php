@@ -466,7 +466,10 @@ class TrinityCsvImporter
     private static function instrumentFromExamination(string $examination): string
     {
         $s = trim($examination);
-        $s = (string) preg_replace('/\s*(?:Technical\s+)?Grade\s+\d+.*$/i', '', $s);
+        // "Grade 4", "Technical Grade 6", and Trinity's Initial grade, which
+        // it writes as "Grade IN" — that one is why Skyla Quinn and Victoria
+        // Tone imported with no instrument on 3 Aug 2026.
+        $s = (string) preg_replace('/\s*(?:Technical\s+)?Grade\s+(?:\d+|IN|Initial)\b.*$/i', '', $s);
         $s = (string) preg_replace('/\s*\bInitial\b.*$/i', '', $s);
         $s = (string) preg_replace('/^(Rock and Pop|Classical and Jazz|Classical & Jazz)\s+/i', '', $s);
 

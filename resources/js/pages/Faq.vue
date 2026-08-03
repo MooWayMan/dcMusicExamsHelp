@@ -105,6 +105,11 @@ const faqs = [
     answer:
       'Every Trinity exam comes with a free digital certificate that you can download and share online. A printed paper certificate is £5 (UK delivery), ordered directly from Trinity at <a href="https://mycertificates.trinitycollege.com" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand-accent underline hover:opacity-70">mycertificates.trinitycollege.com</a> using the “Paper certificates” option. <strong>Only the parent can order it</strong> — it uses the parent’s own email address (the one used on the entry the applicant made), because that is where Trinity sends the certificate. Teachers and centres cannot order one on a candidate’s behalf, so the parent has to do it themselves. The same page can also order a replacement if a certificate is ever lost or damaged.',
   },
+  {
+    question: 'My child was ill and missed their exam — what happens?',
+    answer:
+      'Let me know as soon as you can. Trinity can issue a <strong>re-entry permit</strong>, which lets your child sit the same exam at the same level again. I will need a medical certificate covering the date of the exam, and the application has to reach Trinity <strong>within 30 days of the exam date</strong>. Send it to me rather than to Trinity — I deal with them on your behalf. The permit is valid for 12 months from the date it is issued, and a re-entry costs 50% of the entry fee current at that time. If a candidate simply wants to postpone rather than having been ill, the original fee cannot be refunded — the permit route applies to illness and other genuine exceptional circumstances.',
+  },
 ]
 
 useAccordionHashOpen()
