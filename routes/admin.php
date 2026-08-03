@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\PendingResultsController;
 use App\Http\Controllers\Admin\QuarterComparisonController;
 use App\Http\Controllers\Admin\QuarterEndController;
 use App\Http\Controllers\Admin\QuickRepliesController;
+use App\Http\Controllers\Admin\ReEntryPermitController;
 use App\Http\Controllers\Admin\ReconciliationController;
 use App\Http\Controllers\Admin\ResultsScanController;
 use App\Http\Controllers\Admin\RoadmapController;
@@ -120,6 +121,10 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
         Route::post('imports/commit-enrolment-list', [ImportController::class, 'commitEnrolmentList'])->name('imports.commit-enrolment-list');
 
         // Reconciliation — drop a Trinity remittance PDF → mark orders commission-paid
+        Route::get('re-entry-permits', [ReEntryPermitController::class, 'index'])->name('re-entry-permits.index');
+        Route::post('re-entry-permits/preview', [ReEntryPermitController::class, 'preview'])->name('re-entry-permits.preview');
+        Route::post('re-entry-permits/commit', [ReEntryPermitController::class, 'commit'])->name('re-entry-permits.commit');
+
         Route::get('reconciliation', [ReconciliationController::class, 'index'])->name('reconciliation.index');
         Route::post('reconciliation/preview', [ReconciliationController::class, 'preview'])->name('reconciliation.preview');
         Route::post('reconciliation/commit', [ReconciliationController::class, 'commit'])->name('reconciliation.commit');

@@ -418,11 +418,80 @@ class TrinityCsvImporter
     // Section 2 — Per-candidate triple
     // ──────────────────────────────────────────────────────────────────
 
+    /**
+     * Trinity ships TWO shapes of enrolment export and only one carries the
+     * Submitter columns.
+     *
+     *   • "Generate Summary of Entries" (digital): Examination, Subject, …,
+     *     Submitter Last/First Name, Submitter Email Address, Applicant Id, …
+     *
+     *   • The face-to-face export: Line #, Candidate Birth Date, Voucher,
+     *     School, Role …, with NO Submitter columns at all — the booker is in
+     *     Applicant Last/First Name and a plain "Email Address".
+     *
+     * Requiring the Submitter columns rejected every F2F export outright:
+     * "CSV missing required columns: Submitter Last Name, Submitter First
+     * Name, Submitter Email Address". That is why the July 2026 session went
+     * in results-first, leaving 53 entries with no fee and six candidates who
+     * never sat missing entirely.
+     *
+     * So only the genuinely universal columns are required, and the submitter
+     * falls back to the applicant when the columns are absent — which is
+     * correct for that export, where the applicant IS the booker.
+     */
+    /**
+     * The person who submitted the booking, from either enrolment export.
+     *
+     * The F2F export has no Submitter columns, so the Applicant is the booker
+     * — and its email column is called plain "Email Address".
+     *
+     * @param  array<string,mixed>  $data
+     * @return array{first: string, last: string, name: string, email: string}
+     */
+    /**
+     * Pull the instrument out of an Examination string when the export gives
+     * no Subject column of its own: "Rock and Pop Guitar Grade 4" -> "Guitar".
+     *
+     * Strips the trailing grade first, then a leading subject area, leaving
+     * the instrument in the middle. Anything it can't reduce comes back as-is
+     * and simply fails to map, which lands the raw name in the entry's notes
+     * exactly as an unknown Subject would.
+     */
+    /** Test seam for the private helper below. */
+    public static function instrumentFromExaminationForTest(string $examination): string
+    {
+        return self::instrumentFromExamination($examination);
+    }
+
+    private static function instrumentFromExamination(string $examination): string
+    {
+        $s = trim($examination);
+        $s = (string) preg_replace('/\s*(?:Technical\s+)?Grade\s+\d+.*$/i', '', $s);
+        $s = (string) preg_replace('/\s*\bInitial\b.*$/i', '', $s);
+        $s = (string) preg_replace('/^(Rock and Pop|Classical and Jazz|Classical & Jazz)\s+/i', '', $s);
+
+        return trim($s);
+    }
+
+    private function submitterFrom(array $data): array
+    {
+        $get = fn (string $key) => trim((string) ($data[$key] ?? ''));
+
+        $first = $get('Submitter First Name') ?: $get('Applicant First Name');
+        $last = $get('Submitter Last Name') ?: $get('Applicant Last Name');
+        $email = $get('Submitter Email Address') ?: $get('Email Address');
+
+        return [
+            'first' => $first,
+            'last' => $last,
+            'name' => trim($first.' '.$last),
+            'email' => $email,
+        ];
+    }
+
     private const ENROLMENT_HEADERS = [
-        'Examination', 'Subject', 'Candidate Number', 'Candidate Name',
-        'Enrolment Date', 'Price', 'Submitter Last Name', 'Submitter First Name',
-        'Submitter Email Address', 'Applicant Id', 'Applicant Last Name',
-        'Applicant First Name',
+        'Examination', 'Candidate Number', 'Candidate Name',
+        'Price', 'Applicant Last Name', 'Applicant First Name',
     ];
 
     private const SUMMARY_HEADERS = [
@@ -461,8 +530,9 @@ class TrinityCsvImporter
 
             $applicantFirst = trim((string) ($data['Applicant First Name'] ?? ''));
             $applicantLast = trim((string) ($data['Applicant Last Name'] ?? ''));
-            $submitterFirst = trim((string) ($data['Submitter First Name'] ?? ''));
-            $submitterLast = trim((string) ($data['Submitter Last Name'] ?? ''));
+            $submitter = $this->submitterFrom($data);
+            $submitterFirst = $submitter['first'];
+            $submitterLast = $submitter['last'];
 
             $shaped = [
                 'examination' => trim((string) ($data['Examination'] ?? '')),
@@ -474,7 +544,7 @@ class TrinityCsvImporter
                 'submitter_first' => $submitterFirst,
                 'submitter_last' => $submitterLast,
                 'submitter_name' => trim($submitterFirst . ' ' . $submitterLast),
-                'submitter_email' => trim((string) ($data['Submitter Email Address'] ?? '')),
+                'submitter_email' => $submitter['email'],
                 'applicant_id' => trim((string) ($data['Applicant Id'] ?? '')),
                 'applicant_first' => $applicantFirst,
                 'applicant_last' => $applicantLast,
@@ -602,8 +672,7 @@ class TrinityCsvImporter
                 continue; // Centre Commission row
             }
 
-            $submitterFirst = trim((string) ($data['Submitter First Name'] ?? ''));
-            $submitterLast = trim((string) ($data['Submitter Last Name'] ?? ''));
+            $submitter = $this->submitterFrom($data);
             $applicantFirst = trim((string) ($data['Applicant First Name'] ?? ''));
             $applicantLast = trim((string) ($data['Applicant Last Name'] ?? ''));
 
@@ -613,8 +682,8 @@ class TrinityCsvImporter
                 'candidate_number' => $candNumber,
                 'candidate_name' => trim((string) ($data['Candidate Name'] ?? '')),
                 'price' => self::parsePrice((string) ($data['Price'] ?? '')),
-                'submitter_name' => trim($submitterFirst . ' ' . $submitterLast),
-                'submitter_email' => trim((string) ($data['Submitter Email Address'] ?? '')),
+                'submitter_name' => $submitter['name'],
+                'submitter_email' => $submitter['email'],
                 'applicant_name' => trim($applicantFirst . ' ' . $applicantLast),
             ];
         }
@@ -631,8 +700,16 @@ class TrinityCsvImporter
      */
     private function shapeEnrolmentCandidate(array $c): array
     {
+        // The F2F enrolment export leaves Subject blank and carries the
+        // instrument only inside Examination ("Rock and Pop Guitar Grade 4"),
+        // so fall back to pulling it out of there.
+        $subject = trim((string) $c['subject']);
+        if ($subject === '') {
+            $subject = self::instrumentFromExamination((string) $c['examination']);
+        }
+
         $instrumentMap = array_change_key_case(self::instrumentMap(), CASE_LOWER);
-        $mappedName = $instrumentMap[strtolower(trim($c['subject']))] ?? null;
+        $mappedName = $instrumentMap[strtolower($subject)] ?? null;
         $instrument = $mappedName ? Instrument::where('name', $mappedName)->first() : null;
 
         return [
@@ -642,7 +719,7 @@ class TrinityCsvImporter
             'delivery_method' => self::parseDeliveryMethod($c['examination']),
             'subject_area' => self::subjectAreaFromExamination($c['examination']),
             'instrument' => $instrument ? ['id' => $instrument->id, 'name' => $instrument->name] : null,
-            'instrument_raw' => $c['subject'],
+            'instrument_raw' => $subject !== '' ? $subject : $c['subject'],
             'fee' => abs($c['price']),
         ];
     }
