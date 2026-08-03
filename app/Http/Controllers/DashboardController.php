@@ -314,11 +314,37 @@ class DashboardController extends Controller
      * CSV of the signed-in teacher's candidates for the chosen range.
      * Streamed straight back — nothing is written to disk, so this can't be
      * affected by the container's storage being ephemeral.
+     *
+     * ⚠️ Takes NO contact parameter, deliberately. Who the export belongs to is
+     * derived from the authenticated user and nothing else, so there is no id
+     * in the URL for someone to change to a colleague's. The admin-only
+     * variants below are the single exception, and they sit behind the admin
+     * middleware in routes/admin.php.
      */
     public function exportCsv(Request $request): StreamedResponse
     {
         [$contact, $entries, $from, $to] = $this->exportData($request);
 
+        return $this->csvResponse($entries, $from, $to);
+    }
+
+    /**
+     * Admin-only: the same CSV for a named contact, used by the preview
+     * dashboard so its buttons export the teacher being previewed rather than
+     * the admin doing the previewing.
+     */
+    public function exportCsvForContact(Request $request, ExamContact $contact): StreamedResponse
+    {
+        [$from, $to] = $this->dateRange($request);
+
+        return $this->csvResponse($this->contactEntries($contact, $from, $to)->get(), $from, $to);
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int,ExamEntry>  $entries
+     */
+    private function csvResponse($entries, Carbon $from, Carbon $to): StreamedResponse
+    {
         $filename = 'musicexams-results-' . $from->format('Y-m-d') . '-to-' . $to->format('Y-m-d') . '.csv';
 
         return response()->streamDownload(function () use ($entries) {
@@ -350,13 +376,37 @@ class DashboardController extends Controller
 
     /**
      * PDF of the same data, for teachers who'd rather print or forward it.
+     * Same scoping rule as exportCsv() — derived from the authenticated user.
      */
     public function exportPdf(Request $request)
     {
         [$contact, $entries, $from, $to] = $this->exportData($request);
 
+        return $this->pdfResponse($contact?->name ?? $request->user()->name, $entries, $from, $to);
+    }
+
+    /**
+     * Admin-only PDF for a named contact — the preview dashboard's button.
+     */
+    public function exportPdfForContact(Request $request, ExamContact $contact)
+    {
+        [$from, $to] = $this->dateRange($request);
+
+        return $this->pdfResponse(
+            $contact->name,
+            $this->contactEntries($contact, $from, $to)->get(),
+            $from,
+            $to
+        );
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int,ExamEntry>  $entries
+     */
+    private function pdfResponse(string $name, $entries, Carbon $from, Carbon $to)
+    {
         $pdf = Pdf::loadView('exports.teacher-results', [
-            'contactName' => $contact?->name ?? $request->user()->name,
+            'contactName' => $name,
             'entries' => $entries,
             'from' => $from,
             'to' => $to,

@@ -45,6 +45,16 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
         // avoid the Admin\DashboardController import above.
         Route::get('contacts/{contact}/preview-dashboard', [\App\Http\Controllers\DashboardController::class, 'previewForContact'])
             ->name('contacts.preview-dashboard');
+
+        // The preview's own download buttons. These are the ONLY export routes
+        // that name a contact — the teacher-facing ones at /dashboard/export/*
+        // derive the owner from the signed-in user and take no id at all. They
+        // live inside this group so the admin middleware is what gates them.
+        Route::get('contacts/{contact}/export/csv', [\App\Http\Controllers\DashboardController::class, 'exportCsvForContact'])
+            ->name('contacts.export.csv');
+        Route::get('contacts/{contact}/export/pdf', [\App\Http\Controllers\DashboardController::class, 'exportPdfForContact'])
+            ->name('contacts.export.pdf');
+
         Route::get('contacts/{contact}', [ContactController::class, 'show'])->name('contacts.show');
 
         // Users — registered accounts (auth side, not the wider exam_contacts list)
