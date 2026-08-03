@@ -42,7 +42,8 @@ class ContactController extends Controller
                 // deletion. The chips show the union of these + derived.
                 'instruments:id,name,family',
             ])
-            ->withCount(['examEntries', 'students', 'orders']);
+            ->withCount('students')
+            ->withCreditedCounts();
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -106,6 +107,10 @@ class ContactController extends Controller
                 'students_count' => $contact->students_count,
                 'orders_count' => $contact->orders_count,
                 'has_duplicate' => isset($duplicateIds[$contact->id]),
+                // Who it thinks the duplicate is. A bare "possible duplicate"
+                // chip with no counterpart can't be acted on or dismissed —
+                // you have to open the contact to find out what it meant.
+                'duplicate_of' => $duplicateIds[$contact->id] ?? null,
             ];
         });
 

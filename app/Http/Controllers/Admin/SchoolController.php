@@ -115,7 +115,12 @@ class SchoolController extends Controller
     public function show(School $school): Response
     {
         $school->load([
-            'contacts' => fn ($q) => $q->withCount(['examEntries', 'orders']),
+            // Counts deliberately NOT loaded here. This page renders its
+            // `teachers` table from a raw exam_entries join and uses
+            // `contacts` only to pick a primary contact by type, so the
+            // withCount(['examEntries', 'orders']) that used to sit here was
+            // two dead subqueries per contact feeding nothing in the payload.
+            'contacts',
             'orders' => fn ($q) => $q->with(['createdByContact:id,name'])->latest(),
             'instruments:id,name,family',
         ]);

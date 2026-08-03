@@ -24,27 +24,31 @@ use Illuminate\Support\Facades\DB;
 class ContactMergeService
 {
     /**
-     * Contacts that look like duplicates of $contact, by fuzzy name match,
-     * excluding pairs already dismissed as "not the same".
+     * Contacts that look like duplicates of $contact, excluding pairs already
+     * dismissed as "not the same".
      *
      * @return Collection<int, array{contact: ExamContact, score: int}>
      */
     public function possibleDuplicatesFor(ExamContact $contact, int $threshold = 80): Collection
     {
-        $target = $this->normalizeName($contact->name);
-
-        if ($target === '') {
+        if ($this->normalizeName($contact->name) === '') {
             return collect();
         }
 
-        return ExamContact::where('id', '!=', $contact->id)
-            ->get()
-            ->map(function (ExamContact $other) use ($target) {
-                $percent = 0.0;
-                similar_text($target, $this->normalizeName($other->name), $percent);
+        // The subject's own emails and schools are part of the comparison, so
+        // make sure they're loaded — signals() reads them off the relation and
+        // would otherwise quietly see only the primary address.
+        $contact->loadMissing(['emails', 'schools:id']);
 
-                return ['contact' => $other, 'score' => (int) round($percent)];
-            })
+        $me = $this->signals($contact);
+
+        return ExamContact::with(['emails', 'schools:id'])
+            ->where('id', '!=', $contact->id)
+            ->get()
+            ->map(fn (ExamContact $other) => [
+                'contact' => $other,
+                'score' => $this->scoreFor($me, $this->signals($other)),
+            ])
             ->filter(fn ($row) => $row['score'] >= $threshold
                 && ! ContactMergeDismissal::isDismissed($contact->id, $row['contact']->id))
             ->sortByDesc('score')
@@ -52,17 +56,20 @@ class ContactMergeService
     }
 
     /**
-     * IDs of every contact that has at least one non-dismissed fuzzy duplicate,
-     * computed in a single pass (for the contacts-list "possible duplicate"
-     * flag). O(n²) name comparisons, fine for the low-hundreds of contacts.
+     * Every contact that has at least one non-dismissed likely duplicate,
+     * with its BEST match, so the contacts list can name who it means rather
+     * than showing a bare "possible duplicate" chip with no counterpart.
      *
-     * @return array<int, true> keyed by contact id for O(1) lookup
+     * O(n²) comparisons, fine for the low-hundreds of contacts.
+     *
+     * @return array<int, array{id: int, name: string, score: int}> keyed by contact id
      */
     public function duplicateContactIds(int $threshold = 80): array
     {
-        $rows = ExamContact::get(['id', 'name'])
-            ->map(fn ($c) => ['id' => $c->id, 'norm' => $this->normalizeName($c->name)])
-            ->filter(fn ($c) => $c['norm'] !== '')
+        $rows = ExamContact::with(['emails', 'schools:id'])
+            ->get()
+            ->map(fn (ExamContact $c) => $this->signals($c))
+            ->filter(fn (array $sig) => $sig['norm'] !== '')
             ->values()
             ->all();
 
@@ -71,25 +78,195 @@ class ContactMergeService
             $dismissed[$d->low_contact_id.'-'.$d->high_contact_id] = true;
         }
 
-        $flagged = [];
+        $best = [];
         $count = count($rows);
         for ($i = 0; $i < $count; $i++) {
             for ($j = $i + 1; $j < $count; $j++) {
-                $percent = 0.0;
-                similar_text($rows[$i]['norm'], $rows[$j]['norm'], $percent);
-                if ($percent < $threshold) {
+                $score = $this->scoreFor($rows[$i], $rows[$j]);
+                if ($score < $threshold) {
                     continue;
                 }
                 [$low, $high] = ContactMergeDismissal::pair($rows[$i]['id'], $rows[$j]['id']);
                 if (isset($dismissed[$low.'-'.$high])) {
                     continue;
                 }
-                $flagged[$rows[$i]['id']] = true;
-                $flagged[$rows[$j]['id']] = true;
+                foreach ([[$i, $j], [$j, $i]] as [$self, $other]) {
+                    if (($best[$rows[$self]['id']]['score'] ?? -1) < $score) {
+                        $best[$rows[$self]['id']] = [
+                            'id' => $rows[$other]['id'],
+                            'name' => $rows[$other]['name'],
+                            'score' => $score,
+                        ];
+                    }
+                }
             }
         }
 
-        return $flagged;
+        return $best;
+    }
+
+    /**
+     * Everything the matcher looks at for one contact, gathered once so the
+     * O(n²) pass isn't re-deriving it on every comparison.
+     *
+     * @return array{id: int, name: string, norm: string, first: string, last: string,
+     *               emails: array<int, string>, phone: string, schools: array<int, int>}
+     */
+    private function signals(ExamContact $c): array
+    {
+        $norm = $this->normalizeName($c->name);
+        $parts = preg_split('/\s+/', $norm, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        $emails = collect([$c->email])
+            ->merge($c->relationLoaded('emails') ? $c->emails->pluck('email') : [])
+            ->filter()
+            ->map(fn ($e) => mb_strtolower(trim((string) $e)))
+            ->unique()
+            ->values()
+            ->all();
+
+        // Digits only, so 07584 904 971 and +447584904971 compare equal.
+        $phone = preg_replace('/\D+/', '', (string) $c->phone) ?? '';
+        if (strlen($phone) > 10) {
+            $phone = substr($phone, -10);
+        }
+
+        return [
+            'id' => $c->id,
+            'name' => (string) $c->name,
+            'norm' => $norm,
+            'first' => $parts[0] ?? '',
+            'last' => count($parts) > 1 ? $parts[count($parts) - 1] : '',
+            'emails' => $emails,
+            'phone' => strlen($phone) >= 7 ? $phone : '',
+            'schools' => $c->relationLoaded('schools') ? $c->schools->pluck('id')->all() : [],
+        ];
+    }
+
+    /**
+     * How likely two contacts are the same person, 0–100.
+     *
+     * The old rule ran similar_text() over the WHOLE name at 80%. That treats
+     * a name as a bag of characters, so a shared forename dominates whenever
+     * the surnames are short: "claire freeman" vs "claire reed" scores exactly
+     * 80.00 — seven characters of "claire " plus the accident that "ree"
+     * appears in both "f-ree-man" and "ree-d" — and got flagged. Meanwhile
+     * "emily bates" vs "emma bates" scored 76 and did not.
+     *
+     * So: score the forename and surname SEPARATELY, then let other evidence
+     * corroborate. Two rules Paul set (3 Aug 2026) shape this:
+     *
+     *   - People marry and change surname, so a surname match can NOT be a
+     *     hard gate — a renamed teacher must still be findable.
+     *   - People use several email addresses, so a shared email is strong
+     *     evidence FOR a match, but NOT sharing one is no evidence against.
+     *     Corroboration therefore only ever ADDS.
+     *
+     * A changed surname with no shared email, phone or school is genuinely
+     * indistinguishable from two different people, and no threshold can fix
+     * that. Those stay a manual catch — the "merge another contact into this
+     * one" picker on the contact page lists EVERY contact with a free-text
+     * search, independent of this score, so nothing is out of reach.
+     *
+     * @param  array{norm: string, first: string, last: string, emails: array<int, string>, phone: string, schools: array<int, int>}  $a
+     * @param  array{norm: string, first: string, last: string, emails: array<int, string>, phone: string, schools: array<int, int>}  $b
+     */
+    private function scoreFor(array $a, array $b): int
+    {
+        if ($a['norm'] === '' || $b['norm'] === '') {
+            return 0;
+        }
+
+        // Identical names need no corroboration.
+        if ($a['norm'] === $b['norm']) {
+            return 100;
+        }
+
+        $firstStrong = $this->partScore($a['first'], $b['first']) >= 85;
+        $lastStrong = $a['last'] !== '' && $b['last'] !== ''
+            && $this->partScore($a['last'], $b['last']) >= 85;
+
+        if ($firstStrong && $lastStrong) {
+            $name = 95;          // "cheryl ritchie" / "cheryl richie"
+        } elseif ($lastStrong) {
+            $name = 60;          // same surname, different forename — siblings and
+                                 // spouses look exactly like this, so ask for more
+        } elseif ($firstStrong) {
+            $name = 40;          // the "claire freeman" / "claire reed" case
+        } else {
+            return 0;
+        }
+
+        // Same surname, different forename: far more often a FAMILY than a
+        // duplicate. Families share a landline and a school, so those two
+        // signals prove much less here than they do elsewhere. A shared email
+        // address stays strong either way.
+        $familyLike = $lastStrong && ! $firstStrong;
+
+        return min(100, $name + $this->corroboration($a, $b, $familyLike));
+    }
+
+    /**
+     * Evidence beyond the name. Only ever adds — see scoreFor().
+     *
+     * A shared email is what rescues a marriage rename: same person, new
+     * surname, but one address still in common across contact_emails.
+     *
+     * $familyLike flips the weighting for the same-surname/different-forename
+     * case. A household shares a phone number and a school, so neither says
+     * much about two people called Smith — but two records called Claire that
+     * share a mobile are almost certainly one person who changed surname.
+     *
+     * @param  array{emails: array<int, string>, phone: string, schools: array<int, int>}  $a
+     * @param  array{emails: array<int, string>, phone: string, schools: array<int, int>}  $b
+     */
+    private function corroboration(array $a, array $b, bool $familyLike = false): int
+    {
+        $score = 0;
+
+        // Strong regardless: two people rarely share a mailbox, and this is
+        // the signal that survives a change of name.
+        if (array_intersect($a['emails'], $b['emails'])) {
+            $score += 45;
+        }
+
+        // 45, matching email, NOT 40: at 40 the rename case lands on exactly
+        // 80 — the same knife-edge that made the old whole-name rule flag
+        // Claire Freeman and Claire Reed. Leave headroom.
+        if ($a['phone'] !== '' && $a['phone'] === $b['phone']) {
+            $score += $familyLike ? 10 : 45;
+        }
+
+        if (array_intersect($a['schools'], $b['schools'])) {
+            $score += $familyLike ? 5 : 15;
+        }
+
+        return $score;
+    }
+
+    /**
+     * Similarity of one name PART, 0–100. An initial counts as a match for
+     * any forename starting with the same letter, so "p sheridan" and
+     * "paul sheridan" aren't split apart by the abbreviation.
+     */
+    private function partScore(string $a, string $b): float
+    {
+        if ($a === '' || $b === '') {
+            return 0.0;
+        }
+
+        if ($a === $b) {
+            return 100.0;
+        }
+
+        if ((strlen($a) === 1 || strlen($b) === 1) && $a[0] === $b[0]) {
+            return 90.0;
+        }
+
+        $percent = 0.0;
+        similar_text($a, $b, $percent);
+
+        return $percent;
     }
 
     /**
