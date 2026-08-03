@@ -81,5 +81,10 @@ test('the fee is read so entries do not land unpriced', function () {
 test('the instrument is recovered from Examination when Subject is empty', function () {
     expect(TrinityCsvImporter::instrumentFromExaminationForTest('Rock and Pop Guitar Grade 4'))->toBe('Guitar')
         ->and(TrinityCsvImporter::instrumentFromExaminationForTest('Rock and Pop Vocals Grade 1'))->toBe('Vocals')
-        ->and(TrinityCsvImporter::instrumentFromExaminationForTest('Rock and Pop Drums Grade 4'))->toBe('Drums');
+        ->and(TrinityCsvImporter::instrumentFromExaminationForTest('Rock and Pop Drums Grade 4'))->toBe('Drums')
+        // Trinity writes its Initial grade as "Grade IN", not "Initial".
+        ->and(TrinityCsvImporter::instrumentFromExaminationForTest('Piano Grade IN'))->toBe('Piano')
+        ->and(TrinityCsvImporter::instrumentFromExaminationForTest('Violin Grade IN'))->toBe('Violin')
+        ->and(TrinityCsvImporter::instrumentFromExaminationForTest('Classical Guitar Grade 5'))->toBe('Classical Guitar')
+        ->and(TrinityCsvImporter::instrumentFromExaminationForTest('Electronic Keyboard Grade 3'))->toBe('Electronic Keyboard');
 });
