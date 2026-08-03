@@ -26,6 +26,7 @@ interface ExamEntryRow {
     fee: string | null
     raw_teacher_name: string | null
     notes: string | null
+    re_entry_code: string | null
     show_full_name: boolean
     booking_role: string | null
 }
@@ -141,6 +142,7 @@ const form = useForm({
     result: '',
     score: null as number | null,
     notes: '',
+    re_entry_code: '',
     show_full_name: false,
     booking_role: '' as string,
 })
@@ -162,6 +164,7 @@ function openEdit(entry: ExamEntryRow) {
     form.result = entry.result ?? ''
     form.score = entry.score
     form.notes = entry.notes ?? ''
+    form.re_entry_code = entry.re_entry_code ?? ''
     form.show_full_name = entry.show_full_name
     form.booking_role = entry.booking_role ?? ''
 }
@@ -491,8 +494,35 @@ function submitEdit() {
                         <label class="mb-1 block text-sm font-medium text-brand-text">Notes</label>
                         <textarea v-model="form.notes" rows="2"
                             class="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"></textarea>
-                        <p class="mt-1 text-xs text-brand-text-soft">CANCELLED or NO_SHOW here drive result-based filters — use them exactly.</p>
+                        <p class="mt-1 text-xs text-brand-text-soft">
+                            CANCELLED, NO_SHOW or RE_ENTRY here drive result-based filters &mdash; use them exactly.
+                        </p>
+                        <div class="mt-2 flex flex-wrap gap-1.5">
+                            <button
+                                v-for="s in ['CANCELLED', 'NO_SHOW', 'RE_ENTRY']"
+                                :key="s"
+                                type="button"
+                                class="cursor-pointer rounded-full px-3 py-1 text-xs font-medium transition-colors"
+                                :class="form.notes === s
+                                    ? 'bg-brand-accent text-brand-text-inverse'
+                                    : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text'"
+                                @click="form.notes = form.notes === s ? '' : s"
+                            >
+                                {{ s }}
+                            </button>
+                        </div>
                         <p v-if="form.errors.notes" class="mt-1 text-sm text-brand-danger">{{ form.errors.notes }}</p>
+                    </div>
+
+                    <div v-if="form.notes === 'RE_ENTRY'">
+                        <label class="mb-1 block text-sm font-medium text-brand-text">Re-entry permit code</label>
+                        <input v-model="form.re_entry_code" type="text" placeholder="1-18154879067"
+                            class="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent" />
+                        <p class="mt-1 text-xs text-brand-text-soft">
+                            From the Re-entry Permit PDF. The family needs it to re-enter free within twelve months,
+                            and it lives nowhere else.
+                        </p>
+                        <p v-if="form.errors.re_entry_code" class="mt-1 text-sm text-brand-danger">{{ form.errors.re_entry_code }}</p>
                     </div>
 
                     <label class="flex items-center gap-2">

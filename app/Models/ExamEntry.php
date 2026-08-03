@@ -24,15 +24,27 @@ class ExamEntry extends Model
     // Recognition or in the prize draw) but DOES count for teacher
     // volume tallies — the booking was made, the entry happened from
     // the teacher's perspective.
+    //
+    // RE_ENTRY — booked and paid, didn't sit, and Trinity issued a Re-entry
+    // Permit: a voucher at 100% credit, valid twelve months. Behaves like
+    // NO_SHOW (the fee and commission were real, the booking counts toward
+    // teacher volume) but is recorded separately because a free exam is owed,
+    // and re-entering on the voucher earns NO second commission.
+    //
+    // It exists mainly so booked-versus-sat adds up. Trinity's orders CSV
+    // counts everyone BOOKED; exam_entries holds everyone who SAT. Leaving the
+    // withdrawn candidates absent made four July 2026 orders permanently short
+    // — 53 rows against 59 candidates — which reads as a broken import forever.
     public const NOTE_CANCELLED = 'CANCELLED';
     public const NOTE_NO_SHOW = 'NO_SHOW';
+    public const NOTE_RE_ENTRY = 'RE_ENTRY';
 
     /**
      * Notes values meaning no exam outcome will exist. Used by every
      * result-based filter (Recognition page, top scorers, prize draw
      * eligibility, pending-results queue, certificate generation).
      */
-    public const NOTES_NO_RESULT = [self::NOTE_CANCELLED, self::NOTE_NO_SHOW];
+    public const NOTES_NO_RESULT = [self::NOTE_CANCELLED, self::NOTE_NO_SHOW, self::NOTE_RE_ENTRY];
 
     /**
      * Scope: limit to entries that are still result-possible — exclude
@@ -74,6 +86,7 @@ class ExamEntry extends Model
         'exam_date',
         'date_of_birth',
         'notes',
+        're_entry_code',
         'teacher_contact_id',
         'teacher_credit_status',
         'source',
