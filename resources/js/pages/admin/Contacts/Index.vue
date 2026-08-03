@@ -26,6 +26,7 @@ interface Contact {
     students_count: number
     orders_count: number
     has_duplicate: boolean
+    duplicate_of: { id: number; name: string; score: number } | null
 }
 
 interface PaginatedData {
@@ -312,10 +313,15 @@ const filterPills: { value: string | null; label: string }[] = [
                             <td class="px-4 py-3">
                                 <span class="font-medium text-brand-accent hover:underline">{{ contact.name }}</span>
                                 <span v-if="contact.has_duplicate"
-                                    title="Looks like a duplicate — open to review and merge"
+                                    :title="contact.duplicate_of
+                                        ? `Looks like the same person as ${contact.duplicate_of.name} (${contact.duplicate_of.score}% match) — open to review, merge or dismiss`
+                                        : 'Looks like a duplicate — open to review and merge'"
                                     class="ml-2 inline-flex items-center gap-1 rounded-full bg-brand-purple-soft px-2 py-0.5 text-xs font-medium text-brand-purple">
                                     <AlertTriangle class="h-3 w-3" />
-                                    possible duplicate
+                                    <template v-if="contact.duplicate_of">
+                                        possible duplicate of {{ contact.duplicate_of.name }}
+                                    </template>
+                                    <template v-else>possible duplicate</template>
                                 </span>
                             </td>
                             <td class="px-4 py-3"><span class="text-sm text-brand-text-soft">{{ contact.email ?? '—' }}</span></td>

@@ -113,19 +113,29 @@ class UserController extends Controller
         // use on first login — if no contact matches, the user would land
         // on the "we couldn't find any exams under this email" fallback,
         // which is exactly what we want to surface here for debugging.
+        // Both foreign keys are selected deliberately: Eloquent matches an
+        // eager-loaded hasMany on its foreign key, so omitting it from a
+        // constrained select returns an empty relation.
+        $entrySelect = fn ($q) => $q
+            ->select(
+                'id', 'order_id', 'candidate_name', 'grade',
+                'subject_area', 'delivery_method', 'result',
+                'score', 'exam_date', 'teacher_contact_id', 'submitter_contact_id'
+            )
+            ->latest('exam_date');
+
         $contact = $user->email
             ? ExamContact::query()
                 ->with([
                     'students:id,first_name,last_name,teacher_contact_id',
-                    'examEntries' => fn ($q) => $q
-                        ->select(
-                            'id', 'order_id', 'candidate_name', 'grade',
-                            'subject_area', 'delivery_method', 'result',
-                            'score', 'exam_date'
-                        )
-                        ->latest('exam_date'),
+                    // Entries they TAUGHT plus entries they merely SUBMITTED.
+                    // A parent is never the teacher, so on its own the first
+                    // relation renders their page blank.
+                    'examEntries' => $entrySelect,
+                    'submittedExamEntries' => $entrySelect,
                 ])
-                ->withCount(['examEntries', 'students'])
+                ->withCount('students')
+                ->withCreditedCounts()
                 ->where('email', $user->email)
                 ->orWhereHas('emails', fn ($eq) => $eq->where('email', $user->email))
                 ->first()
@@ -162,7 +172,12 @@ class UserController extends Controller
                     // view of what minors look like in the system.
                     'name' => trim($s->first_name . ' ' . substr($s->last_name ?? '', 0, 1) . '.'),
                 ]),
-                'exam_entries' => $contact->examEntries->map(fn ($e) => [
+                'exam_entries' => $contact->examEntries
+                    ->concat($contact->submittedExamEntries)
+                    ->unique('id')
+                    ->sortByDesc('exam_date')
+                    ->values()
+                    ->map(fn ($e) => [
                     'id' => $e->id,
                     'candidate_name' => $e->candidate_name,
                     'grade' => $e->grade,

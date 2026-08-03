@@ -122,6 +122,36 @@ class ExamContact extends Model
     }
 
     /**
+     * Entry and order counts that credit a contact however they are linked.
+     *
+     * `examEntries()` only sees `teacher_contact_id`, and `orders()` only sees
+     * the `order_contacts` pivot. A parent or self-booker who merely SUBMITTED
+     * a booking is neither, so the contacts list showed them as "0 entries,
+     * 0 orders" while their own detail page listed those very rows. Same
+     * blind spot, same credit rule, as App\Support\EntryCredit.
+     *
+     * Counting ROWS rather than summing two relations is deliberate: a teacher
+     * who books their own candidate is both teacher and submitter on the same
+     * row, and adding two counts would report them twice.
+     */
+    public function scopeWithCreditedCounts(Builder $query): Builder
+    {
+        return $query->addSelect([
+            'exam_entries_count' => ExamEntry::query()
+                ->selectRaw('count(*)')
+                ->where(fn ($q) => $q
+                    ->whereColumn('exam_entries.teacher_contact_id', 'exam_contacts.id')
+                    ->orWhereColumn('exam_entries.submitter_contact_id', 'exam_contacts.id')),
+            'orders_count' => Order::query()
+                ->selectRaw('count(distinct orders.id)')
+                ->leftJoin('order_contacts', 'order_contacts.order_id', '=', 'orders.id')
+                ->where(fn ($q) => $q
+                    ->whereColumn('order_contacts.exam_contact_id', 'exam_contacts.id')
+                    ->orWhereColumn('orders.created_by_contact_id', 'exam_contacts.id')),
+        ]);
+    }
+
+    /**
      * All orders linked to this contact with contextual roles.
      */
     public function orders(): BelongsToMany
