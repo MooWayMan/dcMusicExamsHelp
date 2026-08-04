@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Seeds the Syllabus Finder from the curated dataset built in Cowork:
- *   database/seeders/data/books.json     — canonical Books table (Amazon links, tag musicexamshelp-21)
+ *   database/seeders/data/books.json     — canonical Books table (Amazon links, tag musicexams-21)
  *   database/seeders/data/syllabus.json  — 910 pieces (Trinity Piano C&J + Rock & Pop), with
  *                                          audio search links, within-Trinity cross-references,
  *                                          and per-piece exact buy links resolved to the book above.
