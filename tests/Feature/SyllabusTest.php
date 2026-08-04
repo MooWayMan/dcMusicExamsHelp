@@ -17,7 +17,7 @@ function makeBook(array $overrides = []): SyllabusBook
         'title' => 'Piano Exam Pieces Plus Exercises from 2023: Grade 3',
         'edition' => 'Standard',
         'asin' => '1804903140',
-        'buy_url' => 'https://www.amazon.co.uk/dp/1804903140?tag=musicexamshelp-21',
+        'buy_url' => 'https://www.amazon.co.uk/dp/1804903140?tag=musicexams-21',
     ], $overrides));
 }
 
@@ -99,7 +99,7 @@ test('a piece belongs to its book and shares the buy link', function () {
 
     expect($piece->book->is($book))->toBeTrue()
         ->and($piece->buy_url)->toBe($book->buy_url)
-        ->and($piece->buy_url)->toContain('musicexamshelp-21');
+        ->and($piece->buy_url)->toContain('musicexams-21');
 });
 
 test('search scope matches title, composer and book (case-insensitive)', function () {
@@ -130,7 +130,7 @@ test('drum kit seed files are well-formed and self-consistent', function () {
 
     // Seven books, each with an ASIN and the affiliate tag.
     expect($books)->toHaveCount(7);
-    expect(collect($books)->every(fn ($b) => strlen((string) $b['asin']) === 10 && str_contains($b['url'], 'musicexamshelp-21')))->toBeTrue();
+    expect(collect($books)->every(fn ($b) => strlen((string) $b['asin']) === 10 && str_contains($b['url'], 'musicexams-21')))->toBeTrue();
 
     // Every piece's buy ASIN maps to a known book (so the seeder can link it).
     $bookAsins = collect($books)->pluck('asin')->all();
@@ -153,7 +153,7 @@ test('seeding loads the C&J Drum Kit and links pieces to books', function () {
         ->and($piece->grade)->toBe('Grade 1')
         ->and($piece->variant)->toBe('Group A')
         ->and($piece->syllabus_book_id)->not->toBeNull()
-        ->and($piece->buy_url)->toContain('musicexamshelp-21');
+        ->and($piece->buy_url)->toContain('musicexams-21');
 })->group('seed');
 
 test('the additive Drum Kit seeder adds 118 pieces without touching other pieces', function () {
@@ -198,7 +198,7 @@ test('EK + Organ seed files are well-formed and self-consistent', function () {
     expect($books)->toHaveCount(9);
     expect(collect($books)->every(fn ($b) => $b['instrument'] === 'Electronic Keyboard'
         && strlen((string) $b['asin']) === 10
-        && str_contains($b['url'], 'musicexamshelp-21')))->toBeTrue();
+        && str_contains($b['url'], 'musicexams-21')))->toBeTrue();
 
     // Every "Core repertoire" piece is EK, buys "exact", and its ASIN maps to a book.
     $bookAsins = collect($books)->pluck('asin')->all();
@@ -230,7 +230,7 @@ test('seeding loads EK + Organ and links only core pieces to books', function ()
         ->and($ek->grade)->toBe('Initial')
         ->and($ek->variant)->toBe('Core repertoire')
         ->and($ek->syllabus_book_id)->not->toBeNull()
-        ->and($ek->buy_url)->toContain('musicexamshelp-21');
+        ->and($ek->buy_url)->toContain('musicexams-21');
 
     // An Organ piece has its book title + publisher code but no linked book / buy link.
     $organ = SyllabusPiece::where('instrument', 'Organ')->where('title', 'Trumpet Piece')->first();
