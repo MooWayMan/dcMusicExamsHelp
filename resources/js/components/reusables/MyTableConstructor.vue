@@ -35,6 +35,28 @@ interface Props {
    * week becomes a list of every cell in it.
    */
   stackOnMobile?: boolean
+  /**
+   * How many columns a table needs before stacking is worth it. Default 5.
+   *
+   * 14 Aug 2026 — Paul photographed the public Exam fees page on his phone:
+   * two columns, Grade and Fee, already fitting perfectly. Stacking it would
+   * have turned nine tidy rows into eighteen lines, each carrying a label the
+   * reader can already see in the header. Stacking is a fix for tables that
+   * DON'T fit; applied to one that does, it is just damage.
+   *
+   * Counted per table at render time rather than set per caller, so a narrow
+   * table nobody has thought about still does the right thing.
+   *
+   * ⚠️ FIVE, not four, and the fourth column is why. Paul photographed the
+   * public UCAS points table on a phone: four columns whose values are "8",
+   * "10", "12" — it fits anywhere, and stacking would have turned three rows
+   * into twelve lines. Column count is a PROXY for width and this is where
+   * the proxy fails. Every table confirmed broken on a phone has been 5+
+   * (contacts 5, tidyup 7, transactions 7, the exam admin lists 5-9); every
+   * one confirmed fine has been 4 or fewer. If a wide-ish 4-column table ever
+   * does overflow, it scrolls — which is exactly what it did before.
+   */
+  stackFromColumns?: number
   clickableRows?: boolean
   clickableCells?: boolean
   fullWidth?: boolean
@@ -55,6 +77,7 @@ const props = withDefaults(defineProps<Props>(), {
   hoverable: true,
   responsive: true,
   stackOnMobile: true,
+  stackFromColumns: 5,
   clickableRows: false,
   clickableCells: false,
   fullWidth: true,
@@ -167,6 +190,13 @@ function toggleSortFor(column: Column) {
 }
 
 /*
+ * Does THIS table stack? Wide enough to need it, and not opted out.
+ */
+const stacks = computed(
+  () => props.stackOnMobile && props.columns.length >= props.stackFromColumns
+)
+
+/*
  * Stacking hides <thead>, and the sort buttons live in the header cells — so
  * without this a phone silently loses every sort the desktop has. Same state,
  * same emit, just a control that survives the stack.
@@ -175,7 +205,7 @@ const sortableColumns = computed(() =>
   props.sortable ? props.columns.filter((c) => c.sortable !== false && !!c.key) : []
 )
 
-const showMobileSort = computed(() => props.stackOnMobile && sortableColumns.value.length > 0)
+const showMobileSort = computed(() => stacks.value && sortableColumns.value.length > 0)
 
 function setMobileSortKey(event: Event) {
   const key = (event.target as HTMLSelectElement).value
@@ -339,7 +369,7 @@ function sortIndicator(column: Column) {
 
     <div :class="[
       'max-w-full',
-      props.stackOnMobile ? 'stacked-table' : '',
+      stacks ? 'stacked-table' : '',
       props.responsive ? 'overflow-x-auto' : '',
       'rounded-lg',
       props.bordered ? 'border-4 border-brand-primary' : '',
