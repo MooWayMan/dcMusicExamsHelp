@@ -328,7 +328,7 @@ function formatRunSummary(run: { summary: Record<string, unknown> | null }): str
             </div>
 
             <div v-if="props.recent.length === 0" class="text-sm text-brand-text-soft">No remittances reconciled yet.</div>
-            <table v-else class="w-full text-sm">
+            <table v-else class="stacked-table w-full text-sm">
                 <thead class="text-left text-xs uppercase tracking-wider text-brand-text-soft">
                     <tr>
                         <th class="px-3 py-2">When</th>
@@ -339,10 +339,10 @@ function formatRunSummary(run: { summary: Record<string, unknown> | null }): str
                 </thead>
                 <tbody>
                     <tr v-for="run in props.recent" :key="run.id" class="border-t border-brand-border">
-                        <td class="px-3 py-2 font-mono text-brand-text">{{ run.created_at }}</td>
-                        <td class="px-3 py-2 text-brand-text-soft">{{ run.filename || '—' }}</td>
-                        <td class="px-3 py-2 text-brand-text">{{ formatRunSummary(run) }}</td>
-                        <td class="px-3 py-2 text-brand-text-soft">{{ run.user_name || '—' }}</td>
+                        <td :data-label="'When'" class="px-3 py-2 font-mono text-brand-text">{{ run.created_at }}</td>
+                        <td :data-label="'File'" class="px-3 py-2 text-brand-text-soft">{{ run.filename || '—' }}</td>
+                        <td :data-label="'Result'" class="px-3 py-2 text-brand-text">{{ formatRunSummary(run) }}</td>
+                        <td :data-label="'By'" class="px-3 py-2 text-brand-text-soft">{{ run.user_name || '—' }}</td>
                     </tr>
                 </tbody>
             </table>

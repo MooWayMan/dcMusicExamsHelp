@@ -25,6 +25,16 @@ interface Props {
   bordered?: boolean
   hoverable?: boolean
   responsive?: boolean
+  /**
+   * Under `sm:`, turn each row into a stacked label/value card instead of
+   * leaving it to scroll sideways. Ported from MusicRegisterOnline,
+   * 14 Aug 2026 — horizontal scroll is the FALLBACK, not the norm.
+   *
+   * ⚠️ OFF for grids: anything whose columns are a DIMENSION rather than a
+   * set of fields (a day x time matrix) wants :stackOnMobile="false", or one
+   * week becomes a list of every cell in it.
+   */
+  stackOnMobile?: boolean
   clickableRows?: boolean
   clickableCells?: boolean
   fullWidth?: boolean
@@ -44,6 +54,7 @@ const props = withDefaults(defineProps<Props>(), {
   bordered: true,
   hoverable: true,
   responsive: true,
+  stackOnMobile: true,
   clickableRows: false,
   clickableCells: false,
   fullWidth: true,
@@ -151,6 +162,35 @@ function toggleSortFor(column: Column) {
     state.sortKey = column.key
     state.sortDir = 'asc'
   }
+
+  emit('sort', { key: state.sortKey, dir: state.sortDir })
+}
+
+/*
+ * Stacking hides <thead>, and the sort buttons live in the header cells — so
+ * without this a phone silently loses every sort the desktop has. Same state,
+ * same emit, just a control that survives the stack.
+ */
+const sortableColumns = computed(() =>
+  props.sortable ? props.columns.filter((c) => c.sortable !== false && !!c.key) : []
+)
+
+const showMobileSort = computed(() => props.stackOnMobile && sortableColumns.value.length > 0)
+
+function setMobileSortKey(event: Event) {
+  const key = (event.target as HTMLSelectElement).value
+
+  state.sortKey = key === '' ? null : key
+
+  emit('sort', { key: state.sortKey, dir: state.sortDir })
+}
+
+function toggleMobileSortDir() {
+  if (!state.sortKey) {
+    return
+  }
+
+  state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc'
 
   emit('sort', { key: state.sortKey, dir: state.sortDir })
 }
@@ -269,8 +309,37 @@ function sortIndicator(column: Column) {
       content on iPhone instead of letting it overflow. Canonical Tailwind
       responsive-table pattern: ONE wrapper, one table inside.
     -->
+    <!-- Phones only. Hidden from `sm:` up, where the header cells are back
+         and they are the better control (you can see all of them at once). -->
+    <div
+      v-if="showMobileSort && (data?.length ?? 0) > 0"
+      class="mb-2 flex items-center gap-2 sm:hidden"
+    >
+      <span class="shrink-0 text-xs font-semibold text-brand-text-soft">Sort by</span>
+      <select
+        :value="state.sortKey ?? ''"
+        class="min-w-0 flex-1 rounded-md border border-brand-border bg-brand-surface px-2 py-1.5 text-sm"
+        aria-label="Sort by"
+        @change="setMobileSortKey"
+      >
+        <option value="">The order it came in</option>
+        <option v-for="column in sortableColumns" :key="column.key" :value="column.key">
+          {{ column.title }}
+        </option>
+      </select>
+      <button
+        type="button"
+        class="shrink-0 rounded-md border-2 border-brand-primary bg-brand-surface px-2 py-1.5 text-sm font-semibold text-brand-text disabled:opacity-50"
+        :disabled="!state.sortKey"
+        @click="toggleMobileSortDir"
+      >
+        {{ state.sortDir === 'asc' ? '↑ A–Z' : '↓ Z–A' }}
+      </button>
+    </div>
+
     <div :class="[
       'max-w-full',
+      props.stackOnMobile ? 'stacked-table' : '',
       props.responsive ? 'overflow-x-auto' : '',
       'rounded-lg',
       props.bordered ? 'border-4 border-brand-primary' : '',
@@ -320,6 +389,7 @@ function sortIndicator(column: Column) {
                 <td
                   v-for="column in columns"
                   :key="column.key"
+                  :data-label="column.title || ''"
                   :class="[
                     cellClasses,
                     column.align === 'right'
