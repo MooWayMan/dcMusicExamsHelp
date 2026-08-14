@@ -1264,7 +1264,7 @@ function formatRunSummary(run: { type: string; summary: Record<string, unknown> 
             </div>
 
             <div v-if="recent.length === 0" class="text-sm text-brand-text-soft">No imports recorded yet.</div>
-            <table v-else class="w-full text-sm">
+            <table v-else class="stacked-table w-full text-sm">
                 <thead class="text-left text-xs uppercase tracking-wider text-brand-text-soft">
                     <tr>
                         <th class="px-3 py-2">When</th>
@@ -1276,13 +1276,13 @@ function formatRunSummary(run: { type: string; summary: Record<string, unknown> 
                 </thead>
                 <tbody>
                     <tr v-for="run in recent" :key="run.id" class="border-t border-brand-border">
-                        <td class="px-3 py-2 font-mono text-brand-text">{{ run.created_at }}</td>
-                        <td class="px-3 py-2 text-brand-text">{{ run.type }}</td>
-                        <td class="px-3 py-2 text-brand-text-soft">{{ run.filename || '—' }}</td>
-                        <td class="px-3 py-2 text-brand-text">
+                        <td :data-label="'When'" class="px-3 py-2 font-mono text-brand-text">{{ run.created_at }}</td>
+                        <td :data-label="'Type'" class="px-3 py-2 text-brand-text">{{ run.type }}</td>
+                        <td :data-label="'File'" class="px-3 py-2 text-brand-text-soft">{{ run.filename || '—' }}</td>
+                        <td :data-label="'Summary'" class="px-3 py-2 text-brand-text">
                             {{ formatRunSummary(run) }}
                         </td>
-                        <td class="px-3 py-2 text-brand-text-soft">{{ run.user_name || '—' }}</td>
+                        <td :data-label="'By'" class="px-3 py-2 text-brand-text-soft">{{ run.user_name || '—' }}</td>
                     </tr>
                 </tbody>
             </table>

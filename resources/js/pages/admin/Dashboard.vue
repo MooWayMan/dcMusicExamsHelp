@@ -189,7 +189,7 @@ const { animClass } = usePageAnimation()
                     <h2 class="text-xl font-semibold text-brand-text">Recent Orders</h2>
                 </div>
                 <div class="overflow-x-auto">
-                    <table v-if="recentOrders.length" class="w-full text-left">
+                    <table v-if="recentOrders.length" class="stacked-table w-full text-left">
                         <thead>
                             <tr class="border-b border-brand-border bg-brand-primary text-brand-text-inverse">
                                 <th class="px-4 py-3 text-base font-semibold">Order #</th>
@@ -205,18 +205,18 @@ const { animClass } = usePageAnimation()
                                 class="cursor-pointer border-b border-brand-border transition-colors hover:bg-brand-surface-soft"
                                 :class="idx % 2 === 1 ? 'bg-brand-surface-soft/50' : ''"
                                 @click="router.visit(`/admin/orders/${order.id}`)">
-                                <td class="px-4 py-3"><span class="font-medium text-brand-accent hover:underline">{{ order.trinity_order_number }}</span></td>
-                                <td class="px-4 py-3">
+                                <td :data-label="'Order #'" class="px-4 py-3"><span class="font-medium text-brand-accent hover:underline">{{ order.trinity_order_number }}</span></td>
+                                <td :data-label="'Teacher'" class="px-4 py-3">
                                     <Link v-if="order.teacher_contact_id"
                                         :href="`/admin/contacts/${order.teacher_contact_id}`"
                                         class="text-brand-accent hover:underline"
                                         @click.stop>{{ order.teacher_name }}</Link>
                                     <span v-else class="text-brand-text">{{ order.teacher_name }}</span>
                                 </td>
-                                <td class="px-4 py-3"><span class="text-sm text-brand-text-soft">{{ order.delivery_method }}</span></td>
-                                <td class="px-4 py-3"><span class="text-sm text-brand-text-soft">{{ order.candidates }}</span></td>
-                                <td class="px-4 py-3"><span class="font-medium text-brand-text">&pound;{{ order.commission_amount }}</span></td>
-                                <td class="px-4 py-3">
+                                <td :data-label="'Type'" class="px-4 py-3"><span class="text-sm text-brand-text-soft">{{ order.delivery_method }}</span></td>
+                                <td :data-label="'Candidates'" class="px-4 py-3"><span class="text-sm text-brand-text-soft">{{ order.candidates }}</span></td>
+                                <td :data-label="'Commission'" class="px-4 py-3"><span class="font-medium text-brand-text">&pound;{{ order.commission_amount }}</span></td>
+                                <td :data-label="'Status'" class="px-4 py-3">
                                     <span class="rounded-full px-2 py-0.5 text-sm font-medium"
                                         :class="{
                                             'bg-brand-success-soft text-brand-success': order.order_status === 'Completed',
@@ -240,7 +240,7 @@ const { animClass } = usePageAnimation()
                     <h2 class="text-xl font-semibold text-brand-text">Recent Contact Activity</h2>
                 </div>
                 <div class="overflow-x-auto">
-                    <table v-if="recentContacts.length" class="w-full text-left">
+                    <table v-if="recentContacts.length" class="stacked-table w-full text-left">
                         <thead>
                             <tr class="border-b border-brand-border bg-brand-primary text-brand-text-inverse">
                                 <th class="px-4 py-3 text-base font-semibold">Teacher</th>
@@ -255,17 +255,17 @@ const { animClass } = usePageAnimation()
                                 class="cursor-pointer border-b border-brand-border transition-colors hover:bg-brand-surface-soft"
                                 :class="idx % 2 === 1 ? 'bg-brand-surface-soft/50' : ''"
                                 @click="contact.teacher_contact_id && router.visit(`/admin/contacts/${contact.teacher_contact_id}`)">
-                                <td class="px-4 py-3">
+                                <td :data-label="'Teacher'" class="px-4 py-3">
                                     <Link v-if="contact.teacher_contact_id"
                                         :href="`/admin/contacts/${contact.teacher_contact_id}`"
                                         class="font-medium text-brand-accent hover:underline"
                                         @click.stop>{{ contact.teacher_name }}</Link>
                                     <span v-else class="font-medium text-brand-text">{{ contact.teacher_name }}</span>
                                 </td>
-                                <td class="px-4 py-3"><span class="text-sm text-brand-text-soft">{{ contact.contact_type }}</span></td>
-                                <td class="px-4 py-3"><span class="text-sm text-brand-text-soft">{{ contact.direction }}</span></td>
-                                <td class="px-4 py-3"><span class="text-brand-text">{{ contact.subject }}</span></td>
-                                <td class="px-4 py-3"><span class="text-sm text-brand-text-soft">{{ contact.contacted_at }}</span></td>
+                                <td :data-label="'Type'" class="px-4 py-3"><span class="text-sm text-brand-text-soft">{{ contact.contact_type }}</span></td>
+                                <td :data-label="'Direction'" class="px-4 py-3"><span class="text-sm text-brand-text-soft">{{ contact.direction }}</span></td>
+                                <td :data-label="'Subject'" class="px-4 py-3"><span class="text-brand-text">{{ contact.subject }}</span></td>
+                                <td :data-label="'Date'" class="px-4 py-3"><span class="text-sm text-brand-text-soft">{{ contact.contacted_at }}</span></td>
                             </tr>
                         </tbody>
                     </table>

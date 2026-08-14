@@ -459,3 +459,99 @@
     }
 }
 } /* end @layer components */
+
+/* ===============================
+   STACKED TABLES ON PHONES  (14 Aug 2026)
+
+   Add `stacked-table` to a <table> (or any wrapper around one) and under
+   `sm:` each row becomes a card: one label/value pair per cell, the label
+   taken from `data-label` on the <td>. Horizontal scroll stays as the
+   fallback for anything that opts out.
+
+   GLOBAL, not scoped to MyTableConstructor, because the pages that break on
+   a phone are usually the ones using RAW <table>s — a rule living inside the
+   constructor could never reach them. One definition, and a raw table opts
+   in with a class and its data-labels.
+
+   ⚠️ 639px, not 640px: Tailwind's `sm:` starts AT 640px, so this must stop
+   one pixel short or the header comes back on top of stacked rows.
+
+   ⚠️ Not for grids. If the columns ARE a dimension (days of the week),
+   stacking turns one week into a list of every cell in it. Those pass
+   :stack-on-mobile="false" / simply don't add the class.
+
+   Ported from MusicRegisterOnline, 14 Aug 2026.
+================================ */
+@media (max-width: 639px) {
+    .stacked-table table,
+    .stacked-table tbody,
+    .stacked-table tr,
+    .stacked-table td,
+    table.stacked-table,
+    table.stacked-table tbody,
+    table.stacked-table tr,
+    table.stacked-table td {
+        display: block;
+        width: 100%;
+    }
+
+    /* Visually hidden, NOT display:none — screen readers still read the
+       column names out, and aria-sort on the headers stays meaningful. */
+    .stacked-table thead,
+    table.stacked-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
+    }
+
+    .stacked-table tr,
+    table.stacked-table tr {
+        border-bottom: 2px solid var(--brand-border);
+    }
+
+    .stacked-table tr:last-child,
+    table.stacked-table tr:last-child {
+        border-bottom: 0;
+    }
+
+    .stacked-table td,
+    table.stacked-table td {
+        display: grid;
+        grid-template-columns: minmax(5.5rem, 38%) 1fr;
+        align-items: start;
+        gap: 0.75rem;
+        text-align: left !important;
+        white-space: normal !important;
+        border-right: 0 !important;
+    }
+
+    .stacked-table td::before,
+    table.stacked-table td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: var(--brand-text-soft);
+    }
+
+    /* An actions column has no heading, so it takes the full width rather
+       than an empty label column pushing its buttons into the right third. */
+    .stacked-table td[data-label=''],
+    table.stacked-table td[data-label=''] {
+        grid-template-columns: 1fr;
+    }
+
+    .stacked-table td[data-label='']::before,
+    table.stacked-table td[data-label='']::before {
+        content: none;
+    }
+
+    .stacked-table td:last-child,
+    table.stacked-table td:last-child {
+        border-bottom: 0;
+    }
+}
