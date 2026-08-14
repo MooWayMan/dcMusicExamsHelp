@@ -341,30 +341,44 @@ function sortIndicator(column: Column) {
     -->
     <!-- Phones only. Hidden from `sm:` up, where the header cells are back
          and they are the better control (you can see all of them at once). -->
+    <!-- ⚠️ Inset. A BARE table has no card of its own — it is sitting in
+         someone else's, whose padding this control never inherited, so it ran
+         edge to edge while the search box above it sat indented, and the
+         direction button pressed against the card border (14 Aug 2026, Paul:
+         "its still wrong"). -->
     <div
       v-if="showMobileSort && (data?.length ?? 0) > 0"
-      class="mb-2 flex items-center gap-2 sm:hidden"
+      :class="['mb-3 sm:hidden', props.bare ? 'px-3' : 'px-1']"
     >
-      <span class="shrink-0 text-xs font-semibold text-brand-text-soft">Sort by</span>
-      <select
-        :value="state.sortKey ?? ''"
-        class="min-w-0 flex-1 rounded-md border border-brand-border bg-brand-surface px-2 py-1.5 text-sm"
-        aria-label="Sort by"
-        @change="setMobileSortKey"
-      >
-        <option value="">The order it came in</option>
-        <option v-for="column in sortableColumns" :key="column.key" :value="column.key">
-          {{ column.title }}
-        </option>
-      </select>
-      <button
-        type="button"
-        class="shrink-0 rounded-md border-2 border-brand-primary bg-brand-surface px-2 py-1.5 text-sm font-semibold text-brand-text disabled:opacity-50"
-        :disabled="!state.sortKey"
-        @click="toggleMobileSortDir"
-      >
-        {{ state.sortDir === 'asc' ? '↑ A–Z' : '↓ Z–A' }}
-      </button>
+      <!-- Label on its own line (14 Aug 2026, Paul: "its squashed"). Three
+           things on one row left the select pinched in the middle and the
+           direction button hard against the card edge — on the narrowest
+           phones it had nowhere left to go. -->
+      <span class="mb-1 block text-xs font-semibold text-brand-text-soft">Sort by</span>
+
+      <div class="flex items-center gap-2">
+        <select
+          :value="state.sortKey ?? ''"
+          class="min-w-0 flex-1 rounded-md border border-brand-border bg-brand-surface px-2 py-1.5 text-sm focus:border-brand-cta focus:outline-none focus:ring-1 focus:ring-brand-cta"
+          aria-label="Sort by"
+          @change="setMobileSortKey"
+        >
+          <option value="">The order it came in</option>
+          <option v-for="column in sortableColumns" :key="column.key" :value="column.key">
+            {{ column.title }}
+          </option>
+        </select>
+
+        <button
+          type="button"
+          class="shrink-0 rounded-md border-2 border-brand-primary bg-brand-surface px-3 py-1.5 text-sm font-semibold text-brand-text transition-colors hover:bg-brand-surface-soft disabled:opacity-50 dark:border-brand-accent"
+          :disabled="!state.sortKey"
+          :aria-label="state.sortDir === 'asc' ? 'Sorted A to Z, tap for Z to A' : 'Sorted Z to A, tap for A to Z'"
+          @click="toggleMobileSortDir"
+        >
+          {{ state.sortDir === 'asc' ? '↑ A–Z' : '↓ Z–A' }}
+        </button>
+      </div>
     </div>
 
     <div :class="[
