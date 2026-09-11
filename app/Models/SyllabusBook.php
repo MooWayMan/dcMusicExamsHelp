@@ -19,7 +19,6 @@ class SyllabusBook extends Model
         'title',
         'edition',
         'asin',
-        'buy_url',
     ];
 
     public function pieces(): HasMany

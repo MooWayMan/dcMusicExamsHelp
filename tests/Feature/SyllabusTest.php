@@ -17,7 +17,6 @@ function makeBook(array $overrides = []): SyllabusBook
         'title' => 'Piano Exam Pieces Plus Exercises from 2023: Grade 3',
         'edition' => 'Standard',
         'asin' => '1804903140',
-        'buy_url' => 'https://www.amazon.co.uk/dp/1804903140?tag=musicexams-21',
     ], $overrides));
 }
 
@@ -36,7 +35,7 @@ function makePiece(SyllabusBook $book, array $overrides = []): SyllabusPiece
         'syllabus_book_id' => $book->id,
         'technical_focus' => false,
         'buy_kind' => 'exact',
-        'buy_url' => $book->buy_url,
+        'buy_asin' => $book->asin,
         'buy_edition' => 'Standard',
         'audio' => ['youtube_search' => 'https://youtube.com/results?search_query=x'],
         'also_in' => ['Rock & Pop · Guitar · Grade 3'],
@@ -98,7 +97,8 @@ test('a piece belongs to its book and shares the buy link', function () {
     $piece = makePiece($book);
 
     expect($piece->book->is($book))->toBeTrue()
-        ->and($piece->buy_url)->toBe($book->buy_url)
+        ->and($piece->buy_asin)->toBe($book->asin)
+        ->and($piece->buy_url)->toContain('/dp/'.$book->asin)
         ->and($piece->buy_url)->toContain('musicexams-21');
 });
 
@@ -128,16 +128,15 @@ test('drum kit seed files are well-formed and self-consistent', function () {
     $grades = collect($pieces)->pluck('grade')->unique()->values();
     expect($grades)->toContain('Initial', 'Grade 1', 'Grade 5', 'Grade 8');
 
-    // Seven books, each with an ASIN and the affiliate tag.
+    // Seven books, each with a 10-char ASIN and no stored link (the tag lives in config).
     expect($books)->toHaveCount(7);
-    expect(collect($books)->every(fn ($b) => strlen((string) $b['asin']) === 10 && str_contains($b['url'], 'musicexams-21')))->toBeTrue();
+    expect(collect($books)->every(fn ($b) => strlen((string) $b['asin']) === 10 && ! array_key_exists('url', $b)))->toBeTrue();
 
     // Every piece's buy ASIN maps to a known book (so the seeder can link it).
     $bookAsins = collect($books)->pluck('asin')->all();
     collect($pieces)->each(function ($p) use ($bookAsins) {
         expect($p['buy_kind'])->toBe('exact');
-        preg_match('#/dp/([A-Z0-9]{10})#', $p['buy']['amazon'], $m);
-        expect($m[1] ?? null)->toBeIn($bookAsins);
+        expect($p['buy_asin'])->toBeIn($bookAsins);
     });
 });
 
@@ -194,11 +193,11 @@ test('EK + Organ seed files are well-formed and self-consistent', function () {
     expect($organ->pluck('grade')->unique()->values())->toContain('Grade 1', 'Grade 8')
         ->not->toContain('Initial');
 
-    // Nine EK Trinity core books, each with a 10-char ASIN and the affiliate tag.
+    // Nine EK Trinity core books, each with a 10-char ASIN and no stored link.
     expect($books)->toHaveCount(9);
     expect(collect($books)->every(fn ($b) => $b['instrument'] === 'Electronic Keyboard'
         && strlen((string) $b['asin']) === 10
-        && str_contains($b['url'], 'musicexams-21')))->toBeTrue();
+        && ! array_key_exists('url', $b)))->toBeTrue();
 
     // Every "Core repertoire" piece is EK, buys "exact", and its ASIN maps to a book.
     $bookAsins = collect($books)->pluck('asin')->all();
@@ -207,14 +206,13 @@ test('EK + Organ seed files are well-formed and self-consistent', function () {
     $core->each(function ($p) use ($bookAsins) {
         expect($p['instrument'])->toBe('Electronic Keyboard');
         expect($p['buy_kind'])->toBe('exact');
-        preg_match('#/dp/([A-Z0-9]{10})#', $p['buy']['amazon'], $m);
-        expect($m[1] ?? null)->toBeIn($bookAsins);
+        expect($p['buy_asin'])->toBeIn($bookAsins);
     });
 
     // Everything else (EK alternative + all Organ) carries NO Amazon link.
     collect($pieces)->where('variant', '!=', 'Core repertoire')->each(function ($p) {
         expect($p['buy_kind'])->toBe('none');
-        expect($p['buy'])->toBeNull();
+        expect($p['buy_asin'])->toBeNull();
     });
 });
 

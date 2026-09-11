@@ -86,4 +86,16 @@ return [
         'base_url' => env('ANTHROPIC_BASE_URL', 'https://api.anthropic.com'),
     ],
 
+    /*
+    | Amazon Associates — the affiliate tag on every Amazon buy link in the Piece
+    | Finder. This is the ONLY place the tag lives: the database and the seed
+    | files store bare ASINs, and App\Support\AmazonLink builds each link.
+    |
+    | The authoritative value is the Associates welcome email (4 Aug 2026), NOT
+    | the domain name. Changing it = edit here (or set the env var) and deploy.
+    */
+    'amazon' => [
+        'associates_tag' => env('AMAZON_ASSOCIATES_TAG', 'musicexams-21'),
+    ],
+
 ];

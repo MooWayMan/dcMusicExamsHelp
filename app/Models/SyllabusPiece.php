@@ -4,6 +4,7 @@
 
 namespace App\Models;
 
+use App\Support\AmazonLink;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -30,9 +31,9 @@ class SyllabusPiece extends Model
         'voice_range',
         'syllabus_from',
         'buy_kind',
-        'buy_url',
+        'buy_asin',
         'buy_edition',
-        'buy_alt_url',
+        'buy_alt_asin',
         'buy_alt_edition',
         'buy_ebook_url',
         'curated_video_url',
@@ -45,6 +46,22 @@ class SyllabusPiece extends Model
         'audio' => 'array',
         'also_in' => 'array',
     ];
+
+    /**
+     * Amazon link for the book this piece is in, built from the stored ASIN.
+     */
+    public function getBuyUrlAttribute(): ?string
+    {
+        return AmazonLink::forAsin($this->buy_asin);
+    }
+
+    /**
+     * Amazon link for the cheaper alternative edition, built from the stored ASIN.
+     */
+    public function getBuyAltUrlAttribute(): ?string
+    {
+        return AmazonLink::forAsin($this->buy_alt_asin);
+    }
 
     public function book(): BelongsTo
     {
