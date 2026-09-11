@@ -154,12 +154,13 @@ class ThankYouController extends Controller
                 ]);
         }
 
-        // All entries — grouped by band then alphabetical
-        // Waiting sorts after Pass but before Below Pass
-        $bandOrder = ['Distinction' => 1, 'Merit' => 2, 'Pass' => 3, 'Waiting' => 4, 'Below Pass' => 5];
+        // All entries — Distinction, Merit, everyone who sat, then Waiting;
+        // alphabetical within each. Pass and Below Pass share the one public
+        // value "Sat", so a fail sorts among the passes and is never sent.
+        $bandOrder = ['Distinction' => 1, 'Merit' => 2, 'Sat' => 3, 'Waiting' => 4];
 
         $thankYouEntries = $entries->map(function (ExamEntry $e) use ($bandOrder) {
-            $result = $e->score !== null ? $e->result_band : 'Waiting';
+            $result = $e->recognition_result;
             $certificate = $e->score !== null ? $e->certificate_name : 'Bravo Certificate';
 
             return [

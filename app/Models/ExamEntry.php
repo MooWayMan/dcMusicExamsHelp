@@ -176,6 +176,26 @@ class ExamEntry extends Model
         };
     }
 
+    /**
+     * What the public Recognition page may say about this result.
+     *
+     * Distinction and Merit are named. Pass and Below Pass are deliberately
+     * the SAME public value, "Sat", so a candidate who did not pass cannot be
+     * told apart from one who did: not by a label, not by where their name
+     * sorts, and not in the page source. Unscored entries are "Waiting".
+     */
+    public function getRecognitionResultAttribute(): string
+    {
+        if ($this->score === null) {
+            return 'Waiting';
+        }
+
+        return match ($this->result_band) {
+            'Distinction', 'Merit' => $this->result_band,
+            default => 'Sat',
+        };
+    }
+
     // ──────────────────────────────────────────
     // Relationships
     // ──────────────────────────────────────────

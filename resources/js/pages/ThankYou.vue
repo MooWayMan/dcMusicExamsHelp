@@ -27,7 +27,7 @@ interface ThankYouEntry {
   name: string
   instrument: string
   grade: string
-  result: string
+  result: 'Distinction' | 'Merit' | 'Sat' | 'Waiting'
   certificate: string | null
 }
 
