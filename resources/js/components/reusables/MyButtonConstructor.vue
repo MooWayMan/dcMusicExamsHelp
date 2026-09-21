@@ -2,6 +2,7 @@
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
+import { recordButtonPress } from '@/composables/useSiteStats'
 
 interface Props {
   size?: 'small' | 'medium' | 'large'
@@ -90,6 +91,7 @@ const textVariant = computed(() => {
 
 const handleClick = (event: MouseEvent) => {
   if (props.disabled) return
+  recordButtonPress((event.currentTarget as HTMLElement | null)?.innerText ?? '')
   emit('click', event)
   emit('clicked')
 }

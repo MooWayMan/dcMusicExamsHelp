@@ -47,50 +47,8 @@ test('a missing ASIN gives no link rather than a broken one', function () {
         ->and(AmazonLink::forAsin(''))->toBeNull();
 });
 
-/**
- * Every file that could plausibly carry a hand-written Amazon link, with
- * comments removed. Migrations are excluded on purpose: a migration is a
- * frozen snapshot that must not call app code, so the one that converted the
- * links to ASINs has to spell a link out in its down().
- *
- * @return array<string, string> relative path => comment-free contents
- */
-function amazonGuardSources(): array
-{
-    $roots = ['app', 'config', 'routes', 'resources/js', 'resources/views', 'database/seeders', 'database/factories'];
-    $sources = [];
-
-    foreach ($roots as $root) {
-        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(base_path($root), FilesystemIterator::SKIP_DOTS));
-        foreach ($iterator as $file) {
-            $path = $file->getPathname();
-            $relative = ltrim(str_replace(base_path(), '', $path), '/');
-            $ext = $file->getExtension();
-
-            if (! in_array($ext, ['php', 'ts', 'js', 'vue', 'json'], true)) {
-                continue;
-            }
-
-            $code = file_get_contents($path);
-
-            if ($ext === 'php') {
-                $code = collect(token_get_all($code))
-                    ->reject(fn ($t) => is_array($t) && in_array($t[0], [T_COMMENT, T_DOC_COMMENT], true))
-                    ->map(fn ($t) => is_array($t) ? $t[1] : $t)
-                    ->implode('');
-            } elseif ($ext !== 'json') {
-                $code = preg_replace(['#/\*.*?\*/#s', '#<!--.*?-->#s', '#^\s*//.*$#m'], '', $code);
-            }
-
-            $sources[$relative] = $code;
-        }
-    }
-
-    return $sources;
-}
-
 test('no Amazon product link is written out anywhere except AmazonLink', function () {
-    $offenders = collect(amazonGuardSources())
+    $offenders = collect(guardSources())
         ->filter(fn ($code) => str_contains($code, 'amazon.co.uk/dp/'))
         ->keys()
         ->reject(fn ($path) => $path === 'app/Support/AmazonLink.php')
@@ -101,7 +59,7 @@ test('no Amazon product link is written out anywhere except AmazonLink', functio
 });
 
 test('the Associates tag is written down only in config/services.php', function () {
-    $offenders = collect(amazonGuardSources())
+    $offenders = collect(guardSources())
         ->filter(fn ($code) => str_contains($code, 'musicexams-21'))
         ->keys()
         ->reject(fn ($path) => $path === 'config/services.php')

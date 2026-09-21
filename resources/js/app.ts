@@ -9,6 +9,8 @@ import { ZiggyVue } from 'ziggy-js'
 
 import { initializeTheme } from '@/composables/useAppearance'
 import { installScrollMemory } from '@/composables/useScrollMemory'
+import { installSiteStats } from '@/composables/useSiteStats'
+import { isPublicPage } from '@/lib/publicPages'
 import { authConfig } from '@/composables/useAuthConfig'
 
 // Layouts
@@ -53,7 +55,7 @@ createInertiaApp({
         const isAuthed = !!authUser
         const isAdmin = authUser?.role === 'admin'
 
-        if (['Welcome', 'ConstructorsDemo', 'Search', 'Faq', 'ForTeachers', 'TeacherAwards', 'SwitchToCentre120', 'TrinityExamInformation', 'ForParents', 'ForStudents', 'Books', 'Syllabus', 'TopTen', 'ThankYou', 'ExamGuide', 'ExamGuideUcas', 'ExamGuideExpect', 'ExamGuideDigital', 'ExamGuideGrades', 'ExamGuideSyllabuses', 'ExamFees', 'Incentives', 'Contact', 'About', 'PrivacyPolicy', 'CookiePolicy', 'TermsOfUse', 'ComingSoonPage', 'Sitemap'].includes(name)) {
+        if (isPublicPage(name)) {
             // Public marketing pages → clean layout (no admin sidebar)
     page.default.layout = undefined
 
@@ -142,6 +144,9 @@ if (typeof window !== 'undefined') {
 
     // Scroll position memory (back button, breadcrumbs, nav links)
     installScrollMemory()
+
+    // Anonymous page-open counter (no cookies, no visitor data)
+    installSiteStats()
 
     // ===============================
     // Session expiry handler

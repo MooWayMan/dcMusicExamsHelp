@@ -9,6 +9,7 @@ import {
 } from 'lucide-vue-next'
 import PageHeader from '@/components/reusables/PageHeader.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
+import { xsrfToken } from '@/lib/utils'
 
 interface Student {
   name: string
@@ -200,7 +201,7 @@ async function generateTopScorerCerts() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-XSRF-TOKEN': getXsrfToken(),
+        'X-XSRF-TOKEN': xsrfToken(),
         'Accept': 'application/json',
       },
       body: JSON.stringify({ quarter: props.quarter, year: props.year }),
@@ -244,7 +245,7 @@ async function publishTopScorers() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-XSRF-TOKEN': getXsrfToken(),
+        'X-XSRF-TOKEN': xsrfToken(),
         'Accept': 'application/json',
       },
       body: JSON.stringify({ quarter: props.quarter, year: props.year }),
@@ -336,7 +337,7 @@ async function toggleWorkflowStep(awardKey: AwardKey, winnerFullName: string, st
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-XSRF-TOKEN': getXsrfToken(),
+        'X-XSRF-TOKEN': xsrfToken(),
         'Accept': 'application/json',
       },
       body: JSON.stringify({
@@ -520,10 +521,6 @@ function toggleTeacher(name: string) {
   expandedTeacher.value = expandedTeacher.value === name ? null : name
 }
 
-function getXsrfToken(): string {
-  const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/)
-  return match ? decodeURIComponent(match[1]) : ''
-}
 
 async function markDone(name: string) {
   const newState = !completedTeachers.value[name]
@@ -535,7 +532,7 @@ async function markDone(name: string) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-XSRF-TOKEN': getXsrfToken(),
+        'X-XSRF-TOKEN': xsrfToken(),
         'Accept': 'application/json',
       },
       body: JSON.stringify({
@@ -988,7 +985,7 @@ async function runDraw(type: 'student' | 'teacher', mode: 'test' | 'real') {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-XSRF-TOKEN': getXsrfToken(),
+        'X-XSRF-TOKEN': xsrfToken(),
         'Accept': 'application/json',
       },
       body: JSON.stringify({ type, quarter: props.quarter, year: props.year, mode }),

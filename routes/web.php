@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\SiteStatController;
 use App\Http\Controllers\SyllabusController;
 use App\Http\Controllers\TopTenController;
 use App\Http\Controllers\SubscriberController;
@@ -134,6 +135,13 @@ Route::middleware('throttle:5,1')->group(function () {
     Route::post('/lead-magnet/subscribe', [SubscriberController::class, 'leadMagnet'])->name('lead-magnet.subscribe');
     Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 });
+
+// Anonymous page-open / button-press counter (App\Services\SiteStats).
+// Stores daily totals only - no IP, browser, user id or cookie - so it
+// needs no consent. Throttled so one visitor cannot inflate the numbers.
+Route::post('/stats', [SiteStatController::class, 'store'])
+    ->middleware('throttle:120,1')
+    ->name('site-stats.store');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');

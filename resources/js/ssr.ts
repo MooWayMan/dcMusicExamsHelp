@@ -10,6 +10,7 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 import SettingsLayout from '@/layouts/settings/Layout.vue'
 import { authConfig } from '@/composables/useAuthConfig'
+import { isPublicPage } from '@/lib/publicPages'
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel'
 
@@ -25,9 +26,7 @@ createServer((page) =>
                 import.meta.glob<DefineComponent>('./pages/**/*.vue')
             )
 
-            const publicPages = ['Welcome', 'ConstructorsDemo', 'Faq', 'ForTeachers', 'TeacherAwards', 'ForParents', 'ForStudents', 'Books', 'ThankYou', 'ExamGuide', 'ExamGuideUcas', 'ExamGuideExpect', 'ExamGuideDigital', 'ExamGuideGrades', 'ExamGuideSyllabuses', 'ExamFees', 'Incentives', 'Contact', 'About', 'PrivacyPolicy', 'CookiePolicy', 'TermsOfUse', 'ComingSoonPage']
-
-            if (publicPages.includes(name)) {
+            if (isPublicPage(name)) {
                 resolvedPage.default.layout = undefined
             } else if (name.startsWith('auth/')) {
                 const opt = resolvedPage.default.layout

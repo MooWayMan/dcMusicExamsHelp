@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 import {
+    Activity,
     LayoutGrid,
     Users,
     UserCog,
@@ -135,6 +136,11 @@ const adminExamsNavItems: NavItem[] = [
         title: 'Quarter Comparison',
         href: '/admin/quarter-comparison',
         icon: BarChart3,
+    },
+    {
+        title: 'Site Stats',
+        href: '/admin/site-stats',
+        icon: Activity,
     },
     {
         title: 'Certificates',

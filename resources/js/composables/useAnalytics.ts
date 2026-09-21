@@ -17,6 +17,8 @@
 // Meta Pixel ID 2164549404093546 = musicExams.help website dataset
 // (live ad account 26629640546692642, NOT the personal one).
 
+import { recordSiteEvent } from '@/composables/useSiteStats'
+
 type EventParams = Record<string, string | number | boolean>
 
 declare global {
@@ -37,8 +39,14 @@ const META_EVENT_MAP: Record<string, string> = {
 }
 
 export function useAnalytics() {
-  function trackEvent(name: string, params: EventParams = {}) {
+  // `detail` is what the site's own counter (useSiteStats) files the event
+  // under - e.g. which booking system. It goes nowhere else.
+  function trackEvent(name: string, params: EventParams = {}, detail = '') {
     if (typeof window === 'undefined') return
+
+    // The site's own anonymous counter. Unlike GA4 and Meta below, it needs
+    // no consent, so it counts every visitor.
+    recordSiteEvent(name, detail)
 
     // Default GBP currency on monetary events — keeps Google Ads value
     // reporting consistent. Override by passing `currency` in params.

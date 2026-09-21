@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\ResultsScanController;
 use App\Http\Controllers\Admin\RoadmapController;
 use App\Http\Controllers\Admin\SchoolController;
 use App\Http\Controllers\Admin\SessionLogController;
+use App\Http\Controllers\Admin\SiteStatsController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\SubscriberController;
 use App\Http\Controllers\Admin\TaskController;
@@ -95,6 +96,9 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
 
         // Quarter Comparison — side-by-side quarterly performance
         Route::get('quarter-comparison', [QuarterComparisonController::class, 'index'])->name('quarter-comparison.index');
+
+        // Site stats - the app's own anonymous page-open / button-press counts
+        Route::get('site-stats', [SiteStatsController::class, 'index'])->name('site-stats.index');
 
         // Exam Entries — imported raw candidate/result data
         Route::get('exam-entries', [ExamEntryController::class, 'index'])->name('exam-entries.index');

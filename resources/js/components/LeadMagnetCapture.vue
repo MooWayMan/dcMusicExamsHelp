@@ -4,6 +4,7 @@ import { onMounted, ref } from 'vue'
 import { CheckCircle2, FileDown } from 'lucide-vue-next'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import { useAnalytics } from '@/composables/useAnalytics'
+import { xsrfToken } from '@/lib/utils'
 
 const { trackEvent } = useAnalytics()
 
@@ -81,9 +82,7 @@ async function handleSubmit() {
   isSubmitting.value = true
 
   try {
-    const xsrf = decodeURIComponent(
-      document.cookie.split('; ').find((c) => c.startsWith('XSRF-TOKEN='))?.split('=')[1] || ''
-    )
+    const xsrf = xsrfToken()
 
     const response = await fetch('/lead-magnet/subscribe', {
       method: 'POST',
@@ -144,7 +143,7 @@ async function handleSubmit() {
       value: 14,
       lead_magnet: 'trinity-exam-checklist',
       marketing_consent: marketingConsent.value,
-    })
+    }, 'trinity-exam-checklist')
 
     // Remember in this browser so they don't see the form on every visit.
     try {

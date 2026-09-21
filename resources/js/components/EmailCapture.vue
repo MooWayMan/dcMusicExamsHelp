@@ -3,6 +3,7 @@
 import { ref, computed } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import { useSubscription } from '@/composables/useSubscription'
+import { xsrfToken } from '@/lib/utils'
 
 interface Props {
   variant?: 'light' | 'dark'
@@ -51,9 +52,7 @@ async function handleSubmit() {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'X-XSRF-TOKEN': decodeURIComponent(
-          document.cookie.split('; ').find(c => c.startsWith('XSRF-TOKEN='))?.split('=')[1] || ''
-        ),
+        'X-XSRF-TOKEN': xsrfToken(),
       },
       body: JSON.stringify({
         name: name.value.trim(),

@@ -78,7 +78,7 @@ const handleOptionClick = (option: typeof bookingOptions[number]) => {
     value: 14,
     booking_system: option.id,
     booking_title: option.title,
-  })
+  }, option.id)
 
   window.open(option.url, '_blank', 'noopener,noreferrer')
   emit('close')
