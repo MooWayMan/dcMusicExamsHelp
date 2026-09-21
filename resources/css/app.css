@@ -79,6 +79,7 @@
     --color-chart-pass: var(--chart-pass);
     --color-chart-below: var(--chart-below);
     --color-chart-awaiting: var(--chart-awaiting);
+    --color-chart-count: var(--chart-count);
 
     /* SIDEBAR */
     --color-sidebar: var(--sidebar);
@@ -186,6 +187,9 @@
     --chart-pass: hsl(175 85% 30%);
     --chart-below: hsl(0 72% 50%);
     --chart-awaiting: hsl(215 16% 55%);
+    /* A plain count over time (Site stats, MyBarChartConstructor). One
+       series, so one hue; validated against the light and dark card. */
+    --chart-count: hsl(217 91% 60%);
 
     /* SIDEBAR */
     --sidebar: hsl(0 0% 100%);
@@ -250,6 +254,7 @@
     --chart-pass: hsl(175 62% 38%);
     --chart-below: hsl(0 84% 65%);
     --chart-awaiting: hsl(215 20% 55%);
+    --chart-count: hsl(217 91% 60%);
 
     /* SIDEBAR DARK */
     --sidebar: hsl(224 36% 14%);

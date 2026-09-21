@@ -1,6 +1,9 @@
 <!-- resources/js/components/dashboard/DashboardCharts.vue -->
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
+import { rightRounded, topRounded } from '@/lib/chartShapes'
+import { useChartTip } from '@/composables/useChartTip'
+import MyChartTooltip from '@/components/reusables/MyChartTooltip.vue'
 
 interface ChartEntry {
     grade: string | null
@@ -35,16 +38,7 @@ function parseDmy(value: string | null): Date | null {
 // ─── Shared tooltip ───────────────────────────────────────────────────────
 // Hover enhances; it never gates. Every value here is also printed on the
 // chart itself (legend counts, bar-tip values), so nothing is hover-only.
-const tip = ref<{ x: number; y: number; label: string; value: string } | null>(null)
-function showTip(event: MouseEvent, label: string, value: string) {
-    const host = (event.currentTarget as SVGElement).ownerSVGElement?.parentElement
-    if (!host) return
-    const box = host.getBoundingClientRect()
-    tip.value = { x: event.clientX - box.left, y: event.clientY - box.top, label, value }
-}
-function hideTip() {
-    tip.value = null
-}
+const { tip, showTip, hideTip } = useChartTip()
 
 // ─── 1. Results mix (donut) ───────────────────────────────────────────────
 interface Band {
@@ -173,11 +167,6 @@ const timeColumns = computed(() =>
     }),
 )
 
-// Rounded at the data end, square at the baseline.
-function topRounded(x: number, y: number, w: number, h: number, r = 4) {
-    const rr = Math.min(r, h, w / 2)
-    return `M ${x} ${y + h} L ${x} ${y + rr} Q ${x} ${y} ${x + rr} ${y} L ${x + w - rr} ${y} Q ${x + w} ${y} ${x + w} ${y + rr} L ${x + w} ${y + h} Z`
-}
 
 // ─── 3. Grade spread (horizontal bars) ────────────────────────────────────
 const GRADE_ORDER = ['Initial', '1', '2', '3', '4', '5', '6', '7', '8']
@@ -210,10 +199,6 @@ function gradeBar(count: number) {
     return Math.max(3, (count / gradeMax.value) * GRADE_TRACK)
 }
 
-function rightRounded(x: number, y: number, w: number, h: number, r = 4) {
-    const rr = Math.min(r, w, h / 2)
-    return `M ${x} ${y} L ${x + w - rr} ${y} Q ${x + w} ${y} ${x + w} ${y + rr} L ${x + w} ${y + h - rr} Q ${x + w} ${y + h} ${x + w - rr} ${y + h} L ${x} ${y + h} Z`
-}
 
 // ─── 4. Score distribution (histogram) ────────────────────────────────────
 // Single hue on purpose. The band a score falls in is carried by the marked
@@ -475,13 +460,6 @@ const hasAnyChart = computed(
             </section>
         </div>
 
-        <div
-            v-if="tip"
-            class="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-full rounded-lg border border-brand-border bg-brand-surface px-2.5 py-1.5 text-xs shadow-lg"
-            :style="{ left: `${tip.x}px`, top: `${tip.y - 8}px` }"
-        >
-            <span class="font-semibold text-brand-text">{{ tip.label }}</span>
-            <span class="ml-2 text-brand-text-soft">{{ tip.value }}</span>
-        </div>
+        <MyChartTooltip :tip="tip" />
     </div>
 </template>

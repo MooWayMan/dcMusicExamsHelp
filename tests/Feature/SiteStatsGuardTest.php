@@ -37,3 +37,15 @@ test('the XSRF cookie is read in one place', function () {
 test('the list of public pages is written down once', function () {
     expect(guardOffenders("/'ExamGuideSyllabuses',\s*'ExamFees'/", ['resources/js/lib/publicPages.ts']))->toBe([]);
 });
+
+test('the rounded bar shapes are drawn by one helper', function () {
+    expect(guardOffenders('/function\s+(topRounded|rightRounded)\s*\(/', ['resources/js/lib/chartShapes.ts']))->toBe([]);
+});
+
+test('client-side paging lives in usePagination only', function () {
+    expect(guardOffenders('/function\s+usePagination\s*[<(]/', ['resources/js/composables/usePagination.ts']))->toBe([]);
+});
+
+test('chart tooltips are positioned by useChartTip only', function () {
+    expect(guardOffenders('/clientX\s*-\s*\w+\.left/', ['resources/js/composables/useChartTip.ts']))->toBe([]);
+});

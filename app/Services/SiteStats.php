@@ -125,7 +125,8 @@ class SiteStats
      *     totals: array{pages: int, events: int},
      *     pages: array<int, array{path: string, hits: int}>,
      *     events: array<int, array{path: string, event: string, detail: string, hits: int}>,
-     *     daily: array<int, array{day: string, pages: int, events: int}>
+     *     daily: array<int, array{day: string, pages: int, events: int}>,
+     *     chart: array{unit: string, bars: array<int, array{label: string, full: string, pages: int, events: int}>}
      * }
      */
     public function summary(int $days): array
@@ -187,6 +188,42 @@ class SiteStats
             'pages' => $pages,
             'events' => $events,
             'daily' => $daily,
+            'chart' => $this->chartBuckets($daily, $days),
         ];
+    }
+
+    /**
+     * The daily totals grouped for the chart: by day for a week or a month,
+     * by week (Monday start) for 90 days, by month for a year, so the chart
+     * never has to draw hundreds of hairline bars.
+     *
+     * @param  array<int, array{day: string, pages: int, events: int}>  $daily
+     * @return array{unit: string, bars: array<int, array{label: string, full: string, pages: int, events: int}>}
+     */
+    public function chartBuckets(array $daily, int $days): array
+    {
+        $unit = match (true) {
+            $days <= 28 => 'day',
+            $days <= 90 => 'week',
+            default => 'month',
+        };
+
+        $bars = [];
+        foreach ($daily as $row) {
+            $date = Carbon::parse($row['day']);
+            $monday = $date->copy()->startOfWeek(CarbonInterface::MONDAY);
+
+            [$key, $label, $full] = match ($unit) {
+                'day' => [$row['day'], $date->format('j'), $date->format('D j M')],
+                'week' => [$monday->toDateString(), $monday->format('j M'), 'Week of '.$monday->format('j M')],
+                default => [$date->format('Y-m'), $date->format('M'), $date->format('F Y')],
+            };
+
+            $bars[$key] ??= ['label' => $label, 'full' => $full, 'pages' => 0, 'events' => 0];
+            $bars[$key]['pages'] += $row['pages'];
+            $bars[$key]['events'] += $row['events'];
+        }
+
+        return ['unit' => $unit, 'bars' => array_values($bars)];
     }
 }

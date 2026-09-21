@@ -131,3 +131,36 @@ test('only an admin can open the site stats page', function () {
         ->get('/admin/site-stats')
         ->assertForbidden();
 });
+
+test('the chart groups by day, then week, then month, and loses no hits doing it', function (int $days, string $unit, int $minBars, int $maxBars) {
+    $stats = app(SiteStats::class);
+    $stats->record(SiteStats::KIND_PAGE, '/faq', day: now());
+    $stats->record(SiteStats::KIND_PAGE, '/faq', day: now()->subDays($days - 1));
+    $stats->record(SiteStats::KIND_EVENT, '/', 'button', 'Book an exam', now()->subDays(intdiv($days, 2)));
+
+    $summary = statsPage($days);
+    $bars = collect($summary['chart']['bars']);
+
+    expect($summary['chart']['unit'])->toBe($unit)
+        ->and($bars->count())->toBeGreaterThanOrEqual($minBars)->toBeLessThanOrEqual($maxBars)
+        ->and($bars->sum('pages'))->toBe($summary['totals']['pages'])
+        ->and($bars->sum('events'))->toBe($summary['totals']['events'])
+        ->and($summary['totals'])->toBe(['pages' => 2, 'events' => 1]);
+})->with([
+    'a week' => [7, 'day', 7, 7],
+    'four weeks' => [28, 'day', 28, 28],
+    'ninety days' => [90, 'week', 13, 14],
+    'a year' => [365, 'month', 12, 13],
+]);
+
+test('a week bar starts on a Monday', function () {
+    $bars = app(SiteStats::class)->chartBuckets([
+        ['day' => '2026-09-20', 'pages' => 1, 'events' => 0],
+        ['day' => '2026-09-21', 'pages' => 2, 'events' => 0],
+    ], 90)['bars'];
+
+    expect($bars)->toBe([
+        ['label' => '14 Sep', 'full' => 'Week of 14 Sep', 'pages' => 1, 'events' => 0],
+        ['label' => '21 Sep', 'full' => 'Week of 21 Sep', 'pages' => 2, 'events' => 0],
+    ]);
+});

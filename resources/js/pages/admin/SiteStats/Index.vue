@@ -6,10 +6,14 @@ import PageHeader from '@/components/reusables/PageHeader.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyTableConstructor from '@/components/reusables/MyTableConstructor.vue'
+import MyPaginationConstructor from '@/components/reusables/MyPaginationConstructor.vue'
+import MyBarChartConstructor from '@/components/reusables/MyBarChartConstructor.vue'
+import { usePagination } from '@/composables/usePagination'
 
 interface PageRow { path: string; hits: number }
 interface EventRow { path: string; event: string; detail: string; hits: number }
 interface DayRow { day: string; pages: number; events: number }
+interface ChartBar { label: string; full: string; pages: number; events: number }
 
 const props = defineProps<{
     stats: {
@@ -19,6 +23,7 @@ const props = defineProps<{
         pages: PageRow[]
         events: EventRow[]
         daily: DayRow[]
+        chart: { unit: 'day' | 'week' | 'month'; bars: ChartBar[] }
     }
     ranges: number[]
 }>()
@@ -61,16 +66,29 @@ const dailyRows = computed(() => [...props.stats.daily].reverse().map((row) => (
     dayLabel: formatDay(row.day),
 })))
 
+const CHART_UNIT: Record<string, string> = { day: 'day', week: 'week', month: 'month' }
+
+const pageOpenBars = computed(() => props.stats.chart.bars.map((b) => ({ label: b.label, full: b.full, value: b.pages })))
+const actionBars = computed(() => props.stats.chart.bars.map((b) => ({ label: b.label, full: b.full, value: b.events })))
+const chartUnit = computed(() => CHART_UNIT[props.stats.chart.unit] ?? 'day')
+
+// Paged tables are pre-sorted by the server and NOT sortable here: the
+// table constructor would only sort the page on screen, not the whole list.
+const PER_PAGE = 14
+
+const eventPager = usePagination(() => eventRows.value, { perPage: PER_PAGE, scrollToTop: false })
+const dayPager = usePagination(() => dailyRows.value, { perPage: PER_PAGE, scrollToTop: false })
+
 const pageColumns = [
     { key: 'path', title: 'Page', sortable: true },
     { key: 'hits', title: 'Opens', sortable: true, align: 'right' as const },
 ]
 
 const eventColumns = [
-    { key: 'what', title: 'Action', sortable: true },
-    { key: 'detail', title: 'Which one', sortable: true },
-    { key: 'path', title: 'On page', sortable: true },
-    { key: 'hits', title: 'Times', sortable: true, align: 'right' as const },
+    { key: 'what', title: 'Action', sortable: false },
+    { key: 'detail', title: 'Which one', sortable: false },
+    { key: 'path', title: 'On page', sortable: false },
+    { key: 'hits', title: 'Times', sortable: false, align: 'right' as const },
 ]
 
 const dailyColumns = [
@@ -106,6 +124,19 @@ const dailyColumns = [
                 <template #mySubTitle>{{ summary }}</template>
             </MyTextConstructor>
 
+            <div class="grid gap-6 lg:grid-cols-2">
+                <MyBarChartConstructor
+                    :title="`Page opens per ${chartUnit}`"
+                    :bars="pageOpenBars"
+                    noun="page open"
+                />
+                <MyBarChartConstructor
+                    :title="`Actions per ${chartUnit}`"
+                    :bars="actionBars"
+                    noun="action"
+                />
+            </div>
+
             <MyTableConstructor
                 title="Pages opened"
                 :data="stats.pages"
@@ -115,22 +146,43 @@ const dailyColumns = [
                 default-sort-dir="desc"
             />
 
-            <MyTableConstructor
-                title="Buttons and actions"
-                subtitle="Button presses are counted on the public pages only."
-                :data="eventRows"
-                :columns="eventColumns"
-                default-sort-key="hits"
-                default-sort-dir="desc"
-            />
+            <div>
+                <MyTableConstructor
+                    title="Buttons and actions"
+                    subtitle="Button presses are counted on the public pages only."
+                    :data="eventPager.paged.value"
+                    :columns="eventColumns"
+                    :sortable="false"
+                />
+                <MyPaginationConstructor
+                    :page="eventPager.page.value"
+                    :page-count="eventPager.pageCount.value"
+                    :showing-from="eventPager.showingFrom.value"
+                    :showing-to="eventPager.showingTo.value"
+                    :total="eventPager.total.value"
+                    noun="row"
+                    @update:page="eventPager.goToPage"
+                />
+            </div>
 
-            <MyTableConstructor
-                title="Day by day"
-                :data="dailyRows"
-                :columns="dailyColumns"
-                row-key="day"
-                :sortable="false"
-            />
+            <div>
+                <MyTableConstructor
+                    title="Day by day"
+                    :data="dayPager.paged.value"
+                    :columns="dailyColumns"
+                    row-key="day"
+                    :sortable="false"
+                />
+                <MyPaginationConstructor
+                    :page="dayPager.page.value"
+                    :page-count="dayPager.pageCount.value"
+                    :showing-from="dayPager.showingFrom.value"
+                    :showing-to="dayPager.showingTo.value"
+                    :total="dayPager.total.value"
+                    noun="day"
+                    @update:page="dayPager.goToPage"
+                />
+            </div>
         </div>
     </div>
 </template>
