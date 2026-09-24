@@ -10,6 +10,7 @@ import PageHeader from '@/components/reusables/PageHeader.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import { useQuarterCertificateBatch } from '@/composables/useQuarterCertificateBatch'
+import { recipientGreetingName } from '@/lib/quarterEndEmails'
 
 interface StudentEntry {
   id: number
@@ -274,16 +275,6 @@ const totalWeeklyTeachers = computed(() => props.weeklyGroups.length)
 const totalWeeklyStudents = computed(() =>
   props.weeklyGroups.reduce((acc, g) => acc + g.unsent_count, 0),
 )
-
-/**
- * Strip surnames off "Mr Smith" / "Mrs Jones" / "Daniel Rogers" so the
- * Hi line reads naturally. Matches recipientGreetingName() in QuarterEnd.
- */
-function recipientGreetingName(fullName: string): string {
-  if (!fullName) return ''
-  const stripped = fullName.replace(/^(Mr|Mrs|Ms|Miss|Dr|Mx)\.?\s+/i, '').trim()
-  return stripped.split(/\s+/)[0]
-}
 
 /**
  * Last month of the currently-selected quarter, used in the weekly email

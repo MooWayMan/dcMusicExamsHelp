@@ -5,7 +5,7 @@ import { router, usePage } from '@inertiajs/vue3'
 import {
   Award, CheckCircle2, Circle, Download, Package,
   Trophy, Users, Clock, Star, ChevronDown, ChevronUp, Copy,
-  Gift, Sparkles, Loader2, ExternalLink
+  Gift, Sparkles, Loader2, ExternalLink, CheckSquare, Square
 } from 'lucide-vue-next'
 import PageHeader from '@/components/reusables/PageHeader.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
@@ -13,6 +13,7 @@ import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import { useQuarterCertificateBatch, type QuarterBatchResult } from '@/composables/useQuarterCertificateBatch'
 import { xsrfToken } from '@/lib/utils'
 import { GIFT_TOKEN_REDEEM_RULE } from '@/lib/prizeRules'
+import { recipientGreetingName, resultsEmailBody, resultsEmailSubject, type ResultsEmailOptions } from '@/lib/quarterEndEmails'
 
 interface Student {
   name: string
@@ -371,29 +372,9 @@ async function toggleWorkflowStep(awardKey: AwardKey, winnerFullName: string, st
   }
 }
 
-// Greeting name resolver. Two cases Paul wants distinct:
-//   • "Mrs Fakerson" → "Mrs Fakerson"  (keep title + surname)
-//   • "Sarah Mitchell" → "Sarah"        (drop surname, just first name)
-// Detects titles case-insensitively and tolerates trailing dots
-// ("Mr." / "Dr.") which appear on some imported teacher names.
-function recipientGreetingName(teacherName: string | null | undefined): string {
-  if (! teacherName) return 'there'
-  const parts = teacherName.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return 'there'
-
-  const titles = ['mr', 'mrs', 'ms', 'miss', 'mx', 'dr', 'rev', 'sir', 'dame', 'prof']
-  const firstNorm = parts[0].toLowerCase().replace(/\.$/, '')
-
-  if (titles.includes(firstNorm)) {
-    // Title-prefixed name → "Mrs Fakerson" (title + surname). If there's
-    // only the title and nothing else, fall through to using it on its
-    // own (rare edge case — better than greeting "there").
-    if (parts.length < 2) return parts[0]
-    return `${parts[0]} ${parts[parts.length - 1]}`
-  }
-
-  // No title — first name only.
-  return parts[0]
+// Opens the prize emails when "Sending late" is ticked in Step 2.
+function lateNote(): string {
+  return sendingLate.value ? "Sorry this is late — it should have reached you weeks ago, and that's down to me.\n\n" : ''
 }
 
 function copyTopScorerEmail(winner: AwardWinner, awardKey: AwardKey, tieCount: number) {
@@ -431,7 +412,7 @@ function copyTopScorerEmail(winner: AwardWinner, awardKey: AwardKey, tieCount: n
   if (winner.booking_role === 'self') {
     body = `Hi ${recipientFirstName},
 
-Wonderful news — you've been awarded the **${meta.bandLabel} (${meta.groupLabel})** for ${props.quarterLabel}!
+${lateNote()}Wonderful news — you've been awarded the ${meta.bandLabel} (${meta.groupLabel}) for ${props.quarterLabel}!
 
 You scored ${winner.score} marks in ${winner.instrument} Grade ${winner.grade} — a brilliant achievement.
 
@@ -439,11 +420,11 @@ ${tieSentence.replace(`${winnerName}'s share`, 'your share').replace(`${winnerNa
 
 Your personalised ${meta.certificate} Certificate is attached to this email — print it, display it on a tablet for photos, or share it on social media.
 
-Here's the Amazon gift card code:
+Here's your Amazon gift card — click the link and sign in to Amazon to add it to your account:
 
-[PASTE GIFT CARD CODE HERE]
+[PASTE GIFT CARD LINK HERE]
 
-You can add this to any Amazon account — it's not tied to a name or email. ${GIFT_TOKEN_REDEEM_RULE}
+It can go on any Amazon account. ${GIFT_TOKEN_REDEEM_RULE}
 
 You'll also appear on the Recognition page at https://musicexams.help/recognition.
 
@@ -454,7 +435,7 @@ Paul Sheridan`
   } else if (winner.is_parent_booking) {
     body = `Hi ${recipientFirstName},
 
-Wonderful news — ${winnerName} has been awarded the **${meta.bandLabel} (${meta.groupLabel})** for ${props.quarterLabel}!
+${lateNote()}Wonderful news — ${winnerName} has been awarded the ${meta.bandLabel} (${meta.groupLabel}) for ${props.quarterLabel}!
 
 They scored ${winner.score} marks in ${winner.instrument} Grade ${winner.grade} — a brilliant achievement.
 
@@ -462,11 +443,11 @@ ${tieSentence}
 
 ${winnerName}'s personalised ${meta.certificate} Certificate is attached to this email — print it, display it on a tablet for photos, or share it on social media.
 
-Here's the Amazon gift card code:
+Here's the Amazon gift card — click the link and sign in to Amazon to add it to your account:
 
-[PASTE GIFT CARD CODE HERE]
+[PASTE GIFT CARD LINK HERE]
 
-You can add this to any Amazon account — it's not tied to a name or email. ${GIFT_TOKEN_REDEEM_RULE}
+It can go on any Amazon account. ${GIFT_TOKEN_REDEEM_RULE}
 
 ${winnerName} will also appear on the Recognition page at https://musicexams.help/recognition.
 
@@ -477,19 +458,15 @@ Paul Sheridan`
   } else {
     body = `Hi ${recipientFirstName},
 
-Wonderful news — one of your students, ${winnerName}, has been awarded the **${meta.bandLabel} (${meta.groupLabel})** for ${props.quarterLabel}!
+${lateNote()}Wonderful news — one of your students, ${winnerName}, has been awarded the ${meta.bandLabel} (${meta.groupLabel}) for ${props.quarterLabel}!
 
 They scored ${winner.score} marks in ${winner.instrument} Grade ${winner.grade} — a brilliant achievement.
 
 ${tieSentence}
 
-${winnerName}'s personalised ${meta.certificate} Certificate is attached to this email — please pass it on to them along with the gift card code below.
+${winnerName}'s personalised ${meta.certificate} Certificate is attached to this email — please pass it on to their parent or guardian.
 
-Here's the Amazon gift card code for you to pass on to ${winnerName}'s parent/guardian:
-
-[PASTE GIFT CARD CODE HERE]
-
-It can be added to any Amazon account — it's not tied to a name or email. ${GIFT_TOKEN_REDEEM_RULE}
+To claim the gift token, please ask ${winnerName}'s parent or guardian to email me at musicexams@musicexams.help, and I'll send the gift card straight to them. ${GIFT_TOKEN_REDEEM_RULE}
 
 ${winnerName} will also appear on the Recognition page at https://musicexams.help/recognition.
 
@@ -504,7 +481,7 @@ Paul
 
 P.S. Here's a suggested message you can copy and paste when you forward this on to ${winnerName}'s parent/guardian — feel free to tweak or skip:
 
-"Hi [Parent Name], wonderful news — musicExams.help (centre 120) have just awarded ${winnerName} the ${meta.bandLabel} (${meta.groupLabel}) for ${props.quarterLabel} for their brilliant ${winner.score}-mark performance in ${winner.instrument} Grade ${winner.grade}. Their personalised ${meta.certificate} Certificate is attached, along with an Amazon gift card to celebrate. They'll also appear on the Recognition page at https://musicexams.help/recognition (first name and surname initial only — let me know if you'd like the full name shown). Huge congratulations to ${winnerName}! — [Your Name]"`
+"Hi [Parent Name], wonderful news — musicExams.help (centre 120) have just awarded ${winnerName} the ${meta.bandLabel} (${meta.groupLabel}) for ${props.quarterLabel} for their brilliant ${winner.score}-mark performance in ${winner.instrument} Grade ${winner.grade}. Their personalised ${meta.certificate} Certificate is attached, and ${winnerName} has won a £${split} Amazon gift token — to claim it, just email Paul at musicexams@musicexams.help. They'll also appear on the Recognition page at https://musicexams.help/recognition (first name and surname initial only — let me know if you'd like the full name shown). Huge congratulations to ${winnerName}! — [Your Name]"`
   }
 
   navigator.clipboard.writeText(body)
@@ -591,235 +568,12 @@ async function batchGenerate() {
 
 // Copy email template to clipboard
 function copyEmailTemplate(teacher: Teacher) {
-  // Self-applicants (candidate booked their own exam) get a you-centric template.
-  if (teacher.booking_role === 'self') {
-    copySelfApplicantTemplate(teacher)
-    return
-  }
-  // Parent bookings get a direct-to-parent template (no "students" plural,
-  // no teacher prize draw talk, warm intro to the site).
-  if (teacher.is_parent_booking) {
-    copyParentDirectTemplate(teacher)
-    return
-  }
-
-  const studentList = teacher.students
-    .map(s => `  • ${s.name} — ${s.instrument} Grade ${s.grade} — ${s.score} (${s.result}) — ${s.certificate}`)
-    .join('\n')
-
-  const badgeText = teacher.badge_tier
-    ? `\n\nI'm also pleased to award you a ${teacher.badge_tier} Certificate of Appreciation for entering ${teacher.total_entries}+ candidates through centre 120 this quarter. Thank you for your continued support!\n`
-    : ''
-
-  // Top scorer mentions — four awards per quarter (matches public Awards
-  // banner): Highest Distinction & Highest Merit in each of two groups
-  // (Initial–5 and 6–8). Ties are listed together (gift token is split).
-  const formatWinners = (winners: AwardWinner[]) =>
-    winners
-      .map(w => `${w.name} — ${w.instrument} Grade ${w.grade} — ${w.score} marks`)
-      .join(' & ')
-
-  const buildAwardLine = (label: string, winners: AwardWinner[]) =>
-    winners.length ? `${label}: ${formatWinners(winners)}` : ''
-
-  const top = props.summary.top_scorers
-  const awardLines = [
-    buildAwardLine('Highest Distinction (Initial–5)', top?.initial_5?.distinction ?? []),
-    buildAwardLine('Highest Merit (Initial–5)',       top?.initial_5?.merit       ?? []),
-    buildAwardLine('Highest Distinction (Grades 6–8)', top?.['6_8']?.distinction  ?? []),
-    buildAwardLine('Highest Merit (Grades 6–8)',       top?.['6_8']?.merit        ?? []),
-  ].filter(Boolean)
-
-  const topScorerText = awardLines.length
-    ? `\n\nQuarterly award winners:\n  • ${awardLines.join('\n  • ')}\nWinners receive a gift token (split equally if tied) and a personalised certificate.\n`
-    : ''
-
-  // Student prize draw winner — teacher needs to pass the gift token on
-  // Use first name + initial only (GDPR — no full names without consent)
-  const winnerShortName = studentWinner.value
-    ? studentWinner.value.name.split(' ').length > 1
-      ? `${studentWinner.value.name.split(' ')[0]} ${studentWinner.value.name.split(' ').slice(-1)[0][0].toUpperCase()}`
-      : studentWinner.value.name
-    : ''
-  const studentDrawText = studentWinner.value
-    ? `\n\nStudent Prize Draw\nThe winner of the £50 gift token this quarter is ${winnerShortName} (${studentWinner.value.instrument} Grade ${studentWinner.value.grade}) — congratulations! Every student entered through centre 120 was in the draw.${studentWinner.value.teacher === teacher.teacher_name ? ' As their teacher, I\'ll be in touch with you separately about getting the prize to them.' : ''}\n`
-    : ''
-
-  // Teacher prize draw — wording depends on whether the draw has been run
-  // for this quarter. Once run, "taking place in the coming weeks" is wrong
-  // and confuses any teacher who logs in expecting to see their result.
-  // Winners aren't named in the email (privacy) — teachers log in to check.
-  const teacherDrawText = props.existingDraws.teacher
-    ? `Teacher draw: this quarter's draw has been run. Winners are notified privately rather than announced publicly — log into your teacher dashboard at https://musicexams.help/register to check if you won. The more students you enter through centre 120 next quarter, the more tickets you'll have.`
-    : `Teacher draw: taking place in the coming weeks. The prize is a £50 gift token to help buy musical instruments for your school. The more students linked to you, the more tickets you have — that's why the question at the top matters!\n\nThe teacher draw result won't be published on the website — no competition between teachers. Winners can see their result privately by logging in, and you're welcome to promote it on your own channels if you win!`
-
-  // Linked-students nudge — wording depends on whether this quarter's
-  // draw + badges are already settled. Pre-draw the pitch is "earn extra
-  // tickets THIS quarter"; post-draw the pitch is forward-looking ("counts
-  // toward next quarter's badge and draw"). Asking AFTER the badges are
-  // awarded with the same urgency reads as a bit late.
-  const linkedStudentsNudge = props.existingDraws.teacher
-    ? `Quick favour while I have you: do you have any students who booked their exam through centre 120 in 2026 but booked directly or through a parent? If so, reply with their names and I'll link them to you — it'll feed into your badge tally going forward and add extra tickets to the next teacher prize draw.`
-    : `Before I get to the good stuff: do you have any students who booked their exam through centre 120 in 2026 but booked directly or through a parent? If so, reply with their names so I can link them to you — it counts towards your Teacher Appreciation badge and extra tickets in the teacher prize draw!`
-
-  const firstName = recipientGreetingName(teacher.teacher_name)
-
-  const template = `Hi ${firstName},
-
-Quick heads-up — I've moved to a new email address: musicexams@musicexams.help. Please save this for future correspondence.
-
-${linkedStudentsNudge}
-
----
-
-Your Students' Results
-
-Your students have done brilliantly! Here are the results:
-
-${studentList}${teacher.pending > 0 ? `\n\nNote: ${teacher.pending} of your students are still awaiting results — I'll be in touch as soon as they come through.\n` : ''}
-
-Your students' personalised certificates are in the attached ZIP file — just double-click to open it.
-
-Every student receives at least a Bravo Certificate, with Merit earning a Take a Bow Certificate and Distinction earning a Standing Ovation Certificate.
-
-You can now see all of your candidates' exam details from January 2026 onwards by logging in at https://musicexams.help/dashboard — including any still waiting on a result. Pick any date range you like and download it as a spreadsheet or a PDF whenever you need it.${badgeText}${topScorerText}
-
----
-
-Prize Draws
-
-Every quarter we run two prize draws — one for students, one for teachers. Every student entry through centre 120 earns one ticket.
-${studentDrawText}
-${teacherDrawText}
-
-Top Scorer awards and gift tokens are announced around 6 weeks after the quarter ends, once all results (including digital) are in. Keep an eye on musicExams.help!
-
----
-
-Introducing musicExams.help
-
-I've recently launched musicExams.help — a free resource for teachers, parents and students booking Trinity exams through centre 120. If parents ever ask things like "what's the difference between digital and face-to-face?" — point them straight to the site.
-
-Highlights:
-  • NEW — your own teacher dashboard: track all your students' bookings, results, certificates and awards in one place (free, sign up at https://musicexams.help/register)
-  • Student recognition — Hall of Fame, certificates and quarterly prize draws
-  • Teacher awards — Bronze, Silver, Gold and Top Award badges
-  • Faber music book discounts for teachers
-  • Booking made easy across all 3 Trinity systems
-
-Have a look: https://musicexams.help
-
-We'd love any feedback — even a quick "looks good" helps!
-
----
-
-Thank you for everything you do for your students — and for choosing to enter them through centre 120. It really is appreciated.
-
-Best wishes,
-Paul
-
-P.S. Here's a message you can send to parents with their child's certificate:
-
-"Hi [Parent Name], I've recently partnered with musicExams.help, a platform that supports teachers, parents and students taking Trinity exams. Your child now receives a personalised certificate — please find it attached. They also appear on the Recognition page at https://musicexams.help/recognition (first name and surname initial only). So we can credit the right person, please reply with your child's music teacher's name — and if their lessons are through a music school, let us know which one. If you'd like their full name displayed, just email musicexams@musicexams.help."`
-
-  navigator.clipboard.writeText(template)
+  navigator.clipboard.writeText(resultsEmailBody(teacher, emailOptions.value))
   alert('Email template copied to clipboard! Now click "Open in Gmail" to compose.')
 }
 
-/**
- * Direct-to-parent email template — used when the row is a parent booking
- * (Gillian Leslie, Adrian O'Malley, Claire Reed, etc.) rather than a teacher.
- * No teacher-prize-draw talk, no Faber pitch, short and warm.
- */
-function copyParentDirectTemplate(teacher: Teacher) {
-  const firstName = recipientGreetingName(teacher.teacher_name)
-  const count = teacher.students.length
-
-  // Use candidates' first names in prose instead of assuming the applicant
-  // is a parent ("your child") — works for guardians, grandparents, aunts,
-  // or the candidate themselves.
-  const candidateFirstNames = teacher.students.map(s => s.name.split(' ')[0])
-  const namesSentence = count === 1
-    ? candidateFirstNames[0]
-    : count === 2
-      ? `${candidateFirstNames[0]} and ${candidateFirstNames[1]}`
-      : `${candidateFirstNames.slice(0, -1).join(', ')} and ${candidateFirstNames.slice(-1)[0]}`
-  const certWord = count === 1 ? 'certificate is attached below' : 'certificates are attached below'
-  const examWord = count === 1 ? 'Trinity exam' : 'Trinity exams'
-
-  const template = `Hi ${firstName},
-
-I'm Paul Sheridan, running Trinity exam centre 120. Thank you for entering ${namesSentence} for their recent ${examWord} through centre 120. Their personalised musicExams.help ${certWord}.
-
-This is our own centre 120 recognition — separate from any certificate Trinity themselves issue (Trinity send a digital certificate directly to candidates who pass).
-
-How our certificates work: every candidate entered through centre 120 earns at least a Bravo certificate as a thank-you for taking part. Candidates who achieve a Merit earn a Take a Bow certificate, and those who achieve a Distinction earn a Standing Ovation certificate.
-
-${namesSentence} will also appear on the Recognition page at https://musicexams.help/recognition — first name and surname initial only, for GDPR. If you'd like the full name shown, just reply and say the word.
-
-I've recently launched musicExams.help — a free resource for anyone booking Trinity exams. It covers the difference between digital and face-to-face, grades explained, UCAS points and more. Have a look when you get a minute: https://musicexams.help
-
-If ${namesSentence} ${count === 1 ? 'has' : 'have'} a music teacher, do let them know about our site too — teachers earn their own appreciation badges for supporting candidates through centre 120.
-
-Every entry through centre 120 also gets one ticket in our quarterly prize draw — the £50 gift token winner is announced on the Recognition page. Good luck in future draws!
-
-Thanks for choosing centre 120.
-
-Best wishes,
-Paul Sheridan`
-
-  navigator.clipboard.writeText(template)
-  alert('Parent email template copied to clipboard! Now click "Open in Gmail" to compose.')
-}
-
-/**
- * Self-applicant template — when the candidate booked their own exam (adult
- * learner, or a teenager going direct). Recipient IS the candidate, so the
- * whole voice is second-person.
- */
-function copySelfApplicantTemplate(teacher: Teacher) {
-  const firstName = recipientGreetingName(teacher.teacher_name)
-  const count = teacher.students.length
-  const certWord = count === 1 ? 'certificate is attached below' : 'certificates are attached below'
-  const examWord = count === 1 ? 'Trinity exam' : 'Trinity exams'
-
-  const template = `Hi ${firstName},
-
-I'm Paul Sheridan, running Trinity exam centre 120. Thank you for entering your recent ${examWord} through centre 120. Your personalised musicExams.help ${certWord}.
-
-This is our own centre 120 recognition — separate from any certificate Trinity themselves issue (Trinity send a digital certificate directly to candidates who pass).
-
-How our certificates work: every candidate entered through centre 120 earns at least a Bravo certificate as a thank-you for taking part. A Merit earns a Take a Bow certificate, and a Distinction earns a Standing Ovation certificate.
-
-Your name will also appear on the Recognition page at https://musicexams.help/recognition — first name and surname initial only, for GDPR. If you'd like your full name shown, just reply and say the word.
-
-I've recently launched musicExams.help — a free resource for anyone booking Trinity exams. It covers the difference between digital and face-to-face, grades explained, UCAS points and more. Have a look when you get a minute: https://musicexams.help
-
-If you have a music teacher, do let them know about our site too — teachers earn their own appreciation badges for supporting candidates through centre 120.
-
-Every entry through centre 120 also gets one ticket in our quarterly prize draw — the £50 gift token winner is announced on the Recognition page. Good luck in future draws!
-
-Thanks for choosing centre 120.
-
-Best wishes,
-Paul Sheridan`
-
-  navigator.clipboard.writeText(template)
-  alert('Self-applicant email template copied to clipboard! Now click "Open in Gmail" to compose.')
-}
-
 function openGmailCompose(teacher: Teacher) {
-  // Subject varies by recipient type. Teacher → existing. Parent → child-focused.
-  // Self → your-own-result focused.
-  let subjectText: string
-  if (teacher.booking_role === 'self') {
-    subjectText = `Your musicExams.help Certificate — Trinity ${props.quarterLabel}`
-  } else if (teacher.is_parent_booking) {
-    subjectText = `musicExams.help Certificate${teacher.students.length > 1 ? 's' : ''} — ${teacher.students.map(s => s.name.split(' ')[0]).join(' & ')}`
-  } else {
-    subjectText = `${props.quarterLabel} Exam Results — Your Students Did Brilliantly!`
-  }
-  const subject = encodeURIComponent(subjectText)
+  const subject = encodeURIComponent(resultsEmailSubject(teacher, emailOptions.value))
   const to = encodeURIComponent(teacher.applicant_email || '')
   window.open(`https://mail.google.com/mail/?view=cm&to=${to}&su=${subject}`, '_blank')
 }
@@ -837,13 +591,9 @@ function copyWinnerEmail(teacher: Teacher) {
 
   const template = `Hi ${firstName},
 
-Great news — one of your students, ${winnerInitial}, has won the ${props.quarterLabel} student prize draw! They'll be receiving a £50 Amazon gift token.
+${lateNote()}Great news — one of your students, ${winnerInitial}, has won the ${props.quarterLabel} student prize draw! They'll receive a £50 Amazon gift token.
 
-Here's the gift card code for you to pass on to their parent/guardian:
-
-[PASTE GIFT CARD CODE HERE]
-
-They can add this to any Amazon account — it's not tied to a name or email. ${GIFT_TOKEN_REDEEM_RULE}
+To claim it, please ask their parent or guardian to email me at musicexams@musicexams.help, and I'll send the gift card straight to them. ${GIFT_TOKEN_REDEEM_RULE}
 
 Their name will appear on the musicExams.help Recognition page as "${winnerInitial}". If they or their parent would like us to display their full name instead, just let me know and I'll update it.
 
@@ -877,15 +627,15 @@ function copyTeacherDrawWinnerEmail() {
 
   const body = `Hi ${firstName},
 
-Wonderful news — you've won the ${props.quarterLabel} musicExams.help teacher prize draw!
+${lateNote()}Wonderful news — you've won the ${props.quarterLabel} musicExams.help teacher prize draw!
 
 Out of ${totalTickets} tickets in the pool (one for every non-cancelled student entry through centre 120), ${entries === 1 ? 'your one ticket' : `your ${entries} tickets`} came up.
 
-The prize is a £50 gift token to invest back into your teaching — new resources, an instrument top-up, sheet music, whatever helps you and your students. Here's the Amazon gift card code:
+The prize is a £50 gift token to invest back into your teaching — new resources, an instrument top-up, sheet music, whatever helps you and your students. Click the link below and sign in to Amazon to add it to your account:
 
-[PASTE GIFT CARD CODE HERE]
+[PASTE GIFT CARD LINK HERE]
 
-You can add this to any Amazon account — it's not tied to a name or email. ${GIFT_TOKEN_REDEEM_RULE}
+It can go on any Amazon account. ${GIFT_TOKEN_REDEEM_RULE}
 
 The teacher draw isn't published on the public site (no competition between teachers), but you'll see your win on your dashboard at https://musicexams.help/dashboard when you log in. You're welcome to share on your own channels if you'd like.
 
@@ -1035,6 +785,18 @@ const studentWinner = computed(() => {
   }
   return null
 })
+
+// Tick "Sending late" when a quarter's results go out after they should have:
+// every results email gains an apology and its subject says so.
+const sendingLate = ref(false)
+
+const emailOptions = computed<ResultsEmailOptions>(() => ({
+  quarterLabel: props.quarterLabel,
+  late: sendingLate.value,
+  topScorers: props.summary.top_scorers,
+  studentWinner: studentWinner.value,
+  teacherDrawRun: Boolean(props.existingDraws.teacher),
+}))
 const teacherWinner = computed(() => {
   if (teacherRealWinner.value) return {
     name: teacherRealWinner.value.winner_name,
@@ -1172,6 +934,17 @@ const topScorerAwardCount = computed(() => {
 
       <!-- STEPS -->
       <div class="mb-8 space-y-4">
+        <div class="flex items-center gap-3">
+          <MyButtonConstructor
+            size="small"
+            :variant="sendingLate ? 'primary' : 'outline'"
+            :icon="sendingLate ? CheckSquare : Square"
+            @click="sendingLate = !sendingLate"
+          >
+            Sending late
+          </MyButtonConstructor>
+          <MyTextConstructor v-if="sendingLate">Every email copied below will open with an apology for being late.</MyTextConstructor>
+        </div>
 
         <!-- STEP 1: Generate certificates -->
         <div v-show="currentStep === 1" class="rounded-xl border-2 border-brand-accent bg-brand-surface p-5">
