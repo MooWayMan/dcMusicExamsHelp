@@ -28,6 +28,7 @@ beforeEach(function (): void {
     $this->admin = User::factory()->create(['role' => 'admin']);
     Carbon::setTestNow(Carbon::create(2026, 5, 8, 12, 0, 0));
     Storage::fake('local');
+    fakeCertificateTemplates();
 });
 
 afterEach(function (): void {
@@ -74,14 +75,8 @@ it('counts NO_SHOW + Fails toward badge tier alongside passing scores', function
     badgeEntry('Daniel Rogers', null, 'NO_SHOW');
     badgeEntry('Daniel Rogers', 0, null); // Fail (recorded as TOL had it)
 
-    // batchGenerate redirects with flash on success (back()->with('success'))
-    // — assert the redirect AND that no error flash leaked, which proves we
-    // hit the cert-writing path rather than an early-return like "No entries
-    // with results found for this quarter".
-    $this->actingAs($this->admin)
-        ->post('/admin/certificates/batch', ['quarter' => 1, 'year' => 2026])
-        ->assertRedirect()
-        ->assertSessionMissing('error');
+    $this->actingAs($this->admin);
+    runQuarterCertificateBatch($this, 1, 2026);
 
     expect(Storage::disk('local')->exists('certificates/2026-Q1/Daniel_Rogers/Daniel_Rogers_Silver_Appreciation.pdf'))
         ->toBeTrue('Silver appreciation cert should exist for 22 non-cancelled entries');
@@ -98,14 +93,8 @@ it('does NOT count CANCELLED entries toward badge tier', function (): void {
         badgeEntry('Sarah Smith', null, 'CANCELLED');
     }
 
-    // batchGenerate redirects with flash on success (back()->with('success'))
-    // — assert the redirect AND that no error flash leaked, which proves we
-    // hit the cert-writing path rather than an early-return like "No entries
-    // with results found for this quarter".
-    $this->actingAs($this->admin)
-        ->post('/admin/certificates/batch', ['quarter' => 1, 'year' => 2026])
-        ->assertRedirect()
-        ->assertSessionMissing('error');
+    $this->actingAs($this->admin);
+    runQuarterCertificateBatch($this, 1, 2026);
 
     expect(Storage::disk('local')->exists('certificates/2026-Q1/Sarah_Smith/Sarah_Smith_Bronze_Appreciation.pdf'))
         ->toBeTrue('Bronze cert (19 entries) — CANCELLED rows must be excluded');
@@ -119,14 +108,8 @@ it('still gives a teacher with only passing scores the right tier', function ():
         badgeEntry('Tom Hardy', 75);
     }
 
-    // batchGenerate redirects with flash on success (back()->with('success'))
-    // — assert the redirect AND that no error flash leaked, which proves we
-    // hit the cert-writing path rather than an early-return like "No entries
-    // with results found for this quarter".
-    $this->actingAs($this->admin)
-        ->post('/admin/certificates/batch', ['quarter' => 1, 'year' => 2026])
-        ->assertRedirect()
-        ->assertSessionMissing('error');
+    $this->actingAs($this->admin);
+    runQuarterCertificateBatch($this, 1, 2026);
 
     expect(Storage::disk('local')->exists('certificates/2026-Q1/Tom_Hardy/Tom_Hardy_Silver_Appreciation.pdf'))
         ->toBeTrue();
@@ -139,14 +122,8 @@ it('does not award any badge when total entries are below 10', function (): void
     }
     badgeEntry('Jenny Capstick', null, 'NO_SHOW');
 
-    // batchGenerate redirects with flash on success (back()->with('success'))
-    // — assert the redirect AND that no error flash leaked, which proves we
-    // hit the cert-writing path rather than an early-return like "No entries
-    // with results found for this quarter".
-    $this->actingAs($this->admin)
-        ->post('/admin/certificates/batch', ['quarter' => 1, 'year' => 2026])
-        ->assertRedirect()
-        ->assertSessionMissing('error');
+    $this->actingAs($this->admin);
+    runQuarterCertificateBatch($this, 1, 2026);
 
     foreach (['Bronze', 'Silver', 'Gold', 'Top_Award'] as $tier) {
         expect(Storage::disk('local')->exists("certificates/2026-Q1/Jenny_Capstick/Jenny_Capstick_{$tier}_Appreciation.pdf"))

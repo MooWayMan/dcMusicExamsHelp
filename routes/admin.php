@@ -158,7 +158,9 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
         Route::get('certificates', [CertificateController::class, 'index'])->name('certificates.index');
         Route::post('certificates/student', [CertificateController::class, 'generateStudent'])->name('certificates.generate-student');
         Route::post('certificates/teacher', [CertificateController::class, 'generateTeacher'])->name('certificates.generate-teacher');
-        Route::post('certificates/batch', [CertificateController::class, 'batchGenerate'])->name('certificates.batch');
+        Route::post('certificates/batch/start', [CertificateController::class, 'batchStart'])->name('certificates.batch.start');
+        Route::post('certificates/batch/step', [CertificateController::class, 'batchStep'])->name('certificates.batch.step');
+        Route::post('certificates/batch/finish', [CertificateController::class, 'batchFinish'])->name('certificates.batch.finish');
         Route::post('certificates/top-scorers', [CertificateController::class, 'generateTopScorers'])->name('certificates.top-scorers');
         Route::post('certificates/mark-sent', [CertificateController::class, 'markSent'])->name('certificates.mark-sent');
         Route::post('certificates/unmark-sent', [CertificateController::class, 'unmarkSent'])->name('certificates.unmark-sent');

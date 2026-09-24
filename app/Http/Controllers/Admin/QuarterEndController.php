@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\PrizeDraw;
 use App\Models\TopScorerPublication;
 use App\Models\TopScorerWorkflow;
+use App\Services\CertificateRenderer;
 use App\Support\TopScorers;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -188,13 +189,7 @@ class QuarterEndController extends Controller
             // doesn't get a Q2 badge.
             $quarterCount = $entries->count();
 
-            $badgeTier = match (true) {
-                $quarterCount >= 40 => 'Top Award',
-                $quarterCount >= 30 => 'Gold',
-                $quarterCount >= 20 => 'Silver',
-                $quarterCount >= 10 => 'Bronze',
-                default => null,
-            };
+            $badgeTier = CertificateRenderer::teacherBadge($quarterCount);
 
             return [
                 'teacher_name' => $teacherName,

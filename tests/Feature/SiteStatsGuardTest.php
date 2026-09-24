@@ -5,19 +5,7 @@
 // Things the site-stats work made shared, each of which must exist once.
 // Keyed on the act (reading the cookie, writing the table, listing the
 // pages), with comments stripped by guardSources() in tests/Pest.php.
-
-function guardOffenders(string $pattern, array $allowed): array
-{
-    return collect(guardSources())
-        ->filter(fn ($code) => preg_match($pattern, $code) === 1)
-        ->keys()
-        ->reject(fn ($path) => in_array($path, $allowed, true)
-            || str_starts_with($path, 'resources/js/actions/')
-            || str_starts_with($path, 'resources/js/routes/')
-            || str_starts_with($path, 'resources/js/wayfinder/'))
-        ->values()
-        ->all();
-}
+// guardOffenders() lives there too, shared with the other guard files.
 
 test('the site_stats table is written and read only by SiteStats', function () {
     expect(guardOffenders("/['\"]site_stats['\"]/", ['app/Services/SiteStats.php']))->toBe([]);

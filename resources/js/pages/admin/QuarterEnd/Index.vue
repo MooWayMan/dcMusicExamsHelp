@@ -9,6 +9,8 @@ import {
 } from 'lucide-vue-next'
 import PageHeader from '@/components/reusables/PageHeader.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
+import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
+import { useQuarterCertificateBatch, type QuarterBatchResult } from '@/composables/useQuarterCertificateBatch'
 import { xsrfToken } from '@/lib/utils'
 
 interface Student {
@@ -136,11 +138,18 @@ const props = defineProps<{
 }>()
 
 const page = usePage()
-// Prefer flash (just-generated) but fall back to persistedBatchResult (from
-// disk scan in controller) so download links stay visible across navigation
-// and after Inertia's flash is consumed.
-const batchResult = computed(() =>
-  (page.props as any).flash?.batch_result
+// The batch just run on this page, or else the ZIPs already on disk from an
+// earlier run (the controller scans for them) so download links survive
+// navigation.
+const {
+  running: batchGenerating,
+  progress: batchProgress,
+  result: justGenerated,
+  error: batchError,
+  run: runBatch,
+} = useQuarterCertificateBatch()
+const batchResult = computed<QuarterBatchResult | null>(() =>
+  justGenerated.value
     ?? (page.props as any).persistedBatchResult
     ?? null
 )
@@ -558,9 +567,9 @@ const remainingCertsToSend = computed(() =>
     .reduce((sum, t) => sum + (t.with_results ?? 0), 0)
 )
 
-// Step tracking — only auto-advance to step 2 when the batch has JUST run
-// (flash data exists). Loading the page on a later visit should start on
-// step 1 so download links are visible, even though files exist on disk.
+// Step tracking — batchGenerate() moves to step 2 once the batch has run.
+// Loading the page on a later visit starts on step 1 so download links are
+// visible, even though files exist on disk.
 // Preserve the step across Inertia navigations triggered by Preview /
 // Publish (which both do `router.get(...)` and would otherwise drop us
 // back on Step 1). We read `?step=N` from the URL on mount, and our
@@ -569,23 +578,14 @@ const currentStep = ref<number>((() => {
   const params = new URLSearchParams(window.location.search)
   const stepParam = parseInt(params.get('step') ?? '', 10)
   if (stepParam >= 1 && stepParam <= 3) return stepParam
-  return (page.props as any).flash?.batch_result ? 2 : 1
+  return 1
 })())
 
 // Batch generate
-const batchGenerating = ref(false)
-function batchGenerate() {
-  batchGenerating.value = true
-  router.post('/admin/certificates/batch', {
-    quarter: props.quarter,
-    year: props.year,
-  }, {
-    preserveScroll: true,
-    onFinish: () => {
-      batchGenerating.value = false
-      currentStep.value = 2
-    },
-  })
+async function batchGenerate() {
+  if (await runBatch(props.quarter, props.year)) {
+    currentStep.value = 2
+  }
 }
 
 // Copy email template to clipboard
@@ -1192,12 +1192,16 @@ const topScorerAwardCount = computed(() => {
             :disabled="batchGenerating"
             @click="batchGenerate"
           >
-            {{ batchGenerating ? 'Generating... please wait' : `Generate All ${quarterLabel} Certificates` }}
+            Generate All {{ quarterLabel }} Certificates
           </MyButtonConstructor>
+          <div v-if="batchGenerating || batchError" class="mt-3">
+            <MyTextConstructor v-if="batchGenerating">{{ batchProgress }}</MyTextConstructor>
+            <MyTextConstructor v-else text-color="text-brand-danger">{{ batchError }}</MyTextConstructor>
+          </div>
 
           <!-- Results -->
           <div v-if="batchResult" class="mt-3 rounded-lg border border-brand-success bg-brand-success-soft p-4">
-            <p class="text-sm font-bold text-brand-text mb-3">{{ batchResult.total }} certificates generated</p>
+            <p class="text-sm font-bold text-brand-text mb-3">{{ batchResult.total !== null ? `${batchResult.total} certificates generated` : 'Certificates already generated' }}</p>
             <div class="flex flex-wrap gap-2">
               <a
                 v-if="batchResult.master_zip"

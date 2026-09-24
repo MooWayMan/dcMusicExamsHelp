@@ -13,44 +13,44 @@
 // versa, the cert generator silently picks the legacy generic
 // template — which is the exact bug we just fixed.
 
-use App\Http\Controllers\Admin\CertificateController;
+use App\Services\CertificateRenderer;
 
 it('returns the correct Showstopper template for Initial–5', function () {
-    expect(CertificateController::topScorerTemplate('Showstopper', 'initial_5'))
+    expect(CertificateRenderer::topScorerTemplate('Showstopper', 'initial_5'))
         ->toBe('certStu_5_initial5.png');
 });
 
 it('returns the correct Showstopper template for Grades 6–8', function () {
-    expect(CertificateController::topScorerTemplate('Showstopper', '6_8'))
+    expect(CertificateRenderer::topScorerTemplate('Showstopper', '6_8'))
         ->toBe('certStu_5_g68.png');
 });
 
 it('returns the correct Centre Stage template for Initial–5', function () {
-    expect(CertificateController::topScorerTemplate('Centre Stage', 'initial_5'))
+    expect(CertificateRenderer::topScorerTemplate('Centre Stage', 'initial_5'))
         ->toBe('certStu_4_initial5.png');
 });
 
 it('returns the correct Centre Stage template for Grades 6–8', function () {
-    expect(CertificateController::topScorerTemplate('Centre Stage', '6_8'))
+    expect(CertificateRenderer::topScorerTemplate('Centre Stage', '6_8'))
         ->toBe('certStu_4_g68.png');
 });
 
 it('returns null for an unknown tier', function () {
-    expect(CertificateController::topScorerTemplate('Standing Ovation', 'initial_5'))
+    expect(CertificateRenderer::topScorerTemplate('Standing Ovation', 'initial_5'))
         ->toBeNull();
 });
 
 it('returns null for an unknown group', function () {
-    expect(CertificateController::topScorerTemplate('Showstopper', 'grade_3'))
+    expect(CertificateRenderer::topScorerTemplate('Showstopper', 'grade_3'))
         ->toBeNull();
 });
 
 it('produces four unique filenames across the full mapping', function () {
     $files = collect([
-        CertificateController::topScorerTemplate('Showstopper', 'initial_5'),
-        CertificateController::topScorerTemplate('Showstopper', '6_8'),
-        CertificateController::topScorerTemplate('Centre Stage', 'initial_5'),
-        CertificateController::topScorerTemplate('Centre Stage', '6_8'),
+        CertificateRenderer::topScorerTemplate('Showstopper', 'initial_5'),
+        CertificateRenderer::topScorerTemplate('Showstopper', '6_8'),
+        CertificateRenderer::topScorerTemplate('Centre Stage', 'initial_5'),
+        CertificateRenderer::topScorerTemplate('Centre Stage', '6_8'),
     ]);
 
     expect($files->unique()->count())->toBe(4);

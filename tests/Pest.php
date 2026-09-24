@@ -101,3 +101,64 @@ function guardSources(): array
 
     return $sources;
 }
+
+/**
+ * Files matching $pattern, other than the ones allowed to. Generated
+ * Wayfinder route files are ignored: they mirror routes/, they aren't a copy.
+ *
+ * @param  list<string>  $allowed
+ * @return list<string>
+ */
+function guardOffenders(string $pattern, array $allowed): array
+{
+    return collect(guardSources())
+        ->filter(fn ($code) => preg_match($pattern, $code) === 1)
+        ->keys()
+        ->reject(fn ($path) => in_array($path, $allowed, true)
+            || str_starts_with($path, 'resources/js/actions/')
+            || str_starts_with($path, 'resources/js/routes/')
+            || str_starts_with($path, 'resources/js/wayfinder/'))
+        ->values()
+        ->all();
+}
+
+/**
+ * Serve a small blank PNG for every certificate template and badge on S3,
+ * so certificate tests run offline and quickly.
+ */
+function fakeCertificateTemplates(): void
+{
+    $image = imagecreatetruecolor(200, 283);
+    imagefill($image, 0, 0, imagecolorallocate($image, 255, 255, 255));
+    ob_start();
+    imagepng($image);
+    $png = ob_get_clean();
+
+    Illuminate\Support\Facades\Http::fake([
+        'moowaymusicbucket.s3.eu-west-2.amazonaws.com/*' => Illuminate\Support\Facades\Http::response($png, 200, ['Content-Type' => 'image/png']),
+    ]);
+}
+
+/**
+ * Run a quarter's certificate batch through its three endpoints, the way the
+ * page does, and return what finish() returned.
+ */
+function runQuarterCertificateBatch(Tests\TestCase $test, int $quarter, int $year): array
+{
+    $plan = $test->postJson('/admin/certificates/batch/start', ['quarter' => $quarter, 'year' => $year])
+        ->assertOk()
+        ->json();
+
+    foreach ($plan['steps'] as $step) {
+        $test->postJson('/admin/certificates/batch/step', [
+            'quarter' => $quarter,
+            'year' => $year,
+            'teacher' => $step['teacher'],
+            'part' => $step['part'],
+        ])->assertOk();
+    }
+
+    return $test->postJson('/admin/certificates/batch/finish', ['quarter' => $quarter, 'year' => $year])
+        ->assertOk()
+        ->json();
+}

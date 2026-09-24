@@ -1,13 +1,15 @@
 <!-- resources/js/pages/admin/Certificates/Index.vue -->
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { router, usePage } from '@inertiajs/vue3'
+import { router } from '@inertiajs/vue3'
 import {
   Award, Download, User, Music, Search, Eye, X, Package, Loader2,
   Copy, ExternalLink, CheckCircle2, ChevronUp, ChevronDown, Mail, Send,
 } from 'lucide-vue-next'
 import PageHeader from '@/components/reusables/PageHeader.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
+import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
+import { useQuarterCertificateBatch } from '@/composables/useQuarterCertificateBatch'
 
 interface StudentEntry {
   id: number
@@ -61,9 +63,6 @@ const props = defineProps<{
   weeklyGroups: WeeklyGroup[]
 }>()
 
-// Flash data
-const page = usePage()
-const batchResult = computed(() => (page.props as any).flash?.batch_result ?? null)
 
 // Tab state
 const activeTab = ref<'student' | 'teacher'>('student')
@@ -71,7 +70,13 @@ const activeTab = ref<'student' | 'teacher'>('student')
 // Batch generate — initialise from the URL (or today) so the page stays in sync
 const batchQuarter = ref(props.selectedQuarter)
 const batchYear = ref(props.selectedYear)
-const batchGenerating = ref(false)
+const {
+  running: batchGenerating,
+  progress: batchProgress,
+  result: batchResult,
+  error: batchError,
+  run: runBatch,
+} = useQuarterCertificateBatch()
 
 // Friendly quarter label for the page header, e.g. "Q1 2026"
 const quarterLabel = computed(() => `Q${batchQuarter.value} ${batchYear.value}`)
@@ -466,15 +471,8 @@ function markWeeklyGroupSent(group: WeeklyGroup) {
     .finally(() => { markingSent.value[group.teacher_name] = false })
 }
 
-async function batchGenerate() {
-  batchGenerating.value = true
-  router.post('/admin/certificates/batch', {
-    quarter: batchQuarter.value,
-    year: batchYear.value,
-  }, {
-    preserveScroll: true,
-    onFinish: () => { batchGenerating.value = false },
-  })
+function batchGenerate() {
+  runBatch(batchQuarter.value, batchYear.value)
 }
 
 // Student form
@@ -782,8 +780,12 @@ async function generateTeacherCert(mode: 'preview' | 'download' = 'preview') {
             :disabled="batchGenerating"
             @click="batchGenerate"
           >
-            {{ batchGenerating ? 'Generating...' : 'Generate All Certificates' }}
+            Generate All Certificates
           </MyButtonConstructor>
+        </div>
+        <div v-if="batchGenerating || batchError" class="mt-3">
+          <MyTextConstructor v-if="batchGenerating">{{ batchProgress }}</MyTextConstructor>
+          <MyTextConstructor v-else text-color="text-brand-danger">{{ batchError }}</MyTextConstructor>
         </div>
 
         <!-- Batch results -->

@@ -7,93 +7,17 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ExamContact;
 use App\Models\ExamEntry;
-use App\Support\EntryCredit;
-use App\Support\TopScorers;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\CertificateRenderer;
+use App\Services\QuarterCertificateBatch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver;
-use Intervention\Image\Encoders\PngEncoder;
-use Intervention\Image\Typography\FontFactory;
 use ZipArchive;
 
 class CertificateController extends Controller
 {
-    private const S3_BASE = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/';
-
-    /**
-     * Student certificate templates (blank PNGs on S3).
-     *
-     * Centre Stage / Showstopper here are the LEGACY single-version templates
-     * kept as a fallback. The live top-scorer cert generator picks group-
-     * specific templates from TOP_SCORER_TEMPLATES below — those are what
-     * Paul actually wants attached to the winner emails. The legacy entries
-     * stay so any older code path that looks up by certificate name keeps
-     * working.
-     */
-    private const STUDENT_TEMPLATES = [
-        'Bravo Certificate'             => 'certStu_1.png',
-        'Take a Bow Certificate'        => 'certStu_2.png',
-        'Standing Ovation Certificate'  => 'certStu_3.png',
-        'Centre Stage Certificate'      => 'certStu_4.png',
-        'Showstopper Certificate'       => 'certStu_5.png',
-    ];
-
-    /**
-     * Group-specific top-scorer cert templates.
-     *
-     * Each quarter awards FOUR top-scorer certificates — one per
-     * (group × tier) combination. Anna in Initial–5 might score 92 (her
-     * group's top Distinction) the same quarter Seth scores 93 in Grades
-     * 6–8 (his group's top Distinction). Both deserve a cert that says
-     * "highest in YOUR group" — not the legacy generic "highest this
-     * quarter" that misled the recipient about which slice was won.
-     *
-     * Index: [tier][group] → S3 filename.
-     *   tier  = 'Showstopper' (Distinction) | 'Centre Stage' (Merit)
-     *   group = 'initial_5' | '6_8'
-     */
-    private const TOP_SCORER_TEMPLATES = [
-        'Showstopper' => [
-            'initial_5' => 'certStu_5_initial5.png',
-            '6_8'       => 'certStu_5_g68.png',
-        ],
-        'Centre Stage' => [
-            'initial_5' => 'certStu_4_initial5.png',
-            '6_8'       => 'certStu_4_g68.png',
-        ],
-    ];
-
-    /**
-     * Resolve the S3 filename for a (tier × group) top-scorer cert.
-     *
-     * Public so tests can verify the wiring without reaching into a
-     * private constant via reflection.
-     *
-     * @param  string  $tier   'Showstopper' (Distinction) | 'Centre Stage' (Merit)
-     * @param  string  $group  'initial_5' | '6_8'
-     * @return string|null     Matching filename, or null for unknown combos.
-     */
-    public static function topScorerTemplate(string $tier, string $group): ?string
-    {
-        return self::TOP_SCORER_TEMPLATES[$tier][$group] ?? null;
-    }
-
-    /**
-     * Teacher certificate templates (blank PNGs on S3).
-     */
-    private const TEACHER_TEMPLATES = [
-        'Bronze Appreciation Certificate'    => 'certTeach_1.png',
-        'Silver Appreciation Certificate'    => 'certTeach_2.png',
-        'Gold Appreciation Certificate'      => 'certTeach_3.png',
-        'Top Award Appreciation Certificate' => 'certTeach_4.png',
-    ];
-
     /**
      * Show the certificate generator page.
      *
@@ -169,13 +93,7 @@ class CertificateController extends Controller
                 'id'               => $contact?->id,
                 'name'             => $teacherName,
                 'candidates_count' => $count,
-                'tier'             => match (true) {
-                    $count >= 40 => 'Top Award',
-                    $count >= 30 => 'Gold',
-                    $count >= 20 => 'Silver',
-                    $count >= 10 => 'Bronze',
-                    default      => null,
-                },
+                'tier'             => CertificateRenderer::teacherBadge($count),
             ];
         })->sortByDesc('candidates_count')->values();
 
@@ -189,8 +107,8 @@ class CertificateController extends Controller
         return Inertia::render('admin/Certificates/Index', [
             'students'          => $students,
             'teachers'          => $teachers,
-            'studentTemplates'  => array_keys(self::STUDENT_TEMPLATES),
-            'teacherTemplates'  => array_keys(self::TEACHER_TEMPLATES),
+            'studentTemplates'  => array_keys(CertificateRenderer::STUDENT_TEMPLATES),
+            'teacherTemplates'  => array_keys(CertificateRenderer::TEACHER_TEMPLATES),
             'selectedQuarter'   => $quarter,
             'selectedYear'      => $year,
             'weeklyGroups'      => $weeklyGroups,
@@ -360,32 +278,24 @@ class CertificateController extends Controller
      * (template missing, S3 unreachable, encode error) so the caller
      * can skip the entry rather than 500-ing the whole batch.
      */
-    private function renderStudentCertPdfBytes(ExamEntry $entry, string $quarterLabel): ?string
+    private function renderStudentCertPdfBytes(CertificateRenderer $renderer, ExamEntry $entry, string $quarterLabel): ?string
     {
-        $certName = $entry->certificate_name;
-        if (! $certName || ! isset(self::STUDENT_TEMPLATES[$certName])) {
+        $file = CertificateRenderer::STUDENT_TEMPLATES[$entry->certificate_name] ?? null;
+        if (! $file) {
             return null;
         }
 
         try {
-            $templateUrl = self::S3_BASE . self::STUDENT_TEMPLATES[$certName];
-            $image = $this->overlayStudentText(
-                $templateUrl,
+            return $renderer->pdf($renderer->student(
+                $file,
                 $entry->candidate_name,
                 $entry->instrument?->name ?? '',
-                $entry->grade ?? '',
+                (string) ($entry->grade ?? ''),
                 $quarterLabel,
-            );
-
-            $encoded = $image->encode(new PngEncoder());
-            $base64 = base64_encode((string) $encoded);
-            $html = '<html><head><style>@page { margin: 0; } body { margin: 0; }</style></head><body>'
-                . '<img src="data:image/png;base64,' . $base64 . '" style="width:210mm;height:297mm;display:block;">'
-                . '</body></html>';
-
-            return Pdf::loadHTML($html)->setPaper('a4', 'portrait')->output();
+            ));
         } catch (\Throwable $e) {
             \Log::error("Cert render failed for entry {$entry->id}: {$e->getMessage()}");
+
             return null;
         }
     }
@@ -436,9 +346,10 @@ class CertificateController extends Controller
             return response()->json(['error' => 'Could not create temp dir.'], 500);
         }
 
+        $renderer = new CertificateRenderer();
         $writtenFiles = [];
         foreach ($entries as $entry) {
-            $pdfBytes = $this->renderStudentCertPdfBytes($entry, $quarterLabel);
+            $pdfBytes = $this->renderStudentCertPdfBytes($renderer, $entry, $quarterLabel);
             if (! $pdfBytes) {
                 continue;
             }
@@ -499,7 +410,7 @@ class CertificateController extends Controller
         $templateKey = $validated['template'];
         $format = $validated['format'] ?? 'pdf';
 
-        if (! isset(self::STUDENT_TEMPLATES[$templateKey])) {
+        if (! isset(CertificateRenderer::STUDENT_TEMPLATES[$templateKey])) {
             return back()->withErrors(['template' => 'Invalid template selected.']);
         }
 
@@ -512,32 +423,10 @@ class CertificateController extends Controller
         $quarter = $validated['quarter'] ?? $this->getQuarterLabel($effectiveDate);
 
         try {
-            $templateUrl = self::S3_BASE . self::STUDENT_TEMPLATES[$templateKey];
-            $image = $this->overlayStudentText($templateUrl, $name, $instrument, $grade, $quarter);
+            $renderer = new CertificateRenderer();
+            $image = $renderer->student(CertificateRenderer::STUDENT_TEMPLATES[$templateKey], $name, $instrument, (string) $grade, $quarter);
 
-            $encoded = $image->encode(new PngEncoder());
-            $safeBase = str_replace(' ', '_', $templateKey) . '_' . str_replace(' ', '_', $name);
-
-            // PNG mode — return the raw image so the browser can render an inline preview
-            if ($format === 'png') {
-                return response((string) $encoded, 200, [
-                    'Content-Type'        => 'image/png',
-                    'Content-Disposition' => 'inline; filename="' . $safeBase . '.png"',
-                ]);
-            }
-
-            // PDF mode — wrap the PNG in an A4 page for download
-            $base64 = base64_encode((string) $encoded);
-            $html = '<html><head><style>@page { margin: 0; } body { margin: 0; }</style></head><body>'
-                . '<img src="data:image/png;base64,' . $base64 . '" style="width:210mm;height:297mm;display:block;">'
-                . '</body></html>';
-
-            $pdf = Pdf::loadHTML($html)->setPaper('a4', 'portrait');
-
-            return response($pdf->output(), 200, [
-                'Content-Type'        => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="' . $safeBase . '.pdf"',
-            ]);
+            return $this->certificateResponse($renderer, $image, $templateKey, $name, $format);
         } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
@@ -549,777 +438,104 @@ class CertificateController extends Controller
     public function generateTeacher(Request $request)
     {
         $validated = $request->validate([
-            'teacher_id'   => 'required|exists:users,id',
+            'teacher_id'   => 'required|integer|exists:exam_contacts,id',
             'template'     => 'required|string',
             'custom_name'  => 'nullable|string|max:100',
             'quarter'      => 'nullable|string|max:30',
             'format'       => 'nullable|in:png,pdf',
         ]);
 
-        $teacher = User::findOrFail($validated['teacher_id']);
+        $contact = ExamContact::with('schools:id,name')->findOrFail($validated['teacher_id']);
         $templateKey = $validated['template'];
         $format = $validated['format'] ?? 'pdf';
 
-        if (! isset(self::TEACHER_TEMPLATES[$templateKey])) {
+        if (! isset(CertificateRenderer::TEACHER_TEMPLATES[$templateKey])) {
             return back()->withErrors(['template' => 'Invalid template selected.']);
         }
 
-        // Use custom name if provided, otherwise look up the teacher's school
-        // via the unified ExamContact → contact_school pivot. Falls back to the
-        // teacher's display name if no school is linked.
-        $schoolName = \App\Models\ExamContact::query()
-            ->where('user_id', $teacher->id)
-            ->with('schools:id,name')
-            ->first()
-            ?->schools->first()?->name;
-        $name = $validated['custom_name'] ?? $schoolName ?? $teacher->name;
+        // The page sends the teacher's contact id. Certificates show the
+        // school when one is linked, otherwise the teacher's own name.
+        $name = $validated['custom_name'] ?? $contact->schools->first()?->name ?? $contact->name;
         $quarter = $validated['quarter'] ?? $this->getQuarterLabel(now());
 
-        $templateUrl = self::S3_BASE . self::TEACHER_TEMPLATES[$templateKey];
-        $image = $this->overlayTeacherText($templateUrl, $name, $quarter);
+        $renderer = new CertificateRenderer();
+        $image = $renderer->teacher(CertificateRenderer::TEACHER_TEMPLATES[$templateKey], $name, $quarter);
 
-        $encoded = $image->encode(new PngEncoder());
-        $safeBase = str_replace(' ', '_', $templateKey) . '_' . str_replace(' ', '_', $name);
+        return $this->certificateResponse($renderer, $image, $templateKey, $name, $format);
+    }
+
+    /**
+     * A single certificate as an inline PNG (the preview) or a PDF download.
+     */
+    private function certificateResponse(CertificateRenderer $renderer, $image, string $templateKey, string $name, string $format)
+    {
+        $safeBase = str_replace(' ', '_', $templateKey).'_'.str_replace(' ', '_', $name);
 
         if ($format === 'png') {
-            return response((string) $encoded, 200, [
+            return response($renderer->png($image), 200, [
                 'Content-Type'        => 'image/png',
-                'Content-Disposition' => 'inline; filename="' . $safeBase . '.png"',
+                'Content-Disposition' => 'inline; filename="'.$safeBase.'.png"',
             ]);
         }
 
-        $base64 = base64_encode((string) $encoded);
-        $html = '<html><head><style>@page { margin: 0; } body { margin: 0; }</style></head><body>'
-            . '<img src="data:image/png;base64,' . $base64 . '" style="width:210mm;height:297mm;display:block;">'
-            . '</body></html>';
-
-        $pdf = Pdf::loadHTML($html)->setPaper('a4', 'portrait');
-
-        return response($pdf->output(), 200, [
+        return response($renderer->pdf($image), 200, [
             'Content-Type'        => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="' . $safeBase . '.pdf"',
+            'Content-Disposition' => 'attachment; filename="'.$safeBase.'.pdf"',
         ]);
     }
 
     /**
-     * Overlay student name and instrument/grade onto certificate template.
-     *
-     * Text sits in the empty space between "Proudly Presented To" and the body text.
-     * Positioned centre-right to avoid the badge on the left.
-     * Uses percentage-based Y positioning so it works at any resolution.
+     * Quarter batch, step 1 of 3: clear the quarter's folder and return the
+     * list of steps for the page to run. See QuarterCertificateBatch for why
+     * the work is split.
      */
-    private function overlayStudentText(string $templateUrl, string $name, string $instrument, string $grade, string $quarter)
+    public function batchStart(Request $request, QuarterCertificateBatch $batch): JsonResponse
     {
-        $response = Http::get($templateUrl);
-        if (! $response->successful()) {
-            throw new \RuntimeException("Failed to download template from: {$templateUrl}");
+        ['quarter' => $quarter, 'year' => $year] = $this->quarterInput($request);
+
+        $plan = $batch->start($quarter, $year);
+        if ($plan === null) {
+            return response()->json(['error' => 'No entries with results found for '.QuarterCertificateBatch::label($quarter, $year).'.'], 422);
         }
 
-        $manager = new ImageManager(new Driver());
-        $image = $manager->decode($response->body());
-
-        $width = $image->width();
-        $height = $image->height();
-
-        // Text shifted right to avoid badge on the left
-        $textX = (int) ($width * 0.60);
-
-        // Font — Georgia preferred, DejaVu as fallback (GD built-in only supports size 1-5)
-        $fontPath = resource_path('fonts/Georgia.ttf');
-        if (! file_exists($fontPath)) {
-            $fontPath = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf';
-        }
-        if (! file_exists($fontPath)) {
-            $fontPath = glob('/usr/share/fonts/truetype/*/*.ttf')[0] ?? null;
-        }
-
-        // Scale font sizes relative to image width (designed for ~2480px wide A4)
-        $nameSize = (int) ($width * 0.038);
-        $detailSize = (int) ($width * 0.028);
-        $quarterSize = (int) ($width * 0.042);
-
-        // Right-side text X — right edge anchor, aligned with body text area
-        $rightTextX = (int) ($width * 0.92);
-
-        // Bold font for date (try Bold variant, fall back to regular)
-        $boldFontPath = resource_path('fonts/Georgia-Bold.ttf');
-        if (! file_exists($boldFontPath)) {
-            $boldFontPath = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf';
-        }
-        if (! file_exists($boldFontPath)) {
-            $boldFontPath = $fontPath; // fall back to regular
-        }
-
-        // Name — positioned at ~47% from top, right-aligned
-        $nameY = (int) ($height * 0.47);
-        $image->text($name, $rightTextX, $nameY, function (FontFactory $font) use ($fontPath, $nameSize) {
-            if ($fontPath) {
-                $font->filename($fontPath);
-            }
-            $font->size($nameSize);
-            $font->color('#1e3a5f');
-            $font->align('right');
-        });
-
-        // Instrument & Grade — positioned at ~52% from top, right-aligned to same anchor
-        $detail = trim("$instrument Grade $grade");
-        $detailY = (int) ($height * 0.52);
-        $image->text($detail, $rightTextX, $detailY, function (FontFactory $font) use ($fontPath, $detailSize) {
-            if ($fontPath) {
-                $font->filename($fontPath);
-            }
-            $font->size($detailSize);
-            $font->color('#1e3a5f');
-            $font->align('right');
-        });
-
-        // Quarter — at the bottom (~96% from top, bold and bigger)
-        $quarterX = (int) ($width * 0.50);
-        $quarterY = (int) ($height * 0.96);
-        $image->text($quarter, $quarterX, $quarterY, function (FontFactory $font) use ($boldFontPath, $quarterSize) {
-            if ($boldFontPath) {
-                $font->filename($boldFontPath);
-            }
-            $font->size($quarterSize);
-            $font->color('#1e3a5f');
-            $font->align('center');
-        });
-
-        return $image;
+        return response()->json($plan);
     }
 
     /**
-     * Overlay teacher name and quarter onto certificate template.
-     *
-     * Same layout as student but only needs the name (no instrument/grade).
+     * Quarter batch, step 2 of 3, called once per step start() listed.
      */
-    private function overlayTeacherText(string $templateUrl, string $name, string $quarter)
+    public function batchStep(Request $request, QuarterCertificateBatch $batch): JsonResponse
     {
-        $response = Http::get($templateUrl);
-        if (! $response->successful()) {
-            throw new \RuntimeException("Failed to download template from: {$templateUrl}");
-        }
+        ['quarter' => $quarter, 'year' => $year] = $this->quarterInput($request);
+        $step = $request->validate([
+            'teacher' => 'required|string|max:255',
+            'part' => 'required|integer|min:1',
+        ]);
 
-        $manager = new ImageManager(new Driver());
-        $image = $manager->decode($response->body());
-
-        $width = $image->width();
-        $height = $image->height();
-
-        // Right-side text X — right edge anchor, matching student certificate layout
-        $rightTextX = (int) ($width * 0.92);
-
-        // Font — Georgia preferred, DejaVu as fallback
-        $fontPath = resource_path('fonts/Georgia.ttf');
-        if (! file_exists($fontPath)) {
-            $fontPath = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf';
-        }
-        if (! file_exists($fontPath)) {
-            $fontPath = glob('/usr/share/fonts/truetype/*/*.ttf')[0] ?? null;
-        }
-
-        // Scale font sizes relative to image width
-        $nameSize = (int) ($width * 0.038);
-        $quarterSize = (int) ($width * 0.042);
-
-        // Name — positioned at ~47% from top, right-aligned (matching student layout)
-        $nameY = (int) ($height * 0.47);
-        $image->text($name, $rightTextX, $nameY, function (FontFactory $font) use ($fontPath, $nameSize) {
-            if ($fontPath) {
-                $font->filename($fontPath);
-            }
-            $font->size($nameSize);
-            $font->color('#1e3a5f');
-            $font->align('right');
-        });
-
-        // Quarter — bold, at the very bottom (~94% from top)
-        $quarterX = (int) ($width * 0.50);
-        $quarterY = (int) ($height * 0.94);
-        $image->text($quarter, $quarterX, $quarterY, function (FontFactory $font) use ($fontPath, $quarterSize) {
-            if ($fontPath) {
-                $font->filename($fontPath);
-            }
-            $font->size($quarterSize);
-            $font->color('#1e3a5f');
-            $font->align('center');
-        });
-
-        return $image;
+        return response()->json([
+            'written' => $batch->step($quarter, $year, $step['teacher'], (int) $step['part']),
+        ]);
     }
 
     /**
-     * Batch generate all certificates for a quarter, grouped by teacher in ZIPs.
+     * Quarter batch, step 3 of 3: the ZIPs and the download links.
      */
-    public function batchGenerate(Request $request)
+    public function batchFinish(Request $request, QuarterCertificateBatch $batch): JsonResponse
     {
-        set_time_limit(120); // Certificate generation can take a while with many entries
+        ['quarter' => $quarter, 'year' => $year] = $this->quarterInput($request);
 
+        return response()->json($batch->finish($quarter, $year));
+    }
+
+    /** @return array{quarter: int, year: int} */
+    private function quarterInput(Request $request): array
+    {
         $validated = $request->validate([
             'quarter' => 'required|integer|min:1|max:4',
             'year' => 'required|integer|min:2025|max:2030',
         ]);
 
-        $quarter = $validated['quarter'];
-        $year = $validated['year'];
-
-        $suffix = match ($quarter) {
-            1 => '1st', 2 => '2nd', 3 => '3rd', 4 => '4th',
-        };
-        $quarterLabel = "{$suffix} Quarter {$year}";
-
-        // Date range for the quarter
-        $startMonth = (($quarter - 1) * 3) + 1;
-        $startDate = "{$year}-" . str_pad($startMonth, 2, '0', STR_PAD_LEFT) . '-01';
-        $endDate = \Carbon\Carbon::parse($startDate)->addMonths(3)->subDay()->toDateString();
-
-        // Get all SCORED entries in this quarter — drives the per-student
-        // certificate generation. Every candidate who sat the exam gets a
-        // certificate based on their result: Standing Ovation for a
-        // Distinction, Take a Bow for a Merit, Bravo for a Pass OR a Below
-        // Pass. That last case is the point of the scheme — see ForTeachers
-        // ("even if they don't pass"). CANCELLED entries are excluded because
-        // no exam was sat.
-        $entries = ExamEntry::whereNotNull('score')
-            ->where(function ($q) {
-                $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
-            })
-            ->with(['instrument:id,name', 'order:id,requested_start_date'])
-            ->get()
-            ->filter(function ($entry) use ($startDate, $endDate) {
-                $date = $entry->exam_date ?? $entry->order?->requested_start_date;
-                return $date && $date->between($startDate, $endDate);
-            });
-
-        if ($entries->isEmpty()) {
-            return back()->with('error', "No entries with results found for {$quarterLabel}.");
-        }
-
-        // Credit-name resolution for the ZIP folders and the report PDFs.
-        //
-        // Entries created by the Section 1b enrolment-list import carry
-        // `teacher_name = null` on purpose — Trinity doesn't tell us the
-        // teacher until the per-candidate results triple arrives — and their
-        // only link to a person is `submitter_contact_id`. Grouping on the raw
-        // string alone therefore dropped every not-yet-resulted candidate out
-        // of their teacher's bucket, which is why the "Awaiting Results"
-        // section silently never rendered for them. (Penelope Jane Mitchell,
-        // Q2 2026 — Paul's report said 6 Total with no pending line, while
-        // Quarter End correctly showed 1 pending.)
-        //
-        // This mirrors the submitter fallback in
-        // QuarterEndController::creditNameFor(). It deliberately does NOT
-        // adopt that method's school-admin rollup: Quarter End rolls Daniel
-        // Rogers up into "Pulse Music School", but the ZIP is built per person
-        // (Daniel_Rogers_Report.pdf), and changing that here would rename
-        // existing folders.
-        //
-        // See App\Support\EntryCredit for the rule itself.
-        $submitterNameById = EntryCredit::submitterNames($entries);
-
-        $creditName = fn (ExamEntry $e) => EntryCredit::nameFor($e, $submitterNameById);
-
-        // Group by teacher
-        $grouped = $entries->groupBy($creditName);
-
-        // ── Teacher badge volume counts ──────────────────────────────────────
-        // The Bronze/Silver/Gold/Top-Award badge counts EVERY non-CANCELLED
-        // entry in the quarter — including NO_SHOW and Fails — because the
-        // booking itself earns the teacher their volume tally. Using the
-        // passing-scores-only $grouped count (the previous behaviour) under-
-        // counted teachers near a threshold and shipped them the wrong cert
-        // (e.g. Daniel Rogers Q1 2026: 19 passes + 2 NO_SHOW + 1 Fail = 22
-        // entries → Silver, but the old logic said 19 → Bronze, which then
-        // disagreed with the email body's "22+ candidates / Silver" line).
-        // Mirrors the inclusion rule on /admin/quarter-end so the cert
-        // generator and the email body always agree on which badge to award.
-        $teacherBadgeCounts = ExamEntry::query()
-            ->where(function ($q) {
-                $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
-            })
-            ->whereNotNull('teacher_name')
-            ->where('teacher_name', '!=', '')
-            ->with('order:id,requested_start_date')
-            ->get()
-            ->filter(function ($entry) use ($startDate, $endDate) {
-                $date = $entry->exam_date ?? $entry->order?->requested_start_date;
-                return $date && $date->between($startDate, $endDate);
-            })
-            ->groupBy('teacher_name')
-            ->map->count();
-
-        // Template image cache
-        $templateImageCache = [];
-
-        // Create output directory
-        $outputDir = "certificates/{$year}-Q{$quarter}";
-        Storage::disk('local')->deleteDirectory($outputDir); // Clean previous run
-        Storage::disk('local')->makeDirectory($outputDir);
-
-        $totalGenerated = 0;
-        $teacherSummary = [];
-
-        foreach ($grouped as $teacher => $teacherEntries) {
-            $safeTeacher = preg_replace('/[^a-zA-Z0-9_-]/', '_', $teacher);
-            $teacherDir = "{$outputDir}/{$safeTeacher}";
-            Storage::disk('local')->makeDirectory($teacherDir);
-
-            $certCount = 0;
-
-            foreach ($teacherEntries as $entry) {
-                $certName = $entry->certificate_name;
-                if (! $certName || ! isset(self::STUDENT_TEMPLATES[$certName])) {
-                    continue;
-                }
-
-                try {
-                    $templateUrl = self::S3_BASE . self::STUDENT_TEMPLATES[$certName];
-
-                    // Cache template downloads
-                    if (! isset($templateImageCache[$templateUrl])) {
-                        $response = Http::get($templateUrl);
-                        if (! $response->successful()) {
-                            continue;
-                        }
-                        $templateImageCache[$templateUrl] = $response->body();
-                    }
-
-                    $manager = new ImageManager(new Driver());
-                    $image = $manager->decode($templateImageCache[$templateUrl]);
-
-                    $width = $image->width();
-                    $height = $image->height();
-
-                    $fontPath = resource_path('fonts/Georgia.ttf');
-                    if (! file_exists($fontPath)) {
-                        $fontPath = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf';
-                    }
-                    $boldFontPath = resource_path('fonts/Georgia-Bold.ttf');
-                    if (! file_exists($boldFontPath)) {
-                        $boldFontPath = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf';
-                    }
-
-                    $nameSize = (int) ($width * 0.038);
-                    $detailSize = (int) ($width * 0.028);
-                    $quarterSize = (int) ($width * 0.042);
-                    $rightTextX = (int) ($width * 0.92);
-
-                    // Name at 47%
-                    $image->text($entry->candidate_name, $rightTextX, (int) ($height * 0.47), function (FontFactory $font) use ($fontPath, $nameSize) {
-                        if ($fontPath) $font->filename($fontPath);
-                        $font->size($nameSize);
-                        $font->color('#1e3a5f');
-                        $font->align('right');
-                    });
-
-                    // Instrument & Grade at 52%
-                    $detail = trim(($entry->instrument?->name ?? '') . ' Grade ' . ($entry->grade ?? ''));
-                    $image->text($detail, $rightTextX, (int) ($height * 0.52), function (FontFactory $font) use ($fontPath, $detailSize) {
-                        if ($fontPath) $font->filename($fontPath);
-                        $font->size($detailSize);
-                        $font->color('#1e3a5f');
-                        $font->align('right');
-                    });
-
-                    // Quarter at 96%, bold, centre
-                    $image->text($quarterLabel, (int) ($width * 0.50), (int) ($height * 0.96), function (FontFactory $font) use ($boldFontPath, $quarterSize) {
-                        if ($boldFontPath) $font->filename($boldFontPath);
-                        $font->size($quarterSize);
-                        $font->color('#1e3a5f');
-                        $font->align('center');
-                    });
-
-                    $encoded = $image->encode(new PngEncoder());
-
-                    // Convert PNG to PDF using DomPDF
-                    $base64 = base64_encode((string) $encoded);
-                    $html = '<html><head><style>@page { margin: 0; } body { margin: 0; }</style></head><body>'
-                        . '<img src="data:image/png;base64,' . $base64 . '" style="width:210mm;height:297mm;display:block;">'
-                        . '</body></html>';
-
-                    $pdf = Pdf::loadHTML($html)->setPaper('a4', 'portrait');
-
-                    $safeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $entry->candidate_name);
-                    $shortCert = str_replace([' Certificate', ' '], ['', '_'], $certName);
-                    $filename = "{$teacherDir}/{$safeName}_{$shortCert}.pdf";
-
-                    Storage::disk('local')->put($filename, $pdf->output());
-                    $certCount++;
-                    $totalGenerated++;
-                } catch (\Throwable $e) {
-                    \Log::error("Batch cert failed for {$entry->candidate_name}: {$e->getMessage()}");
-                }
-            }
-
-            $teacherSummary[$teacher] = $certCount;
-        }
-
-        // Top-Scorer certificates — extracted into a shared helper so the
-        // standalone "Generate top-scorer certs only" endpoint can reuse
-        // the exact same rendering pipeline.
-        $topScorerResult = $this->renderTopScorerCertificates(
-            $entries,
-            $quarter,
-            $year,
-            $quarterLabel,
-            $templateImageCache,
-            true // alsoIntoTeacherFolder — bundle into the teacher's ZIP
-        );
-        $topScorerCount = $topScorerResult['count'];
-        $topScorerLog = $topScorerResult['log'];
-        $totalGenerated += $topScorerCount;
-
-        // NOTE: the per-teacher results CSV and report PDF used to be built
-        // here. They duplicated the teacher dashboard, which now carries every
-        // candidate's exam details — including the ones still awaiting a
-        // result — and offers its own dated CSV / PDF download. Dropping them
-        // takes two renders per teacher out of this already slow batch, so it
-        // now produces certificates only.
-
-        // Generate teacher badge certificates for qualifying teachers
-        foreach ($grouped as $teacher => $teacherEntries) {
-            if ($teacher === 'Unassigned') continue;
-
-            $safeTeacher = preg_replace('/[^a-zA-Z0-9_-]/', '_', $teacher);
-            $teacherDir = "{$outputDir}/{$safeTeacher}";
-
-            // Look up school name for this teacher — certificates show school, not personal name
-            $teacherContact = ExamContact::withType('teacher')
-                ->with('schools')
-                ->whereRaw('LOWER(name) = ?', [mb_strtolower($teacher)])
-                ->first();
-            $certDisplayName = $teacherContact?->schools->first()?->name ?? $teacher;
-
-            // Badges reset per-quarter — count this quarter's non-CANCELLED
-            // entries (NO_SHOW + Fails included, see $teacherBadgeCounts
-            // build above). Falls back to the passing-scores group count
-            // only if the teacher somehow isn't in the badge-count map
-            // (defensive — shouldn't happen since the badge query is broader).
-            $quarterCandidates = $teacherBadgeCounts->get($teacher, $teacherEntries->count());
-
-            $badgeTier = match (true) {
-                $quarterCandidates >= 40 => 'Top Award Appreciation Certificate',
-                $quarterCandidates >= 30 => 'Gold Appreciation Certificate',
-                $quarterCandidates >= 20 => 'Silver Appreciation Certificate',
-                $quarterCandidates >= 10 => 'Bronze Appreciation Certificate',
-                default => null,
-            };
-
-            if ($badgeTier && isset(self::TEACHER_TEMPLATES[$badgeTier])) {
-                try {
-                    $templateUrl = self::S3_BASE . self::TEACHER_TEMPLATES[$badgeTier];
-
-                    if (! isset($templateImageCache[$templateUrl])) {
-                        $response = Http::get($templateUrl);
-                        if ($response->successful()) {
-                            $templateImageCache[$templateUrl] = $response->body();
-                        }
-                    }
-
-                    if (isset($templateImageCache[$templateUrl])) {
-                        $image = (new ImageManager(new Driver()))->decode($templateImageCache[$templateUrl]);
-                        $w = $image->width();
-                        $h = $image->height();
-
-                        $fontPath = resource_path('fonts/Georgia.ttf');
-                        if (! file_exists($fontPath)) $fontPath = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf';
-                        $boldFontPath = resource_path('fonts/Georgia-Bold.ttf');
-                        if (! file_exists($boldFontPath)) $boldFontPath = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf';
-
-                        $image->text($certDisplayName, (int) ($w * 0.92), (int) ($h * 0.47), function (FontFactory $font) use ($fontPath, $w) {
-                            if ($fontPath) $font->filename($fontPath);
-                            $font->size((int) ($w * 0.038));
-                            $font->color('#1e3a5f');
-                            $font->align('right');
-                        });
-
-                        $image->text($quarterLabel, (int) ($w * 0.50), (int) ($h * 0.94), function (FontFactory $font) use ($boldFontPath, $w) {
-                            if ($boldFontPath) $font->filename($boldFontPath);
-                            $font->size((int) ($w * 0.04));
-                            $font->color('#1e3a5f');
-                            $font->align('center');
-                        });
-
-                        $encoded = $image->encode(new PngEncoder());
-                        $base64 = base64_encode((string) $encoded);
-                        $html = '<html><head><style>@page { margin: 0; } body { margin: 0; }</style></head><body>'
-                            . '<img src="data:image/png;base64,' . $base64 . '" style="width:210mm;height:297mm;display:block;">'
-                            . '</body></html>';
-
-                        $badgePdf = Pdf::loadHTML($html)->setPaper('a4', 'portrait');
-                        $shortBadge = str_replace([' Certificate', ' '], ['', '_'], $badgeTier);
-                        Storage::disk('local')->put("{$teacherDir}/{$safeTeacher}_{$shortBadge}.pdf", $badgePdf->output());
-                    }
-                } catch (\Throwable $e) {
-                    \Log::error("Badge cert failed for {$teacher}: {$e->getMessage()}");
-                }
-
-                // Download the badge PNG from S3 for social media / website use
-                try {
-                    $badgePngMap = [
-                        'Bronze Appreciation Certificate' => 'awardTA10.png',
-                        'Silver Appreciation Certificate' => 'awardTA20.png',
-                        'Gold Appreciation Certificate'   => 'awardTA30.png',
-                        'Top Award Appreciation Certificate' => 'awardTA40.png',
-                    ];
-
-                    if (isset($badgePngMap[$badgeTier])) {
-                        $badgePngUrl = self::S3_BASE . $badgePngMap[$badgeTier];
-                        $badgePngResponse = Http::get($badgePngUrl);
-
-                        if ($badgePngResponse->successful()) {
-                            $shortTier = str_replace([' Appreciation Certificate', ' '], ['', '_'], $badgeTier);
-                            Storage::disk('local')->put(
-                                "{$teacherDir}/{$safeTeacher}_{$shortTier}_Badge.png",
-                                $badgePngResponse->body()
-                            );
-                        }
-                    }
-                } catch (\Throwable $e) {
-                    \Log::error("Badge PNG download failed for {$teacher}: {$e->getMessage()}");
-                }
-            }
-        }
-
-        // Create ZIPs per teacher
-        $zipDir = "{$outputDir}/zips";
-        Storage::disk('local')->makeDirectory($zipDir);
-        $downloadLinks = [];
-
-        foreach ($grouped as $teacher => $teacherEntries) {
-            $safeTeacher = preg_replace('/[^a-zA-Z0-9_-]/', '_', $teacher);
-            $teacherDir = "{$outputDir}/{$safeTeacher}";
-            $zipFilename = "{$zipDir}/{$safeTeacher}_Q{$quarter}_{$year}.zip";
-            $zipFullPath = Storage::disk('local')->path($zipFilename);
-
-            $zip = new ZipArchive();
-            if ($zip->open($zipFullPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-                continue;
-            }
-
-            foreach (Storage::disk('local')->files($teacherDir) as $file) {
-                $zip->addFile(Storage::disk('local')->path($file), basename($file));
-            }
-            $zip->close();
-
-            $downloadLinks[$teacher] = $zipFilename;
-        }
-
-        // Master ZIP — contains the individual teacher ZIPs (not loose folders)
-        $masterZipName = "{$outputDir}/ALL_Q{$quarter}_{$year}_Certificates.zip";
-        $masterZipPath = Storage::disk('local')->path($masterZipName);
-        $zip = new ZipArchive();
-
-        if ($zip->open($masterZipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
-            foreach ($downloadLinks as $teacher => $teacherZipPath) {
-                $fullPath = Storage::disk('local')->path($teacherZipPath);
-                $zip->addFile($fullPath, basename($teacherZipPath));
-            }
-            $zip->close();
-        }
-
-        return back()->with('batch_result', [
-            'total' => $totalGenerated,
-            'quarter_label' => $quarterLabel,
-            'teachers' => $teacherSummary,
-            'download_links' => $downloadLinks,
-            'master_zip' => $masterZipName,
-            // Top-scorer cert manifest — Paul attaches these standalone PDFs
-            // to the per-winner congratulations emails on QuarterEnd Step 3.
-            'top_scorer_certs'  => $topScorerLog,
-            'top_scorer_count'  => $topScorerCount,
-        ]);
-    }
-
-    /**
-     * Render Showstopper / Centre Stage PDFs for the four top-scorer
-     * winners (more if ties). Two output locations:
-     *
-     *   1. Standalone in `certificates/{year}-Q{quarter}/top-scorers/` —
-     *      always written. Each PDF is a single attachable file for the
-     *      per-winner congratulations email Paul sends from QuarterEnd
-     *      Step 3.
-     *
-     *   2. Optionally also into the winner's teacher folder — only when
-     *      `$alsoIntoTeacherFolder` is true (i.e. when called as part of
-     *      the full batch). Skipped for the standalone "top-scorer certs
-     *      only" endpoint, since regenerating individual teacher folders
-     *      without their other certs would make confusing partial ZIPs.
-     *
-     * @param  Collection<int, ExamEntry>  $entries
-     * @param  array  $templateImageCache  Pass-by-ref so the per-student
-     *                                     loop and this method can share
-     *                                     fetched template PNGs.
-     * @return array{count: int, log: array, dir: string}
-     */
-    private function renderTopScorerCertificates(
-        \Illuminate\Support\Collection $entries,
-        int $quarter,
-        int $year,
-        string $quarterLabel,
-        array &$templateImageCache = [],
-        bool $alsoIntoTeacherFolder = false
-    ): array {
-        $outputDir = "certificates/{$year}-Q{$quarter}";
-        $topScorersDir = "{$outputDir}/top-scorers";
-        Storage::disk('local')->makeDirectory($outputDir);
-        Storage::disk('local')->makeDirectory($topScorersDir);
-
-        $log = [];
-        $count = 0;
-
-        // Bucket the actual ExamEntry models ourselves rather than going
-        // through TopScorers::calculate, because that helper's ->toArray()
-        // call converts Eloquent models to plain associative arrays, which
-        // breaks the `$entry->candidate_name` / `$entry->instrument?->name`
-        // / `$entry->teacher_name` access we need below.
-        $awards = [];
-        foreach (['initial_5', '6_8'] as $group) {
-            foreach (['distinction', 'merit'] as $band) {
-                $bucket = $entries->filter(fn ($e) =>
-                    $e->score !== null
-                    && TopScorers::groupOf((string) $e->grade) === $group
-                    && TopScorers::bandOf((int) $e->score) === $band
-                );
-                if ($bucket->isEmpty()) continue;
-                $topScore = $bucket->max('score');
-                foreach ($bucket->where('score', $topScore) as $entry) {
-                    $awards[] = [
-                        'entry' => $entry,
-                        'group' => $group,
-                        'band'  => $band,
-                        'certificate' => $band === 'distinction' ? 'Showstopper' : 'Centre Stage',
-                    ];
-                }
-            }
-        }
-
-        foreach ($awards as $award) {
-            /** @var ExamEntry $entry */
-            $entry = $award['entry'];
-            $certName = $award['certificate'].' Certificate'; // 'Showstopper Certificate' | 'Centre Stage Certificate'
-
-            // Pick the group-specific template (Initial–5 vs 6–8) so the cert
-            // text reflects which slice was won. Falls back to the legacy
-            // single template by certificate name if the group-specific
-            // file isn't mapped — defensive only, the map should always hit.
-            $tier  = $award['certificate']; // 'Showstopper' | 'Centre Stage'
-            $group = $award['group'];       // 'initial_5'   | '6_8'
-            $templateFile = self::topScorerTemplate($tier, $group)
-                ?? self::STUDENT_TEMPLATES[$certName]
-                ?? null;
-
-            if (! $templateFile) {
-                continue;
-            }
-
-            try {
-                $templateUrl = self::S3_BASE.$templateFile;
-
-                if (! isset($templateImageCache[$templateUrl])) {
-                    $response = Http::get($templateUrl);
-                    if (! $response->successful()) {
-                        \Log::warning("Top-scorer template fetch failed: {$templateUrl}");
-                        continue;
-                    }
-                    $templateImageCache[$templateUrl] = $response->body();
-                }
-
-                $manager = new ImageManager(new Driver());
-                $image = $manager->decode($templateImageCache[$templateUrl]);
-
-                $width = $image->width();
-                $height = $image->height();
-
-                $fontPath = resource_path('fonts/Georgia.ttf');
-                if (! file_exists($fontPath)) {
-                    $fontPath = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf';
-                }
-                $boldFontPath = resource_path('fonts/Georgia-Bold.ttf');
-                if (! file_exists($boldFontPath)) {
-                    $boldFontPath = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf';
-                }
-
-                $nameSize = (int) ($width * 0.038);
-                $detailSize = (int) ($width * 0.028);
-                $quarterSize = (int) ($width * 0.042);
-                $rightTextX = (int) ($width * 0.92);
-
-                $image->text($entry->candidate_name, $rightTextX, (int) ($height * 0.47), function (FontFactory $font) use ($fontPath, $nameSize) {
-                    if ($fontPath) $font->filename($fontPath);
-                    $font->size($nameSize);
-                    $font->color('#1e3a5f');
-                    $font->align('right');
-                });
-
-                $detail = trim(($entry->instrument?->name ?? '').' Grade '.($entry->grade ?? ''));
-                $image->text($detail, $rightTextX, (int) ($height * 0.52), function (FontFactory $font) use ($fontPath, $detailSize) {
-                    if ($fontPath) $font->filename($fontPath);
-                    $font->size($detailSize);
-                    $font->color('#1e3a5f');
-                    $font->align('right');
-                });
-
-                $image->text($quarterLabel, (int) ($width * 0.50), (int) ($height * 0.96), function (FontFactory $font) use ($boldFontPath, $quarterSize) {
-                    if ($boldFontPath) $font->filename($boldFontPath);
-                    $font->size($quarterSize);
-                    $font->color('#1e3a5f');
-                    $font->align('center');
-                });
-
-                $encoded = $image->encode(new PngEncoder());
-
-                $base64 = base64_encode((string) $encoded);
-                $html = '<html><head><style>@page { margin: 0; } body { margin: 0; }</style></head><body>'
-                    .'<img src="data:image/png;base64,'.$base64.'" style="width:210mm;height:297mm;display:block;">'
-                    .'</body></html>';
-
-                $pdf = Pdf::loadHTML($html)->setPaper('a4', 'portrait');
-
-                $safeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $entry->candidate_name);
-                $shortCert = str_replace([' Certificate', ' '], ['', '_'], $certName);
-                $pdfBytes = $pdf->output();
-
-                $standalonePath = "{$topScorersDir}/{$safeName}_{$shortCert}.pdf";
-                Storage::disk('local')->put($standalonePath, $pdfBytes);
-
-                if ($alsoIntoTeacherFolder) {
-                    $teacherForWinner = $entry->teacher_name ?? 'Unassigned';
-                    $safeTeacher = preg_replace('/[^a-zA-Z0-9_-]/', '_', $teacherForWinner);
-                    $teacherDir = "{$outputDir}/{$safeTeacher}";
-                    Storage::disk('local')->makeDirectory($teacherDir);
-                    Storage::disk('local')->put("{$teacherDir}/{$safeName}_{$shortCert}.pdf", $pdfBytes);
-                }
-
-                $count++;
-                $log[] = [
-                    'name'             => $entry->candidate_name,
-                    'short_name'       => $this->shortDisplayName($entry->candidate_name),
-                    'certificate'      => $certName,
-                    'group'            => $award['group'],
-                    'band'             => $award['band'],
-                    'score'            => $entry->score,
-                    'instrument'       => $entry->instrument?->name,
-                    'grade'            => $entry->grade,
-                    'standalone_path'  => $standalonePath,
-                    'download_url'     => '/admin/certificates/download/'.$standalonePath,
-                ];
-            } catch (\Throwable $e) {
-                \Log::error("Top-scorer cert failed for {$entry->candidate_name}: {$e->getMessage()}");
-            }
-        }
-
-        return ['count' => $count, 'log' => $log, 'dir' => $topScorersDir];
-    }
-
-    /**
-     * GDPR display name: "Anna M". Mirrors ThankYouController.
-     */
-    private function shortDisplayName(string $fullName): string
-    {
-        $parts = preg_split('/\s+/', trim($fullName));
-        if (count($parts) <= 1) return $fullName;
-        return $parts[0].' '.mb_strtoupper(mb_substr(end($parts), 0, 1));
+        return ['quarter' => (int) $validated['quarter'], 'year' => (int) $validated['year']];
     }
 
     /**
@@ -1331,60 +547,25 @@ class CertificateController extends Controller
      * ZIPs — much faster than re-running the full batch when Paul just
      * wants the four PDFs to attach to congratulations emails.
      */
-    public function generateTopScorers(Request $request): JsonResponse
+    public function generateTopScorers(Request $request, QuarterCertificateBatch $batch): JsonResponse
     {
-        set_time_limit(60);
+        ['quarter' => $quarter, 'year' => $year] = $this->quarterInput($request);
+        $label = QuarterCertificateBatch::label($quarter, $year);
 
-        $validated = $request->validate([
-            'quarter' => 'required|integer|min:1|max:4',
-            'year' => 'required|integer|min:2025|max:2030',
-        ]);
-
-        $quarter = $validated['quarter'];
-        $year = $validated['year'];
-        $suffix = match ($quarter) {
-            1 => '1st', 2 => '2nd', 3 => '3rd', 4 => '4th',
-        };
-        $quarterLabel = "{$suffix} Quarter {$year}";
-
-        $startMonth = (($quarter - 1) * 3) + 1;
-        $startDate = \Carbon\Carbon::create($year, $startMonth, 1)->startOfDay();
-        $endDate = $startDate->copy()->addMonths(3)->subDay()->endOfDay();
-
-        $entries = ExamEntry::whereNotNull('score')
-            ->where('score', '>=', 60)
-            ->where(function ($q) {
-                $q->whereNull('notes')->orWhere('notes', '!=', 'CANCELLED');
-            })
-            ->with(['instrument:id,name', 'order:id,requested_start_date'])
-            ->get()
-            ->filter(function ($entry) use ($startDate, $endDate) {
-                $date = $entry->exam_date ?? $entry->order?->requested_start_date;
-                return $date && $date->between($startDate, $endDate);
-            });
-
-        if ($entries->isEmpty()) {
+        if ($batch->entries($quarter, $year)->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'error' => "No scored entries in {$quarterLabel}.",
+                'error' => "No scored entries in {$label}.",
             ], 422);
         }
 
-        $cache = [];
-        $result = $this->renderTopScorerCertificates(
-            $entries,
-            $quarter,
-            $year,
-            $quarterLabel,
-            $cache,
-            false // standalone — DON'T duplicate into teacher folders
-        );
+        $certs = $batch->topScorersOnly($quarter, $year);
 
         return response()->json([
             'success' => true,
-            'count' => $result['count'],
-            'quarter_label' => $quarterLabel,
-            'certs' => $result['log'],
+            'count' => count($certs),
+            'quarter_label' => $label,
+            'certs' => $certs,
         ]);
     }
 
