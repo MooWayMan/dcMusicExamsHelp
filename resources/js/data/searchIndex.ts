@@ -1,5 +1,7 @@
 // resources/js/data/searchIndex.ts
 
+import { GIFT_TOKEN_REDEEM_RULE } from '@/lib/prizeRules'
+
 export interface SearchEntry {
   id: string
   title: string
@@ -197,6 +199,14 @@ export const searchEntries: SearchEntry[] = [
     url: '/for-parents#faq-5',
     section: 'FAQ',
     keywords: ['results', 'when are results', 'how long for results', 'result turnaround', 'when do i get results', 'how long until results', 'get my results', 'exam report', 'when results'],
+  },
+  {
+    id: 'topic-gift-token-expiry',
+    title: 'How long do I have to use a gift token?',
+    snippet: GIFT_TOKEN_REDEEM_RULE,
+    url: '/incentives#faq-7',
+    section: 'FAQ',
+    keywords: ['gift token', 'gift card', 'expire', 'expiry', 'redeem', 'claim prize', 'prize draw', '12 months'],
   },
   {
     id: 'topic-late-entry',

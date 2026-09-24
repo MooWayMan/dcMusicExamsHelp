@@ -12,6 +12,7 @@ import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import { useQuarterCertificateBatch, type QuarterBatchResult } from '@/composables/useQuarterCertificateBatch'
 import { xsrfToken } from '@/lib/utils'
+import { GIFT_TOKEN_REDEEM_RULE } from '@/lib/prizeRules'
 
 interface Student {
   name: string
@@ -442,7 +443,7 @@ Here's the Amazon gift card code:
 
 [PASTE GIFT CARD CODE HERE]
 
-You can add this to any Amazon account — it's not tied to a name or email.
+You can add this to any Amazon account — it's not tied to a name or email. ${GIFT_TOKEN_REDEEM_RULE}
 
 You'll also appear on the Recognition page at https://musicexams.help/recognition.
 
@@ -465,7 +466,7 @@ Here's the Amazon gift card code:
 
 [PASTE GIFT CARD CODE HERE]
 
-You can add this to any Amazon account — it's not tied to a name or email.
+You can add this to any Amazon account — it's not tied to a name or email. ${GIFT_TOKEN_REDEEM_RULE}
 
 ${winnerName} will also appear on the Recognition page at https://musicexams.help/recognition.
 
@@ -488,7 +489,7 @@ Here's the Amazon gift card code for you to pass on to ${winnerName}'s parent/gu
 
 [PASTE GIFT CARD CODE HERE]
 
-It can be added to any Amazon account — it's not tied to a name or email.
+It can be added to any Amazon account — it's not tied to a name or email. ${GIFT_TOKEN_REDEEM_RULE}
 
 ${winnerName} will also appear on the Recognition page at https://musicexams.help/recognition.
 
@@ -842,7 +843,7 @@ Here's the gift card code for you to pass on to their parent/guardian:
 
 [PASTE GIFT CARD CODE HERE]
 
-They can add this to any Amazon account — it's not tied to a name or email.
+They can add this to any Amazon account — it's not tied to a name or email. ${GIFT_TOKEN_REDEEM_RULE}
 
 Their name will appear on the musicExams.help Recognition page as "${winnerInitial}". If they or their parent would like us to display their full name instead, just let me know and I'll update it.
 
@@ -884,7 +885,7 @@ The prize is a £50 gift token to invest back into your teaching — new resourc
 
 [PASTE GIFT CARD CODE HERE]
 
-You can add this to any Amazon account — it's not tied to a name or email.
+You can add this to any Amazon account — it's not tied to a name or email. ${GIFT_TOKEN_REDEEM_RULE}
 
 The teacher draw isn't published on the public site (no competition between teachers), but you'll see your win on your dashboard at https://musicexams.help/dashboard when you log in. You're welcome to share on your own channels if you'd like.
 

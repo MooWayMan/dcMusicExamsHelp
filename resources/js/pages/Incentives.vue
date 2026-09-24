@@ -2,6 +2,7 @@
 <script setup lang="ts">
 import { usePageAnimation } from '@/composables/usePageAnimation'
 import { useBookingModal } from '@/composables/useBookingModal'
+import { useAccordionHashOpen } from '@/composables/useAccordionHashOpen'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
 import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
@@ -13,9 +14,11 @@ import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructo
 import MyFooter from '@/components/layouts/MyFooter.vue'
 import PageMaintenance from '@/components/reusables/PageMaintenance.vue'
 import { Trophy, Award, Star, Gift, Users, CheckCircle } from 'lucide-vue-next'
+import { GIFT_TOKEN_REDEEM_RULE } from '@/lib/prizeRules'
 
 const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
+useAccordionHashOpen()
 
 const pageMeta = {
   title: 'Trinity Exam Incentives & Rewards',
@@ -123,6 +126,11 @@ const faqs = [
     id: 6,
     question: 'Do digital exams qualify?',
     answer: 'Yes. Every incentive on this page applies to both face-to-face and digital exams booked through centre 120. Digital exams count exactly the same.',
+  },
+  {
+    id: 7,
+    question: 'How long do I have to use a gift token?',
+    answer: GIFT_TOKEN_REDEEM_RULE,
   },
 ]
 </script>
