@@ -8,13 +8,14 @@ use App\Models\ExamEntry;
 use App\Models\Order;
 use App\Models\PrizeDraw;
 use App\Models\TopScorerPublication;
-use App\Models\TopScorerWorkflow;
+use App\Models\PrizeWorkflow;
 use App\Services\CertificateRenderer;
 use App\Support\TopScorers;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -476,18 +477,13 @@ class QuarterEndController extends Controller
             ->pluck('teacher_name')
             ->toArray();
 
-        // Per-winner workflow checkboxes (Bought / Sent / Cert) for the
-        // top-scorer awards. Keyed `award_key|winner_full_name` so the Vue
-        // side can look up status for each tied winner independently.
-        $winnerWorkflow = TopScorerWorkflow::where('quarter', $quarter)
+        // Tick boxes for every prize winner (top scorers and both draws).
+        // Keyed `award_key|winner_full_name` so each tied winner has its own.
+        $winnerWorkflow = PrizeWorkflow::where('quarter', $quarter)
             ->where('year', $year)
             ->get()
-            ->mapWithKeys(fn ($r) => [
-                "{$r->award_key}|{$r->winner_full_name}" => [
-                    'bought' => $r->bought,
-                    'sent'   => $r->sent,
-                    'cert'   => $r->cert,
-                ],
+            ->mapWithKeys(fn (PrizeWorkflow $r) => [
+                "{$r->award_key}|{$r->winner_full_name}" => $r->status(),
             ])
             ->toArray();
 
@@ -594,12 +590,14 @@ class QuarterEndController extends Controller
             ],
             'persistedBatchResult' => $persistedBatchResult,
             'winnerWorkflow' => $winnerWorkflow,
+            'workflowSteps' => PrizeWorkflow::stepsForPage(),
         ]);
     }
 
     /**
-     * Toggle a single workflow step for a single top-scorer winner.
-     * Called from /admin/quarter-end checkboxes (Bought / Sent / Cert).
+     * Tick or untick one box for one prize winner on /admin/quarter-end.
+     * A step is only accepted for a prize that shows it
+     * (PrizeWorkflow::STEPS_BY_AWARD).
      *
      * Tied winners are tracked separately because the table key includes
      * winner_full_name — Anna and Maya each have their own row even when
@@ -607,16 +605,23 @@ class QuarterEndController extends Controller
      */
     public function toggleWorkflow(Request $request): JsonResponse
     {
+        $awardKey = $request->input('award_key');
+        $allowedSteps = is_string($awardKey) ? (PrizeWorkflow::STEPS_BY_AWARD[$awardKey] ?? []) : [];
+
         $validated = $request->validate([
             'quarter'          => 'required|integer|min:1|max:4',
             'year'             => 'required|integer|min:2025|max:2030',
-            'award_key'        => 'required|string|in:'.implode(',', TopScorerWorkflow::AWARD_KEYS),
+            'award_key'        => 'required|string|in:'.implode(',', array_keys(PrizeWorkflow::STEPS_BY_AWARD)),
             'winner_full_name' => 'required|string|max:255',
-            'step'             => 'required|string|in:'.implode(',', TopScorerWorkflow::STEPS),
+            'step'             => [
+                'required',
+                'string',
+                Rule::in($allowedSteps),
+            ],
             'value'            => 'required|boolean',
         ]);
 
-        $record = TopScorerWorkflow::firstOrNew([
+        $record = PrizeWorkflow::firstOrNew([
             'quarter'          => $validated['quarter'],
             'year'             => $validated['year'],
             'award_key'        => $validated['award_key'],
@@ -629,11 +634,7 @@ class QuarterEndController extends Controller
 
         return response()->json([
             'success' => true,
-            'status' => [
-                'bought' => $record->bought,
-                'sent'   => $record->sent,
-                'cert'   => $record->cert,
-            ],
+            'status' => $record->status(),
         ]);
     }
 

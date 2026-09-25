@@ -1,13 +1,13 @@
 <?php
 
-// tests/Feature/Admin/TopScorerWorkflowTest.php
+// tests/Feature/Admin/PrizeWorkflowTest.php
 //
-// /admin/quarter-end exposes Bought / Sent / Cert checkboxes per top-scorer
-// winner. State is persisted in `top_scorer_workflow` so Paul can look back
-// at any past quarter and see which winners were dealt with. These tests
-// cover the toggle endpoint that drives those checkboxes.
+// /admin/quarter-end shows tick boxes for every prize winner: the four
+// top-scorer awards, the student draw and the teacher draw. State is kept in
+// `prize_workflow` so Paul can look back at any past quarter. Which boxes a
+// prize shows comes from PrizeWorkflow::STEPS_BY_AWARD.
 
-use App\Models\TopScorerWorkflow;
+use App\Models\PrizeWorkflow;
 use App\Models\User;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
@@ -45,7 +45,7 @@ it('creates a new workflow row when none exists for that winner', function (): v
             'status' => ['bought' => true, 'sent' => false, 'cert' => false],
         ]);
 
-    $row = TopScorerWorkflow::where('winner_full_name', 'Anna Martin')->first();
+    $row = PrizeWorkflow::where('winner_full_name', 'Anna Martin')->first();
     expect($row)->not->toBeNull();
     expect($row->bought)->toBeTrue();
     expect($row->sent)->toBeFalse();
@@ -54,7 +54,7 @@ it('creates a new workflow row when none exists for that winner', function (): v
 });
 
 it('updates an existing row in place rather than duplicating', function (): void {
-    TopScorerWorkflow::create([
+    PrizeWorkflow::create([
         'quarter' => 1,
         'year' => 2026,
         'award_key' => 'initial_5_distinction',
@@ -76,8 +76,8 @@ it('updates an existing row in place rather than duplicating', function (): void
         ])
         ->assertOk();
 
-    expect(TopScorerWorkflow::count())->toBe(1);
-    $row = TopScorerWorkflow::first();
+    expect(PrizeWorkflow::count())->toBe(1);
+    $row = PrizeWorkflow::first();
     expect($row->bought)->toBeTrue();
     expect($row->sent)->toBeTrue();
     expect($row->cert)->toBeFalse();
@@ -102,15 +102,15 @@ it('keeps tied winners separate (anna and maya tracked independently)', function
         'step' => 'sent', 'value' => true,
     ])->assertOk();
 
-    expect(TopScorerWorkflow::count())->toBe(2);
-    expect(TopScorerWorkflow::where('winner_full_name', 'Anna Martin')->first()->bought)->toBeTrue();
-    expect(TopScorerWorkflow::where('winner_full_name', 'Anna Martin')->first()->sent)->toBeFalse();
-    expect(TopScorerWorkflow::where('winner_full_name', 'Maya Parkinson')->first()->bought)->toBeFalse();
-    expect(TopScorerWorkflow::where('winner_full_name', 'Maya Parkinson')->first()->sent)->toBeTrue();
+    expect(PrizeWorkflow::count())->toBe(2);
+    expect(PrizeWorkflow::where('winner_full_name', 'Anna Martin')->first()->bought)->toBeTrue();
+    expect(PrizeWorkflow::where('winner_full_name', 'Anna Martin')->first()->sent)->toBeFalse();
+    expect(PrizeWorkflow::where('winner_full_name', 'Maya Parkinson')->first()->bought)->toBeFalse();
+    expect(PrizeWorkflow::where('winner_full_name', 'Maya Parkinson')->first()->sent)->toBeTrue();
 });
 
 it('can untick a step (set back to false)', function (): void {
-    TopScorerWorkflow::create([
+    PrizeWorkflow::create([
         'quarter' => 1, 'year' => 2026,
         'award_key' => 'initial_5_distinction',
         'winner_full_name' => 'Anna Martin',
@@ -133,7 +133,7 @@ it('rejects an unknown award_key', function (): void {
     $this->actingAs($this->admin)
         ->postJson('/admin/quarter-end/toggle-workflow', [
             'quarter' => 1, 'year' => 2026,
-            'award_key' => 'student_draw', // not a valid top-scorer award_key
+            'award_key' => 'not_a_prize',
             'winner_full_name' => 'Anna Martin',
             'step' => 'bought', 'value' => true,
         ])
@@ -152,7 +152,7 @@ it('rejects an unknown step', function (): void {
 });
 
 it('exposes existing workflow status on the index page so checkboxes pre-fill on reload', function (): void {
-    TopScorerWorkflow::create([
+    PrizeWorkflow::create([
         'quarter' => 1, 'year' => 2026,
         'award_key' => 'initial_5_distinction',
         'winner_full_name' => 'Anna Martin',
@@ -165,9 +165,78 @@ it('exposes existing workflow status on the index page so checkboxes pre-fill on
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->where('winnerWorkflow.initial_5_distinction|Anna Martin', [
-                'bought' => true,
                 'sent' => false,
                 'cert' => true,
+                'claimed' => false,
+                'bought' => true,
+                'card_sent' => false,
+                'used' => false,
             ])
         );
+});
+
+it('tracks the student draw winner through the claim-first steps', function (): void {
+    $this->actingAs($this->admin)
+        ->postJson('/admin/quarter-end/toggle-workflow', [
+            'quarter' => 3, 'year' => 2026,
+            'award_key' => 'student_draw',
+            'winner_full_name' => 'Jim Hazell',
+            'step' => 'claimed', 'value' => true,
+        ])
+        ->assertOk()
+        ->assertJson(['status' => ['claimed' => true, 'bought' => false, 'used' => false]]);
+
+    expect(PrizeWorkflow::where('award_key', 'student_draw')->first()->claimed)->toBeTrue();
+});
+
+it('refuses a step the prize does not show', function (): void {
+    $this->actingAs($this->admin)
+        ->postJson('/admin/quarter-end/toggle-workflow', [
+            'quarter' => 3, 'year' => 2026,
+            'award_key' => 'teacher_draw',
+            'winner_full_name' => 'Jenny Capstick',
+            'step' => 'claimed', 'value' => true,
+        ])
+        ->assertStatus(422);
+
+    expect(PrizeWorkflow::count())->toBe(0);
+});
+
+it('sends the page the boxes each prize shows, in order', function (): void {
+    $this->actingAs($this->admin)
+        ->get('/admin/quarter-end?quarter=3&year=2026')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('workflowSteps.teacher_draw', [
+                ['key' => 'bought', 'label' => 'Bought'],
+                ['key' => 'sent', 'label' => 'Email sent'],
+                ['key' => 'used', 'label' => 'Used'],
+            ])
+            ->where('workflowSteps.student_draw.1', ['key' => 'claimed', 'label' => 'Claimed'])
+            ->where('workflowSteps.initial_5_merit.1', ['key' => 'cert', 'label' => 'Cert'])
+        );
+});
+
+it('round-trips a teacher draw tick back onto the page', function (): void {
+    $this->actingAs($this->admin)
+        ->postJson('/admin/quarter-end/toggle-workflow', [
+            'quarter' => 3, 'year' => 2026,
+            'award_key' => 'teacher_draw',
+            'winner_full_name' => 'Jenny Capstick',
+            'step' => 'used', 'value' => true,
+        ])
+        ->assertOk();
+
+    $this->get('/admin/quarter-end?quarter=3&year=2026')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('winnerWorkflow.teacher_draw|Jenny Capstick.used', true)
+            ->where('winnerWorkflow.teacher_draw|Jenny Capstick.bought', false)
+        );
+});
+
+it('posts prize tick boxes from one component only', function (): void {
+    expect(guardOffenders('#/admin/quarter-end/toggle-workflow#', [
+        'resources/js/components/PrizeWorkflowChecks.vue',
+    ]))->toBe([]);
 });
