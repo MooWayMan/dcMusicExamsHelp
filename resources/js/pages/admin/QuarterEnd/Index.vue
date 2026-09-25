@@ -13,7 +13,7 @@ import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import PrizeWorkflowChecks, { type PrizeWorkflowStep } from '@/components/PrizeWorkflowChecks.vue'
 import { useQuarterCertificateBatch, type QuarterBatchResult } from '@/composables/useQuarterCertificateBatch'
 import { xsrfToken } from '@/lib/utils'
-import { GIFT_TOKEN_REDEEM_RULE } from '@/lib/prizeRules'
+import { GIFT_TOKEN_REDEEM_RULE, REPLY_TO_CLAIM } from '@/lib/prizeRules'
 import { recipientGreetingName, resultsEmailBody, resultsEmailSubject, type ResultsEmailOptions } from '@/lib/quarterEndEmails'
 
 interface Student {
@@ -374,11 +374,7 @@ ${tieSentence.replace(`${winnerName}'s share`, 'your share').replace(`${winnerNa
 
 Your personalised ${meta.certificate} Certificate is attached to this email — print it, display it on a tablet for photos, or share it on social media.
 
-Here's your Amazon gift card — click the link and sign in to Amazon to add it to your account:
-
-[PASTE GIFT CARD LINK HERE]
-
-It can go on any Amazon account. ${GIFT_TOKEN_REDEEM_RULE}
+${REPLY_TO_CLAIM} ${GIFT_TOKEN_REDEEM_RULE}
 
 You'll also appear on the Recognition page at https://musicexams.help/recognition.
 
@@ -397,11 +393,7 @@ ${tieSentence}
 
 ${winnerName}'s personalised ${meta.certificate} Certificate is attached to this email — print it, display it on a tablet for photos, or share it on social media.
 
-Here's the Amazon gift card — click the link and sign in to Amazon to add it to your account:
-
-[PASTE GIFT CARD LINK HERE]
-
-It can go on any Amazon account. ${GIFT_TOKEN_REDEEM_RULE}
+${REPLY_TO_CLAIM} ${GIFT_TOKEN_REDEEM_RULE}
 
 ${winnerName} will also appear on the Recognition page at https://musicexams.help/recognition.
 
@@ -543,6 +535,28 @@ function copyWinnerEmail(teacher: Teacher) {
     ? `${winnerFirst} ${winner.name.split(' ').slice(-1)[0][0].toUpperCase()}`
     : winnerFirst
 
+  // Booked by a parent or by the candidate: the email goes straight to the
+  // family, so they reply to claim. Booked by a teacher: the teacher asks the
+  // parent to email in.
+  if (teacher.booking_role === 'parent' || teacher.booking_role === 'self') {
+    const self = teacher.booking_role === 'self'
+    const direct = `Hi ${firstName},
+
+${lateNote()}Great news — ${self ? 'you have' : `${winnerFirst} has`} won the ${props.quarterLabel} student prize draw! The prize is a £50 Amazon gift token.
+
+${REPLY_TO_CLAIM} ${GIFT_TOKEN_REDEEM_RULE}
+
+${self ? 'Your' : `${winnerFirst}'s`} name will appear on the musicExams.help Recognition page as "${winnerInitial}". If you'd like the full name shown instead, just let me know and I'll update it.
+
+Congratulations${self ? '' : ` to ${winnerFirst}`}, and thank you for choosing centre 120!
+
+Best wishes,
+Paul Sheridan`
+    navigator.clipboard.writeText(direct)
+    alert('Winner email copied to clipboard!')
+    return
+  }
+
   const template = `Hi ${firstName},
 
 ${lateNote()}Great news — one of your students, ${winnerInitial}, has won the ${props.quarterLabel} student prize draw! They'll receive a £50 Amazon gift token.
@@ -558,6 +572,15 @@ PS — if you don't already, you can track all your students' results and awards
   navigator.clipboard.writeText(template)
   alert('Winner email copied to clipboard!')
 }
+
+// The Step 2 row the student draw winner was credited to (their teacher, or
+// the parent / candidate who booked). Drives the winner email button on the
+// draw card; null when no row carries that name.
+const studentWinnerRow = computed<Teacher | null>(() => {
+  const target = (studentWinner.value?.teacher ?? '').trim().toLowerCase()
+  if (! target) return null
+  return (props.teachers || []).find(t => (t.teacher_name ?? '').trim().toLowerCase() === target) ?? null
+})
 
 // Copy / open the teacher prize-draw winner email. Resolves the recipient
 // email by matching the winner_name against the teachers[] array from the
@@ -1400,6 +1423,12 @@ const topScorerAwardCount = computed(() => {
                 <p class="text-lg font-bold text-brand-text">{{ studentRealWinner.winner_name }}</p>
                 <p class="text-sm text-brand-text-soft">{{ studentRealWinner.winner_instrument }} {{ formatGrade(studentRealWinner.winner_grade) }} — Teacher: {{ studentRealWinner.winner_teacher }}</p>
                 <p class="mt-2 text-xs text-brand-text-soft">Drawn from {{ studentRealWinner.total_tickets }} tickets. This result is permanently recorded.</p>
+                <div class="mt-3 flex flex-wrap gap-2">
+                  <MyButtonConstructor v-if="studentWinnerRow" size="small" variant="outline" :icon="Copy" @click="copyWinnerEmail(studentWinnerRow)">
+                    Copy Winner Email
+                  </MyButtonConstructor>
+                  <MyTextConstructor v-else variant="muted">No Step 2 row is called "{{ studentRealWinner.winner_teacher }}", so there is no winner email to copy.</MyTextConstructor>
+                </div>
                 <div class="mt-3 flex flex-wrap">
                   <PrizeWorkflowChecks v-bind="workflowProps('student_draw', studentRealWinner.winner_name)" />
                 </div>
