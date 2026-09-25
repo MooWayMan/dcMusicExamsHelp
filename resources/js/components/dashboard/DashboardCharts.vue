@@ -1,6 +1,7 @@
 <!-- resources/js/components/dashboard/DashboardCharts.vue -->
 <script setup lang="ts">
 import { computed } from 'vue'
+import { formatGrade } from '@/lib/grades'
 import { rightRounded, topRounded } from '@/lib/chartShapes'
 import { useChartTip } from '@/composables/useChartTip'
 import MyChartTooltip from '@/components/reusables/MyChartTooltip.vue'
@@ -386,7 +387,7 @@ const hasAnyChart = computed(
                         <path
                             :d="rightRounded(38, i * GRADE_ROW + 4, gradeBar(row.count), 14)"
                             fill="var(--chart-merit)"
-                            @mousemove="showTip($event, row.grade === 'Initial' ? 'Initial' : `Grade ${row.grade}`, `${row.count} ${row.count === 1 ? 'exam' : 'exams'}`)"
+                            @mousemove="showTip($event, formatGrade(row.grade), `${row.count} ${row.count === 1 ? 'exam' : 'exams'}`)"
                             @mouseleave="hideTip"
                         />
                         <text

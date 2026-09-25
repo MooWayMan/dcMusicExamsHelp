@@ -4,6 +4,7 @@
 
 namespace App\Services;
 
+use App\Support\Grade;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Http;
 use Intervention\Image\Drivers\Gd\Driver;
@@ -116,7 +117,7 @@ class CertificateRenderer
         [$regular, $bold] = $this->fonts();
 
         $this->write($image, $name, (int) ($w * 0.92), (int) ($h * 0.47), $regular, (int) ($w * 0.038), 'right');
-        $this->write($image, trim("{$instrument} Grade {$grade}"), (int) ($w * 0.92), (int) ($h * 0.52), $regular, (int) ($w * 0.028), 'right');
+        $this->write($image, trim($instrument.' '.Grade::label($grade)), (int) ($w * 0.92), (int) ($h * 0.52), $regular, (int) ($w * 0.028), 'right');
         $this->write($image, $quarterLabel, (int) ($w * 0.50), (int) ($h * 0.96), $bold, (int) ($w * 0.042), 'center');
 
         return $image;

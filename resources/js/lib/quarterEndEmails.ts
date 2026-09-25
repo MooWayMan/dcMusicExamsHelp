@@ -1,5 +1,7 @@
 // resources/js/lib/quarterEndEmails.ts
 
+import { formatGrade } from '@/lib/grades'
+
 // The results emails Quarter End copies to the clipboard: one for a teacher
 // (or music school), one for a parent who booked directly, one for a candidate
 // who booked their own exam. Plain text, pasted into Gmail by Paul.
@@ -124,7 +126,7 @@ export function resultsEmailBody(recipient: EmailRecipient, options: ResultsEmai
 
 function teacherBody(recipient: EmailRecipient, options: ResultsEmailOptions): string {
     const studentList = recipient.students
-        .map(s => `  • ${s.name} — ${s.instrument} Grade ${s.grade} — ${s.score} (${s.result}) — ${s.certificate}`)
+        .map(s => `  • ${s.name} — ${s.instrument} ${formatGrade(s.grade)} — ${s.score} (${s.result}) — ${s.certificate}`)
         .join('\n')
 
     const pendingText = recipient.pending > 0
@@ -136,7 +138,7 @@ function teacherBody(recipient: EmailRecipient, options: ResultsEmailOptions): s
         : ''
 
     const winnersText = (winners: EmailAwardWinner[]) =>
-        winners.map(w => `${w.name} — ${w.instrument} Grade ${w.grade} — ${w.score} marks`).join(' & ')
+        winners.map(w => `${w.name} — ${w.instrument} ${formatGrade(w.grade)} — ${w.score} marks`).join(' & ')
     const top = options.topScorers
     const awardLines = ([
         ['Highest Distinction (Initial–5)', top?.initial_5?.distinction ?? []],
@@ -153,7 +155,7 @@ function teacherBody(recipient: EmailRecipient, options: ResultsEmailOptions): s
 
     const winner = options.studentWinner
     const studentDrawText = winner
-        ? `\n\nStudent Prize Draw\nThe winner of the £50 gift token this quarter is ${shortName(winner.name)} (${winner.instrument} Grade ${winner.grade}) — congratulations! Every student entered through centre 120 was in the draw.${winner.teacher === recipient.teacher_name ? " As their teacher, I'll be in touch with you separately about getting the prize to them." : ''}\n`
+        ? `\n\nStudent Prize Draw\nThe winner of the £50 gift token this quarter is ${shortName(winner.name)} (${winner.instrument} ${formatGrade(winner.grade)}) — congratulations! Every student entered through centre 120 was in the draw.${winner.teacher === recipient.teacher_name ? " As their teacher, I'll be in touch with you separately about getting the prize to them." : ''}\n`
         : ''
 
     const teacherDrawText = options.teacherDrawRun

@@ -128,7 +128,7 @@ class TopScorers
         }
         // Strip an optional "Grade " (case-insensitive) prefix so "Grade 8"
         // and "8" classify identically.
-        $normalised = preg_replace('/^grade\s+/i', '', trim($grade));
+        $normalised = Grade::bare($grade);
         if ($normalised === 'Initial' || in_array((string) $normalised, ['1', '2', '3', '4', '5'], true)) {
             return 'initial_5';
         }

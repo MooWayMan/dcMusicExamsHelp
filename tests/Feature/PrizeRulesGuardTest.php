@@ -14,7 +14,7 @@ test('the Incentives page and the winner emails use the shared rule', function (
     $sources = guardSources();
 
     expect($sources['resources/js/pages/Incentives.vue'])->toContain('GIFT_TOKEN_REDEEM_RULE')
-        ->and(substr_count($sources['resources/js/pages/admin/QuarterEnd/Index.vue'], '${GIFT_TOKEN_REDEEM_RULE}'))->toBe(6);
+        ->and(substr_count($sources['resources/js/pages/admin/QuarterEnd/Index.vue'], '${redeemRule()}'))->toBe(6);
 });
 
 test('prizes that go through a teacher are claimed by email, not handed over as a code', function () {
@@ -29,11 +29,19 @@ test('the reply-to-claim wording is written down once and used by every direct w
 
     $page = guardSources()['resources/js/pages/admin/QuarterEnd/Index.vue'];
 
-    expect(substr_count($page, '${REPLY_TO_CLAIM} ${GIFT_TOKEN_REDEEM_RULE}'))->toBe(3);
+    expect(substr_count($page, '${REPLY_TO_CLAIM} ${redeemRule()}'))->toBe(3);
 });
 
 test('only the teacher draw hands over a gift card link without a claim', function () {
     $page = guardSources()['resources/js/pages/admin/QuarterEnd/Index.vue'];
 
     expect(substr_count($page, '[PASTE GIFT CARD LINK HERE]'))->toBe(1);
+});
+
+test('a winner told late gets 12 months from the email, never backdated to the award', function () {
+    expect(guardOffenders('/within 12 months of this email/', ['resources/js/lib/prizeRules.ts']))->toBe([]);
+
+    $page = guardSources()['resources/js/pages/admin/QuarterEnd/Index.vue'];
+
+    expect($page)->toContain('sendingLate.value ? GIFT_TOKEN_REDEEM_RULE_LATE : GIFT_TOKEN_REDEEM_RULE');
 });

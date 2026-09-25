@@ -28,7 +28,7 @@ class CheckTeacherEntries extends Command
 
             foreach ($teacherEntries as $e) {
                 $score = $e->score ?? 'PENDING';
-                $this->line("  {$e->candidate_name} | Grade {$e->grade} | Score: {$score}");
+                $this->line("  {$e->candidate_name} | ".\App\Support\Grade::label($e->grade)." | Score: {$score}");
             }
         }
 
@@ -43,7 +43,7 @@ class CheckTeacherEntries extends Command
             $this->warn("\nUnassigned (no teacher) — {$unassigned->count()} entries");
             foreach ($unassigned as $e) {
                 $score = $e->score ?? 'PENDING';
-                $this->line("  {$e->candidate_name} | Grade {$e->grade} | Score: {$score}");
+                $this->line("  {$e->candidate_name} | ".\App\Support\Grade::label($e->grade)." | Score: {$score}");
             }
         }
 

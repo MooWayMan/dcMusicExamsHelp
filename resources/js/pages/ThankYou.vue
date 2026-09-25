@@ -1,6 +1,7 @@
 <!-- resources/js/pages/ThankYou.vue -->
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted } from 'vue'
+import { formatGrade } from '@/lib/grades'
 import { usePageAnimation } from '@/composables/usePageAnimation'
 import { useBookingModal } from '@/composables/useBookingModal'
 import Head from '@/components/layouts/Head.vue'
@@ -125,16 +126,6 @@ const tieSplitLabel = (n: number): string => {
   if (n === 1) return '£20 gift token'
   const each = n === 2 ? 10 : 5
   return `${n}-way tie · £${each} each`
-}
-// Production data stores grades as either "Grade 1" or bare "1" or "Initial"
-// — normalise to a single human-readable form. "Initial" never gets a
-// "Grade" prefix per Trinity convention.
-const formatGrade = (g: unknown): string => {
-  if (g === null || g === undefined || g === '') return ''
-  const trimmed = String(g).trim()
-  const normalised = trimmed.replace(/^grade\s+/i, '')
-  if (normalised === 'Initial') return 'Initial'
-  return `Grade ${normalised}`
 }
 const thankYouEntries = computed(() => activeData.value?.thankYouEntries ?? [])
 const summary = computed(() => activeData.value?.summary ?? { distinctions: 0, merits: 0, total: 0, pending_count: 0 })

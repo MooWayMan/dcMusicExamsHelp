@@ -11,6 +11,7 @@ import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import { useQuarterCertificateBatch } from '@/composables/useQuarterCertificateBatch'
 import { recipientGreetingName } from '@/lib/quarterEndEmails'
+import { formatGrade } from '@/lib/grades'
 
 interface StudentEntry {
   id: number
@@ -305,7 +306,7 @@ function buildWeeklyEmail(group: WeeklyGroup): string {
     : `Quick update — Trinity has released results for ${count} of your students:`
 
   const studentList = group.students
-    .map(s => `  • ${s.name} — ${s.instrument} Grade ${s.grade} — ${s.score} (${s.result}) — ${s.certificate}`)
+    .map(s => `  • ${s.name} — ${s.instrument} ${formatGrade(s.grade)} — ${s.score} (${s.result}) — ${s.certificate}`)
     .join('\n')
 
   // 1 student → single PDF attachment. 2+ → ZIP attachment with the
@@ -379,7 +380,7 @@ function buildWeeklyParentEmail(group: WeeklyGroup): string {
       : `${candidateFirstNames.slice(0, -1).join(', ')} and ${candidateFirstNames.slice(-1)[0]}`
 
   const studentList = group.students
-    .map(s => `  • ${s.name} — ${s.instrument} Grade ${s.grade} — ${s.score} (${s.result}) — ${s.certificate}`)
+    .map(s => `  • ${s.name} — ${s.instrument} ${formatGrade(s.grade)} — ${s.score} (${s.result}) — ${s.certificate}`)
     .join('\n')
 
   // 1 student → single PDF attachment. 2+ → ZIP attachment with the

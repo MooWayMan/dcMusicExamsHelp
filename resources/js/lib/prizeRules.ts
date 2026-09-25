@@ -13,3 +13,9 @@ export const GIFT_TOKEN_REDEEM_RULE =
 // email me" wording instead.
 export const REPLY_TO_CLAIM =
     "To claim the gift token, just reply to this email and I'll send the gift card straight to you. I'll only use your email address to send the prize."
+
+// A winner told late (Q1 and Q2 2026 went out months after their draws) gets
+// the 12 months from the email, never from the award date: a deadline that had
+// mostly passed before they heard of it is backdating (ASA/CAP).
+export const GIFT_TOKEN_REDEEM_RULE_LATE =
+    'Please claim it within 12 months of this email. After that, an unused prize goes back into the prize fund.'

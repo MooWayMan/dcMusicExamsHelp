@@ -13,7 +13,8 @@ import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import PrizeWorkflowChecks, { type PrizeWorkflowStep } from '@/components/PrizeWorkflowChecks.vue'
 import { useQuarterCertificateBatch, type QuarterBatchResult } from '@/composables/useQuarterCertificateBatch'
 import { xsrfToken } from '@/lib/utils'
-import { GIFT_TOKEN_REDEEM_RULE, REPLY_TO_CLAIM } from '@/lib/prizeRules'
+import { GIFT_TOKEN_REDEEM_RULE, GIFT_TOKEN_REDEEM_RULE_LATE, REPLY_TO_CLAIM } from '@/lib/prizeRules'
+import { formatGrade } from '@/lib/grades'
 import { recipientGreetingName, resultsEmailBody, resultsEmailSubject, type ResultsEmailOptions } from '@/lib/quarterEndEmails'
 
 interface Student {
@@ -171,17 +172,6 @@ const hasAnyAward = computed(() =>
   || grades68.value.merit.length > 0
 )
 
-// Production data stores grades as either "Grade 1" or bare "1" or "Initial"
-// — normalise to a single human-readable form. "Initial" never gets a
-// "Grade" prefix per Trinity convention.
-const formatGrade = (g: unknown): string => {
-  if (g === null || g === undefined || g === '') return ''
-  const trimmed = String(g).trim()
-  const normalised = trimmed.replace(/^grade\s+/i, '')
-  if (normalised === 'Initial') return 'Initial'
-  return `Grade ${normalised}`
-}
-
 // "Preview leaders so far" — reloads with ?finalise=1 (param name kept for
 // backend compatibility, but it's a preview, not a commitment). Backend
 // recalculates awards from whatever scores ARE in. Nothing is published,
@@ -326,6 +316,12 @@ function workflowProps(awardKey: string, winnerFullName: string) {
   }
 }
 
+// The gift token deadline for a prize email: from the award normally, from
+// the email itself when "Sending late" is ticked.
+function redeemRule(): string {
+  return sendingLate.value ? GIFT_TOKEN_REDEEM_RULE_LATE : GIFT_TOKEN_REDEEM_RULE
+}
+
 // Opens the prize emails when "Sending late" is ticked in Step 2.
 function lateNote(): string {
   return sendingLate.value ? "Sorry this is late — it should have reached you weeks ago, and that's down to me.\n\n" : ''
@@ -368,13 +364,13 @@ function copyTopScorerEmail(winner: AwardWinner, awardKey: AwardKey, tieCount: n
 
 ${lateNote()}Wonderful news — you've been awarded the ${meta.bandLabel} (${meta.groupLabel}) for ${props.quarterLabel}!
 
-You scored ${winner.score} marks in ${winner.instrument} Grade ${winner.grade} — a brilliant achievement.
+You scored ${winner.score} marks in ${winner.instrument} ${formatGrade(winner.grade)} — a brilliant achievement.
 
 ${tieSentence.replace(`${winnerName}'s share`, 'your share').replace(`${winnerName} receives`, 'you receive')}
 
 Your personalised ${meta.certificate} Certificate is attached to this email — print it, display it on a tablet for photos, or share it on social media.
 
-${REPLY_TO_CLAIM} ${GIFT_TOKEN_REDEEM_RULE}
+${REPLY_TO_CLAIM} ${redeemRule()}
 
 You'll also appear on the Recognition page at https://musicexams.help/recognition.
 
@@ -387,13 +383,13 @@ Paul Sheridan`
 
 ${lateNote()}Wonderful news — ${winnerName} has been awarded the ${meta.bandLabel} (${meta.groupLabel}) for ${props.quarterLabel}!
 
-They scored ${winner.score} marks in ${winner.instrument} Grade ${winner.grade} — a brilliant achievement.
+They scored ${winner.score} marks in ${winner.instrument} ${formatGrade(winner.grade)} — a brilliant achievement.
 
 ${tieSentence}
 
 ${winnerName}'s personalised ${meta.certificate} Certificate is attached to this email — print it, display it on a tablet for photos, or share it on social media.
 
-${REPLY_TO_CLAIM} ${GIFT_TOKEN_REDEEM_RULE}
+${REPLY_TO_CLAIM} ${redeemRule()}
 
 ${winnerName} will also appear on the Recognition page at https://musicexams.help/recognition.
 
@@ -406,13 +402,13 @@ Paul Sheridan`
 
 ${lateNote()}Wonderful news — one of your students, ${winnerName}, has been awarded the ${meta.bandLabel} (${meta.groupLabel}) for ${props.quarterLabel}!
 
-They scored ${winner.score} marks in ${winner.instrument} Grade ${winner.grade} — a brilliant achievement.
+They scored ${winner.score} marks in ${winner.instrument} ${formatGrade(winner.grade)} — a brilliant achievement.
 
 ${tieSentence}
 
 ${winnerName}'s personalised ${meta.certificate} Certificate is attached to this email — please pass it on to their parent or guardian.
 
-To claim the gift token, please ask ${winnerName}'s parent or guardian to email me at musicexams@musicexams.help, and I'll send the gift card straight to them. I'll only use their email address to send the prize. ${GIFT_TOKEN_REDEEM_RULE}
+To claim the gift token, please ask ${winnerName}'s parent or guardian to email me at musicexams@musicexams.help, and I'll send the gift card straight to them. I'll only use their email address to send the prize. ${redeemRule()}
 
 ${winnerName} will also appear on the Recognition page at https://musicexams.help/recognition.
 
@@ -427,7 +423,7 @@ Paul
 
 P.S. Here's a suggested message you can copy and paste when you forward this on to ${winnerName}'s parent/guardian — feel free to tweak or skip:
 
-"Hi [Parent Name], wonderful news — musicExams.help (centre 120) have just awarded ${winnerName} the ${meta.bandLabel} (${meta.groupLabel}) for ${props.quarterLabel} for their brilliant ${winner.score}-mark performance in ${winner.instrument} Grade ${winner.grade}. Their personalised ${meta.certificate} Certificate is attached, and ${winnerName} has won a £${split} Amazon gift token — to claim it, just email Paul at musicexams@musicexams.help (your email is only used to send the prize). They'll also appear on the Recognition page at https://musicexams.help/recognition (first name and surname initial only — let me know if you'd like the full name shown). Huge congratulations to ${winnerName}! — [Your Name]"`
+"Hi [Parent Name], wonderful news — musicExams.help (centre 120) have just awarded ${winnerName} the ${meta.bandLabel} (${meta.groupLabel}) for ${props.quarterLabel} for their brilliant ${winner.score}-mark performance in ${winner.instrument} ${formatGrade(winner.grade)}. Their personalised ${meta.certificate} Certificate is attached, and ${winnerName} has won a £${split} Amazon gift token — to claim it, just email Paul at musicexams@musicexams.help (your email is only used to send the prize). They'll also appear on the Recognition page at https://musicexams.help/recognition (first name and surname initial only — let me know if you'd like the full name shown). Huge congratulations to ${winnerName}! — [Your Name]"`
   }
 
   navigator.clipboard.writeText(body)
@@ -544,7 +540,7 @@ function copyWinnerEmail(teacher: Teacher) {
 
 ${lateNote()}Great news — ${self ? 'you have' : `${winnerFirst} has`} won the ${props.quarterLabel} student prize draw! The prize is a £50 Amazon gift token.
 
-${REPLY_TO_CLAIM} ${GIFT_TOKEN_REDEEM_RULE}
+${REPLY_TO_CLAIM} ${redeemRule()}
 
 ${self ? 'Your' : `${winnerFirst}'s`} name will appear on the musicExams.help Recognition page as "${winnerInitial}". If you'd like the full name shown instead, just let me know and I'll update it.
 
@@ -561,7 +557,7 @@ Paul Sheridan`
 
 ${lateNote()}Great news — one of your students, ${winnerInitial}, has won the ${props.quarterLabel} student prize draw! They'll receive a £50 Amazon gift token.
 
-To claim it, please ask their parent or guardian to email me at musicexams@musicexams.help, and I'll send the gift card straight to them. I'll only use their email address to send the prize. ${GIFT_TOKEN_REDEEM_RULE}
+To claim it, please ask their parent or guardian to email me at musicexams@musicexams.help, and I'll send the gift card straight to them. I'll only use their email address to send the prize. ${redeemRule()}
 
 Their name will appear on the musicExams.help Recognition page as "${winnerInitial}". If they or their parent would like us to display their full name instead, just let me know and I'll update it.
 
@@ -612,7 +608,7 @@ The prize is a £50 gift token to invest back into your teaching — new resourc
 
 [PASTE GIFT CARD LINK HERE]
 
-It can go on any Amazon account. ${GIFT_TOKEN_REDEEM_RULE}
+It can go on any Amazon account. ${redeemRule()}
 
 The teacher draw isn't published on the public site (no competition between teachers), but you'll see your win on your dashboard at https://musicexams.help/dashboard when you log in. You're welcome to share on your own channels if you'd like.
 
