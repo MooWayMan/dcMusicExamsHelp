@@ -49,6 +49,14 @@ export interface EmailStudentDrawWinner {
     teacher: string
 }
 
+// Added to the student draw paragraph when the winner is this recipient's own
+// pupil, child or self, so they know the prize email is coming.
+function winnerIsYoursLine(recipient: EmailRecipient, winnerName: string): string {
+    if (recipient.booking_role === 'self') return " That's you, so I'll email you separately about claiming the prize."
+    if (recipient.booking_role === 'parent') return ` That's ${winnerName.split(' ')[0]}, so I'll email you separately about claiming the prize.`
+    return " As their teacher, I'll be in touch with you separately about getting the prize to them."
+}
+
 export interface ResultsEmailOptions {
     quarterLabel: string
     late: boolean
@@ -155,7 +163,7 @@ function teacherBody(recipient: EmailRecipient, options: ResultsEmailOptions): s
 
     const winner = options.studentWinner
     const studentDrawText = winner
-        ? `\n\nStudent Prize Draw\nThe winner of the £50 gift token this quarter is ${shortName(winner.name)} (${winner.instrument} ${formatGrade(winner.grade)}) — congratulations! Every student entered through centre 120 was in the draw.${winner.teacher === recipient.teacher_name ? " As their teacher, I'll be in touch with you separately about getting the prize to them." : ''}\n`
+        ? `\n\nStudent Prize Draw\nThe winner of the £50 gift token this quarter is ${shortName(winner.name)} (${winner.instrument} ${formatGrade(winner.grade)}) — congratulations! Every student entered through centre 120 was in the draw.${winner.teacher === recipient.teacher_name ? winnerIsYoursLine(recipient, winner.name) : ''}\n`
         : ''
 
     const teacherDrawText = options.teacherDrawRun

@@ -748,16 +748,29 @@ async function runDraw(type: 'student' | 'teacher', mode: 'test' | 'real') {
   }
 }
 
-// For the email template — use real winner if available, otherwise null
+// For the email template — use real winner if available, otherwise null.
+// `teacher` is the Step 2 row the winner is credited to. The draw records a
+// name at draw time, which can be "Unknown" (a parent booking not yet linked);
+// then the row that lists the winner among its students is used instead.
 const studentWinner = computed(() => {
-  if (studentRealWinner.value) return {
-    name: studentRealWinner.value.winner_name,
-    instrument: studentRealWinner.value.winner_instrument ?? '',
-    grade: studentRealWinner.value.winner_grade ?? '',
-    teacher: studentRealWinner.value.winner_teacher ?? '',
+  const w = studentRealWinner.value
+  if (! w) return null
+  return {
+    name: w.winner_name,
+    instrument: w.winner_instrument ?? '',
+    grade: w.winner_grade ?? '',
+    teacher: creditedRowName(w.winner_teacher ?? '', w.winner_name),
   }
-  return null
 })
+
+function creditedRowName(recorded: string, winnerName: string): string {
+  const norm = (s: string | null | undefined) => (s ?? '').trim().toLowerCase()
+  const rows = props.teachers || []
+  const named = rows.find(r => norm(r.teacher_name) === norm(recorded))
+  if (named) return named.teacher_name
+  const listing = rows.find(r => (r.students || []).some(st => norm(st.name) === norm(winnerName)))
+  return listing?.teacher_name ?? recorded
+}
 
 // Tick "Sending late" when a quarter's results go out after they should have:
 // every results email gains an apology and its subject says so.
@@ -1121,7 +1134,7 @@ const topScorerAwardCount = computed(() => {
                     <ExternalLink class="h-4 w-4" /> Open in Gmail
                   </button>
                   <button
-                    v-if="studentWinner && studentWinner.teacher === teacher.teacher_name"
+                    v-if="studentWinnerRow?.teacher_name === teacher.teacher_name"
                     class="inline-flex items-center gap-1.5 rounded-lg bg-yellow-500 px-3 py-2 text-sm font-semibold text-white hover:opacity-90 transition"
                     @click="copyWinnerEmail(teacher)"
                   >
@@ -1417,13 +1430,13 @@ const topScorerAwardCount = computed(() => {
                   <span class="font-bold text-brand-text">Official Winner (recorded)</span>
                 </div>
                 <p class="text-lg font-bold text-brand-text">{{ studentRealWinner.winner_name }}</p>
-                <p class="text-sm text-brand-text-soft">{{ studentRealWinner.winner_instrument }} {{ formatGrade(studentRealWinner.winner_grade) }} — Teacher: {{ studentRealWinner.winner_teacher }}</p>
+                <p class="text-sm text-brand-text-soft">{{ studentRealWinner.winner_instrument }} {{ formatGrade(studentRealWinner.winner_grade) }} — {{ studentWinnerRow && (studentWinnerRow.booking_role === 'parent' || studentWinnerRow.booking_role === 'self') ? 'Booked by' : 'Teacher' }}: {{ studentWinner?.teacher }}</p>
                 <p class="mt-2 text-xs text-brand-text-soft">Drawn from {{ studentRealWinner.total_tickets }} tickets. This result is permanently recorded.</p>
                 <div class="mt-3 flex flex-wrap gap-2">
                   <MyButtonConstructor v-if="studentWinnerRow" size="small" variant="outline" :icon="Copy" @click="copyWinnerEmail(studentWinnerRow)">
                     Copy Winner Email
                   </MyButtonConstructor>
-                  <MyTextConstructor v-else variant="muted">No Step 2 row is called "{{ studentRealWinner.winner_teacher }}", so there is no winner email to copy.</MyTextConstructor>
+                  <MyTextConstructor v-else variant="muted">No Step 2 row is called "{{ studentWinner?.teacher }}" or lists {{ studentRealWinner.winner_name }}, so there is no winner email to copy.</MyTextConstructor>
                 </div>
                 <div class="mt-3 flex flex-wrap">
                   <PrizeWorkflowChecks v-bind="workflowProps('student_draw', studentRealWinner.winner_name)" />
