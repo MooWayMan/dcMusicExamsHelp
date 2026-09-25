@@ -52,6 +52,10 @@ return [
     |
     | `token` blank  => the sync job no-ops (staging/local + test are meant to
     |                   run with a blank token, exactly like the Mailchimp keys).
+    |                   It is only ever read in PRODUCTION: there is one live
+    |                   portal and no sandbox, and a local .env holding the live
+    |                   token let the test suite push 137 fake example.com
+    |                   contacts into it, 130 of them marked as consenting.
     | `consent_property` is the INTERNAL NAME of a boolean HubSpot contact
     |                   property we set to true/false to mirror marketing consent
     |                   so the "All Marketing Subscribers" smart list can filter on
@@ -64,7 +68,7 @@ return [
     |                   (the sync stays inert for service until it is set).
     */
     'hubspot' => [
-        'token' => env('HUBSPOT_API_TOKEN'),
+        'token' => env('APP_ENV') === 'production' ? env('HUBSPOT_API_TOKEN') : null,
         'base_url' => env('HUBSPOT_BASE_URL', 'https://api.hubapi.com'),
         'consent_property' => env('HUBSPOT_CONSENT_PROPERTY'),
         'service_property' => env('HUBSPOT_SERVICE_PROPERTY'),

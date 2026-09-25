@@ -268,3 +268,63 @@ test('the backfill queues a service sync for every account holder, creating a su
     // The account holder who lacked a subscriber row now has one.
     expect(Subscriber::where('email', 'dan@example.com')->exists())->toBeTrue();
 });
+
+// ──────────────────────────────────────────
+// Only production may reach the live portal. A local .env holding the live
+// token let the test suite write 137 fake contacts into it.
+// ──────────────────────────────────────────
+
+function hubspotTokenWhen(string $appEnv): ?string
+{
+    $saved = [];
+
+    foreach (['APP_ENV' => $appEnv, 'HUBSPOT_API_TOKEN' => 'pat-live-token'] as $key => $value) {
+        $saved[$key] = [$_SERVER[$key] ?? null, $_ENV[$key] ?? null, getenv($key)];
+        $_SERVER[$key] = $_ENV[$key] = $value;
+        putenv("{$key}={$value}");
+    }
+
+    try {
+        return (require base_path('config/services.php'))['hubspot']['token'];
+    } finally {
+        foreach ($saved as $key => [$server, $env, $put]) {
+            if ($server === null) {
+                unset($_SERVER[$key]);
+            } else {
+                $_SERVER[$key] = $server;
+            }
+
+            if ($env === null) {
+                unset($_ENV[$key]);
+            } else {
+                $_ENV[$key] = $env;
+            }
+
+            putenv($put === false ? $key : "{$key}={$put}");
+        }
+    }
+}
+
+test('the live HubSpot token is read in production', function () {
+    expect(hubspotTokenWhen('production'))->toBe('pat-live-token');
+});
+
+test('the live HubSpot token is ignored everywhere else, even when the env file holds it', function (string $appEnv) {
+    expect(hubspotTokenWhen($appEnv))->toBeNull();
+})->with(['testing', 'local', 'staging']);
+
+test('registering a user in the test suite sends nothing to HubSpot', function () {
+    $this->skipUnlessFortifyHas(Features::registration());
+    Http::fake();
+
+    $this->post(route('register.store'), [
+        'name' => 'Faye Fixture',
+        'email' => 'faye@example.com',
+        'role' => 'teacher',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+        'marketing_consent' => true,
+    ])->assertRedirect();
+
+    Http::assertNotSent(fn ($request) => str_contains($request->url(), 'hubapi.com'));
+});
