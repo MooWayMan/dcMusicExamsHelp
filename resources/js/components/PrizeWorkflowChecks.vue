@@ -18,6 +18,8 @@ const props = defineProps<{
   initial?: Record<string, boolean>
 }>()
 
+const emit = defineEmits<{ (e: 'saved', status: Record<string, boolean>): void }>()
+
 const status = ref<Record<string, boolean>>({ ...(props.initial ?? {}) })
 
 watch(() => props.initial, (next) => {
@@ -50,7 +52,10 @@ async function toggle(step: string) {
     })
     if (! res.ok) throw new Error('Toggle failed')
     const data = await res.json()
-    if (data?.status) status.value = data.status
+    if (data?.status) {
+      status.value = data.status
+      emit('saved', data.status)
+    }
   } catch (e) {
     status.value = previous
     console.error('Failed to save workflow step', e)

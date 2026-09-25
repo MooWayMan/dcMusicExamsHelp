@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\PageMaintenanceController;
 use App\Http\Controllers\Admin\PendingResultsController;
 use App\Http\Controllers\Admin\QuarterComparisonController;
 use App\Http\Controllers\Admin\QuarterEndController;
+use App\Http\Controllers\Admin\PrizeController;
 use App\Http\Controllers\Admin\QuickRepliesController;
 use App\Http\Controllers\Admin\ReEntryPermitController;
 use App\Http\Controllers\Admin\ReconciliationController;
@@ -153,6 +154,7 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
         Route::post('quarter-end/mark-sent', [QuarterEndController::class, 'markSent'])->name('quarter-end.mark-sent');
         Route::post('quarter-end/publish-top-scorers', [QuarterEndController::class, 'publishTopScorers'])->name('quarter-end.publish-top-scorers');
         Route::post('quarter-end/toggle-workflow', [QuarterEndController::class, 'toggleWorkflow'])->name('quarter-end.toggle-workflow');
+        Route::get('prizes', [PrizeController::class, 'index'])->name('prizes.index');
 
         // Certificates — generate personalised certificates
         Route::get('certificates', [CertificateController::class, 'index'])->name('certificates.index');

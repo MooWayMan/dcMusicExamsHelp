@@ -16,6 +16,7 @@ import {
     Award,
     Construction,
     Gift,
+    Hourglass,
     FileSpreadsheet,
     Contact as ContactIcon,
     MessageSquareText,
@@ -151,6 +152,11 @@ const adminExamsNavItems: NavItem[] = [
         title: 'Quarter End',
         href: '/admin/quarter-end',
         icon: Gift,
+    },
+    {
+        title: 'Prizes',
+        href: '/admin/prizes',
+        icon: Hourglass,
     },
 ];
 

@@ -628,7 +628,7 @@ class QuarterEndController extends Controller
             'winner_full_name' => $validated['winner_full_name'],
         ]);
 
-        $record->{$validated['step']} = $validated['value'];
+        $record->setStep($validated['step'], (bool) $validated['value']);
         $record->updated_by = $request->user()->id;
         $record->save();
 

@@ -32,6 +32,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool   $bought     Gift card bought on Amazon
  * @property bool   $card_sent  Gift card sent to the winner
  * @property bool   $used       Amazon order page shows the card Redeemed
+ * @property \Illuminate\Support\Carbon|null $sent_at  When Email sent was ticked
  * @property int    $updated_by
  */
 class PrizeWorkflow extends Model
@@ -71,6 +72,7 @@ class PrizeWorkflow extends Model
         'bought',
         'card_sent',
         'used',
+        'sent_at',
         'updated_by',
     ];
 
@@ -81,7 +83,21 @@ class PrizeWorkflow extends Model
         'bought' => 'boolean',
         'card_sent' => 'boolean',
         'used' => 'boolean',
+        'sent_at' => 'datetime',
     ];
+
+    /**
+     * Tick or untick one box. Ticking Email sent records the day, which is
+     * when the winner's 12 months start; unticking it clears the day.
+     */
+    public function setStep(string $step, bool $value): void
+    {
+        $this->{$step} = $value;
+
+        if ($step === 'sent') {
+            $this->sent_at = $value ? ($this->sent_at ?? now()) : null;
+        }
+    }
 
     /**
      * @return array<string, bool>
