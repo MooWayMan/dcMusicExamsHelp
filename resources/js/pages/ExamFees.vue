@@ -358,7 +358,7 @@ const faqs = [
             :sortable="false"
             :striped="true"
             :bordered="true"
-            size="medium"
+            size="large"
           />
         </div>
       </div>
@@ -396,7 +396,7 @@ const faqs = [
             :sortable="false"
             :striped="true"
             :bordered="true"
-            size="medium"
+            size="large"
           />
         </div>
 
@@ -435,7 +435,7 @@ const faqs = [
             :sortable="false"
             :striped="true"
             :bordered="true"
-            size="medium"
+            size="large"
           />
         </div>
       </div>
@@ -473,7 +473,7 @@ const faqs = [
             :sortable="false"
             :striped="true"
             :bordered="true"
-            size="medium"
+            size="large"
           />
         </div>
 
@@ -486,7 +486,7 @@ const faqs = [
             :sortable="false"
             :striped="true"
             :bordered="true"
-            size="medium"
+            size="large"
           />
         </div>
       </div>
@@ -573,7 +573,7 @@ const faqs = [
             :sortable="false"
             :striped="true"
             :bordered="true"
-            size="medium"
+            size="large"
           />
         </div>
 
@@ -586,7 +586,7 @@ const faqs = [
             :sortable="false"
             :striped="true"
             :bordered="true"
-            size="medium"
+            size="large"
           />
           <p class="mt-3 text-sm text-white/60">
             These booking windows are for face-to-face Classical &amp; Jazz exams. Rock &amp; Pop face-to-face exams are booked through a different system (MyTrinity) — sessions are published when available, so check our site or get in touch for the latest dates.

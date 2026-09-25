@@ -150,7 +150,7 @@ const faqs = [
             :sortable="false"
             :striped="true"
             :bordered="true"
-            size="medium"
+            size="large"
           />
         </div>
 
@@ -192,7 +192,7 @@ const faqs = [
             :sortable="false"
             :striped="true"
             :bordered="true"
-            size="medium"
+            size="large"
           />
         </div>
 

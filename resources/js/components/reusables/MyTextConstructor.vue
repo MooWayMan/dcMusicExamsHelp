@@ -21,7 +21,7 @@ interface Props {
   spacing?: 'none' | 'tight' | 'normal' | 'relaxed'
   fontFamily?: 'default' | 'display' | 'asap-condensed'
   subTitleVariant?: 'body' | 'muted' | 'subheading'
-  bodyVariant?: 'body' | 'muted'
+  bodyVariant?: 'body' | 'muted' | 'inherit'
   titleTag?: string
 }
 
@@ -110,6 +110,8 @@ const bodyClasses = computed(() => {
   const map = {
     body: 'text-xl sm:text-xl md:text-2xl lg:text-3xl leading-relaxed text-brand-text',
     muted: 'text-lg sm:text-lg md:text-xl lg:text-2xl leading-relaxed text-brand-text-soft',
+    // Takes its size from the parent, e.g. a table cell sized by the table.
+    inherit: 'leading-snug text-brand-text',
   } as const
 
   return [

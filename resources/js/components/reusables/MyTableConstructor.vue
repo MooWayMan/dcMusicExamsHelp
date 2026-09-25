@@ -455,7 +455,7 @@ function sortIndicator(column: Column) {
 
                   <template v-else>
                     <MyTextConstructor
-                      bodyVariant="muted"
+                      bodyVariant="inherit"
                       alignment="left"
                       spacing="none"
                       textColor="text-brand-text"

@@ -92,6 +92,7 @@ function refresh() {
         :data="section.rows"
         :columns="columns"
         row-key="id"
+        size="small"
         :sortable="false"
         :stack-on-mobile="true"
       >
