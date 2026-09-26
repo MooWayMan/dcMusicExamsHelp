@@ -1,6 +1,6 @@
 <!-- resources/js/components/reusables/MyTextConstructor.vue -->
 <script setup lang="ts">
-import { computed, useSlots } from 'vue'
+import { computed } from 'vue'
 
 interface Props {
   variant?:
@@ -39,7 +39,23 @@ const props = withDefaults(defineProps<Props>(), {
   titleTag: 'div',
 })
 
-const slots = useSlots()
+/**
+ * The slots, DECLARED, so tests/Feature/TextConstructorSlotsTest.php can
+ * read the list and fail on any page passing a name that isn't in it. Vue
+ * drops an unknown named slot without a word, so a paragraph passed as
+ * `#myBody` (a slot this never had) simply never appears. Ported from Music
+ * Register, 26 Sep 2026.
+ *
+ * `myPara` is the paragraph slot, drawn in the `variant` the caller asked
+ * for: `variant="muted"` gives a muted paragraph.
+ */
+const slots = defineSlots<{
+  myEyebrow?: () => unknown
+  myTitle?: () => unknown
+  mySubTitle?: () => unknown
+  myPara?: () => unknown
+  default?: () => unknown
+}>()
 
 const alignmentClasses = computed(() => {
   return {
@@ -138,7 +154,15 @@ const underlineClasses = computed(() => {
 const hasEyebrowSlot = computed(() => Boolean(slots.myEyebrow))
 const hasTitleSlot = computed(() => Boolean(slots.myTitle))
 const hasSubTitleSlot = computed(() => Boolean(slots.mySubTitle))
+const hasParaSlot = computed(() => Boolean(slots.myPara))
 const hasDefaultSlot = computed(() => Boolean(slots.default))
+
+const paraClasses = computed(() => [
+  fontFamilyClass.value,
+  variantClasses[props.variant],
+  props.textColor === 'inherit' ? '!text-inherit' : '',
+  resolvedTextColor.value,
+])
 </script>
 
 <template>
@@ -158,6 +182,10 @@ const hasDefaultSlot = computed(() => Boolean(slots.default))
 
     <div v-if="hasSubTitleSlot" :class="subTitleClasses">
       <slot name="mySubTitle" />
+    </div>
+
+    <div v-if="hasParaSlot" :class="paraClasses">
+      <slot name="myPara" />
     </div>
 
     <div v-if="hasDefaultSlot" :class="bodyClasses">
