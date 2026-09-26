@@ -178,6 +178,9 @@ The only `<select>` to use. `v-model`, `options`: `{ value, label }[]` (typed: s
 ### MySearchPickConstructor.vue
 Type-to-filter pick list (Top Ten "Rate a piece", Piece tracker). `v-model` (the chosen value or null), `items`: `{ value, label, hint? }[]` (hint shows before the label), `placeholder`, `emptyText`, `tone`: surface | glass, `maxShown` (50). Emits `pick` with the whole item.
 
+### MyCheckboxConstructor.vue
+A tick box with an optional label. `v-model` (boolean), `label`, `ariaLabel` (give one when there is no label, e.g. in a table column headed by the question), `disabled`. Seven older files still draw a raw checkbox; they are listed as a shrink-only baseline in `SyllabusPickerGuardTest`.
+
 ### SyllabusFilterSelects.vue (components/syllabus)
 Exam type → instrument → grade, cascading, built from `App\Services\SyllabusFacets::forDropdowns()`. `v-model:stream`, `v-model:instrument`, `v-model:grade`, `facets`, `tone`, `size`, `allowAll` ("All …" vs "Choose …"), `labelled`. The cascade itself lives in `composables/useSyllabusFacets.ts` (guard-tested).
 

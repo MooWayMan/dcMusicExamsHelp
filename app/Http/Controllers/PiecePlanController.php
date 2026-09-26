@@ -32,6 +32,7 @@ class PiecePlanController extends Controller
             'sectionLabels' => PiecePlans::SECTION_LABELS,
             'suggestions' => PiecePlans::SUGGESTIONS,
             'maxItems' => PiecePlans::MAX_ITEMS,
+            'maxScore' => PiecePlans::MAX_SCORE,
             ...$facets->forDropdowns(),
         ]);
     }

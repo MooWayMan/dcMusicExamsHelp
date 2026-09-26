@@ -32,6 +32,11 @@ class PiecePlan extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(PiecePlanRating::class);
+    }
+
     public function items(): HasMany
     {
         return $this->hasMany(PiecePlanItem::class)->orderBy('position')->orderBy('id');

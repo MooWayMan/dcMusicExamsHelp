@@ -250,7 +250,7 @@ test('the piece picker lists only that exam\'s syllabus pieces', function () {
     $this->actingAs(ppTeacher())
         ->getJson('/dashboard/pieces/syllabus?'.http_build_query(['stream' => 'Classical & Jazz', 'instrument' => 'Piano', 'grade' => 'Grade 3']))
         ->assertOk()
-        ->assertExactJson([['value' => $wanted->id, 'label' => "Wanted — {$wanted->composer}", 'book' => 'The Book']]);
+        ->assertExactJson([['value' => $wanted->id, 'label' => "Wanted — {$wanted->composer}", 'book' => 'The Book', 'listen' => null]]);
 });
 
 test('a teacher can start a plan from their own candidates, and a planned pupil drops off the list', function () {
@@ -304,4 +304,92 @@ test('a teacher can start a plan from their own candidates, and a planned pupil 
     $this->actingAs($teacher)->post('/dashboard/pieces', ppPlanData(['pupil_name' => 'freddie smith']));
 
     expect($names())->toBe(['Amy Jones']);
+});
+
+// ──────────────────────────────────────────
+// Choosing pieces: the pupil marks each syllabus piece out of 10 after
+// hearing it. Being tried is not stored with the mark: it is the piece being
+// in the plan's Pieces rows, which the round trip above already covers.
+// ──────────────────────────────────────────
+
+test('marks round-trip: set, changed, cleared', function () {
+    $a = ppPiece(['title' => 'A']);
+    $b = ppPiece(['title' => 'B']);
+    $c = ppPiece(['title' => 'C']);
+    $teacher = ppTeacher();
+
+    $this->actingAs($teacher)->post('/dashboard/pieces', ppPlanData([
+        'ratings' => [
+            ['syllabus_piece_id' => $a->id, 'score' => 10],
+            ['syllabus_piece_id' => $b->id, 'score' => 3],
+        ],
+    ]))->assertSessionHasNoErrors();
+
+    $plan = ppServed($this, $teacher)[0];
+    expect($plan['ratings'])->toBe([
+        ['syllabus_piece_id' => $a->id, 'score' => 10],
+        ['syllabus_piece_id' => $b->id, 'score' => 3],
+    ]);
+
+    // Send back what was served, with B changed, A cleared and C marked.
+    $this->actingAs($teacher)->put("/dashboard/pieces/{$plan['id']}", [
+        ...collect($plan)->only(['pupil_name', 'exam_stream', 'instrument', 'grade', 'target_date', 'items'])->all(),
+        'ratings' => [
+            ['syllabus_piece_id' => $a->id, 'score' => null],
+            ['syllabus_piece_id' => $b->id, 'score' => 10],
+            ['syllabus_piece_id' => $c->id, 'score' => 0],
+        ],
+    ])->assertSessionHasNoErrors();
+
+    expect(ppServed($this, $teacher)[0]['ratings'])->toBe([
+        ['syllabus_piece_id' => $b->id, 'score' => 10],
+        ['syllabus_piece_id' => $c->id, 'score' => 0],
+    ]);
+});
+
+test('a save that carries no marks leaves the marks alone', function () {
+    $a = ppPiece();
+    $teacher = ppTeacher();
+    $this->actingAs($teacher)->post('/dashboard/pieces', ppPlanData([
+        'ratings' => [['syllabus_piece_id' => $a->id, 'score' => 8]],
+    ]));
+    $plan = PiecePlan::first();
+
+    $this->actingAs($teacher)->put("/dashboard/pieces/{$plan->id}", ppPlanData(['pupil_name' => 'Renamed']))
+        ->assertSessionHasNoErrors();
+
+    expect(ppServed($this, $teacher)[0]['ratings'])->toBe([['syllabus_piece_id' => $a->id, 'score' => 8]]);
+});
+
+test('a mark is out of 10', function () {
+    $a = ppPiece();
+
+    $this->actingAs(ppTeacher())->post('/dashboard/pieces', ppPlanData([
+        'ratings' => [['syllabus_piece_id' => $a->id, 'score' => 11]],
+    ]))->assertSessionHasErrors('ratings.0.score');
+});
+
+test('removing a plan removes its marks', function () {
+    $a = ppPiece();
+    $teacher = ppTeacher();
+    $this->actingAs($teacher)->post('/dashboard/pieces', ppPlanData([
+        'ratings' => [['syllabus_piece_id' => $a->id, 'score' => 8]],
+    ]));
+
+    $this->actingAs($teacher)->delete('/dashboard/pieces/'.PiecePlan::first()->id);
+
+    expect(App\Models\PiecePlanRating::count())->toBe(0);
+});
+
+test('each piece on the list links to where it can be heard', function () {
+    $searched = ppPiece(['title' => 'Searched', 'audio' => ['youtube_search' => 'https://www.youtube.com/results?search_query=Searched']]);
+    $curated = ppPiece(['title' => 'Curated', 'curated_video_url' => 'https://www.youtube.com/watch?v=abc', 'audio' => ['youtube_search' => 'https://www.youtube.com/results?search_query=Curated']]);
+
+    $list = collect($this->actingAs(ppTeacher())
+        ->getJson('/dashboard/pieces/syllabus?'.http_build_query(['stream' => 'Classical & Jazz', 'instrument' => 'Piano', 'grade' => 'Grade 3']))
+        ->assertOk()
+        ->json())->keyBy('value');
+
+    expect($list[$searched->id]['listen'])->toBe('https://www.youtube.com/results?search_query=Searched')
+        ->and($list[$curated->id]['listen'])->toBe('https://www.youtube.com/watch?v=abc');
 });

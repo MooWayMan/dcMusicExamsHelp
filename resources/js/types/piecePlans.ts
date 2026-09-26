@@ -13,6 +13,14 @@ export interface PlanItem {
   book: string | null
 }
 
+/** A pupil's mark out of maxScore for a syllabus piece they have heard. */
+// A type, not an interface: it is sent in an Inertia request body, and
+// only a type alias satisfies Inertia's index-signature payload type.
+export type PlanRating = {
+  syllabus_piece_id: number
+  score: number
+}
+
 export interface PiecePlan {
   id: number
   pupil_name: string
@@ -21,6 +29,7 @@ export interface PiecePlan {
   grade: string
   target_date: string | null
   items: PlanItem[]
+  ratings: PlanRating[]
   ready: number
 }
 

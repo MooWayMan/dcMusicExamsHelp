@@ -28,5 +28,30 @@ test('which entries belong to a person is decided by TeacherEntries only', funct
 });
 
 test('piece plans are read and written by PiecePlans only', function () {
-    expect(guardOffenders('/PiecePlan(Item)?::(query|create|where|find)/', ['app/Services/PiecePlans.php']))->toBe([]);
+    expect(guardOffenders('/PiecePlan(Item|Rating)?::(query|create|where|find)/', ['app/Services/PiecePlans.php']))->toBe([]);
+});
+
+// Tick boxes: MyCheckboxConstructor, added 26 Sep 2026. These files drew
+// their own before it existed. The list may only get shorter: moving one
+// onto the constructor means deleting its line here.
+const RAW_CHECKBOX_BASELINE = [
+    'resources/js/components/LeadMagnetCapture.vue',
+    'resources/js/components/PrizeWorkflowChecks.vue',
+    'resources/js/pages/admin/Contacts/Edit.vue',
+    'resources/js/pages/admin/ExamEntries/Index.vue',
+    'resources/js/pages/admin/Imports/Index.vue',
+    'resources/js/pages/auth/Register.vue',
+    'resources/js/pages/settings/Profile.vue',
+];
+
+test('no new page draws its own tick box', function () {
+    $offenders = guardOffenders('/type="checkbox"/', ['resources/js/components/reusables/MyCheckboxConstructor.vue']);
+
+    expect(array_values(array_diff($offenders, RAW_CHECKBOX_BASELINE)))->toBe([]);
+});
+
+test('the tick-box baseline only lists files that still need moving', function () {
+    $offenders = guardOffenders('/type="checkbox"/', ['resources/js/components/reusables/MyCheckboxConstructor.vue']);
+
+    expect(array_values(array_diff(RAW_CHECKBOX_BASELINE, $offenders)))->toBe([]);
 });

@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Models\ExamEntry;
 use App\Models\PiecePlan;
 use App\Models\PiecePlanItem;
+use App\Models\PiecePlanRating;
 use App\Models\SyllabusPiece;
 use App\Models\User;
 use App\Support\Grade;
@@ -53,6 +54,9 @@ final class PiecePlans
 
     public const MAX_ITEMS = 30;
 
+    /** A pupil's mark for a piece they have heard is out of this. */
+    public const MAX_SCORE = 10;
+
     public function __construct(
         private readonly SyllabusFacets $facets,
         private readonly TeacherEntries $teacherEntries,
@@ -68,7 +72,7 @@ final class PiecePlans
     {
         return PiecePlan::query()
             ->where('user_id', $user->id)
-            ->with('items.syllabusPiece:id,book_title')
+            ->with(['items.syllabusPiece:id,book_title', 'ratings'])
             ->orderBy('pupil_name')
             ->orderBy('id')
             ->get()
@@ -99,6 +103,16 @@ final class PiecePlans
             'grade' => $plan->grade,
             'target_date' => $plan->target_date?->toDateString(),
             'items' => $items->all(),
+            // Only pieces that have been given a mark. Whether one is being
+            // tried is not stored here: it is the piece being in `items`.
+            'ratings' => $plan->ratings
+                ->sortBy('syllabus_piece_id')
+                ->map(fn (PiecePlanRating $r) => [
+                    'syllabus_piece_id' => $r->syllabus_piece_id,
+                    'score' => $r->score,
+                ])
+                ->values()
+                ->all(),
             'ready' => $items->isEmpty() ? 0 : (int) round($items->avg('percent')),
         ];
     }
@@ -123,6 +137,9 @@ final class PiecePlans
             'items.*.syllabus_piece_id' => ['nullable', 'integer', 'exists:syllabus_pieces,id'],
             'items.*.label' => ['nullable', 'string', 'max:200', 'required_without:items.*.syllabus_piece_id'],
             'items.*.percent' => ['required', 'integer', 'between:0,100'],
+            'ratings' => ['array', 'max:500'],
+            'ratings.*.syllabus_piece_id' => ['required', 'integer', 'distinct', 'exists:syllabus_pieces,id'],
+            'ratings.*.score' => ['nullable', 'integer', 'between:0,'.self::MAX_SCORE],
         ];
     }
 
@@ -134,6 +151,7 @@ final class PiecePlans
                 ...$this->planAttributes($data),
             ]);
             $this->syncItems($plan, $data['items'] ?? []);
+            $this->syncRatings($plan, $data['ratings'] ?? []);
 
             return $plan;
         });
@@ -144,6 +162,11 @@ final class PiecePlans
         DB::transaction(function () use ($plan, $data) {
             $plan->update($this->planAttributes($data));
             $this->syncItems($plan, $data['items'] ?? []);
+            // Left alone when the request carries no ratings at all, so a
+            // save that never showed the list cannot wipe the marks.
+            if (array_key_exists('ratings', $data)) {
+                $this->syncRatings($plan, $data['ratings']);
+            }
         });
     }
 
@@ -160,7 +183,7 @@ final class PiecePlans
     /**
      * Pieces on the syllabus for one exam, for the piece picker.
      *
-     * @return list<array{value: int, label: string, book: ?string}>
+     * @return list<array{value: int, label: string, book: ?string, listen: ?string}>
      */
     public function syllabusOptions(string $stream, string $instrument, string $grade): array
     {
@@ -175,6 +198,9 @@ final class PiecePlans
                 'value' => $p->id,
                 'label' => self::pieceLabel($p),
                 'book' => $p->book_title,
+                // Where to hear it: the chosen exam performance when there is
+                // one, otherwise the same YouTube search the Piece Finder uses.
+                'listen' => $p->curated_video_url ?: ($p->audio['youtube_search'] ?? null),
             ])
             ->values()
             ->all();
@@ -262,6 +288,28 @@ final class PiecePlans
             ->delete();
 
         $plan->unsetRelation('items');
+    }
+
+    /**
+     * Make the plan's marks exactly the list given. A piece sent with no
+     * score has had its mark cleared, so it loses its row.
+     */
+    private function syncRatings(PiecePlan $plan, array $ratings): void
+    {
+        PiecePlanRating::query()->where('piece_plan_id', $plan->id)->delete();
+
+        foreach ($ratings as $rating) {
+            if (($rating['score'] ?? null) === null) {
+                continue;
+            }
+            PiecePlanRating::create([
+                'piece_plan_id' => $plan->id,
+                'syllabus_piece_id' => (int) $rating['syllabus_piece_id'],
+                'score' => max(0, min(self::MAX_SCORE, (int) $rating['score'])),
+            ]);
+        }
+
+        $plan->unsetRelation('ratings');
     }
 
     private function itemAttributes(array $item, int $position): array

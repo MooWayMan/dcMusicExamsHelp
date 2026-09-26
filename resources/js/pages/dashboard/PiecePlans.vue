@@ -22,6 +22,7 @@ const props = defineProps<SyllabusFacetLists & {
   sectionLabels: SectionLabels
   suggestions: Suggestions
   maxItems: number
+  maxScore: number
 }>()
 
 defineOptions({ layout: { breadcrumbs: [{ title: 'Dashboard', href: '/dashboard' }, { title: 'Piece tracker', href: '/dashboard/pieces' }] } })
@@ -152,6 +153,7 @@ return
         :section-labels="sectionLabels"
         :suggestions="suggestions"
         :max-items="maxItems"
+        :max-score="maxScore"
       />
     </div>
   </div>

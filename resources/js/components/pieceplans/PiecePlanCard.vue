@@ -1,8 +1,9 @@
 <!-- resources/js/components/pieceplans/PiecePlanCard.vue -->
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3'
-import { Plus, Trash2, X, Pencil, Save } from 'lucide-vue-next'
+import { Plus, Trash2, X, Pencil, Save, ListMusic } from 'lucide-vue-next'
 import { computed, reactive, ref, toRef, watch } from 'vue'
+import PieceChooser from '@/components/pieceplans/PieceChooser.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyInputConstructor from '@/components/reusables/MyInputConstructor.vue'
 import MyProgress from '@/components/reusables/MyProgress.vue'
@@ -16,7 +17,8 @@ import SyllabusFilterSelects from '@/components/syllabus/SyllabusFilterSelects.v
 import { instrumentLabel  } from '@/composables/useSyllabusFacets'
 import type {SyllabusFacetLists} from '@/composables/useSyllabusFacets';
 import { useSyllabusPieceOptions } from '@/composables/useSyllabusPieceOptions'
-import type { PiecePlan, PlanItem, PlanSection, SectionLabels, Suggestions } from '@/types/piecePlans'
+import type { SyllabusPieceOption } from '@/composables/useSyllabusPieceOptions'
+import type { PiecePlan, PlanItem, PlanRating, PlanSection, SectionLabels, Suggestions } from '@/types/piecePlans'
 
 // One pupil's plan on the Piece tracker: what they are preparing and how
 // ready each part is. Edits stay on the card until Save; Save sends every
@@ -27,6 +29,7 @@ const props = defineProps<{
   sectionLabels: SectionLabels
   suggestions: Suggestions
   maxItems: number
+  maxScore: number
 }>()
 
 type DraftItem = PlanItem & { key: string }
@@ -37,6 +40,7 @@ interface Draft {
   grade: string
   target_date: string
   items: DraftItem[]
+  scores: Record<number, number>
 }
 
 const SECTION_ORDER: PlanSection[] = ['piece', 'technical', 'supporting']
@@ -51,7 +55,16 @@ function toDraft(plan: PiecePlan): Draft {
     grade: plan.grade,
     target_date: plan.target_date ?? '',
     items: plan.items.map((item) => ({ ...item, key: `i${item.id ?? `n${nextKey++}`}` })),
+    scores: Object.fromEntries(plan.ratings.map((r) => [r.syllabus_piece_id, r.score])),
   }
+}
+
+// Marks go back sorted by piece, the order the server serves them in, so an
+// untouched plan compares equal to what was saved.
+function ratingsOf(scores: Record<number, number>): PlanRating[] {
+  return Object.entries(scores)
+    .map(([id, score]) => ({ syllabus_piece_id: Number(id), score }))
+    .sort((a, b) => a.syllabus_piece_id - b.syllabus_piece_id)
 }
 
 const draft = reactive<Draft>(toDraft(props.plan))
@@ -79,6 +92,7 @@ function payload() {
     target_date: draft.target_date || null,
     items: SECTION_ORDER.flatMap((section) => draft.items.filter((i) => i.section === section && filled(i)))
       .map(({ id, section, syllabus_piece_id, label, percent }) => ({ id, section, syllabus_piece_id, label, percent })),
+    ratings: ratingsOf(draft.scores),
   }
 }
 
@@ -91,6 +105,7 @@ function toDraftPayload(plan: PiecePlan) {
     grade: plan.grade,
     target_date: plan.target_date,
     items: plan.items.map(({ id, section, syllabus_piece_id, label, percent }) => ({ id, section, syllabus_piece_id, label, percent })),
+    ratings: plan.ratings.map(({ syllabus_piece_id, score }) => ({ syllabus_piece_id, score })),
   }
 }
 const dirty = computed(() => JSON.stringify(payload()) !== saved.value)
@@ -110,6 +125,35 @@ const ready = computed(() => {
 })
 
 const full = computed(() => draft.items.length >= props.maxItems)
+
+// ── Choosing pieces ───────────────────────────────────────────────
+const choosing = ref(false)
+// Being tried = being in the Pieces rows. Nothing else records it.
+const tryingIds = computed(() =>
+  draft.items.filter((i) => i.section === 'piece' && i.syllabus_piece_id !== null).map((i) => i.syllabus_piece_id as number),
+)
+function setScore(pieceId: number, score: number | null) {
+  if (score === null) {
+    delete draft.scores[pieceId]
+  } else {
+    draft.scores[pieceId] = score
+  }
+}
+function setTrying(piece: SyllabusPieceOption, on: boolean) {
+  if (on) {
+    if (full.value || tryingIds.value.includes(piece.value)) {
+      return
+    }
+
+    draft.items.push({ id: null, section: 'piece', syllabus_piece_id: piece.value, label: piece.label, percent: 0, book: piece.book, key: `n${nextKey++}` })
+  } else {
+    const index = draft.items.findIndex((i) => i.section === 'piece' && i.syllabus_piece_id === piece.value)
+
+    if (index >= 0) {
+      draft.items.splice(index, 1)
+    }
+  }
+}
 
 function addItem(section: PlanSection, label = '') {
   if (full.value) {
@@ -265,6 +309,25 @@ const columns = [
       <MyTextConstructor bodyVariant="muted" spacing="none">
         Nothing added yet. Start with the {{ labels.piece.toLowerCase() }} below.
       </MyTextConstructor>
+    </div>
+
+    <div v-if="syllabusPieces.length" class="flex flex-col gap-3">
+      <div>
+        <MyButtonConstructor size="small" variant="outline" :icon="ListMusic" @click="choosing = !choosing">
+          Choose {{ labels.piece.toLowerCase() }} ({{ syllabusPieces.length }})
+        </MyButtonConstructor>
+      </div>
+      <PieceChooser
+        v-if="choosing"
+        :pieces="syllabusPieces"
+        :scores="draft.scores"
+        :trying-ids="tryingIds"
+        :max-score="maxScore"
+        :piece-word="labels.piece.replace(/s$/, '')"
+        :full="full"
+        @score="setScore"
+        @trying="setTrying"
+      />
     </div>
 
     <div class="flex flex-col gap-3">

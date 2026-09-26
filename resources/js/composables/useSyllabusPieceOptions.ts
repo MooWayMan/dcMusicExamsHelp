@@ -11,6 +11,7 @@ export interface SyllabusPieceOption {
   value: number
   label: string
   book: string | null
+  listen: string | null
 }
 
 const cache = new Map<string, Promise<SyllabusPieceOption[]>>()
