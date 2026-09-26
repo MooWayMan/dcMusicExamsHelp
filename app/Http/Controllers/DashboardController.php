@@ -12,6 +12,7 @@ use App\Models\ExamContact;
 use App\Models\ExamEntry;
 use App\Models\PrizeDraw;
 use App\Models\Task;
+use App\Services\TeacherEntries;
 use App\Support\EntryCredit;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -41,12 +42,7 @@ use Inertia\Response;
  */
 class DashboardController extends Controller
 {
-    /**
-     * Earliest date the dashboard offers. Centre 120's exam history in this
-     * system starts in 2026 — the Quarter End email tells teachers they can
-     * see everything "from January 2026", so the two must not drift apart.
-     */
-    private const HISTORY_START = '2026-01-01';
+    public function __construct(private readonly TeacherEntries $teacherEntries) {}
 
     /**
      * Resolve the requested date range, falling back to the full history.
@@ -70,7 +66,7 @@ class DashboardController extends Controller
             }
         };
 
-        $from = $parse($request->query('from'), Carbon::parse(self::HISTORY_START))->startOfDay();
+        $from = $parse($request->query('from'), Carbon::parse(TeacherEntries::HISTORY_START))->startOfDay();
         $to = $parse($request->query('to'), Carbon::now())->endOfDay();
 
         // A backwards range returns nothing and looks like a bug to the user.
@@ -81,94 +77,14 @@ class DashboardController extends Controller
         return [$from, $to];
     }
 
-    /**
-     * Restrict a query to entries falling inside the range.
-     *
-     * Uses the order's requested start date when the entry has no exam_date of
-     * its own. That is the normal state for a candidate whose result hasn't
-     * come back yet — filtering on exam_date alone would silently drop exactly
-     * the pending rows the dashboard is meant to surface.
-     */
-    private function withinRange($query, Carbon $from, Carbon $to)
-    {
-        return $query
-            ->leftJoin('orders', 'exam_entries.order_id', '=', 'orders.id')
-            ->whereRaw(
-                'COALESCE(exam_entries.exam_date, orders.requested_start_date) BETWEEN ? AND ?',
-                [$from->toDateString(), $to->toDateString()]
-            );
-    }
-
-    /**
-     * The columns every view of a teacher's entries needs, qualified because
-     * withinRange() joins `orders` (which has overlapping column names).
-     *
-     * @return array<int,string>
-     */
-    private function entryColumns(): array
-    {
-        return [
-            'exam_entries.id',
-            'exam_entries.student_id',
-            'exam_entries.instrument_id',
-            'exam_entries.candidate_number',
-            'exam_entries.candidate_name',
-            'exam_entries.date_of_birth',
-            'exam_entries.grade',
-            'exam_entries.subject_area',
-            'exam_entries.delivery_method',
-            'exam_entries.result',
-            'exam_entries.score',
-            'exam_entries.exam_date',
-            'exam_entries.notes',
-            'exam_entries.report',
-        ];
-    }
-
     public function index(Request $request): Response
     {
         $user = $request->user();
 
-        // Find a matching exam_contacts row (handles canonical email + the
-        // legacy contact_emails relation for older imports).
-        $contact = ExamContact::query()
-            ->where('email', $user->email)
-            ->orWhereHas('emails', fn ($q) => $q->where('email', $user->email))
-            ->first();
-
-        // Pull the user's exam entries. Three paths because the existing data
-        // is messy: contact match → entries via teacher_contact_id; falling
-        // back to applicant_email; finally entries where their email appears
-        // anywhere on the entry.
+        // Whose entries these are is decided in one place, shared with the
+        // exports and the Piece tracker (App\Services\TeacherEntries).
         [$from, $to] = $this->dateRange($request);
-
-        $entriesCollection = $this->withinRange(ExamEntry::query(), $from, $to)
-            ->select($this->entryColumns())
-            ->with('instrument:id,name')
-            ->where(function ($q) use ($user, $contact) {
-                $q->where('exam_entries.applicant_email', $user->email);
-                if ($contact) {
-                    $q->orWhere('exam_entries.teacher_contact_id', $contact->id)
-                        // Candidates whose results haven't come back yet.
-                        //
-                        // The Section 1b enrolment-list import creates the
-                        // entry as soon as the order is imported, with
-                        // teacher_contact_id AND applicant_email both null —
-                        // Trinity hasn't told us the teacher yet, so the only
-                        // link to a person is submitter_contact_id. Without
-                        // this clause the two conditions above can never match
-                        // a pre-result row, so a teacher's awaiting candidates
-                        // were invisible to them (the page even has a
-                        // "Pending" filter that could never match anything).
-                        //
-                        // Same credit rule as QuarterEndController and the
-                        // certificate reports — see App\Support\EntryCredit.
-                        ->orWhere('exam_entries.submitter_contact_id', $contact->id);
-                }
-            })
-            ->orderBy('exam_entries.candidate_name')
-            ->orderByDesc('exam_entries.exam_date')
-            ->get();
+        [$contact, $entriesCollection] = $this->teacherEntries->forUser($user, $from, $to);
 
         // Build a map of entry_id → existing pending correction task so the
         // dashboard can show "Correction sent" indicators and let the user
@@ -203,7 +119,28 @@ class DashboardController extends Controller
             }
         }
 
-        $entries = $entriesCollection->map(fn (ExamEntry $e) => [
+        $entries = $entriesCollection->map(fn (ExamEntry $e) => $this->entryRow($e, $correctionMap[$e->id] ?? null));
+
+        return Inertia::render('Dashboard', [
+            'examEntries' => $entries,
+            'hasLinkedContact' => $contact !== null || $entries->isNotEmpty(),
+            'teacherPrizeDraw' => $this->buildTeacherPrizeDrawPayload($contact),
+            'filters' => [
+                'from' => $from->toDateString(),
+                'to' => $to->toDateString(),
+                'history_start' => TeacherEntries::HISTORY_START,
+            ],
+        ]);
+    }
+
+    /**
+     * One row of the candidate list, as the page and the admin preview show it.
+     *
+     * @param  array{submitted_at: ?string, note: string}|null  $correction
+     */
+    private function entryRow(ExamEntry $e, ?array $correction): array
+    {
+        return [
             'id' => $e->id,
             'student_id' => $e->student_id,
             'instrument' => $e->instrument?->name,
@@ -216,23 +153,12 @@ class DashboardController extends Controller
             'result' => $e->result,
             'score' => $e->score,
             'exam_date' => $e->exam_date?->format('d M Y'),
-            'pending_correction' => $correctionMap[$e->id] ?? null,
+            'pending_correction' => $correction,
             // The deciphered F2F report (piece names, marks, examiner comments)
             // when this candidate's paper report has been scanned in. Null for
             // digital exams and anything not yet captured.
             'report' => $e->report,
-        ]);
-
-        return Inertia::render('Dashboard', [
-            'examEntries' => $entries,
-            'hasLinkedContact' => $contact !== null || $entries->isNotEmpty(),
-            'teacherPrizeDraw' => $this->buildTeacherPrizeDrawPayload($contact),
-            'filters' => [
-                'from' => $from->toDateString(),
-                'to' => $to->toDateString(),
-                'history_start' => self::HISTORY_START,
-            ],
-        ]);
+        ];
     }
 
     /**
@@ -247,24 +173,8 @@ class DashboardController extends Controller
     {
         [$from, $to] = $this->dateRange($request);
 
-        $entriesCollection = $this->contactEntries($contact, $from, $to)->get();
-
-        $entries = $entriesCollection->map(fn (ExamEntry $e) => [
-            'id' => $e->id,
-            'student_id' => $e->student_id,
-            'instrument' => $e->instrument?->name,
-            'candidate_number' => $e->candidate_number,
-            'candidate_name' => $e->candidate_name,
-            'date_of_birth' => $e->date_of_birth?->format('d M Y'),
-            'grade' => $e->grade,
-            'subject_area' => $e->subject_area,
-            'delivery_method' => $e->delivery_method,
-            'result' => $e->result,
-            'score' => $e->score,
-            'exam_date' => $e->exam_date?->format('d M Y'),
-            'pending_correction' => null,
-            'report' => $e->report,
-        ]);
+        $entries = $this->teacherEntries->forContact($contact, $from, $to)->get()
+            ->map(fn (ExamEntry $e) => $this->entryRow($e, null));
 
         return Inertia::render('Dashboard', [
             'examEntries' => $entries,
@@ -273,41 +183,13 @@ class DashboardController extends Controller
             'filters' => [
                 'from' => $from->toDateString(),
                 'to' => $to->toDateString(),
-                'history_start' => self::HISTORY_START,
+                'history_start' => TeacherEntries::HISTORY_START,
             ],
             'preview' => [
                 'contact_id' => $contact->id,
                 'contact_name' => $contact->name,
             ],
         ]);
-    }
-
-    /**
-     * Every entry credited to a contact inside a date range, however it is
-     * linked: named teacher, applicant email, or — for candidates still
-     * awaiting a result — the person who submitted the booking.
-     */
-    private function contactEntries(ExamContact $contact, Carbon $from, Carbon $to)
-    {
-        $emails = collect([$contact->email])
-            ->merge($contact->emails->pluck('email'))
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
-
-        return $this->withinRange(ExamEntry::query(), $from, $to)
-            ->select($this->entryColumns())
-            ->with('instrument:id,name')
-            ->where(function ($q) use ($contact, $emails) {
-                $q->where('exam_entries.teacher_contact_id', $contact->id)
-                    ->orWhere('exam_entries.submitter_contact_id', $contact->id);
-                if (! empty($emails)) {
-                    $q->orWhereIn('exam_entries.applicant_email', $emails);
-                }
-            })
-            ->orderBy('exam_entries.candidate_name')
-            ->orderByDesc('exam_entries.exam_date');
     }
 
     /**
@@ -337,7 +219,7 @@ class DashboardController extends Controller
     {
         [$from, $to] = $this->dateRange($request);
 
-        return $this->csvResponse($this->contactEntries($contact, $from, $to)->get(), $from, $to);
+        return $this->csvResponse($this->teacherEntries->forContact($contact, $from, $to)->get(), $from, $to);
     }
 
     /**
@@ -394,7 +276,7 @@ class DashboardController extends Controller
 
         return $this->pdfResponse(
             $contact->name,
-            $this->contactEntries($contact, $from, $to)->get(),
+            $this->teacherEntries->forContact($contact, $from, $to)->get(),
             $from,
             $to
         );
@@ -429,26 +311,9 @@ class DashboardController extends Controller
         $user = $request->user();
         [$from, $to] = $this->dateRange($request);
 
-        $contact = ExamContact::query()
-            ->where('email', $user->email)
-            ->orWhereHas('emails', fn ($q) => $q->where('email', $user->email))
-            ->first();
+        [$contact, $entries] = $this->teacherEntries->forUser($user, $from, $to);
 
-        if ($contact) {
-            return [$contact, $this->contactEntries($contact, $from, $to)->get(), $from, $to];
-        }
-
-        // No linked contact — fall back to the email on the entry, matching
-        // the dashboard's own fallback so the two never disagree.
-        $entries = $this->withinRange(ExamEntry::query(), $from, $to)
-            ->select($this->entryColumns())
-            ->with('instrument:id,name')
-            ->where('exam_entries.applicant_email', $user->email)
-            ->orderBy('exam_entries.candidate_name')
-            ->orderByDesc('exam_entries.exam_date')
-            ->get();
-
-        return [null, $entries, $from, $to];
+        return [$contact, $entries, $from, $to];
     }
 
     /**

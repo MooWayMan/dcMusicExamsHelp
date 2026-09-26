@@ -54,6 +54,10 @@ class ImportController extends Controller
             // For the School-admin role: a datalist of existing schools so
             // Paul reuses (e.g. Learn Music Ltd) instead of re-typing.
             'schools' => School::orderBy('name')->get(['id', 'name']),
+            // What makes a dropped CSV an Enrolment, Summary or Marksheet —
+            // the importer's own required columns, so the page and the
+            // import can never disagree about a file.
+            'candidateCsvHeaders' => TrinityCsvImporter::candidateCsvHeaders(),
         ]);
     }
 

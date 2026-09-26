@@ -1,6 +1,6 @@
 <!-- resources/js/pages/Syllabus.vue -->
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { usePageAnimation } from '@/composables/usePageAnimation'
 import Head from '@/components/layouts/Head.vue'
@@ -8,6 +8,8 @@ import Navbar from '@/components/layouts/Navbar.vue'
 import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
+import SyllabusFilterSelects from '@/components/syllabus/SyllabusFilterSelects.vue'
+import { instrumentLabel as streamInstrumentLabel } from '@/composables/useSyllabusFacets'
 import { Search, Youtube, ShoppingCart, ExternalLink, Monitor } from 'lucide-vue-next'
 
 interface Audio { youtube_search?: string; youtube_music?: string; spotify?: string; apple_music?: string; amazon_music?: string }
@@ -46,35 +48,6 @@ const stream = ref(props.active.stream)
 const instrument = ref(props.active.instrument)
 const grade = ref(props.active.grade)
 
-const instStream = computed<Record<string, string>>(() => {
-  const m: Record<string, string> = {}
-  props.streamInstruments.forEach((si) => { m[si.instrument] = si.stream })
-  return m
-})
-function instLabel(inst: string): string {
-  return instStream.value[inst] === 'Rock & Pop' ? `R&P ${inst}` : inst
-}
-
-const instrumentOptions = computed(() => {
-  const src = stream.value ? props.streamInstruments.filter((si) => si.stream === stream.value) : props.streamInstruments
-  return [...new Set(src.map((si) => si.instrument))].sort().map((v) => ({ value: v, label: instLabel(v) }))
-})
-const gradeOptions = computed(() => {
-  let instrs: string[] | null = null
-  if (instrument.value) instrs = [instrument.value]
-  else if (stream.value) instrs = props.streamInstruments.filter((si) => si.stream === stream.value).map((si) => si.instrument)
-  const present = new Set(
-    props.instrumentGrades.filter((ig) => !instrs || instrs.includes(ig.instrument)).map((ig) => ig.grade),
-  )
-  return props.gradeOrder.filter((g) => present.has(g))
-})
-
-// Keep child filters valid when a parent changes.
-watch([stream, instrument], () => {
-  if (instrument.value && !instrumentOptions.value.some((o) => o.value === instrument.value)) instrument.value = ''
-  if (grade.value && !gradeOptions.value.includes(grade.value)) grade.value = ''
-})
-
 // Server-side fetch (debounced so cascading resets collapse into one request).
 let timer: ReturnType<typeof setTimeout> | undefined
 const loading = ref(false)
@@ -99,7 +72,7 @@ function resetFilters() {
   q.value = ''; stream.value = ''; instrument.value = ''; grade.value = ''
 }
 function instrumentLabel(p: Piece): string {
-  const base = p.stream === 'Rock & Pop' ? `R&P ${p.instrument}` : p.instrument
+  const base = streamInstrumentLabel(p.stream, p.instrument)
   return p.variant ? `${base} (${p.variant})` : base
 }
 </script>
@@ -151,18 +124,13 @@ function instrumentLabel(p: Piece): string {
                 <input v-model="q" type="search" placeholder="Search piece, composer/artist or book…"
                   class="w-full rounded-xl border border-white/20 bg-white/10 py-2.5 pr-3 pl-9 text-base text-white placeholder:text-white/50 backdrop-blur-sm focus:border-brand-accent focus:outline-none" />
               </label>
-              <select v-model="stream" class="rounded-xl border border-white/20 bg-white/10 px-3 py-2.5 text-sm text-white backdrop-blur-sm focus:border-brand-accent focus:outline-none">
-                <option class="text-brand-text" value="">All exam types</option>
-                <option class="text-brand-text" v-for="s in props.streams" :key="s" :value="s">{{ s }}</option>
-              </select>
-              <select v-model="instrument" class="rounded-xl border border-white/20 bg-white/10 px-3 py-2.5 text-sm text-white backdrop-blur-sm focus:border-brand-accent focus:outline-none">
-                <option class="text-brand-text" value="">All instruments</option>
-                <option class="text-brand-text" v-for="i in instrumentOptions" :key="i.value" :value="i.value">{{ i.label }}</option>
-              </select>
-              <select v-model="grade" class="rounded-xl border border-white/20 bg-white/10 px-3 py-2.5 text-sm text-white backdrop-blur-sm focus:border-brand-accent focus:outline-none">
-                <option class="text-brand-text" value="">All grades</option>
-                <option class="text-brand-text" v-for="g in gradeOptions" :key="g" :value="g">{{ g }}</option>
-              </select>
+              <SyllabusFilterSelects
+                v-model:stream="stream"
+                v-model:instrument="instrument"
+                v-model:grade="grade"
+                :facets="props"
+                tone="glass"
+              />
             </div>
             <div class="mt-2 flex items-center justify-between text-sm text-white/70">
               <span>{{ loading ? 'Searching…' : (props.hasQuery ? props.count + ' piece' + (props.count === 1 ? '' : 's') : 'Choose an exam type or search to begin') }}</span>

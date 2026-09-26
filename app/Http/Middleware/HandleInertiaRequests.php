@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\PageMaintenance;
 use App\Services\Impersonation;
+use App\Services\PiecePlans;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Inertia\Middleware;
@@ -55,6 +56,10 @@ class HandleInertiaRequests extends Middleware
                         'target_name' => $request->user()?->name,
                     ]
                     : null,
+                // Whether this person gets the Piece tracker (sidebar link and
+                // the dashboard card). The role list lives in PiecePlans.
+                'pieceTracker' => fn () => $request->user() !== null
+                    && app(PiecePlans::class)->canUse($request->user()),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'flash' => [

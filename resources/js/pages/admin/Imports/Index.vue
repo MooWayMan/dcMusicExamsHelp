@@ -18,6 +18,7 @@ const props = defineProps<{
     defaults: { year: number; quarter: number }
     recent: RecentRun[]
     schools: Array<{ id: number; name: string }>
+    candidateCsvHeaders: { enrolment: string[]; summary: string[]; marksheet: string[] }
 }>()
 
 // ──────────────────────────────────────────────────────────────────
@@ -368,20 +369,28 @@ async function readFirstLine(file: File): Promise<string> {
 
 type CandidateSlot = 'enrolment' | 'summary' | 'marksheet' | null
 
+// A file goes in a slot when its header has every column the importer
+// requires for that slot (props.candidateCsvHeaders, from
+// TrinityCsvImporter::candidateCsvHeaders), in any order. Matching on the
+// first few columns only knew the digital enrolment export, so the
+// face-to-face one ("Line #, Unique Electronic Reference, …") was turned
+// away even though the import reads it fine.
 function classifyHeader(header: string): CandidateSlot {
     // Trinity exports default to Tab Delimited Text File but allow Comma
-    // Separated. Real exports also wrap each column in double-quotes.
-    // Normalise: tabs→commas, strip outer quotes per cell, so the user can
-    // drop either format.
-    const cleaned = header
-        .replace(/^﻿/, '')
-        .replace(/\t/g, ',')
-        .split(',')
-        .map(c => c.trim().replace(/^"(.*)"$/s, '$1').trim())
-        .join(',')
-    if (cleaned.startsWith('Examination,Subject,Candidate Number')) return 'enrolment'
-    if (cleaned.startsWith('Subject Area,Syllabus,Examination Date')) return 'summary'
-    if (cleaned === 'Section #,Mark,Section,Max') return 'marksheet'
+    // Separated, and wrap each column in double-quotes.
+    const delimiter = header.includes('\t') ? '\t' : ','
+    const columns = new Set(
+        header
+            .replace(/^\uFEFF/, '')
+            .split(delimiter)
+            .map(c => c.trim().replace(/^"(.*)"$/s, '$1').trim()),
+    )
+    const has = (required: string[]) => required.every(h => columns.has(h))
+    // Most specific first: a Summary also carries Examination and
+    // Candidate Number, so it must be tested before Enrolment.
+    if (has(props.candidateCsvHeaders.marksheet)) return 'marksheet'
+    if (has(props.candidateCsvHeaders.summary)) return 'summary'
+    if (has(props.candidateCsvHeaders.enrolment)) return 'enrolment'
     return null
 }
 

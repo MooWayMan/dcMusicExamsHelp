@@ -8,7 +8,10 @@ import Navbar from '@/components/layouts/Navbar.vue'
 import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
-import { Search, Star, Trophy, Users, ChevronDown, ChevronUp, PlusCircle, LogIn } from 'lucide-vue-next'
+import SyllabusFilterSelects from '@/components/syllabus/SyllabusFilterSelects.vue'
+import MySearchPickConstructor, { type PickItem } from '@/components/reusables/MySearchPickConstructor.vue'
+import { instrumentLabel } from '@/composables/useSyllabusFacets'
+import { Star, Trophy, Users, ChevronDown, ChevronUp, PlusCircle, LogIn } from 'lucide-vue-next'
 
 interface ChartPiece {
   id: number
@@ -98,33 +101,6 @@ const stream = ref(props.active.stream)
 const instrument = ref(props.active.instrument)
 const grade = ref(props.active.grade)
 
-const instStream = computed<Record<string, string>>(() => {
-  const m: Record<string, string> = {}
-  props.streamInstruments.forEach((si) => { m[si.instrument] = si.stream })
-  return m
-})
-function instLabel(inst: string): string {
-  return instStream.value[inst] === 'Rock & Pop' ? `R&P ${inst}` : inst
-}
-const instrumentOptions = computed(() => {
-  const src = stream.value ? props.streamInstruments.filter((si) => si.stream === stream.value) : props.streamInstruments
-  return [...new Set(src.map((si) => si.instrument))].sort().map((v) => ({ value: v, label: instLabel(v) }))
-})
-const gradeOptions = computed(() => {
-  let instrs: string[] | null = null
-  if (instrument.value) instrs = [instrument.value]
-  else if (stream.value) instrs = props.streamInstruments.filter((si) => si.stream === stream.value).map((si) => si.instrument)
-  const present = new Set(
-    props.instrumentGrades.filter((ig) => !instrs || instrs.includes(ig.instrument)).map((ig) => ig.grade),
-  )
-  return props.gradeOrder.filter((g) => present.has(g))
-})
-
-watch([stream, instrument], () => {
-  if (instrument.value && !instrumentOptions.value.some((o) => o.value === instrument.value)) instrument.value = ''
-  if (grade.value && !gradeOptions.value.includes(grade.value)) grade.value = ''
-})
-
 let timer: ReturnType<typeof setTimeout> | undefined
 const loading = ref(false)
 function go() {
@@ -155,8 +131,7 @@ const loginHref = computed(() => {
 })
 
 function groupTitle(g: Group): string {
-  const inst = g.stream === 'Rock & Pop' ? `R&P ${g.instrument}` : g.instrument
-  return `${inst} · ${g.grade}`
+  return `${instrumentLabel(g.stream, g.instrument)} · ${g.grade}`
 }
 
 // Joint-position detection: a position shared by more than one piece in a group.
@@ -196,41 +171,27 @@ function submitVote(pieceId: number) {
 }
 
 // ── Rate a piece not yet on the chart ──────────────────────────
-const ratePieceId = ref<number | ''>('')
+const ratePieceId = ref<number | null>(null)
 const rateRating = ref<number | null>(null)
 const rateBand = ref<number | null>(null)
-const rateSearch = ref('')
-const showList = ref(false)
 
-const filteredSelectable = computed(() => {
-  const term = rateSearch.value.trim().toLowerCase()
-  if (!term) return props.selectablePieces
-  return props.selectablePieces.filter((p) => p.label.toLowerCase().includes(term) || p.grade.toLowerCase().includes(term))
-})
+const pickItems = computed<PickItem<number>[]>(() =>
+  props.selectablePieces.map((p) => ({ value: p.id, label: p.label, hint: p.grade })),
+)
 const selectedPieceLabel = computed(() => {
   const p = props.selectablePieces.find((x) => x.id === ratePieceId.value)
   return p ? `${p.grade} — ${p.label}` : ''
 })
-function pickPiece(p: { id: number; grade: string; label: string }) {
-  ratePieceId.value = p.id
-  rateSearch.value = `${p.grade} — ${p.label}`
-  showList.value = false
-}
-function onSearchInput() {
-  if (ratePieceId.value !== '') ratePieceId.value = ''
-  showList.value = true
-}
-function closeListSoon() { setTimeout(() => { showList.value = false }, 150) }
 
 function submitNewRating() {
-  if (ratePieceId.value === '') return
+  if (ratePieceId.value === null) return
   saving.value = true
   router.post('/top-ten/vote',
     { syllabus_piece_id: ratePieceId.value, rating: rateRating.value, used_band: rateBand.value },
     {
       preserveScroll: true,
       onFinish: () => { saving.value = false },
-      onSuccess: () => { ratePieceId.value = ''; rateRating.value = null; rateBand.value = null; rateSearch.value = ''; showList.value = false },
+      onSuccess: () => { ratePieceId.value = null; rateRating.value = null; rateBand.value = null },
     },
   )
 }
@@ -278,18 +239,13 @@ function submitNewRating() {
         <div class="sticky top-0 z-20 border-b border-white/10 bg-brand-primary/85 backdrop-blur">
           <div class="mx-auto max-w-5xl px-4 py-3 sm:px-6">
             <div class="flex flex-wrap items-center gap-2">
-              <select v-model="stream" class="rounded-xl border border-white/20 bg-white/10 px-3 py-2.5 text-sm text-white backdrop-blur-sm focus:border-brand-accent focus:outline-none">
-                <option class="text-brand-text" value="">All exam types</option>
-                <option class="text-brand-text" v-for="s in props.streams" :key="s" :value="s">{{ s }}</option>
-              </select>
-              <select v-model="instrument" class="rounded-xl border border-white/20 bg-white/10 px-3 py-2.5 text-sm text-white backdrop-blur-sm focus:border-brand-accent focus:outline-none">
-                <option class="text-brand-text" value="">All instruments</option>
-                <option class="text-brand-text" v-for="i in instrumentOptions" :key="i.value" :value="i.value">{{ i.label }}</option>
-              </select>
-              <select v-model="grade" class="rounded-xl border border-white/20 bg-white/10 px-3 py-2.5 text-sm text-white backdrop-blur-sm focus:border-brand-accent focus:outline-none">
-                <option class="text-brand-text" value="">All grades</option>
-                <option class="text-brand-text" v-for="g in gradeOptions" :key="g" :value="g">{{ g }}</option>
-              </select>
+              <SyllabusFilterSelects
+                v-model:stream="stream"
+                v-model:instrument="instrument"
+                v-model:grade="grade"
+                :facets="props"
+                tone="glass"
+              />
               <button v-if="stream || instrument || grade" type="button" class="ml-auto text-sm font-semibold text-brand-accent hover:opacity-70" @click="resetFilters">Clear filters</button>
             </div>
             <div class="mt-2 text-sm text-white/70">
@@ -319,31 +275,16 @@ function submitNewRating() {
             <div class="p-5 sm:p-6">
               <p v-if="!instrument" class="text-sm text-white/80">Choose an instrument above to pick from its pieces, then rate it or record how many of your students have used it in an exam.</p>
               <div v-else class="space-y-4">
-                <div>
-                  <div class="relative">
-                    <Search class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-brand-accent" />
-                    <input v-model="rateSearch" type="text" autocomplete="off" placeholder="Type to find a piece by title or composer…"
-                      @focus="showList = true" @input="onSearchInput" @blur="closeListSoon"
-                      class="w-full rounded-xl border border-white/20 bg-white/10 py-2.5 pr-3 pl-9 text-base text-white placeholder:text-white/50 focus:border-brand-accent focus:outline-none" />
-                  </div>
-                  <ul v-if="showList && filteredSelectable.length"
-                    class="mt-1 max-h-80 w-full overflow-y-auto rounded-xl border border-white/20 bg-white/5">
-                    <li v-for="p in filteredSelectable.slice(0, 50)" :key="p.id">
-                      <button type="button" @mousedown.prevent="pickPiece(p)"
-                        class="block w-full px-3 py-2.5 text-left text-sm text-white transition hover:bg-white/10"
-                        :class="p.id === ratePieceId ? 'bg-white/10' : ''">
-                        <span class="text-white/60">{{ p.grade }}</span> — {{ p.label }}
-                      </button>
-                    </li>
-                  </ul>
-                  <p v-else-if="showList && rateSearch.trim() && !filteredSelectable.length"
-                    class="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-sm text-white/70">
-                    No matching pieces
-                  </p>
-                </div>
+                <MySearchPickConstructor
+                  v-model="ratePieceId"
+                  :items="pickItems"
+                  tone="glass"
+                  placeholder="Type to find a piece by title or composer…"
+                  empty-text="No matching pieces"
+                />
 
                 <!-- Rating controls only appear once a piece is chosen. -->
-                <p v-if="ratePieceId === ''" class="text-sm text-white/60">Find and choose a piece above, then add your rating.</p>
+                <p v-if="ratePieceId === null" class="text-sm text-white/60">Find and choose a piece above, then add your rating.</p>
 
                 <div v-else>
                   <p class="mb-3 text-sm text-white/80">

@@ -507,6 +507,24 @@ class TrinityCsvImporter
     private const MARKSHEET_HEADERS = ['Section #', 'Mark', 'Section', 'Max'];
 
     /**
+     * The columns that make a file an Enrolment, Summary or Marksheet export,
+     * for the Imports page to sort dropped files into their slots. The page
+     * checks that every listed column is present, in any order, exactly as
+     * extractRows() does here, so a file the page accepts is one the import
+     * can read. Both enrolment shapes (digital and face-to-face) qualify.
+     *
+     * @return array{enrolment: list<string>, summary: list<string>, marksheet: list<string>}
+     */
+    public static function candidateCsvHeaders(): array
+    {
+        return [
+            'enrolment' => self::ENROLMENT_HEADERS,
+            'summary' => self::SUMMARY_HEADERS,
+            'marksheet' => self::MARKSHEET_HEADERS,
+        ];
+    }
+
+    /**
      * Parse the Enrolment CSV and return one candidate's row, skipping the
      * "Centre Commission - …" rows (empty Candidate Number).
      *

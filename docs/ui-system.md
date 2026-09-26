@@ -126,6 +126,8 @@ Clickable card grid. Emits `@cardClick` with card data + isExternal flag.
 
 **Events:** `@update:modelValue`, `@focus`, `@blur`, `@keyup`, `@keydown`, `@enter`
 
+`labelSize`: large (default) | small — small matches MySelectConstructor's labels, for forms that mix inputs and selects.
+
 ### MyTextareaConstructor.vue
 Same as input minus `type`. Has `rows` (default: 4) and `size` ('small' | 'medium' | 'large').
 
@@ -168,7 +170,16 @@ Card data: `{ icon, title, subtitle?, detail, link?, linkText? }`
 `text` (required), `buttonText`, `buttonLink`, `buttonIcon` · `variant`: 'default' | 'dark' | 'primary' · `rounded`: boolean · `padding`: 'tight' | 'normal' | 'loose'
 
 ### MyProgress.vue
-`percentage` (0-100), `label`, `color` · `animated`, `striped`, `indeterminate`: boolean
+`percentage` (0-100), `label`, `color`: blue | green | red | purple (no amber) · `animated`, `striped`, `indeterminate`, `compact`: boolean. `compact` = small text and a thin bar, for a table cell.
+
+### MySelectConstructor.vue
+The only `<select>` to use. `v-model`, `options`: `{ value, label }[]` (typed: string or number values), `placeholder` (adds an empty first option), `label`, `ariaLabel`, `tone`: surface | glass (glass = on the blue/dark public backgrounds), `size`: small | medium, `disabled`. Sets its own width: wrap it in a fixed-width div.
+
+### MySearchPickConstructor.vue
+Type-to-filter pick list (Top Ten "Rate a piece", Piece tracker). `v-model` (the chosen value or null), `items`: `{ value, label, hint? }[]` (hint shows before the label), `placeholder`, `emptyText`, `tone`: surface | glass, `maxShown` (50). Emits `pick` with the whole item.
+
+### SyllabusFilterSelects.vue (components/syllabus)
+Exam type → instrument → grade, cascading, built from `App\Services\SyllabusFacets::forDropdowns()`. `v-model:stream`, `v-model:instrument`, `v-model:grade`, `facets`, `tone`, `size`, `allowAll` ("All …" vs "Choose …"), `labelled`. The cascade itself lives in `composables/useSyllabusFacets.ts` (guard-tested).
 
 ### PageHeader.vue
 `title` (required), `subtitle`, `eyebrow` · `centerAlign`: boolean · `surface`: 'default' | 'solid' | 'minimal' · `size`: 'default' | 'compact' | 'hero' · `contained`: boolean · `showUnderline`, `showIcon`: boolean · **Slot:** `#actions`

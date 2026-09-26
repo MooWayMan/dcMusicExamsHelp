@@ -1,7 +1,8 @@
 <!-- resources/js/components/UserSidebar.vue -->
 <script setup lang="ts">
-import { Link, router } from '@inertiajs/vue3';
-import { LayoutDashboard, User as UserIcon, LogOut } from 'lucide-vue-next';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { LayoutDashboard, ListMusic, User as UserIcon, LogOut } from 'lucide-vue-next';
 import AppLogo from '@/components/AppLogo.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -21,18 +22,24 @@ import type { NavItem } from '@/types';
 // non-admin user — just Dashboard + Profile, with a logout entry pinned
 // at the bottom of the main nav for quick access (the avatar dropdown
 // already has it but Paul wanted it visible up here too).
-const userNavItems: NavItem[] = [
+// The Piece tracker is for people who teach pupils; the server decides who
+// that is (auth.pieceTracker, from App\Services\PiecePlans).
+const page = usePage();
+const userNavItems = computed<NavItem[]>(() => [
     {
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutDashboard,
     },
+    ...((page.props.auth as { pieceTracker?: boolean } | undefined)?.pieceTracker
+        ? [{ title: 'Piece tracker', href: '/dashboard/pieces', icon: ListMusic }]
+        : []),
     {
         title: 'Profile',
         href: '/settings/profile',
         icon: UserIcon,
     },
-];
+]);
 
 // Same handler shape as Dashboard.vue: flush Inertia history before the
 // logout link is followed so any cached pages can't be brought back via

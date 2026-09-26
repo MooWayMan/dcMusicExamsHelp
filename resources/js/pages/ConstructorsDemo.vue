@@ -382,7 +382,7 @@ const breadcrumbPages = [
               label="Warning progress"
               show-label
               show-percentage
-              color="amber"
+              color="blue"
               striped
             />
 

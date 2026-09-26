@@ -11,6 +11,7 @@ export type User = {
 
 export type Auth = {
     user: User;
+    pieceTracker?: boolean;
 };
 
 export type TwoFactorConfigContent = {

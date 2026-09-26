@@ -19,6 +19,8 @@
 
 use App\Services\TrinityCsvImporter;
 
+uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+
 function digitalExport(): string
 {
     $h = "Examination\tSubject\tCandidate Number\tCandidate Name\tEnrolment Date\tPrice\t"
@@ -87,4 +89,71 @@ test('the instrument is recovered from Examination when Subject is empty', funct
         ->and(TrinityCsvImporter::instrumentFromExaminationForTest('Violin Grade IN'))->toBe('Violin')
         ->and(TrinityCsvImporter::instrumentFromExaminationForTest('Classical Guitar Grade 5'))->toBe('Classical Guitar')
         ->and(TrinityCsvImporter::instrumentFromExaminationForTest('Electronic Keyboard Grade 3'))->toBe('Electronic Keyboard');
+});
+
+// ──────────────────────────────────────────
+// Sorting dropped files into slots on /admin/imports.
+//
+// The page puts a file in a slot when its header holds every column
+// TrinityCsvImporter::candidateCsvHeaders() lists for that slot (marksheet,
+// then summary, then enrolment). It used to match the first few columns of
+// the DIGITAL export only, so a face-to-face order export was refused with
+// "header doesn't match Enrolment / Summary / Marksheet format" (Daisy
+// Miller, 26 Sep 2026) although the import itself reads it.
+// ──────────────────────────────────────────
+
+/** The slot the Imports page would give a file with these columns. */
+function slotFor(array $columns): ?string
+{
+    foreach (['marksheet', 'summary', 'enrolment'] as $slot) {
+        if (array_diff(TrinityCsvImporter::candidateCsvHeaders()[$slot], $columns) === []) {
+            return $slot;
+        }
+    }
+
+    return null;
+}
+
+/** Real header rows, as Trinity exports them (26 Sep 2026). */
+function realHeaders(): array
+{
+    return [
+        'face-to-face order' => ['Line #', 'Unique Electronic Reference', 'Candidate Number', 'Enrolment Date', 'Candidate Name',
+            'Candidate Birth Date', 'Under 18?', 'Gender', 'Consent Received', 'Applicant Last Name', 'ID Document Type',
+            'Applicant First Name', 'Email Address', 'Examination', 'Reason for Change of ID Details', 'ID Document Number',
+            'Exam Type', 'Subject', 'Nationality', 'Price', 'Voucher', 'External Funding', 'ID Document Expiry Date', 'Status',
+            'Cancelled', 'SEN', 'Exam Code', 'School on Certificate', 'SEN Requirements', 'School', 'Role', 'Comments',
+            'Applicant Id', 'Art Form', 'Minimum Age', 'Email Address', 'Age Validated', 'Adjusted Duration', 'First Language',
+            'Order Number', 'Product Id', 'Assessment', 'Language of Exam', 'Photo Status', 'Timetable Order',
+            'Left Handed Drum Kit', 'Agent', 'Agent Address', 'Subject Area', 'Alternative Assessment'],
+        'digital summary of entries' => ['Examination', 'Subject', 'Candidate Number', 'Candidate Name', 'Enrolment Date', 'Price',
+            'Submitter Last Name', 'Submitter First Name', 'Submitter Email Address', 'Applicant Id', 'Applicant Last Name',
+            'Applicant First Name'],
+        'summary' => ['Subject Area', 'Syllabus', 'Examination Date', 'Examination', 'Candidate Number', 'Candidate', 'School',
+            'Teacher First Name', 'Teacher Last Name', 'Status', 'Result', 'Digital Certificate ID', 'Digital Certificate URL',
+            'Order Number', 'Examiner'],
+        'marksheet' => ['Section #', 'Mark', 'Section', 'Max'],
+    ];
+}
+
+test('every Trinity export lands in the right slot on the Imports page', function () {
+    $h = realHeaders();
+
+    expect(slotFor($h['face-to-face order']))->toBe('enrolment')
+        ->and(slotFor($h['digital summary of entries']))->toBe('enrolment')
+        ->and(slotFor($h['summary']))->toBe('summary')
+        ->and(slotFor($h['marksheet']))->toBe('marksheet')
+        ->and(slotFor(['Order Number', 'Price']))->toBeNull();
+});
+
+test('the Imports page is given the importer\'s own column lists', function () {
+    $admin = App\Models\User::factory()->create(['role' => 'admin']);
+
+    $this->actingAs($admin)->get('/admin/imports')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('candidateCsvHeaders', TrinityCsvImporter::candidateCsvHeaders()));
+});
+
+test('the Imports page never hard-codes an export header of its own', function () {
+    expect(guardOffenders('/Examination,Subject,Candidate Number|Subject Area,Syllabus,Examination Date|Section #,Mark,Section,Max/', []))->toBe([]);
 });

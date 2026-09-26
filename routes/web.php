@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PiecePlanController;
 use App\Http\Controllers\SiteStatController;
 use App\Http\Controllers\SyllabusController;
 use App\Http\Controllers\TopTenController;
@@ -160,6 +161,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('dashboard.link-request');
     Route::post('dashboard/entries/{entry}/correction-request', [DashboardController::class, 'correctionRequest'])
         ->name('dashboard.correction-request');
+
+    // Piece tracker — a teacher's plans for their pupils' next exams.
+    // Controller enforces teacher / school admin / admin (403 otherwise).
+    Route::get('dashboard/pieces', [PiecePlanController::class, 'index'])->name('piece-plans.index');
+    Route::get('dashboard/pieces/syllabus', [PiecePlanController::class, 'syllabus'])
+        ->middleware('throttle:120,1')
+        ->name('piece-plans.syllabus');
+    Route::post('dashboard/pieces', [PiecePlanController::class, 'store'])->name('piece-plans.store');
+    Route::put('dashboard/pieces/{plan}', [PiecePlanController::class, 'update'])->name('piece-plans.update');
+    Route::delete('dashboard/pieces/{plan}', [PiecePlanController::class, 'destroy'])->name('piece-plans.destroy');
 
     // Top Ten piece voting — controller enforces teacher/admin-only (403 otherwise).
     Route::post('/top-ten/vote', [TopTenController::class, 'vote'])

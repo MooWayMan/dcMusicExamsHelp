@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { Head, Link, Form, router, usePage } from '@inertiajs/vue3'
 import { computed, ref, watch } from 'vue'
-import { LayoutDashboard, ClipboardList, Users, GraduationCap, CheckSquare, Award, AlertCircle, Home, LogOut, Mail, MessageCircle, Info, ChevronDown, ChevronRight, Gift, Ticket, Trophy, Search, FileText, Eye, Download, CalendarRange } from 'lucide-vue-next'
+import { ListMusic, LayoutDashboard, ClipboardList, Users, GraduationCap, CheckSquare, Award, AlertCircle, Home, LogOut, Mail, MessageCircle, Info, ChevronDown, ChevronRight, Gift, Ticket, Trophy, Search, FileText, Eye, Download, CalendarRange } from 'lucide-vue-next'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyInputConstructor from '@/components/reusables/MyInputConstructor.vue'
 import DashboardCharts from '@/components/dashboard/DashboardCharts.vue'
+import DashboardLinkCard from '@/components/dashboard/DashboardLinkCard.vue'
 import { Spinner } from '@/components/ui/spinner'
 import { dashboard, logout } from '@/routes'
 
@@ -90,6 +91,8 @@ const flashSuccess = computed(() => (page.props.flash as any)?.success)
 const showLinkForm = ref(false)
 const entries = computed<ExamEntryRow[]>(() => props.examEntries ?? [])
 const hasEntries = computed(() => entries.value.length > 0)
+// Teachers and school admins get the Piece tracker (decided server-side).
+const pieceTracker = computed(() => Boolean((page.props.auth as { pieceTracker?: boolean } | undefined)?.pieceTracker))
 
 // ─── Date range + downloads ───────────────────────────────────────────────
 // The range is applied server-side, so it bounds the query as well as the
@@ -436,21 +439,22 @@ defineOptions({
 
         <!-- Top Ten pieces — teachers vote on the pieces their students use -->
         <div v-if="canVote" class="mt-8 w-full max-w-5xl">
-            <Link
+            <DashboardLinkCard
                 href="/top-ten"
-                class="group flex items-center gap-4 rounded-xl border border-brand-accent/30 bg-brand-accent/5 p-5 transition-all hover:border-brand-accent hover:shadow-md"
-            >
-                <div class="rounded-lg bg-brand-accent/10 p-3 transition-colors group-hover:bg-brand-accent/20">
-                    <Trophy class="h-6 w-6 text-brand-accent" />
-                </div>
-                <div class="flex-1">
-                    <p class="text-base font-semibold text-brand-text">Vote in the Top Ten</p>
-                    <p class="text-sm text-brand-text-soft">
-                        Rate the Trinity exam pieces your students use and record how often — help build the teachers&rsquo; Top Ten for every instrument and grade.
-                    </p>
-                </div>
-                <ChevronRight class="h-5 w-5 shrink-0 text-brand-accent" />
-            </Link>
+                :icon="Trophy"
+                title="Vote in the Top Ten"
+                text="Rate the Trinity exam pieces your students use and record how often — help build the teachers’ Top Ten for every instrument and grade."
+            />
+        </div>
+
+        <!-- Piece tracker — plan pupils' next exam pieces (dashboard/PiecePlans) -->
+        <div v-if="pieceTracker" class="mt-4 w-full max-w-5xl">
+            <DashboardLinkCard
+                href="/dashboard/pieces"
+                :icon="ListMusic"
+                title="Piece tracker"
+                text="Plan your students’ next exam: pieces from the Trinity syllabus, technical work, supporting tests, and how ready each one is."
+            />
         </div>
 
         <!-- Quick links grid (admin only, and not while previewing a teacher) -->
@@ -491,17 +495,6 @@ defineOptions({
                     Use <span class="font-semibold">Report correction</span> next to the candidate and we&rsquo;ll handle the fix on
                     musicExams.help and with Trinity for you &mdash; please don&rsquo;t contact Trinity directly.
                 </p>
-            </div>
-
-            <!-- "More coming soon" — sets expectations for Phase B (Music Register lite) -->
-            <div v-if="hasEntries" class="mb-6 flex items-start gap-3 rounded-xl border border-brand-accent/30 bg-brand-accent/5 px-4 py-3 text-sm text-brand-text">
-                <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-accent/20 text-xs font-bold text-brand-accent">★</span>
-                <div>
-                    <p class="font-semibold text-brand-text">More coming soon</p>
-                    <p class="mt-0.5 text-brand-text-soft">
-                        We&rsquo;re building a <span class="font-medium text-brand-text">piece tracker</span> so you can plan and follow your students&rsquo; next exam pieces &mdash; with Trinity syllabus dropdowns where available. Look out for it in the next couple of weeks.
-                    </p>
-                </div>
             </div>
 
             <!-- Quarterly Teacher Prize Draw — visible only to authenticated

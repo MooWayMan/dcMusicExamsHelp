@@ -18,6 +18,8 @@ interface Props {
   name?: string
   autocomplete?: string
   label?: string
+  /** 'small' matches MySelectConstructor's labels, for forms that mix the two. */
+  labelSize?: 'large' | 'small'
   error?: string
   success?: string
 }
@@ -35,6 +37,7 @@ const props = withDefaults(defineProps<Props>(), {
   name: '',
   autocomplete: '',
   label: '',
+  labelSize: 'large',
   error: '',
   success: '',
 })
@@ -128,11 +131,11 @@ const handleKeydown = (event: KeyboardEvent) => emit('keydown', event)
 
 <template>
   <div class="w-full">
-    <label v-if="label" :for="inputId" class="mb-2 block">
+    <label v-if="label" :for="inputId" :class="labelSize === 'small' ? 'mb-1 block' : 'mb-2 block'">
       <MyTextConstructor
-        variant="button-lg"
+        :variant="labelSize === 'small' ? 'button-sm' : 'button-lg'"
         alignment="left"
-        textColor="text-brand-text"
+        :textColor="labelSize === 'small' ? 'text-brand-text-soft' : 'text-brand-text'"
         spacing="none"
       >
         <template #myTitle>

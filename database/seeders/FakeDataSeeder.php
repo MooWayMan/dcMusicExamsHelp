@@ -12,6 +12,7 @@ use App\Models\OrderContact;
 use App\Models\School;
 use App\Models\Student;
 use App\Models\User;
+use App\Services\SyllabusFacets;
 use Illuminate\Database\Seeder;
 
 class FakeDataSeeder extends Seeder
@@ -144,7 +145,7 @@ class FakeDataSeeder extends Seeder
         // ──────────────────────────────────────────
         // Orders and Exam Entries
         // ──────────────────────────────────────────
-        $grades = ['Initial', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8'];
+        $grades = SyllabusFacets::GRADE_ORDER;
         $results = ['Pass', 'Merit', 'Distinction', null, null]; // null = not yet taken
         $orderStatuses = ['Submitted', 'Confirmed', 'Completed', 'Completed', 'Completed'];
         $venues = ['Birkenhead Studio', 'West Kirby Centre', 'Liverpool Hub', 'Online (Digital)'];

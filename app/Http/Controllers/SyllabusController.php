@@ -5,23 +5,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\SyllabusPiece;
+use App\Services\SyllabusFacets;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class SyllabusController extends Controller
 {
-    private const GRADE_ORDER = ['Initial', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8'];
-
-    private const STREAM_ORDER = ['Classical & Jazz', 'Rock & Pop'];
-
     /**
      * Public Piece Finder — server-side filtering so the page stays light no
      * matter how many instruments are loaded. Filter facets (small distinct
      * lists) ship on first load to drive the cascading dropdowns; the matching
      * pieces are fetched via an Inertia partial reload when a filter/search is set.
      */
-    public function index(Request $request): Response
+    public function index(Request $request, SyllabusFacets $facets): Response
     {
         $stream = trim((string) $request->query('stream', ''));
         $instrument = trim((string) $request->query('instrument', ''));
@@ -37,7 +34,7 @@ class SyllabusController extends Controller
 
         $count = $hasQuery ? (clone $query)->count() : 0;
 
-        $gradeIndex = array_flip(self::GRADE_ORDER);
+        $gradeIndex = SyllabusFacets::gradeIndex();
         $pieces = $hasQuery
             ? $query->limit(800)->get()
                 ->sortBy(fn (SyllabusPiece $p) => sprintf(
@@ -70,24 +67,11 @@ class SyllabusController extends Controller
                 ])
             : collect();
 
-        // Facets for cascading dropdowns (small distinct lists, computed once).
-        $streamInstruments = SyllabusPiece::query()->select('exam_stream', 'instrument')->distinct()->get()
-            ->map(fn ($p) => ['stream' => $p->exam_stream, 'instrument' => $p->instrument])->values();
-        $instrumentGrades = SyllabusPiece::query()->select('instrument', 'grade')->distinct()->get()
-            ->map(fn ($p) => ['instrument' => $p->instrument, 'grade' => $p->grade])->values();
-
-        $streams = collect(self::STREAM_ORDER)
-            ->filter(fn ($s) => $streamInstruments->contains('stream', $s))
-            ->values();
-
         return Inertia::render('Syllabus', [
             'pieces' => $pieces,
             'count' => $count,
             'hasQuery' => $hasQuery,
-            'streams' => $streams,
-            'streamInstruments' => $streamInstruments,
-            'instrumentGrades' => $instrumentGrades,
-            'gradeOrder' => self::GRADE_ORDER,
+            ...$facets->forDropdowns(),
             'active' => compact('stream', 'instrument', 'grade', 'q'),
         ]);
     }

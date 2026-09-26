@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PieceVote;
 use App\Models\SyllabusPiece;
+use App\Services\SyllabusFacets;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -14,10 +15,6 @@ use Inertia\Response;
 
 class TopTenController extends Controller
 {
-    private const GRADE_ORDER = ['Initial', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8'];
-
-    private const STREAM_ORDER = ['Classical & Jazz', 'Rock & Pop'];
-
     /** Roles allowed to cast a vote. Everyone else views read-only. */
     private const VOTER_ROLES = ['teacher', 'admin'];
 
@@ -28,7 +25,7 @@ class TopTenController extends Controller
      * using competition ranking so ties share a joint position. Each group is
      * split into the Top Ten and the "other pieces" that didn't make it.
      */
-    public function index(Request $request): Response
+    public function index(Request $request, SyllabusFacets $facets): Response
     {
         $stream = trim((string) $request->query('stream', ''));
         $instrument = trim((string) $request->query('instrument', ''));
@@ -91,24 +88,12 @@ class TopTenController extends Controller
                 ])->values()
             : collect();
 
-        // Facets for the cascading dropdowns (small distinct lists).
-        $streamInstruments = SyllabusPiece::query()->select('exam_stream', 'instrument')->distinct()->get()
-            ->map(fn ($p) => ['stream' => $p->exam_stream, 'instrument' => $p->instrument])->values();
-        $instrumentGrades = SyllabusPiece::query()->select('instrument', 'grade')->distinct()->get()
-            ->map(fn ($p) => ['instrument' => $p->instrument, 'grade' => $p->grade])->values();
-        $streams = collect(self::STREAM_ORDER)
-            ->filter(fn ($s) => $streamInstruments->contains('stream', $s))
-            ->values();
-
         return Inertia::render('TopTen', [
             'groups' => $groups,
             'myVotes' => $myVotes,
             'canVote' => $canVote,
             'selectablePieces' => $selectablePieces,
-            'streams' => $streams,
-            'streamInstruments' => $streamInstruments,
-            'instrumentGrades' => $instrumentGrades,
-            'gradeOrder' => self::GRADE_ORDER,
+            ...$facets->forDropdowns(),
             'active' => compact('stream', 'instrument', 'grade'),
         ]);
     }
@@ -165,8 +150,8 @@ class TopTenController extends Controller
      */
     private function buildGroups(Collection $voted): array
     {
-        $streamIndex = array_flip(self::STREAM_ORDER);
-        $gradeIndex = array_flip(self::GRADE_ORDER);
+        $streamIndex = SyllabusFacets::streamIndex();
+        $gradeIndex = SyllabusFacets::gradeIndex();
 
         $grouped = $voted->groupBy(fn ($p) => $p['stream'].'|'.$p['instrument'].'|'.$p['grade']);
 

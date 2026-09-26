@@ -80,8 +80,9 @@ createInertiaApp({
                 ? [AppLayout, SettingsLayout]
                 : [UserLayout, SettingsLayout]
 
-        } else if (name === 'Dashboard') {
-            // Dashboard.vue uses defineOptions({ layout: { breadcrumbs: [...] } })
+        } else if (name === 'Dashboard' || name.startsWith('dashboard/')) {
+            // Dashboard.vue (and the pages under dashboard/, e.g. the Piece
+            // tracker) use defineOptions({ layout: { breadcrumbs: [...] } })
             // — that's a config object, not a layout component. We must
             // ALWAYS overwrite it (not `||`) so a real layout component
             // is rendered. Admins get AppLayout (full admin sidebar);
