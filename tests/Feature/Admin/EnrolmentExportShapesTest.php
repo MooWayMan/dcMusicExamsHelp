@@ -157,3 +157,64 @@ test('the Imports page is given the importer\'s own column lists', function () {
 test('the Imports page never hard-codes an export header of its own', function () {
     expect(guardOffenders('/Examination,Subject,Candidate Number|Subject Area,Syllabus,Examination Date|Section #,Mark,Section,Max/', []))->toBe([]);
 });
+
+// ──────────────────────────────────────────
+// The applicant's email on a face-to-face order.
+//
+// That export has no Submitter columns, so the applicant is the booker and
+// their email is the row's own Email Address, which Trinity leaves blank on
+// most rows (26 Sep 2026: 2 of 12 candidates on one order had one). The
+// email Paul types on the Imports page used to be thrown away in that case,
+// so a parent-booked entry saved with no address for results or prizes.
+// ──────────────────────────────────────────
+
+function f2fOrderWithOneCandidate(string $email): string
+{
+    $h = "Line #\tCandidate Number\tEnrolment Date\tCandidate Name\tApplicant Last Name\t"
+        ."Applicant First Name\tEmail Address\tExamination\tExam Type\tSubject\tPrice\tRole\tOrder Number\tSubject Area";
+    $r = "2\t1796614\t16/04/2026 08:14:38\tJacob Goodwin\tGoodwin\tPhilip\t{$email}\tPiano Grade 5\t"
+        ."Practical\t\t£99.00\tApplicant - Parent/Guardian\t1-16044465651\tMusic";
+
+    return $h."\n".$r."\n";
+}
+
+function summaryForJacob(): string
+{
+    $h = "Subject Area\tSyllabus\tExamination Date\tExamination\tCandidate Number\tCandidate\tSchool\t"
+        ."Teacher First Name\tTeacher Last Name\tStatus\tResult\tDigital Certificate ID\tOrder Number\tExaminer";
+    $r = "Music\tPiano\t09/07/2026\tPiano Grade 5\t1796614\tJacob Goodwin\tLIPA High School\t\t\t"
+        ."Certificate Printed\tMerit\t\t1-16044465651\t";
+
+    return $h."\n".$r."\n";
+}
+
+/** Import Jacob through the per-candidate triple, as the page does, and return his saved entry. */
+function importJacob(string $rowEmail, ?string $typedEmail): App\Models\ExamEntry
+{
+    App\Models\Order::create([
+        'trinity_order_number' => '1-16044465651',
+        'order_status' => 'Submitted',
+        'subject_area' => 'Music',
+        'delivery_method' => 'Face to Face',
+        'requested_start_date' => '2026-07-01',
+    ]);
+
+    $importer = new TrinityCsvImporter();
+    $summary = $importer->parseSummary(summaryForJacob());
+    $enrol = $importer->parseEnrolment(f2fOrderWithOneCandidate($rowEmail), $summary['candidate_number']);
+    $importer->commitCandidate($enrol, $summary, 80, '12/02/2010', $typedEmail, null);
+
+    return App\Models\ExamEntry::where('candidate_number', '1796614')->sole();
+}
+
+test('an email typed on the Imports page is kept when Trinity left the row blank', function () {
+    expect(importJacob('', 'philip.goodwin@example.org')->applicant_email)->toBe('philip.goodwin@example.org');
+});
+
+test('Trinity\'s own email still wins when the row has one', function () {
+    expect(importJacob('goodwin@trinity-row.example', 'typed@example.org')->applicant_email)->toBe('goodwin@trinity-row.example');
+});
+
+test('with neither, the entry is saved without an email rather than refused', function () {
+    expect(importJacob('', null)->applicant_email)->toBeNull();
+});

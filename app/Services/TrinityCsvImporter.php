@@ -1517,16 +1517,27 @@ class TrinityCsvImporter
 
     /**
      * Implements the email rule from the spec:
-     *   - Submitter name == Applicant name → use Submitter Email Address
+     *   - Submitter name == Applicant name → use Submitter Email Address,
+     *     or the Applicant Email typed in the form when that is blank
      *   - Else use the Applicant Email the user typed in the form.
+     *
+     * The blank case is the face-to-face export: it has no Submitter
+     * columns, so the applicant IS the booker, and Trinity leaves the Email
+     * Address empty on most rows (26 Sep 2026: only 2 of 12 candidates on
+     * one order had one). A typed email used to be thrown away there, so a
+     * parent-booked entry saved with no address to send results to.
+     * Trinity's own email still wins when the row has one.
      */
     private function deriveApplicantEmail(array $enrol, ?string $applicantEmail): ?string
     {
+        $typed = trim((string) $applicantEmail);
+        $typed = $typed !== '' ? $typed : null;
+
         if ($this->namesMatch($enrol['submitter_name'], $enrol['applicant_name'])) {
-            return $enrol['submitter_email'] ?: null;
+            return $enrol['submitter_email'] ?: $typed;
         }
-        $email = trim((string) $applicantEmail);
-        return $email !== '' ? $email : null;
+
+        return $typed;
     }
 
     /**
