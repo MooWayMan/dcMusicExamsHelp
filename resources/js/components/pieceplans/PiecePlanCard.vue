@@ -300,18 +300,6 @@ function pickPiece(key: string, item: PickItem<number>) {
   row.label = item.label
   row.book = syllabusPieces.value.find((p) => p.value === item.value)?.book ?? null
 }
-function clearPiece(key: string) {
-  const row = itemFor(key)
-
-  if (!row) {
-    return
-  }
-
-  row.syllabus_piece_id = null
-  row.label = ''
-  row.book = null
-}
-
 function suggestionsFor(section: 'technical' | 'supporting'): string[] {
   const list = props.suggestions[draft.exam_stream]?.[section] ?? []
 
@@ -383,12 +371,9 @@ const columns = [
             @update:model-value="(v) => { const r = itemFor(row.key); if (r) r.label = String(v) }"
           />
         </div>
-        <div v-else-if="row.section === 'piece'" class="flex items-start justify-between gap-2">
-          <div class="flex flex-col gap-0.5">
-            <MyTextConstructor bodyVariant="inherit" spacing="none">{{ row.label }}</MyTextConstructor>
-            <MyTextConstructor v-if="row.book" bodyVariant="inherit" textColor="text-brand-text-soft" spacing="none">{{ row.book }}</MyTextConstructor>
-          </div>
-          <MyButtonConstructor size="small" variant="outline" @click="clearPiece(row.key)">Change</MyButtonConstructor>
+        <div v-else-if="row.section === 'piece'" class="flex flex-col gap-0.5">
+          <MyTextConstructor bodyVariant="inherit" spacing="none">{{ row.label }}</MyTextConstructor>
+          <MyTextConstructor v-if="row.book" bodyVariant="inherit" textColor="text-brand-text-soft" spacing="none">{{ row.book }}</MyTextConstructor>
         </div>
         <MyInputConstructor
           v-else
