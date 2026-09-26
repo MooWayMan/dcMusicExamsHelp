@@ -18,7 +18,7 @@ import type {SyllabusFacetLists} from '@/composables/useSyllabusFacets';
 import { useSyllabusPieceOptions } from '@/composables/useSyllabusPieceOptions'
 import type { SyllabusPieceOption } from '@/composables/useSyllabusPieceOptions'
 import { sendJson } from '@/lib/sendJson'
-import type { PiecePlan, PlanItem, PlanSection, SectionLabels, Suggestions } from '@/types/piecePlans'
+import type { PiecePlan, PlanItem, PlanSection, PlanSummary, SectionLabels, Suggestions } from '@/types/piecePlans'
 
 // One pupil's plan on the Piece tracker: what they are preparing and how
 // ready each part is. There is no Save button: every change saves itself a
@@ -34,6 +34,9 @@ const props = defineProps<{
   maxItems: number
   maxScore: number
 }>()
+
+// The closed row in the pupil list shows this, kept live as the card is edited.
+const emit = defineEmits<{ summary: [summary: PlanSummary] }>()
 
 type DraftItem = PlanItem & { key: string }
 interface Draft {
@@ -326,6 +329,12 @@ const subtitle = computed(() => {
   return parts.join(' · ')
 })
 
+watch(
+  () => ({ name: draft.pupil_name, subtitle: subtitle.value, ready: ready.value }),
+  (summary) => emit('summary', summary),
+  { immediate: true },
+)
+
 const columns = [
   { key: 'part', title: 'Part', width: '9rem' },
   { key: 'label', title: 'What' },
@@ -347,13 +356,12 @@ const columns = [
     </div>
 
     <MyTableConstructor
-      :title="draft.pupil_name"
-      :subtitle="subtitle"
       :data="rows"
       :columns="columns"
       row-key="key"
       size="small"
       :sortable="false"
+      :stack-from-columns="4"
     >
       <template #cell-label="{ row }">
         <div v-if="row.section === 'piece' && row.syllabus_piece_id === null" class="flex flex-col gap-2">

@@ -33,6 +33,13 @@ export interface PiecePlan {
   ready: number
 }
 
+/** What a pupil's closed row on the tracker shows, reported live by their card. */
+export interface PlanSummary {
+  name: string
+  subtitle: string
+  ready: number
+}
+
 export interface PlanCandidate {
   name: string
   last_exam: string

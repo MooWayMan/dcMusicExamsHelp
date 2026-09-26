@@ -129,21 +129,27 @@ const chevronSize = computed(() => {
         :id="`accordion-panel-${item.id}`"
         role="region"
         :aria-labelledby="`accordion-btn-${item.id}`"
-        class="overflow-hidden transition-all duration-300 ease-in-out"
-        :class="isOpen(item.id) ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'"
+        class="grid transition-all duration-300 ease-in-out"
+        :class="isOpen(item.id) ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'"
+        :inert="!isOpen(item.id)"
       >
-        <div class="px-5 pb-5 pt-1 sm:px-6 sm:pb-6" :class="props.contentBgColor">
-          <slot :name="`content-${item.id}`">
-            <MyTextConstructor
-              v-if="item.answer"
-              bodyVariant="muted"
-              alignment="left"
-              spacing="none"
-              class="md:!text-lg lg:!text-lg"
-            >
-              <span v-html="item.answer"></span>
-            </MyTextConstructor>
-          </slot>
+        <!-- Rows 0fr to 1fr opens to the content's real height, however tall;
+             a max-height cap cut off anything longer. inert keeps a closed
+             panel's controls out of the tab order. -->
+        <div class="overflow-hidden">
+          <div class="px-5 pb-5 pt-1 sm:px-6 sm:pb-6" :class="props.contentBgColor">
+            <slot :name="`content-${item.id}`">
+              <MyTextConstructor
+                v-if="item.answer"
+                bodyVariant="muted"
+                alignment="left"
+                spacing="none"
+                class="md:!text-lg lg:!text-lg"
+              >
+                <span v-html="item.answer"></span>
+              </MyTextConstructor>
+            </slot>
+          </div>
         </div>
       </div>
     </div>

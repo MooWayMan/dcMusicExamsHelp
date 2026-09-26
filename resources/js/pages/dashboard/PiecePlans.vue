@@ -4,6 +4,7 @@ import { Head, router, usePage } from '@inertiajs/vue3'
 import { Plus } from 'lucide-vue-next'
 import { computed, reactive, ref } from 'vue'
 import PiecePlanCard from '@/components/pieceplans/PiecePlanCard.vue'
+import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyInputConstructor from '@/components/reusables/MyInputConstructor.vue'
 import MySearchPickConstructor from '@/components/reusables/MySearchPickConstructor.vue'
@@ -12,7 +13,7 @@ import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import PageHeader from '@/components/reusables/PageHeader.vue'
 import SyllabusFilterSelects from '@/components/syllabus/SyllabusFilterSelects.vue'
 import type { SyllabusFacetLists } from '@/composables/useSyllabusFacets'
-import type { PiecePlan, PlanCandidate, SectionLabels, Suggestions } from '@/types/piecePlans'
+import type { PiecePlan, PlanCandidate, PlanSummary, SectionLabels, Suggestions } from '@/types/piecePlans'
 
 // The teacher's Piece tracker: a plan per pupil's next exam. Private to the
 // signed-in teacher; served and saved by App\Services\PiecePlans.
@@ -45,6 +46,20 @@ const candidateItems = computed<PickItem<string>[]>(() =>
 const form = reactive({ pupil_name: '', exam_stream: '', instrument: '', grade: '', target_date: '' })
 const adding = ref(false)
 const canAdd = computed(() => form.pupil_name.trim() !== '' && form.exam_stream !== '' && form.instrument !== '' && form.grade !== '')
+
+// One closed row per pupil; opening it shows their plan. Each card reports
+// its own name, exam and % ready, so a row stays true while it is edited.
+const summaries = ref<Record<number, PlanSummary>>({})
+function setSummary(id: number, summary: PlanSummary) {
+  summaries.value = { ...summaries.value, [id]: summary }
+}
+const planRows = computed(() =>
+  props.plans.map((plan) => {
+    const s = summaries.value[plan.id]
+
+    return { id: plan.id, question: s ? `${s.name} · ${s.subtitle} · ${s.ready}% ready` : plan.pupil_name }
+  }),
+)
 
 function useCandidate(item: PickItem<string>) {
   form.pupil_name = item.value
@@ -145,16 +160,19 @@ return
         </MyTextConstructor>
       </div>
 
-      <PiecePlanCard
-        v-for="plan in plans"
-        :key="plan.id"
-        :plan="plan"
-        :facets="facets"
-        :section-labels="sectionLabels"
-        :suggestions="suggestions"
-        :max-items="maxItems"
-        :max-score="maxScore"
-      />
+      <MyAccordionConstructor v-if="plans.length" :items="planRows" size="small">
+        <template v-for="plan in plans" :key="plan.id" #[`content-${plan.id}`]>
+          <PiecePlanCard
+            :plan="plan"
+            :facets="facets"
+            :section-labels="sectionLabels"
+            :suggestions="suggestions"
+            :max-items="maxItems"
+            :max-score="maxScore"
+            @summary="(s) => setSummary(plan.id, s)"
+          />
+        </template>
+      </MyAccordionConstructor>
     </div>
   </div>
 </template>
