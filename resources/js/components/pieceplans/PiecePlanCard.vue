@@ -9,8 +9,7 @@ import MyInputConstructor from '@/components/reusables/MyInputConstructor.vue'
 import MyProgress from '@/components/reusables/MyProgress.vue'
 import MySearchPickConstructor from '@/components/reusables/MySearchPickConstructor.vue'
 import type {PickItem} from '@/components/reusables/MySearchPickConstructor.vue';
-import MySelectConstructor from '@/components/reusables/MySelectConstructor.vue'
-import type {SelectOption} from '@/components/reusables/MySelectConstructor.vue';
+import MySliderConstructor from '@/components/reusables/MySliderConstructor.vue'
 import MyTableConstructor from '@/components/reusables/MyTableConstructor.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import SyllabusFilterSelects from '@/components/syllabus/SyllabusFilterSelects.vue'
@@ -44,7 +43,6 @@ interface Draft {
 }
 
 const SECTION_ORDER: PlanSection[] = ['piece', 'technical', 'supporting']
-const PERCENT_OPTIONS: SelectOption<number>[] = Array.from({ length: 11 }, (_, i) => ({ value: i * 10, label: `${i * 10}%` }))
 
 let nextKey = 0
 function toDraft(plan: PiecePlan): Draft {
@@ -284,20 +282,13 @@ const columns = [
       </template>
 
       <template #cell-percent="{ row }">
-        <div class="flex items-center gap-3">
-          <div class="w-24 shrink-0">
-            <MySelectConstructor
-              :model-value="row.percent"
-              :options="PERCENT_OPTIONS"
-              size="small"
-              aria-label="How ready"
-              @update:model-value="(v) => { const r = itemFor(row.key); if (r) r.percent = Number(v) }"
-            />
-          </div>
-          <div class="min-w-0 flex-1">
-            <MyProgress :percentage="row.percent" compact />
-          </div>
-        </div>
+        <MySliderConstructor
+          :model-value="row.percent"
+          :step="5"
+          suffix="%"
+          :aria-label="`How ready: ${row.label || row.part}`"
+          @update:model-value="(v) => { const r = itemFor(row.key); if (r) r.percent = v }"
+        />
       </template>
 
       <template #cell-remove="{ row }">

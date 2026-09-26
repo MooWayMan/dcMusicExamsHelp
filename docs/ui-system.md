@@ -178,6 +178,9 @@ The only `<select>` to use. `v-model`, `options`: `{ value, label }[]` (typed: s
 ### MySearchPickConstructor.vue
 Type-to-filter pick list (Top Ten "Rate a piece", Piece tracker). `v-model` (the chosen value or null), `items`: `{ value, label, hint? }[]` (hint shows before the label), `placeholder`, `emptyText`, `tone`: surface | glass, `maxShown` (50). Emits `pick` with the whole item.
 
+### MySliderConstructor.vue
+A slider with its value printed beside it. `v-model` (number), `min` (0), `max` (100), `step` (1), `suffix` (e.g. "%"), `ariaLabel`, `disabled`. The value's box reserves the width of the widest value, so dragging never moves the rest of the row.
+
 ### MyCheckboxConstructor.vue
 A tick box with an optional label. `v-model` (boolean), `label`, `ariaLabel` (give one when there is no label, e.g. in a table column headed by the question), `disabled`. Seven older files still draw a raw checkbox; they are listed as a shrink-only baseline in `SyllabusPickerGuardTest`.
 
