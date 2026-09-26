@@ -62,13 +62,33 @@ class PiecePlanController extends Controller
         return back()->with('success', "Plan added for {$plan->pupil_name}.");
     }
 
-    public function update(Request $request, PiecePlan $plan): RedirectResponse
+    /**
+     * The card autosaves by JSON and gets the saved plan back, so new rows
+     * learn their ids without a page reload. A plain form post still gets
+     * the usual redirect.
+     */
+    public function update(Request $request, PiecePlan $plan): RedirectResponse|JsonResponse
     {
         $this->authorisePlan($request, $plan);
 
         $this->plans->update($plan, $request->validate($this->plans->rules($request->input('exam_stream'))));
 
+        if ($request->wantsJson()) {
+            return response()->json($this->plans->payload($plan->load(['items.syllabusPiece:id,book_title', 'ratings'])));
+        }
+
         return back()->with('success', "Saved {$plan->pupil_name}'s plan.");
+    }
+
+    /** One mark, saved as soon as it is picked (see PiecePlans::rate). */
+    public function rate(Request $request, PiecePlan $plan): \Illuminate\Http\Response
+    {
+        $this->authorisePlan($request, $plan);
+
+        $data = $request->validate($this->plans->ratingRules());
+        $this->plans->rate($plan, (int) $data['syllabus_piece_id'], $data['score'] ?? null);
+
+        return response()->noContent();
     }
 
     public function destroy(Request $request, PiecePlan $plan): RedirectResponse

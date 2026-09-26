@@ -171,6 +171,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('dashboard/pieces', [PiecePlanController::class, 'store'])->name('piece-plans.store');
     Route::put('dashboard/pieces/{plan}', [PiecePlanController::class, 'update'])->name('piece-plans.update');
     Route::delete('dashboard/pieces/{plan}', [PiecePlanController::class, 'destroy'])->name('piece-plans.destroy');
+    Route::put('dashboard/pieces/{plan}/rating', [PiecePlanController::class, 'rate'])
+        ->middleware('throttle:240,1')
+        ->name('piece-plans.rate');
 
     // Top Ten piece voting — controller enforces teacher/admin-only (403 otherwise).
     Route::post('/top-ten/vote', [TopTenController::class, 'vote'])

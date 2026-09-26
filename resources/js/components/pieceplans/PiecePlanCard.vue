@@ -1,8 +1,8 @@
 <!-- resources/js/components/pieceplans/PiecePlanCard.vue -->
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3'
-import { Plus, Trash2, X, Pencil, Save, ListMusic } from 'lucide-vue-next'
-import { computed, reactive, ref, toRef, watch } from 'vue'
+import { Plus, Trash2, X, Pencil, ListMusic } from 'lucide-vue-next'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, toRef, watch } from 'vue'
 import PieceChooser from '@/components/pieceplans/PieceChooser.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyInputConstructor from '@/components/reusables/MyInputConstructor.vue'
@@ -17,11 +17,15 @@ import { instrumentLabel  } from '@/composables/useSyllabusFacets'
 import type {SyllabusFacetLists} from '@/composables/useSyllabusFacets';
 import { useSyllabusPieceOptions } from '@/composables/useSyllabusPieceOptions'
 import type { SyllabusPieceOption } from '@/composables/useSyllabusPieceOptions'
-import type { PiecePlan, PlanItem, PlanRating, PlanSection, SectionLabels, Suggestions } from '@/types/piecePlans'
+import { sendJson } from '@/lib/sendJson'
+import type { PiecePlan, PlanItem, PlanSection, SectionLabels, Suggestions } from '@/types/piecePlans'
 
 // One pupil's plan on the Piece tracker: what they are preparing and how
-// ready each part is. Edits stay on the card until Save; Save sends every
-// field back (App\Services\PiecePlans::update makes the plan match it).
+// ready each part is. There is no Save button: every change saves itself a
+// moment after the last edit (App\Services\PiecePlans::update makes the plan
+// match what is sent), and a mark saves the instant it is picked
+// (PiecePlans::rate). Saves go by JSON, not an Inertia visit, so nothing
+// being typed is ever replaced by a reload.
 const props = defineProps<{
   plan: PiecePlan
   facets: SyllabusFacetLists
@@ -39,10 +43,10 @@ interface Draft {
   grade: string
   target_date: string
   items: DraftItem[]
-  scores: Record<number, number>
 }
 
 const SECTION_ORDER: PlanSection[] = ['piece', 'technical', 'supporting']
+const AUTOSAVE_DELAY_MS = 800
 
 let nextKey = 0
 function toDraft(plan: PiecePlan): Draft {
@@ -53,20 +57,11 @@ function toDraft(plan: PiecePlan): Draft {
     grade: plan.grade,
     target_date: plan.target_date ?? '',
     items: plan.items.map((item) => ({ ...item, key: `i${item.id ?? `n${nextKey++}`}` })),
-    scores: Object.fromEntries(plan.ratings.map((r) => [r.syllabus_piece_id, r.score])),
   }
 }
 
-// Marks go back sorted by piece, the order the server serves them in, so an
-// untouched plan compares equal to what was saved.
-function ratingsOf(scores: Record<number, number>): PlanRating[] {
-  return Object.entries(scores)
-    .map(([id, score]) => ({ syllabus_piece_id: Number(id), score }))
-    .sort((a, b) => a.syllabus_piece_id - b.syllabus_piece_id)
-}
-
 const draft = reactive<Draft>(toDraft(props.plan))
-watch(() => props.plan, (plan) => Object.assign(draft, toDraft(plan)))
+const scores = ref<Record<number, number>>(Object.fromEntries(props.plan.ratings.map((r) => [r.syllabus_piece_id, r.score])))
 
 const stream = toRef(draft, 'exam_stream')
 const instrument = toRef(draft, 'instrument')
@@ -76,9 +71,12 @@ const pieceItems = computed<PickItem<number>[]>(() => syllabusPieces.value.map((
 
 const labels = computed(() => props.sectionLabels[draft.exam_stream] ?? props.sectionLabels['Classical & Jazz'])
 
-// Rows with nothing in them are dropped on save rather than refused.
+// Rows with nothing in them yet are left out of a save rather than refused.
 function filled(item: DraftItem): boolean {
   return item.syllabus_piece_id !== null || item.label.trim() !== ''
+}
+function savedRows(): DraftItem[] {
+  return SECTION_ORDER.flatMap((section) => draft.items.filter((i) => i.section === section && filled(i)))
 }
 
 function payload() {
@@ -88,26 +86,121 @@ function payload() {
     instrument: draft.instrument,
     grade: draft.grade,
     target_date: draft.target_date || null,
-    items: SECTION_ORDER.flatMap((section) => draft.items.filter((i) => i.section === section && filled(i)))
-      .map(({ id, section, syllabus_piece_id, label, percent }) => ({ id, section, syllabus_piece_id, label, percent })),
-    ratings: ratingsOf(draft.scores),
+    items: savedRows().map(({ id, section, syllabus_piece_id, label, percent }) => ({ id, section, syllabus_piece_id, label, percent })),
   }
 }
 
-const saved = computed(() => JSON.stringify(toDraftPayload(props.plan)))
-function toDraftPayload(plan: PiecePlan) {
-  return {
-    pupil_name: plan.pupil_name,
-    exam_stream: plan.exam_stream,
-    instrument: plan.instrument,
-    grade: plan.grade,
-    target_date: plan.target_date,
-    items: plan.items.map(({ id, section, syllabus_piece_id, label, percent }) => ({ id, section, syllabus_piece_id, label, percent })),
-    ratings: plan.ratings.map(({ syllabus_piece_id, score }) => ({ syllabus_piece_id, score })),
+// What the plan says, ignoring row ids (a new row gets its id back from the
+// save, which is not an edit). A change here is what triggers an autosave.
+function contentOf(): string {
+  const { items, ...rest } = payload()
+
+  return JSON.stringify({ ...rest, items: items.map(({ section, syllabus_piece_id, label, percent }) => ({ section, syllabus_piece_id, label, percent })) })
+}
+
+// ── Autosave ──────────────────────────────────────────────────────
+type SaveState = 'saved' | 'waiting' | 'saving' | 'error' | 'incomplete'
+const saveState = ref<SaveState>('saved')
+const saveError = ref('')
+let lastSaved = contentOf()
+let timer: ReturnType<typeof setTimeout> | undefined
+let inFlight = false
+
+// The details every save needs. Changing the exam type clears the
+// instrument; saving then would only be refused.
+const complete = computed(() => draft.pupil_name.trim() !== '' && draft.instrument !== '' && draft.grade !== '')
+
+async function saveNow(keepalive = false) {
+  clearTimeout(timer)
+  const content = contentOf()
+
+  if (content === lastSaved || !complete.value) {
+    return
+  }
+
+  if (inFlight && !keepalive) {
+    timer = setTimeout(() => saveNow(), AUTOSAVE_DELAY_MS)
+
+    return
+  }
+
+  const sentRows = savedRows()
+  inFlight = true
+  saveState.value = 'saving'
+
+  try {
+    const res = await sendJson(`/dashboard/pieces/${props.plan.id}`, 'PUT', payload(), keepalive)
+
+    if (res.status === 422) {
+      const body = await res.json().catch(() => ({}))
+      saveError.value = Object.values((body?.errors ?? {}) as Record<string, string[]>)[0]?.[0] ?? 'Something on this plan could not be saved.'
+      saveState.value = 'error'
+
+      return
+    }
+
+    if (!res.ok) {
+      throw new Error(String(res.status))
+    }
+
+    const saved = (await res.json()) as PiecePlan
+    // Give rows that were new their ids, matched by position in what was
+    // sent (the server keeps that order), so the next save updates them.
+    saved.items.forEach((item, index) => {
+      const row = sentRows[index]
+
+      if (row && row.id === null) {
+        row.id = item.id
+      }
+    })
+    lastSaved = content
+    saveState.value = contentOf() === lastSaved ? 'saved' : 'waiting'
+  } catch {
+    saveError.value = 'Could not reach the site. Your changes are still here and will be tried again.'
+    saveState.value = 'error'
+    timer = setTimeout(() => saveNow(), AUTOSAVE_DELAY_MS * 5)
+  } finally {
+    inFlight = false
   }
 }
-const dirty = computed(() => JSON.stringify(payload()) !== saved.value)
 
+watch(contentOf, (content) => {
+  if (content === lastSaved) {
+    return
+  }
+
+  if (!complete.value) {
+    saveState.value = 'incomplete'
+
+    return
+  }
+
+  saveState.value = 'waiting'
+  clearTimeout(timer)
+  timer = setTimeout(() => saveNow(), AUTOSAVE_DELAY_MS)
+})
+
+// Leaving the page or refreshing sends anything still waiting.
+function flush() {
+  if (contentOf() !== lastSaved) {
+    saveNow(true)
+  }
+}
+onMounted(() => window.addEventListener('pagehide', flush))
+onBeforeUnmount(() => {
+  window.removeEventListener('pagehide', flush)
+  flush()
+})
+
+const statusText = computed(() => ({
+  saved: 'All changes saved',
+  waiting: 'Saving…',
+  saving: 'Saving…',
+  incomplete: 'Choose the pupil, instrument and grade to save',
+  error: `Not saved: ${saveError.value}`,
+}[saveState.value]))
+
+// ── Rows ──────────────────────────────────────────────────────────
 const rows = computed(() =>
   SECTION_ORDER.flatMap((section) => draft.items.filter((i) => i.section === section))
     .map((item) => ({ ...item, part: labels.value[item.section] })),
@@ -130,13 +223,42 @@ const choosing = ref(false)
 const tryingIds = computed(() =>
   draft.items.filter((i) => i.section === 'piece' && i.syllabus_piece_id !== null).map((i) => i.syllabus_piece_id as number),
 )
-function setScore(pieceId: number, score: number | null) {
+
+// A mark saves the instant it is picked, on its own.
+const markError = ref('')
+async function setScore(pieceId: number, score: number | null) {
+  const previous = scores.value[pieceId]
+  const next = { ...scores.value }
+
   if (score === null) {
-    delete draft.scores[pieceId]
+    delete next[pieceId]
   } else {
-    draft.scores[pieceId] = score
+    next[pieceId] = score
+  }
+
+  scores.value = next
+  markError.value = ''
+
+  try {
+    const res = await sendJson(`/dashboard/pieces/${props.plan.id}/rating`, 'PUT', { syllabus_piece_id: pieceId, score })
+
+    if (!res.ok) {
+      throw new Error(String(res.status))
+    }
+  } catch {
+    const undo = { ...scores.value }
+
+    if (previous === undefined) {
+      delete undo[pieceId]
+    } else {
+      undo[pieceId] = previous
+    }
+
+    scores.value = undo
+    markError.value = 'That mark did not save. Please pick it again.'
   }
 }
+
 function setTrying(piece: SyllabusPieceOption, on: boolean) {
   if (on) {
     if (full.value || tryingIds.value.includes(piece.value)) {
@@ -155,8 +277,8 @@ function setTrying(piece: SyllabusPieceOption, on: boolean) {
 
 function addItem(section: PlanSection, label = '') {
   if (full.value) {
-return
-}
+    return
+  }
 
   draft.items.push({ id: null, section, syllabus_piece_id: null, label, percent: 0, book: null, key: `n${nextKey++}` })
 }
@@ -164,15 +286,15 @@ function removeItem(key: string) {
   const index = draft.items.findIndex((i) => i.key === key)
 
   if (index >= 0) {
-draft.items.splice(index, 1)
-}
+    draft.items.splice(index, 1)
+  }
 }
 function pickPiece(key: string, item: PickItem<number>) {
   const row = itemFor(key)
 
   if (!row) {
-return
-}
+    return
+  }
 
   row.syllabus_piece_id = item.value
   row.label = item.label
@@ -182,8 +304,8 @@ function clearPiece(key: string) {
   const row = itemFor(key)
 
   if (!row) {
-return
-}
+    return
+  }
 
   row.syllabus_piece_id = null
   row.label = ''
@@ -197,34 +319,20 @@ function suggestionsFor(section: 'technical' | 'supporting'): string[] {
 }
 
 const editingDetails = ref(false)
-const saving = ref(false)
 const confirmRemove = ref(false)
 
-function save() {
-  saving.value = true
-  router.put(`/dashboard/pieces/${props.plan.id}`, payload(), {
-    preserveScroll: true,
-    onSuccess: () => {
- editingDetails.value = false 
-},
-    onFinish: () => {
- saving.value = false 
-},
-  })
-}
-function discard() {
-  Object.assign(draft, toDraft(props.plan))
-  editingDetails.value = false
-}
 function remove() {
+  clearTimeout(timer)
+  lastSaved = contentOf()
   router.delete(`/dashboard/pieces/${props.plan.id}`, { preserveScroll: true })
 }
 
+// Title and subtitle follow what is on the card, which is what gets saved.
 const subtitle = computed(() => {
-  const parts = [`${instrumentLabel(props.plan.exam_stream, props.plan.instrument)} · ${props.plan.grade}`]
+  const parts = [`${instrumentLabel(draft.exam_stream, draft.instrument)} · ${draft.grade}`]
 
-  if (props.plan.target_date) {
-    parts.push(`exam around ${new Date(`${props.plan.target_date}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`)
+  if (draft.target_date) {
+    parts.push(`exam around ${new Date(`${draft.target_date}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`)
   }
 
   return parts.join(' · ')
@@ -240,8 +348,18 @@ const columns = [
 
 <template>
   <div class="flex flex-col gap-4">
+    <div class="text-sm" aria-live="polite">
+      <MyTextConstructor
+        bodyVariant="inherit"
+        :textColor="saveState === 'error' ? 'text-brand-danger' : 'text-brand-text-soft'"
+        spacing="none"
+      >
+        {{ statusText }}
+      </MyTextConstructor>
+    </div>
+
     <MyTableConstructor
-      :title="plan.pupil_name"
+      :title="draft.pupil_name"
       :subtitle="subtitle"
       :data="rows"
       :columns="columns"
@@ -255,7 +373,7 @@ const columns = [
             v-if="pieceItems.length"
             :model-value="null"
             :items="pieceItems"
-            :placeholder="`Find a ${labels.piece.toLowerCase().replace(/s$/, '')} on the ${plan.grade} list…`"
+            :placeholder="`Find a ${labels.piece.toLowerCase().replace(/s$/, '')} on the ${draft.grade} list…`"
             @pick="(item) => pickPiece(row.key, item)"
           />
           <MyInputConstructor
@@ -311,7 +429,7 @@ const columns = [
       <PieceChooser
         v-if="choosing"
         :pieces="syllabusPieces"
-        :scores="draft.scores"
+        :scores="scores"
         :trying-ids="tryingIds"
         :max-score="maxScore"
         :piece-word="labels.piece.replace(/s$/, '')"
@@ -319,6 +437,9 @@ const columns = [
         @score="setScore"
         @trying="setTrying"
       />
+      <div v-if="markError" class="text-sm">
+        <MyTextConstructor bodyVariant="inherit" textColor="text-brand-danger" spacing="none">{{ markError }}</MyTextConstructor>
+      </div>
     </div>
 
     <div class="flex flex-col gap-3">
@@ -379,12 +500,6 @@ const columns = [
       </div>
 
       <div class="flex flex-wrap items-center gap-2">
-        <MyButtonConstructor size="small" variant="primary" :icon="Save" :disabled="!dirty || saving" @click="save">
-          Save
-        </MyButtonConstructor>
-        <MyButtonConstructor size="small" variant="outline" :disabled="!dirty || saving" @click="discard">
-          Undo changes
-        </MyButtonConstructor>
         <MyButtonConstructor size="small" variant="outline" :icon="Pencil" @click="editingDetails = !editingDetails">
           Pupil and exam
         </MyButtonConstructor>
@@ -395,7 +510,7 @@ const columns = [
 
       <div v-if="confirmRemove" class="flex flex-wrap items-center gap-2">
         <MyButtonConstructor size="small" variant="danger" :icon="Trash2" @click="remove">
-          Yes, remove {{ plan.pupil_name }}'s plan
+          Yes, remove {{ draft.pupil_name }}'s plan
         </MyButtonConstructor>
         <MyButtonConstructor size="small" variant="outline" @click="confirmRemove = false">Keep it</MyButtonConstructor>
       </div>

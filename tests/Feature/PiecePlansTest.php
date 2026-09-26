@@ -308,38 +308,36 @@ test('a teacher can start a plan from their own candidates, and a planned pupil 
 
 // ──────────────────────────────────────────
 // Choosing pieces: the pupil marks each syllabus piece out of 10 after
-// hearing it. Being tried is not stored with the mark: it is the piece being
-// in the plan's Pieces rows, which the round trip above already covers.
+// hearing it, over weeks. A mark saves the instant it is picked, on its own
+// (26 Sep 2026: marks that waited for a Save button vanished on a refresh).
+// Being tried is not stored with the mark: it is the piece being in the
+// plan's Pieces rows, which the round trip above already covers.
 // ──────────────────────────────────────────
 
-test('marks round-trip: set, changed, cleared', function () {
+function ppRate(Tests\TestCase $test, User $user, int $planId, int $pieceId, ?int $score)
+{
+    return $test->actingAs($user)->putJson("/dashboard/pieces/{$planId}/rating", ['syllabus_piece_id' => $pieceId, 'score' => $score]);
+}
+
+test('marks round-trip one at a time: set, changed, cleared', function () {
     $a = ppPiece(['title' => 'A']);
     $b = ppPiece(['title' => 'B']);
     $c = ppPiece(['title' => 'C']);
     $teacher = ppTeacher();
+    $this->actingAs($teacher)->post('/dashboard/pieces', ppPlanData());
+    $planId = PiecePlan::first()->id;
 
-    $this->actingAs($teacher)->post('/dashboard/pieces', ppPlanData([
-        'ratings' => [
-            ['syllabus_piece_id' => $a->id, 'score' => 10],
-            ['syllabus_piece_id' => $b->id, 'score' => 3],
-        ],
-    ]))->assertSessionHasNoErrors();
+    ppRate($this, $teacher, $planId, $a->id, 10)->assertNoContent();
+    ppRate($this, $teacher, $planId, $b->id, 3)->assertNoContent();
 
-    $plan = ppServed($this, $teacher)[0];
-    expect($plan['ratings'])->toBe([
+    expect(ppServed($this, $teacher)[0]['ratings'])->toBe([
         ['syllabus_piece_id' => $a->id, 'score' => 10],
         ['syllabus_piece_id' => $b->id, 'score' => 3],
     ]);
 
-    // Send back what was served, with B changed, A cleared and C marked.
-    $this->actingAs($teacher)->put("/dashboard/pieces/{$plan['id']}", [
-        ...collect($plan)->only(['pupil_name', 'exam_stream', 'instrument', 'grade', 'target_date', 'items'])->all(),
-        'ratings' => [
-            ['syllabus_piece_id' => $a->id, 'score' => null],
-            ['syllabus_piece_id' => $b->id, 'score' => 10],
-            ['syllabus_piece_id' => $c->id, 'score' => 0],
-        ],
-    ])->assertSessionHasNoErrors();
+    ppRate($this, $teacher, $planId, $a->id, null)->assertNoContent();
+    ppRate($this, $teacher, $planId, $b->id, 10)->assertNoContent();
+    ppRate($this, $teacher, $planId, $c->id, 0)->assertNoContent();
 
     expect(ppServed($this, $teacher)[0]['ratings'])->toBe([
         ['syllabus_piece_id' => $b->id, 'score' => 10],
@@ -347,38 +345,87 @@ test('marks round-trip: set, changed, cleared', function () {
     ]);
 });
 
-test('a save that carries no marks leaves the marks alone', function () {
+test('saving the plan never touches the marks', function () {
     $a = ppPiece();
     $teacher = ppTeacher();
-    $this->actingAs($teacher)->post('/dashboard/pieces', ppPlanData([
-        'ratings' => [['syllabus_piece_id' => $a->id, 'score' => 8]],
-    ]));
+    $this->actingAs($teacher)->post('/dashboard/pieces', ppPlanData());
     $plan = PiecePlan::first();
+    ppRate($this, $teacher, $plan->id, $a->id, 8);
 
-    $this->actingAs($teacher)->put("/dashboard/pieces/{$plan->id}", ppPlanData(['pupil_name' => 'Renamed']))
-        ->assertSessionHasNoErrors();
+    $this->actingAs($teacher)->putJson("/dashboard/pieces/{$plan->id}", ppPlanData(['pupil_name' => 'Renamed']))->assertOk();
 
     expect(ppServed($this, $teacher)[0]['ratings'])->toBe([['syllabus_piece_id' => $a->id, 'score' => 8]]);
 });
 
 test('a mark is out of 10', function () {
     $a = ppPiece();
+    $teacher = ppTeacher();
+    $this->actingAs($teacher)->post('/dashboard/pieces', ppPlanData());
 
-    $this->actingAs(ppTeacher())->post('/dashboard/pieces', ppPlanData([
-        'ratings' => [['syllabus_piece_id' => $a->id, 'score' => 11]],
-    ]))->assertSessionHasErrors('ratings.0.score');
+    ppRate($this, $teacher, PiecePlan::first()->id, $a->id, 11)->assertUnprocessable();
+});
+
+test('nobody can mark another teacher\'s pupil', function () {
+    $a = ppPiece();
+    $owner = ppTeacher();
+    $this->actingAs($owner)->post('/dashboard/pieces', ppPlanData());
+
+    ppRate($this, ppTeacher(), PiecePlan::first()->id, $a->id, 5)->assertNotFound();
+
+    expect(App\Models\PiecePlanRating::count())->toBe(0);
 });
 
 test('removing a plan removes its marks', function () {
     $a = ppPiece();
     $teacher = ppTeacher();
-    $this->actingAs($teacher)->post('/dashboard/pieces', ppPlanData([
-        'ratings' => [['syllabus_piece_id' => $a->id, 'score' => 8]],
-    ]));
+    $this->actingAs($teacher)->post('/dashboard/pieces', ppPlanData());
+    ppRate($this, $teacher, PiecePlan::first()->id, $a->id, 8);
 
     $this->actingAs($teacher)->delete('/dashboard/pieces/'.PiecePlan::first()->id);
 
     expect(App\Models\PiecePlanRating::count())->toBe(0);
+});
+
+// ──────────────────────────────────────────
+// Autosave: the card saves by JSON and gets the saved plan back, so a new
+// row learns its id and the next save updates it instead of adding another.
+// ──────────────────────────────────────────
+
+test('an autosave returns the saved plan, and saving again updates the same rows', function () {
+    ppPiece();
+    $teacher = ppTeacher();
+    $this->actingAs($teacher)->post('/dashboard/pieces', ppPlanData());
+    $plan = PiecePlan::first();
+
+    $first = $this->actingAs($teacher)->putJson("/dashboard/pieces/{$plan->id}", ppPlanData([
+        'items' => [
+            ['id' => null, 'section' => 'technical', 'label' => 'Scales', 'percent' => 10],
+            ['id' => null, 'section' => 'supporting', 'label' => 'Aural', 'percent' => 0],
+        ],
+    ]))->assertOk()->json();
+
+    expect(collect($first['items'])->pluck('label')->all())->toBe(['Scales', 'Aural']);
+
+    $again = $this->actingAs($teacher)->putJson("/dashboard/pieces/{$plan->id}", ppPlanData([
+        'items' => [
+            ['id' => $first['items'][0]['id'], 'section' => 'technical', 'label' => 'Scales', 'percent' => 60],
+            ['id' => $first['items'][1]['id'], 'section' => 'supporting', 'label' => 'Aural', 'percent' => 0],
+        ],
+    ]))->assertOk()->json();
+
+    expect(collect($again['items'])->pluck('id')->all())->toBe(collect($first['items'])->pluck('id')->all())
+        ->and($again['items'][0]['percent'])->toBe(60)
+        ->and(PiecePlanItem::count())->toBe(2);
+});
+
+test('an autosave that cannot be saved says why', function () {
+    ppPiece();
+    $teacher = ppTeacher();
+    $this->actingAs($teacher)->post('/dashboard/pieces', ppPlanData());
+
+    $this->actingAs($teacher)->putJson('/dashboard/pieces/'.PiecePlan::first()->id, ppPlanData(['pupil_name' => '']))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('pupil_name');
 });
 
 test('each piece on the list links to where it can be heard', function () {

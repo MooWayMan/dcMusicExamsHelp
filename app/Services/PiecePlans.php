@@ -82,7 +82,8 @@ final class PiecePlans
 
     /**
      * Every field served here is written back by update(), except `book` and
-     * `ready`, which are worked out from other fields and never stored.
+     * `ready`, which are worked out from other fields and never stored, and
+     * `ratings`, which rate() saves one at a time as they are given.
      */
     public function payload(PiecePlan $plan): array
     {
@@ -137,9 +138,6 @@ final class PiecePlans
             'items.*.syllabus_piece_id' => ['nullable', 'integer', 'exists:syllabus_pieces,id'],
             'items.*.label' => ['nullable', 'string', 'max:200', 'required_without:items.*.syllabus_piece_id'],
             'items.*.percent' => ['required', 'integer', 'between:0,100'],
-            'ratings' => ['array', 'max:500'],
-            'ratings.*.syllabus_piece_id' => ['required', 'integer', 'distinct', 'exists:syllabus_pieces,id'],
-            'ratings.*.score' => ['nullable', 'integer', 'between:0,'.self::MAX_SCORE],
         ];
     }
 
@@ -151,7 +149,6 @@ final class PiecePlans
                 ...$this->planAttributes($data),
             ]);
             $this->syncItems($plan, $data['items'] ?? []);
-            $this->syncRatings($plan, $data['ratings'] ?? []);
 
             return $plan;
         });
@@ -162,12 +159,40 @@ final class PiecePlans
         DB::transaction(function () use ($plan, $data) {
             $plan->update($this->planAttributes($data));
             $this->syncItems($plan, $data['items'] ?? []);
-            // Left alone when the request carries no ratings at all, so a
-            // save that never showed the list cannot wipe the marks.
-            if (array_key_exists('ratings', $data)) {
-                $this->syncRatings($plan, $data['ratings']);
-            }
         });
+    }
+
+    /** @return array<string, mixed> */
+    public function ratingRules(): array
+    {
+        return [
+            'syllabus_piece_id' => ['required', 'integer', 'exists:syllabus_pieces,id'],
+            'score' => ['nullable', 'integer', 'between:0,'.self::MAX_SCORE],
+        ];
+    }
+
+    /**
+     * Save one mark the moment it is given, on its own. Marks are collected
+     * over weeks as pieces are heard, so they must never wait for the plan's
+     * Save button (26 Sep 2026: marks kept only on the page vanished on a
+     * refresh). This is the only thing that writes piece_plan_ratings.
+     * A null score clears the mark.
+     */
+    public function rate(PiecePlan $plan, int $syllabusPieceId, ?int $score): void
+    {
+        if ($score === null) {
+            PiecePlanRating::query()
+                ->where('piece_plan_id', $plan->id)
+                ->where('syllabus_piece_id', $syllabusPieceId)
+                ->delete();
+
+            return;
+        }
+
+        PiecePlanRating::query()->updateOrCreate(
+            ['piece_plan_id' => $plan->id, 'syllabus_piece_id' => $syllabusPieceId],
+            ['score' => max(0, min(self::MAX_SCORE, $score))],
+        );
     }
 
     public function delete(PiecePlan $plan): void
@@ -288,28 +313,6 @@ final class PiecePlans
             ->delete();
 
         $plan->unsetRelation('items');
-    }
-
-    /**
-     * Make the plan's marks exactly the list given. A piece sent with no
-     * score has had its mark cleared, so it loses its row.
-     */
-    private function syncRatings(PiecePlan $plan, array $ratings): void
-    {
-        PiecePlanRating::query()->where('piece_plan_id', $plan->id)->delete();
-
-        foreach ($ratings as $rating) {
-            if (($rating['score'] ?? null) === null) {
-                continue;
-            }
-            PiecePlanRating::create([
-                'piece_plan_id' => $plan->id,
-                'syllabus_piece_id' => (int) $rating['syllabus_piece_id'],
-                'score' => max(0, min(self::MAX_SCORE, (int) $rating['score'])),
-            ]);
-        }
-
-        $plan->unsetRelation('ratings');
     }
 
     private function itemAttributes(array $item, int $position): array
