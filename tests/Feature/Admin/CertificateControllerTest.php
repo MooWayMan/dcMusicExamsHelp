@@ -241,7 +241,7 @@ test('weeklyGroups payload only includes scored, unsent, non-cancelled entries f
 test('a parent booking is its own weekly group with the parent\'s email, not the unassigned bucket', function () {
     // 27 Sep 2026: Wilfred Morris, booked by Alexandra King as a parent,
     // sat in "Parent Bookings (no teacher assigned)" with no email buttons
-    // while Quarter End named her. Both now ask App\Services\EntryCredit.
+    // while Quarter End named her. Both now ask App\Support\EntryCredit.
     $parent = ExamContact::create(['name' => 'Alexandra King', 'email' => 'alexi@example.test']);
     $parent->addType('parent');
     makeCertEntry('', 2026, 2, ['teacher_name' => null, 'booking_role' => 'parent', 'submitter_contact_id' => $parent->id]);

@@ -376,7 +376,14 @@ function submitEdit() {
                             </td>
                             <td class="px-4 py-3 text-center"><span class="text-sm font-medium text-brand-text">{{ entry.score ?? '—' }}</span></td>
                             <td class="px-4 py-3">
-                                <button v-if="entry.teacher_name" type="button"
+                                <!-- A linked teacher opens their contact; an unlinked name
+                                     has nobody to open, so it filters the list instead. -->
+                                <Link v-if="entry.teacher_name && entry.teacher_contact_id"
+                                    :href="`/admin/contacts/${entry.teacher_contact_id}`"
+                                    class="text-left text-brand-accent hover:underline">
+                                    {{ entry.teacher_name }}
+                                </Link>
+                                <button v-else-if="entry.teacher_name" type="button"
                                     class="text-left text-brand-accent hover:underline"
                                     @click="filterByValue(entry.teacher_name)">
                                     {{ entry.teacher_name }}

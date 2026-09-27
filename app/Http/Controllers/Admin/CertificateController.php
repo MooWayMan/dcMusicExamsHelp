@@ -8,7 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ExamContact;
 use App\Models\ExamEntry;
 use App\Services\CertificateRenderer;
-use App\Services\EntryCredit;
+use App\Support\EntryCredit;
 use App\Services\QuarterCertificateBatch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -121,7 +121,7 @@ class CertificateController extends Controller
      *
      * Scope: scored entries in the selected quarter whose
      * certificate_sent_at is still NULL. Grouped by who each entry is
-     * credited to, decided by App\Services\EntryCredit exactly as Quarter
+     * credited to, decided by App\Support\EntryCredit exactly as Quarter
      * End does: a school's bookings under the school, a teacher's under
      * them, a parent booking under the parent who submitted it (so it gets
      * its own email and buttons), and only a booking with nobody linked in

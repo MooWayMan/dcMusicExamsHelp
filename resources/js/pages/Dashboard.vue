@@ -254,13 +254,13 @@ const groupedCandidates = computed<CandidateGroup[]>(() => {
 // quarter; the totals should add up to total exams, not total candidates.
 // ─────────────────────────────────────────────────────────────────────────
 const resultSummary = computed(() => {
-    const summary = { distinctions: 0, merits: 0, passes: 0, fails: 0, pending: 0 }
+    const summary = { distinctions: 0, merits: 0, passes: 0, belowPass: 0, pending: 0 }
     for (const e of entries.value) {
         switch (e.result) {
             case 'Distinction': summary.distinctions++; break
             case 'Merit':       summary.merits++; break
             case 'Pass':        summary.passes++; break
-            case 'Fail':        summary.fails++; break
+            case 'Below Pass':  summary.belowPass++; break
             default:            summary.pending++
         }
     }
@@ -346,16 +346,16 @@ function candidateInlineResult(group: CandidateGroup): { single: ExamEntryRow | 
     if (group.entries.length === 1) {
         return { single: group.entries[0], mix: [] }
     }
-    const counts = { Distinction: 0, Merit: 0, Pass: 0, Fail: 0, Pending: 0 }
+    const counts = { Distinction: 0, Merit: 0, Pass: 0, 'Below Pass': 0, Pending: 0 }
     for (const e of group.entries) {
-        const k = (e.result ?? 'Pending') as keyof typeof counts
+        const k = (e.result && e.result in counts ? e.result : 'Pending') as keyof typeof counts
         counts[k]++
     }
     const mix = [
         { label: counts.Distinction ? `${counts.Distinction} Dist` : '', cls: 'bg-brand-success-soft text-brand-success' },
         { label: counts.Merit ? `${counts.Merit} Merit` : '', cls: 'bg-brand-accent/10 text-brand-accent' },
         { label: counts.Pass ? `${counts.Pass} Pass` : '', cls: 'bg-brand-surface-soft text-brand-text-soft' },
-        { label: counts.Fail ? `${counts.Fail} Fail` : '', cls: 'bg-brand-danger-soft text-brand-danger' },
+        { label: counts['Below Pass'] ? `${counts['Below Pass']} Below Pass` : '', cls: 'bg-brand-danger-soft text-brand-danger' },
         { label: counts.Pending ? `${counts.Pending} Pending` : '', cls: 'bg-brand-surface-soft text-brand-text-soft' },
     ].filter((m) => m.label !== '')
     return { single: null, mix }
@@ -387,7 +387,7 @@ function resultBadgeClass(result: string | null): string {
         case 'Distinction': return 'bg-brand-success-soft text-brand-success'
         case 'Merit': return 'bg-brand-accent/10 text-brand-accent'
         case 'Pass': return 'bg-brand-surface-soft text-brand-text-soft'
-        case 'Fail': return 'bg-brand-danger-soft text-brand-danger'
+        case 'Below Pass': return 'bg-brand-danger-soft text-brand-danger'
         default: return 'bg-brand-surface-soft text-brand-text-soft'
     }
 }
@@ -657,8 +657,8 @@ defineOptions({
                             <span v-if="resultSummary.passes" class="rounded-full bg-brand-surface-soft px-3 py-1 font-semibold text-brand-text-soft">
                                 {{ resultSummary.passes }} Pass{{ resultSummary.passes === 1 ? '' : 'es' }}
                             </span>
-                            <span v-if="resultSummary.fails" class="rounded-full bg-brand-danger-soft px-3 py-1 font-semibold text-brand-danger">
-                                {{ resultSummary.fails }} Fail{{ resultSummary.fails === 1 ? '' : 's' }}
+                            <span v-if="resultSummary.belowPass" class="rounded-full bg-brand-danger-soft px-3 py-1 font-semibold text-brand-danger">
+                                {{ resultSummary.belowPass }} Below Pass
                             </span>
                             <span v-if="resultSummary.pending" class="rounded-full bg-brand-surface-soft px-3 py-1 font-semibold text-brand-text-soft">
                                 {{ resultSummary.pending }} Pending

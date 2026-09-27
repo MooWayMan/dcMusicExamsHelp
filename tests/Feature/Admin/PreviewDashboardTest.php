@@ -76,3 +76,29 @@ it('blocks a non-admin from the preview route', function () {
         ->get("/admin/contacts/{$teacher->id}/preview-dashboard")
         ->assertForbidden();
 });
+
+it('shows a result as its band from the score, so a stored "Fail" reads Below Pass', function () {
+    // 27 Sep 2026: an entry back-filled by hand with result 'Fail' (score 0)
+    // showed as "1 Fail" on Daniel Rogers' dashboard while its own chart said
+    // Below Pass. The dashboard now sends the band, as every other page does.
+    $teacher = ExamContact::create(['name' => 'Daniel Rogers', 'email' => 'exams@pulse.test']);
+    $teacher->addType('teacher');
+
+    $order = Order::factory()->create();
+    ExamEntry::create([
+        'order_id' => $order->id,
+        'candidate_name' => 'Clayton Lo',
+        'candidate_number' => '1-15280254974',
+        'grade' => 'Grade 1',
+        'subject_area' => 'Rock and Pop',
+        'delivery_method' => 'Digital',
+        'exam_date' => Carbon::create(2026, 3, 10),
+        'result' => 'Fail',
+        'score' => 0,
+        'teacher_contact_id' => $teacher->id,
+    ]);
+
+    $this->actingAs(User::factory()->create(['role' => 'admin']))
+        ->get("/admin/contacts/{$teacher->id}/preview-dashboard")
+        ->assertInertia(fn ($page) => $page->where('examEntries.0.result', 'Below Pass'));
+});

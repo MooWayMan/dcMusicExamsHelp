@@ -10,7 +10,7 @@ use App\Models\PrizeDraw;
 use App\Models\TopScorerPublication;
 use App\Models\PrizeWorkflow;
 use App\Services\CertificateRenderer;
-use App\Services\EntryCredit;
+use App\Support\EntryCredit;
 use App\Support\TopScorers;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -62,7 +62,7 @@ class QuarterEndController extends Controller
         // and every credit name falls straight through to teacher_name, so the
         // existing teacher behaviour is byte-for-byte unchanged.
         // Who each entry is credited to (school rollup, teacher, or the parent
-        // who submitted it) is decided once, in App\Services\EntryCredit.
+        // who submitted it) is decided once, in App\Support\EntryCredit.
         $credit = EntryCredit::for($allEntries);
         $schoolMetaByNameLower = $credit->schools();
         $creditName = fn ($e) => $credit->name($e);

@@ -151,7 +151,11 @@ class DashboardController extends Controller
             'grade' => $e->grade,
             'subject_area' => $e->subject_area,
             'delivery_method' => $e->delivery_method,
-            'result' => $e->result,
+            // The band from the score (Distinction / Merit / Pass / Below Pass),
+            // as every other page and this page's own chart use. The raw text
+            // Trinity sent can say "Fail", which is not a word shown to
+            // teachers, and a raw "Below Pass" used to count as Pending here.
+            'result' => $e->result_band,
             'score' => $e->score,
             'exam_date' => $e->exam_date?->format('d M Y'),
             'pending_correction' => $correction,
