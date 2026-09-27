@@ -253,6 +253,44 @@ test('the piece picker lists only that exam\'s syllabus pieces', function () {
         ->assertExactJson([['value' => $wanted->id, 'label' => "Wanted — {$wanted->composer}", 'book' => 'The Book', 'listen' => null]]);
 });
 
+test('the candidate list never carries an exam result, because pupils can see it', function () {
+    ppPiece();
+    $teacher = ppTeacher(['email' => 'rita@example.com']);
+    $contact = ExamContact::create(['name' => 'Rita Teacher', 'email' => 'rita@example.com', 'source' => 'trinity_csv']);
+    $contact->addType('teacher');
+    $order = Order::create([
+        'trinity_order_number' => 'ORD-7654399',
+        'order_status' => 'Submitted',
+        'subject_area' => 'Music',
+        'delivery_method' => 'Digital',
+        'requested_start_date' => '2026-03-01',
+    ]);
+    foreach (['Below Pass', 'Distinction'] as $i => $result) {
+        ExamEntry::create([
+            'order_id' => $order->id,
+            'candidate_number' => "1-2000{$i}",
+            'candidate_name' => "Pupil {$i}",
+            'grade' => '3',
+            'subject_area' => 'Music',
+            'delivery_method' => 'Digital',
+            'exam_date' => '2026-03-10',
+            'result' => $result,
+            'teacher_contact_id' => $contact->id,
+        ]);
+    }
+
+    $this->actingAs($teacher)->get('/dashboard/pieces')
+        ->assertInertia(function ($page) {
+            $candidates = $page->toArray()['props']['candidates'];
+            $sent = json_encode($candidates);
+
+            expect($candidates)->toHaveCount(2)
+                ->and($candidates[0]['last_exam'])->toContain('Grade 3')
+                ->and($sent)->not->toContain('Below Pass')
+                ->and($sent)->not->toContain('Distinction');
+        });
+});
+
 test('a teacher can start a plan from their own candidates, and a planned pupil drops off the list', function () {
     ppPiece();
     $teacher = ppTeacher(['email' => 'tina@example.com']);

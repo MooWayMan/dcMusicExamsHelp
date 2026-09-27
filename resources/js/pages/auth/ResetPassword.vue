@@ -40,7 +40,7 @@ const inputEmail = ref(props.email)
                     size="small"
                     v-model="inputEmail"
                     readonly
-                    autocomplete="email"
+                    autocomplete="username"
                     :error="errors.email"
                 />
             </div>

@@ -81,7 +81,7 @@ const visibleRoles = roleOptions.filter((opt) => props.roles.includes(opt.value)
                 placeholder="email@example.com"
                 size="small"
                 required
-                autocomplete="email"
+                autocomplete="username"
                 :error="errors.email"
             />
 

@@ -54,8 +54,7 @@ defineProps<{
                     placeholder="email@example.com"
                     size="small"
                     required
-                    autofocus
-                    autocomplete="email"
+                    autocomplete="username"
                     :error="errors.email"
                 />
             </div>

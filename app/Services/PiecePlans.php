@@ -238,6 +238,12 @@ final class PiecePlans
      * ("Guitar (Rock/Pop)") are not the syllabus's ("Guitar"), so nothing
      * is carried across automatically.
      *
+     * The hint is instrument and grade ONLY, never the result. Pupils see
+     * this list when the teacher opens it in a lesson, and one pupil must
+     * not see another's mark, least of all a fail (GDPR). The result is
+     * left out here, not hidden on the page, so it never reaches the
+     * browser at all.
+     *
      * @return list<array{name: string, last_exam: string}>
      */
     public function candidates(User $user): array
@@ -265,7 +271,6 @@ final class PiecePlans
                 'last_exam' => collect([
                     $e->instrument?->name,
                     Grade::label($e->grade),
-                    $e->result,
                 ])->filter()->implode(' · '),
             ])
             ->values()
