@@ -3,6 +3,9 @@
 import { useForm, Link } from '@inertiajs/vue3'
 import { ArrowLeft, Save, X } from 'lucide-vue-next'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
+import SchoolInstrumentsEditor from '@/components/schools/SchoolInstrumentsEditor.vue'
+import SchoolTeachersEditor from '@/components/schools/SchoolTeachersEditor.vue'
+import type { SchoolOption, SchoolTeacher } from '@/types/schools'
 
 interface SchoolData {
     id: number
@@ -14,7 +17,16 @@ interface SchoolData {
     notes: string | null
 }
 
-const props = defineProps<{ school: SchoolData }>()
+// Teachers who work here (the contact_school link) and what the school
+// teaches, both saved with the form by App\Services\SchoolLinks. Not who has
+// had exams at this address: that is Trinity's venue, not the school's staff.
+const props = defineProps<{
+    school: SchoolData
+    teachers: SchoolTeacher[]
+    teacherOptions: SchoolOption[]
+    instrumentIds: number[]
+    instrumentOptions: SchoolOption[]
+}>()
 
 const form = useForm({
     name: props.school.name,
@@ -23,6 +35,8 @@ const form = useForm({
     postcode: props.school.postcode ?? '',
     email: props.school.email ?? '',
     notes: props.school.notes ?? '',
+    teachers: props.teachers.map((t) => ({ ...t })),
+    instrument_ids: [...props.instrumentIds],
 })
 
 function submit() {
@@ -84,6 +98,10 @@ function goBack() { window.history.back() }
                         class="w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3 text-lg text-brand-text focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"></textarea>
                 </div>
             </div>
+
+            <SchoolTeachersEditor v-model="form.teachers" :options="teacherOptions" />
+
+            <SchoolInstrumentsEditor v-model="form.instrument_ids" :options="instrumentOptions" />
 
             <div class="flex items-center justify-end gap-3">
                 <Link :href="`/admin/schools/${school.id}`">

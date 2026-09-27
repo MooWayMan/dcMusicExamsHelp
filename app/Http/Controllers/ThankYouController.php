@@ -11,25 +11,13 @@ use App\Models\TopScorerPublication;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Support\PublicName;
 
 class ThankYouController extends Controller
 {
     /**
      * GDPR-safe display name: "Seth B" unless parent has opted in.
      */
-    private function shortDisplayName(string $fullName): string
-    {
-        $parts = preg_split('/\s+/', trim($fullName));
-
-        if (count($parts) <= 1) {
-            return $fullName;
-        }
-
-        $firstName = $parts[0];
-        $lastInitial = mb_strtoupper(mb_substr(end($parts), 0, 1));
-
-        return "{$firstName} {$lastInitial}";
-    }
 
     private function displayName(ExamEntry $entry): string
     {
@@ -41,16 +29,7 @@ class ThankYouController extends Controller
             return $entry->candidate_name;
         }
 
-        $parts = preg_split('/\s+/', trim($entry->candidate_name));
-
-        if (count($parts) <= 1) {
-            return $entry->candidate_name;
-        }
-
-        $firstName = $parts[0];
-        $lastInitial = mb_strtoupper(mb_substr(end($parts), 0, 1));
-
-        return "{$firstName} {$lastInitial}";
+        return PublicName::short($entry->candidate_name);
     }
 
     /**
@@ -129,7 +108,7 @@ class ThankYouController extends Controller
                         ->map(function (array $w) {
                             $w['name'] = ($w['show_full_name'] ?? false)
                                 ? ($w['full_name'] ?? $w['name'])
-                                : ($w['name'] ?? $this->shortDisplayName($w['full_name'] ?? ''));
+                                : ($w['name'] ?? PublicName::short($w['full_name'] ?? ''));
                             $w['instrument'] = $this->publicInstrumentLabel($w['instrument'] ?? null);
                             // Don't leak full_name to the public payload
                             // unless the candidate opted in.
@@ -260,7 +239,7 @@ class ThankYouController extends Controller
         $prizeDrawWinners = PrizeDraw::where('type', 'student')
             ->get()
             ->mapWithKeys(fn ($d) => ["{$d->quarter}-{$d->year}" => [
-                'name' => $this->shortDisplayName($d->winner_name),
+                'name' => PublicName::short($d->winner_name),
                 'instrument' => $this->publicInstrumentLabel($d->winner_instrument),
                 'grade' => $d->winner_grade,
             ]])

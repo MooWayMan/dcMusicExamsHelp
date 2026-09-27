@@ -1,6 +1,8 @@
 <!-- resources/js/pages/admin/Schools/Show.vue -->
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3'
+import { computed } from 'vue'
+import type { SchoolTeacher } from '@/types/schools'
 import { ArrowLeft, Pencil, Trash2, MapPin, Phone, Mail, User } from 'lucide-vue-next'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyTableConstructor from '@/components/reusables/MyTableConstructor.vue'
@@ -17,14 +19,8 @@ interface School {
     notes: string | null
     created_at: string
     instruments: Array<{ id: number; name: string; family: string }>
-    teachers: Array<{
-        id: number
-        name: string
-        email: string
-        phone: string | null
-        students_count: number
-        orders_count: number
-    }>
+    // Who works here (App\Services\SchoolLinks), current first.
+    teachers: SchoolTeacher[]
     orders: Array<{
         id: number
         trinity_order_number: string
@@ -39,6 +35,9 @@ interface School {
 }
 
 const props = defineProps<{ school: School }>()
+
+// The heading counts current staff; former teachers are listed but not counted.
+const currentTeachers = computed(() => props.school.teachers.filter((t) => !t.former).length)
 
 function deleteSchool() {
     if (confirm(`Are you sure you want to archive ${props.school.name}? It can be restored later.`)) {
@@ -131,16 +130,16 @@ const orderColumns = [
 
             <!-- Teachers at this school -->
             <div class="rounded-xl border border-brand-border bg-brand-surface p-5 lg:col-span-2">
-                <h2 class="text-xl font-semibold text-brand-text">Teachers ({{ school.teachers.length }})</h2>
+                <h2 class="text-xl font-semibold text-brand-text">Teachers ({{ currentTeachers }})</h2>
                 <div class="mt-3">
                     <div v-if="school.teachers.length" class="flex flex-wrap gap-2">
                         <Link v-for="t in school.teachers" :key="t.id"
                             :href="`/admin/contacts/${t.id}`"
                             class="rounded-full border border-brand-border bg-brand-surface-soft px-3 py-1.5 text-base font-medium text-brand-accent transition-colors hover:bg-brand-accent hover:text-brand-text-inverse">
-                            {{ t.name }}
+                            {{ t.name }}<span v-if="t.former" class="text-brand-text-soft"> · former</span>
                         </Link>
                     </div>
-                    <p v-else class="py-4 text-center text-base text-brand-text-soft">No teachers linked to this school</p>
+                    <p v-else class="py-4 text-center text-base text-brand-text-soft">No teachers recorded. Add them on Edit.</p>
                 </div>
             </div>
         </div>

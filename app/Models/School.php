@@ -30,6 +30,7 @@ class School extends Model
     public function contacts(): BelongsToMany
     {
         return $this->belongsToMany(ExamContact::class, 'contact_school')
+            ->withPivot('former')
             ->withTimestamps();
     }
 

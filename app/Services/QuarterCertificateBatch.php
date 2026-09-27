@@ -13,6 +13,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
+use App\Support\PublicName;
 
 /**
  * A whole quarter's certificates, grouped by teacher into ZIPs.
@@ -323,7 +324,7 @@ class QuarterCertificateBatch
 
         return [
             'name' => $entry->candidate_name,
-            'short_name' => self::shortName($entry->candidate_name),
+            'short_name' => PublicName::short($entry->candidate_name),
             'certificate' => $certName,
             'group' => $award['group'],
             'band' => $award['band'],
@@ -336,15 +337,6 @@ class QuarterCertificateBatch
     }
 
     /** GDPR display name: "Anna M". */
-    private static function shortName(string $fullName): string
-    {
-        $parts = preg_split('/\s+/', trim($fullName));
-        if (count($parts) <= 1) {
-            return $fullName;
-        }
-
-        return $parts[0].' '.mb_strtoupper(mb_substr(end($parts), 0, 1));
-    }
 
     private static function certFile(string $candidate, string $certName): string
     {

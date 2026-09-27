@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Support\PublicName;
 
 class ExamContact extends Model
 {
@@ -213,39 +214,23 @@ class ExamContact extends Model
      * Display name to show on the authenticated teacher dashboard
      * (specifically the prize-draw winner widget).
      *
-     * Priority order:
-     *   1. School admin with at least one linked school → school name
-     *      (Daniel Rogers / Pulse Music School). Removes the personal
-     *      name from view entirely and is more flattering for the school.
-     *   2. Contact has opted in via `show_full_name = true` → full name.
-     *   3. Otherwise → "First L" (e.g. "Helen H"). GDPR-safe default.
+     * Opted in via `show_full_name` → full name; otherwise "First L"
+     * (GDPR-safe default).
      *
-     * Mirrors the same logic used by ThankYouController for candidate
-     * names on the public Recognition page.
+     * A person is always shown as a person. This used to show a school
+     * admin as their school, which was wrong once quarter end began pooling
+     * school entries under the SCHOOL's own name: a win stored under a
+     * person's name is their own solo tickets (Emily Bates teaches at Learn
+     * Music Ltd and also enters her own pupils). School winners are named by
+     * App\Support\PublicName::drawWinner(). Changed 27 Sep 2026.
      */
     public function displayName(): string
     {
-        if ($this->isSchoolAdmin()) {
-            $school = $this->schools()->first();
-            if ($school?->name) {
-                return $school->name;
-            }
-        }
-
         if ($this->show_full_name) {
             return $this->name;
         }
 
-        $parts = preg_split('/\s+/', trim((string) $this->name));
-        if (count($parts) < 2) {
-            return (string) $this->name;
-        }
-
-        $firstName = $parts[0];
-        $surname = end($parts);
-        $lastInitial = mb_strtoupper(mb_substr($surname, 0, 1));
-
-        return "{$firstName} {$lastInitial}";
+        return PublicName::short($this->name);
     }
 
     public function isTrinityAdmin(): bool

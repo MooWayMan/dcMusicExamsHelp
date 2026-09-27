@@ -67,7 +67,10 @@ function pdTeacherDraw(string $winnerName, int $winnerEntries = 5, int $totalTic
 // prepends the current undrawn quarter at quarters.0 — so a real Q1 2026
 // draw row lives at quarters.1.
 
-test('school admin winner is rendered as the school name, not the personal name', function () {
+test('a school admin who wins under their own name is shown as a person, not their school', function () {
+    // Quarter end stores a SCHOOL win under the school's name, so a win
+    // under a person's name is their own solo pupils (Emily Bates works at
+    // Learn Music Ltd and also enters her own).
     $contact = ExamContact::create(['name' => 'Daniel Rogers']);
     $contact->addType('school_admin');
     $school = School::create(['name' => 'Pulse Music School']);
@@ -78,7 +81,28 @@ test('school admin winner is rendered as the school name, not the personal name'
     $user = User::factory()->create();
     $this->actingAs($user)->get(route('dashboard'))->assertInertia(fn ($p) => $p
         ->where('teacherPrizeDraw.quarters.1.has_winner', true)
-        ->where('teacherPrizeDraw.quarters.1.winner_display_name', 'Pulse Music School'));
+        ->where('teacherPrizeDraw.quarters.1.winner_display_name', 'Daniel R'));
+});
+
+test('a school that wins under its own name is shown in full, not as First L', function () {
+    // Quarter end pools a school admin's entries under the SCHOOL, so the
+    // stored winner_name is the school's. 27 Sep 2026: Learn Music Ltd
+    // showed as "Learn L" because only people were looked up.
+    School::create(['name' => 'Learn Music Ltd']);
+
+    pdTeacherDraw('Learn Music Ltd');
+
+    $user = User::factory()->create();
+    $this->actingAs($user)->get(route('dashboard'))->assertInertia(fn ($p) => $p
+        ->where('teacherPrizeDraw.quarters.1.winner_display_name', 'Learn Music Ltd'));
+});
+
+test('a winner matching nobody is still shortened, as it may be a person', function () {
+    pdTeacherDraw('Somebody Unknown');
+
+    $user = User::factory()->create();
+    $this->actingAs($user)->get(route('dashboard'))->assertInertia(fn ($p) => $p
+        ->where('teacherPrizeDraw.quarters.1.winner_display_name', 'Somebody U'));
 });
 
 test('teacher with show_full_name=true is rendered with full name', function () {

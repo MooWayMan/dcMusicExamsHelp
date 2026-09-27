@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Support\PublicName;
 
 class QuarterEndController extends Controller
 {
@@ -307,7 +308,7 @@ class QuarterEndController extends Controller
                     ?? $e->order?->applicant_email;
 
                 return [
-                    'name'              => $this->shortName($e->candidate_name),
+                    'name'              => PublicName::short($e->candidate_name),
                     'full_name'         => $e->candidate_name,
                     'score'             => $e->score,
                     'instrument'        => $e->instrument?->name,
@@ -541,24 +542,24 @@ class QuarterEndController extends Controller
                 // their shape for the FIRST winner (back-compat) — Vue
                 // checks `winners` length to decide rendering.
                 'showstopper' => $topDistinctionWinners->isNotEmpty() ? [
-                    'name' => $this->shortName($topDistinctionWinners->first()->candidate_name),
+                    'name' => PublicName::short($topDistinctionWinners->first()->candidate_name),
                     'full_name' => $topDistinctionWinners->first()->candidate_name,
                     'score' => $topDistinctionWinners->first()->score,
                     'instrument' => $topDistinctionWinners->first()->instrument?->name,
                     'winners' => $topDistinctionWinners->map(fn ($e) => [
-                        'name' => $this->shortName($e->candidate_name),
+                        'name' => PublicName::short($e->candidate_name),
                         'full_name' => $e->candidate_name,
                         'instrument' => $e->instrument?->name,
                         'grade' => $e->grade,
                     ])->all(),
                 ] : null,
                 'centre_stage' => $topMeritWinners->isNotEmpty() ? [
-                    'name' => $this->shortName($topMeritWinners->first()->candidate_name),
+                    'name' => PublicName::short($topMeritWinners->first()->candidate_name),
                     'full_name' => $topMeritWinners->first()->candidate_name,
                     'score' => $topMeritWinners->first()->score,
                     'instrument' => $topMeritWinners->first()->instrument?->name,
                     'winners' => $topMeritWinners->map(fn ($e) => [
-                        'name' => $this->shortName($e->candidate_name),
+                        'name' => PublicName::short($e->candidate_name),
                         'full_name' => $e->candidate_name,
                         'instrument' => $e->instrument?->name,
                         'grade' => $e->grade,
@@ -929,7 +930,7 @@ class QuarterEndController extends Controller
                 ? $parentOrSelfLookup->get(strtolower(trim($teacherName)))
                 : null;
             return [
-                'name'              => $this->shortName($e->candidate_name),
+                'name'              => PublicName::short($e->candidate_name),
                 'full_name'         => $e->candidate_name,
                 'show_full_name'    => (bool) $e->show_full_name, // GDPR — public display
                 'score'             => $e->score,
@@ -1060,20 +1061,6 @@ class QuarterEndController extends Controller
         return $e->teacher_name;
     }
 
-    private function shortName(string $fullName): string
-    {
-        $parts = preg_split('/\s+/', trim($fullName));
-
-        if (count($parts) < 2) {
-            return $fullName;
-        }
-
-        $firstName = $parts[0];
-        $surname = end($parts);
-        $lastInitial = mb_strtoupper(mb_substr($surname, 0, 1));
-
-        return "{$firstName} {$lastInitial}";
-    }
 
     /**
      * Look up the contact_type(s) for a given non-teacher contact name —

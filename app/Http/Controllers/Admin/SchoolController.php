@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\School;
+use App\Services\SchoolLinks;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -15,24 +16,16 @@ class SchoolController extends Controller
 {
     public function index(Request $request): Response
     {
-        // teachers_count = distinct teachers who have actually submitted exam
-        // entries via this school's name. Counts canonical teacher_contact_id
-        // when present, falling back to a normalised teacher_name string for
-        // entries without an FK link. This is more useful than counting the
-        // sparse contact_school pivot (which only has manually-linked rows).
+        // teachers_count = current staff: the contact_school link minus
+        // anyone marked as having left. Not exam entries under the school's
+        // name, which is Trinity's exam VENUE (see App\Services\SchoolLinks).
         $query = School::query()
             ->select('schools.*')
             ->with(['contacts:id,name,phone'])
-            ->withCount(['orders'])
-            ->selectSub(
-                \DB::table('exam_entries')
-                    ->whereColumn('exam_entries.school_name', 'schools.name')
-                    ->whereNotNull('exam_entries.teacher_name')
-                    ->selectRaw(
-                        'COUNT(DISTINCT COALESCE(exam_entries.teacher_contact_id::text, LOWER(TRIM(exam_entries.teacher_name))))'
-                    ),
-                'teachers_count'
-            );
+            ->withCount([
+                'orders',
+                'contacts as teachers_count' => fn ($q) => $q->where('contact_school.former', false),
+            ]);
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -112,7 +105,7 @@ class SchoolController extends Controller
             ->with('success', "{$validated['name']} has been added.");
     }
 
-    public function show(School $school): Response
+    public function show(School $school, SchoolLinks $links): Response
     {
         $school->load([
             // Counts deliberately NOT loaded here. This page renders its
@@ -126,28 +119,6 @@ class SchoolController extends Controller
         ]);
 
         $primary = $this->pickPrimarySchoolContact($school);
-
-        // Derive teachers from exam_entries — same source the index page uses
-        // for `teachers_count`. The contact_school pivot is sparse on prod;
-        // this gives a complete list of who's actually submitted via this
-        // school, ordered by entry volume so the most active teachers surface
-        // first.
-        $derivedTeachers = \DB::table('exam_entries')
-            ->join('exam_contacts', 'exam_contacts.id', '=', 'exam_entries.teacher_contact_id')
-            ->where('exam_entries.school_name', $school->name)
-            ->whereNotNull('exam_entries.teacher_contact_id')
-            ->groupBy('exam_contacts.id', 'exam_contacts.name', 'exam_contacts.email', 'exam_contacts.phone')
-            ->select(
-                'exam_contacts.id',
-                'exam_contacts.name',
-                'exam_contacts.email',
-                'exam_contacts.phone',
-                \DB::raw('COUNT(DISTINCT exam_entries.student_id) as students_count'),
-                \DB::raw('COUNT(DISTINCT exam_entries.order_id) as orders_count'),
-                \DB::raw('COUNT(*) as entries_count'),
-            )
-            ->orderByRaw('COUNT(*) DESC')
-            ->get();
 
         $schoolData = [
             'id' => $school->id,
@@ -166,15 +137,7 @@ class SchoolController extends Controller
                 'name' => $i->name,
                 'family' => $i->family,
             ]),
-            'teachers' => $derivedTeachers->map(fn ($t) => [
-                'id' => $t->id,
-                'name' => $t->name,
-                'email' => $t->email,
-                'phone' => $t->phone,
-                'students_count' => (int) $t->students_count,
-                'orders_count' => (int) $t->orders_count,
-                'entries_count' => (int) $t->entries_count,
-            ]),
+            'teachers' => $links->teachers($school),
             'orders' => $school->orders->map(fn ($o) => [
                 'id' => $o->id,
                 'trinity_order_number' => $o->trinity_order_number,
@@ -193,9 +156,13 @@ class SchoolController extends Controller
         ]);
     }
 
-    public function edit(School $school): Response
+    public function edit(School $school, SchoolLinks $links): Response
     {
         return Inertia::render('admin/Schools/Edit', [
+            'teachers' => $links->teachers($school),
+            'teacherOptions' => $links->teacherOptions(),
+            'instrumentIds' => $links->instrumentIds($school),
+            'instrumentOptions' => $links->instrumentOptions(),
             'school' => [
                 'id' => $school->id,
                 'name' => $school->name,
@@ -208,7 +175,7 @@ class SchoolController extends Controller
         ]);
     }
 
-    public function update(Request $request, School $school): RedirectResponse
+    public function update(Request $request, School $school, SchoolLinks $links): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -217,9 +184,23 @@ class SchoolController extends Controller
             'postcode' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
             'notes' => 'nullable|string',
+            'teachers' => 'sometimes|array',
+            'teachers.*.id' => 'required|integer|exists:exam_contacts,id',
+            'teachers.*.former' => 'boolean',
+            'instrument_ids' => 'sometimes|array',
+            'instrument_ids.*' => 'integer|exists:instruments,id',
         ]);
 
-        $school->update($validated);
+        $school->update(collect($validated)->except(['teachers', 'instrument_ids'])->all());
+
+        // Only when the form sends them: a save without these keys leaves
+        // the school's teachers and instruments exactly as they were.
+        if ($request->has('teachers')) {
+            $links->saveTeachers($school, $validated['teachers'] ?? []);
+        }
+        if ($request->has('instrument_ids')) {
+            $links->saveInstruments($school, $validated['instrument_ids'] ?? []);
+        }
 
         return redirect()->route('admin.schools.show', $school)
             ->with('success', "{$school->name} has been updated.");

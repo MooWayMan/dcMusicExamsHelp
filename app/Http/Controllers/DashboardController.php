@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Support\PublicName;
 
 /**
  * Post-login dashboard for non-admin users (teachers, parents, self, school
@@ -327,9 +328,8 @@ class DashboardController extends Controller
      *     non-CANCELLED entries in the current quarter — climbs week by
      *     week as they enter more candidates, before any draw runs.
      *
-     * Display rules for winner names follow ExamContact::displayName():
-     *   school admin → school name; opted-in teacher → full name;
-     *   otherwise → "First L".
+     * Winner names come from App\Support\PublicName::drawWinner(): a
+     *   school in full; a person full if opted in, otherwise "First L".
      */
     private function buildTeacherPrizeDrawPayload(?ExamContact $contact): array
     {
@@ -353,21 +353,13 @@ class DashboardController extends Controller
             $key = "{$draw->year}-{$draw->quarter}";
             $seen[$key] = true;
 
-            $winnerContact = $draw->winner_name
-                ? ExamContact::query()
-                    ->whereRaw('LOWER(TRIM(name)) = ?', [strtolower(trim($draw->winner_name))])
-                    ->first()
-                : null;
-
             $rows[] = [
                 'quarter' => (int) $draw->quarter,
                 'year' => (int) $draw->year,
                 'label' => "Q{$draw->quarter} {$draw->year}",
                 'drawn_at' => $draw->created_at?->format('d M Y'),
                 'has_winner' => true,
-                'winner_display_name' => $winnerContact
-                    ? $winnerContact->displayName()
-                    : $this->fallbackShortName((string) $draw->winner_name),
+                'winner_display_name' => PublicName::drawWinner($draw->winner_name),
                 'winner_entries' => (int) ($draw->winner_entries ?? 0),
                 'total_tickets' => (int) ($draw->total_tickets ?? 0),
             ];
@@ -449,22 +441,6 @@ class DashboardController extends Controller
             ->count();
     }
 
-    /**
-     * "First L" fallback for the rare case the winner_name on a PrizeDraw
-     * row doesn't match any current ExamContact (legacy or hand-typed
-     * draws). Mirrors ExamContact::displayName()'s short-name branch.
-     */
-    private function fallbackShortName(string $name): string
-    {
-        $parts = preg_split('/\s+/', trim($name));
-        if (count($parts) < 2) {
-            return $name;
-        }
-        $firstName = $parts[0];
-        $surname = end($parts);
-        $lastInitial = mb_strtoupper(mb_substr($surname, 0, 1));
-        return "{$firstName} {$lastInitial}";
-    }
 
     /**
      * Handle the "I might have used a different email on Trinity" form.
