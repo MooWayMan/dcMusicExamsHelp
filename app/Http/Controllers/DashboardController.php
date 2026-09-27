@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
 use App\Support\PublicName;
+use App\Services\EntryCertificates;
 
 /**
  * Post-login dashboard for non-admin users (teachers, parents, self, school
@@ -302,6 +303,97 @@ class DashboardController extends Controller
         $filename = 'musicexams-results-' . $from->format('Y-m-d') . '-to-' . $to->format('Y-m-d') . '.pdf';
 
         return $pdf->download($filename);
+    }
+
+    /**
+     * One candidate's certificate, for the signed-in teacher. Like the
+     * exports, whose candidates these are comes from the signed-in user
+     * alone (App\Services\TeacherEntries); an entry that is not theirs is a
+     * 404, the same answer as one that does not exist.
+     */
+    public function certificate(Request $request, ExamEntry $entry, EntryCertificates $certificates)
+    {
+        [, $mine] = $this->teacherEntries->forUser(
+            $request->user(),
+            Carbon::parse(TeacherEntries::HISTORY_START),
+            Carbon::now()->addYear(),
+        );
+
+        return $this->certificateResponse($entry, $mine, $certificates);
+    }
+
+    /** Admin-only: the same, for the teacher being previewed. */
+    public function certificateForContact(ExamContact $contact, ExamEntry $entry, EntryCertificates $certificates)
+    {
+        $theirs = $this->teacherEntries->forContact(
+            $contact,
+            Carbon::parse(TeacherEntries::HISTORY_START),
+            Carbon::now()->addYear(),
+        )->get();
+
+        return $this->certificateResponse($entry, $theirs, $certificates);
+    }
+
+    /** Every certificate in the dashboard's chosen range, as one ZIP. */
+    public function certificatesZip(Request $request, EntryCertificates $certificates)
+    {
+        [, $entries, $from, $to] = $this->exportData($request);
+
+        return $this->certificatesZipResponse($entries, $from, $to, $certificates);
+    }
+
+    /** Admin-only: the same, for the teacher being previewed. */
+    public function certificatesZipForContact(Request $request, ExamContact $contact, EntryCertificates $certificates)
+    {
+        [$from, $to] = $this->dateRange($request);
+
+        return $this->certificatesZipResponse(
+            $this->teacherEntries->forContact($contact, $from, $to)->get(),
+            $from,
+            $to,
+            $certificates,
+        );
+    }
+
+    /** @param  \Illuminate\Support\Collection<int,ExamEntry>  $allowed */
+    private function certificateResponse(ExamEntry $entry, $allowed, EntryCertificates $certificates)
+    {
+        abort_unless($allowed->contains('id', $entry->id), 404);
+
+        $entry->load(['instrument:id,name', 'order:id,requested_start_date']);
+        $pdf = $certificates->pdf($entry);
+        abort_if($pdf === null, 404);
+
+        return response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.EntryCertificates::fileName((string) $entry->candidate_name, (string) $entry->certificate_name).'"',
+        ]);
+    }
+
+    /** @param  \Illuminate\Support\Collection<int,ExamEntry>  $scoped */
+    private function certificatesZipResponse($scoped, Carbon $from, Carbon $to, EntryCertificates $certificates)
+    {
+        // The dashboard query selects only its table's columns, so load the
+        // scoped entries in full for drawing (the order date sets the quarter).
+        $entries = ExamEntry::with(['instrument:id,name', 'order:id,requested_start_date'])
+            ->whereIn('id', $scoped->pluck('id'))
+            ->whereNotNull('score')
+            ->orderBy('candidate_name')
+            ->get();
+
+        $zip = $entries->isEmpty() ? null : $certificates->zip($entries);
+
+        if ($zip === null) {
+            return back()->with('error', 'There are no certificates to download for these dates yet.');
+        }
+
+        $filename = 'musicexams-certificates-'.$from->format('Y-m-d').'-to-'.$to->format('Y-m-d').'.zip';
+
+        return response($zip, 200, [
+            'Content-Type' => 'application/zip',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+            'Content-Length' => (string) strlen($zip),
+        ]);
     }
 
     /**

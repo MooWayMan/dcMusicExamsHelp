@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Services\QuarterCertificateBatch;
 use Illuminate\Console\Command;
+use App\Support\QuarterLabel;
 
 /**
  * The same quarter batch as the "Generate All Certificates" button, from the
@@ -33,7 +34,7 @@ class GenerateQuarterCertificates extends Command
 
         $plan = $batch->start($quarter, $year);
         if ($plan === null) {
-            $this->warn('No entries with results found for '.QuarterCertificateBatch::label($quarter, $year).'.');
+            $this->warn('No entries with results found for '.QuarterLabel::for($quarter, $year).'.');
 
             return self::SUCCESS;
         }

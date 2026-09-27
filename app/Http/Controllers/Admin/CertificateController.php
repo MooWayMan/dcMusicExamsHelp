@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ExamContact;
 use App\Models\ExamEntry;
 use App\Services\CertificateRenderer;
+use App\Services\EntryCertificates;
 use App\Support\EntryCredit;
 use App\Services\QuarterCertificateBatch;
 use Illuminate\Http\JsonResponse;
@@ -15,7 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
-use ZipArchive;
+use App\Support\QuarterLabel;
 
 class CertificateController extends Controller
 {
@@ -277,37 +278,6 @@ class CertificateController extends Controller
         ]);
     }
 
-    /**
-     * Render one student's cert PDF and return the bytes.
-     *
-     * Shared helper used by batchByEntries — keeps the cert-rendering
-     * recipe (S3 template fetch → overlay text → encode PNG → wrap in
-     * DomPDF) in one place instead of duplicating the inline blocks from
-     * generateStudent / batchGenerate. Returns null on any failure
-     * (template missing, S3 unreachable, encode error) so the caller
-     * can skip the entry rather than 500-ing the whole batch.
-     */
-    private function renderStudentCertPdfBytes(CertificateRenderer $renderer, ExamEntry $entry, string $quarterLabel): ?string
-    {
-        $file = CertificateRenderer::STUDENT_TEMPLATES[$entry->certificate_name] ?? null;
-        if (! $file) {
-            return null;
-        }
-
-        try {
-            return $renderer->pdf($renderer->student(
-                $file,
-                $entry->candidate_name,
-                $entry->instrument?->name ?? '',
-                (string) ($entry->grade ?? ''),
-                $quarterLabel,
-            ));
-        } catch (\Throwable $e) {
-            \Log::error("Cert render failed for entry {$entry->id}: {$e->getMessage()}");
-
-            return null;
-        }
-    }
 
     /**
      * Bundle certs for an arbitrary list of entry IDs into a single ZIP
@@ -322,7 +292,7 @@ class CertificateController extends Controller
      * extra round-trips and a JS dep we don't carry. Better to do it
      * here, return one binary response.
      */
-    public function batchByEntries(Request $request)
+    public function batchByEntries(Request $request, EntryCertificates $certificates)
     {
         set_time_limit(120);
 
@@ -340,65 +310,17 @@ class CertificateController extends Controller
             return response()->json(['error' => 'No matching scored entries.'], 422);
         }
 
-        // Use the first entry's exam/order date as the quarter label.
-        // The Vue groups by teacher's unsent batch so all entries are
-        // typically the same quarter; if they ever diverged, the label
-        // would still pick a reasonable Q for the cert footer text.
-        $firstEntry = $entries->first();
-        $effectiveDate = $firstEntry->exam_date ?? $firstEntry->order?->requested_start_date;
-        $quarterLabel = $this->getQuarterLabel($effectiveDate);
+        // Each certificate carries its own entry's quarter.
+        $zip = $certificates->zip($entries);
 
-        // Temp working dir for PDFs + the ZIP. Cleaned up before return
-        // so we don't accumulate junk under /tmp on the box.
-        $tempDir = sys_get_temp_dir() . '/cert-batch-' . uniqid('', true);
-        if (! mkdir($tempDir, 0700, true) && ! is_dir($tempDir)) {
-            return response()->json(['error' => 'Could not create temp dir.'], 500);
-        }
-
-        $renderer = new CertificateRenderer();
-        $writtenFiles = [];
-        foreach ($entries as $entry) {
-            $pdfBytes = $this->renderStudentCertPdfBytes($renderer, $entry, $quarterLabel);
-            if (! $pdfBytes) {
-                continue;
-            }
-            $safeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $entry->candidate_name);
-            $shortCert = str_replace([' Certificate', ' '], ['', '_'], $entry->certificate_name ?? 'Cert');
-            $pdfPath = "{$tempDir}/{$safeName}_{$shortCert}.pdf";
-            file_put_contents($pdfPath, $pdfBytes);
-            $writtenFiles[] = $pdfPath;
-        }
-
-        if (empty($writtenFiles)) {
-            @rmdir($tempDir);
+        if ($zip === null) {
             return response()->json(['error' => 'No certs could be generated.'], 500);
         }
 
-        $zipPath = "{$tempDir}/certs.zip";
-        $zip = new ZipArchive();
-        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            foreach ($writtenFiles as $f) @unlink($f);
-            @rmdir($tempDir);
-            return response()->json(['error' => 'Could not create ZIP.'], 500);
-        }
-        foreach ($writtenFiles as $f) {
-            $zip->addFile($f, basename($f));
-        }
-        $zip->close();
-
-        $zipBytes = file_get_contents($zipPath);
-
-        // Cleanup temp files before returning.
-        foreach ($writtenFiles as $f) @unlink($f);
-        @unlink($zipPath);
-        @rmdir($tempDir);
-
-        $downloadName = 'certs_' . now()->format('Y-m-d_His') . '.zip';
-
-        return response($zipBytes, 200, [
+        return response($zip, 200, [
             'Content-Type'        => 'application/zip',
-            'Content-Disposition' => 'attachment; filename="' . $downloadName . '"',
-            'Content-Length'      => (string) strlen($zipBytes),
+            'Content-Disposition' => 'attachment; filename="certs_'.now()->format('Y-m-d_His').'.zip"',
+            'Content-Length'      => (string) strlen($zip),
         ]);
     }
 
@@ -429,7 +351,7 @@ class CertificateController extends Controller
 
         // Auto-detect quarter from exam date, falling back to order date
         $effectiveDate = $entry->exam_date ?? $entry->order?->requested_start_date;
-        $quarter = $validated['quarter'] ?? $this->getQuarterLabel($effectiveDate);
+        $quarter = $validated['quarter'] ?? QuarterLabel::forDate($effectiveDate);
 
         try {
             $renderer = new CertificateRenderer();
@@ -465,7 +387,7 @@ class CertificateController extends Controller
         // The page sends the teacher's contact id. Certificates show the
         // school when one is linked, otherwise the teacher's own name.
         $name = $validated['custom_name'] ?? $contact->schools->first()?->name ?? $contact->name;
-        $quarter = $validated['quarter'] ?? $this->getQuarterLabel(now());
+        $quarter = $validated['quarter'] ?? QuarterLabel::forDate(now());
 
         $renderer = new CertificateRenderer();
         $image = $renderer->teacher(CertificateRenderer::TEACHER_TEMPLATES[$templateKey], $name, $quarter);
@@ -504,7 +426,7 @@ class CertificateController extends Controller
 
         $plan = $batch->start($quarter, $year);
         if ($plan === null) {
-            return response()->json(['error' => 'No entries with results found for '.QuarterCertificateBatch::label($quarter, $year).'.'], 422);
+            return response()->json(['error' => 'No entries with results found for '.QuarterLabel::for($quarter, $year).'.'], 422);
         }
 
         return response()->json($plan);
@@ -559,7 +481,7 @@ class CertificateController extends Controller
     public function generateTopScorers(Request $request, QuarterCertificateBatch $batch): JsonResponse
     {
         ['quarter' => $quarter, 'year' => $year] = $this->quarterInput($request);
-        $label = QuarterCertificateBatch::label($quarter, $year);
+        $label = QuarterLabel::for($quarter, $year);
 
         if ($batch->entries($quarter, $year)->isEmpty()) {
             return response()->json([
@@ -600,17 +522,4 @@ class CertificateController extends Controller
      * version, and a narrower hint here used to crash the cert generator
      * with a TypeError on local seed data.
      */
-    private function getQuarterLabel(?\Carbon\CarbonInterface $date): string
-    {
-        $date = $date ?? now();
-        $quarter = (int) ceil($date->month / 3);
-        $suffix = match ($quarter) {
-            1 => '1st',
-            2 => '2nd',
-            3 => '3rd',
-            4 => '4th',
-        };
-
-        return "{$suffix} Quarter {$date->year}";
-    }
 }

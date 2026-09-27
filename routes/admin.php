@@ -57,6 +57,10 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
             ->name('contacts.export.csv');
         Route::get('contacts/{contact}/export/pdf', [\App\Http\Controllers\DashboardController::class, 'exportPdfForContact'])
             ->name('contacts.export.pdf');
+        Route::get('contacts/{contact}/certificates/{entry}', [\App\Http\Controllers\DashboardController::class, 'certificateForContact'])
+            ->name('contacts.certificate');
+        Route::get('contacts/{contact}/certificates', [\App\Http\Controllers\DashboardController::class, 'certificatesZipForContact'])
+            ->name('contacts.certificates');
 
         Route::get('contacts/{contact}', [ContactController::class, 'show'])->name('contacts.show');
 

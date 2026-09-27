@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Support\QuarterLabel;
 
 /**
  * "Quarter Comparison" — side-by-side quarterly performance so Paul can see
@@ -185,7 +186,7 @@ class QuarterComparisonController extends Controller
             arsort($b['instruments']);
 
             return [
-                'label' => $this->quarterLabel($b['quarter'], $b['year']),
+                'label' => QuarterLabel::for($b['quarter'], $b['year']),
                 'short_label' => "Q{$b['quarter']} {$b['year']}",
                 'year' => $b['year'],
                 'quarter' => $b['quarter'],
@@ -252,13 +253,4 @@ class QuarterComparisonController extends Controller
         ];
     }
 
-    private function quarterLabel(int $quarter, int $year): string
-    {
-        $suffix = match ($quarter) {
-            1 => '1st', 2 => '2nd', 3 => '3rd', 4 => '4th',
-            default => '?',
-        };
-
-        return "{$suffix} Quarter {$year}";
-    }
 }

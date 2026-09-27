@@ -414,7 +414,7 @@ ${winnerName} will also appear on the Recognition page at https://musicexams.hel
 
 Congratulations to them — and well done to you for entering them through centre 120!
 
-Quick tip — if you'd like to see all your students' results, certificates and awards in one place (and get notified the moment new scores come in), you can create a free teacher account at https://musicexams.help/register.
+Quick tip — if you'd like to see all your students' results in one place and download their certificates, you can create a free teacher account at https://musicexams.help/register.
 
 Best wishes,
 Paul

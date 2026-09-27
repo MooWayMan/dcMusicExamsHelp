@@ -20,6 +20,7 @@ use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use App\Support\PublicName;
+use App\Support\QuarterLabel;
 
 class QuarterEndController extends Controller
 {
@@ -34,10 +35,7 @@ class QuarterEndController extends Controller
         $quarter = (int) ($request->query('quarter', $defaultQuarter));
         $year = (int) ($request->query('year', $defaultYear));
 
-        $suffix = match ($quarter) {
-            1 => '1st', 2 => '2nd', 3 => '3rd', 4 => '4th',
-        };
-        $quarterLabel = "{$suffix} Quarter {$year}";
+        $quarterLabel = QuarterLabel::for($quarter, $year);
 
         // Date range
         $startMonth = (($quarter - 1) * 3) + 1;

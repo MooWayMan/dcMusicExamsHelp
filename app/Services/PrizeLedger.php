@@ -10,6 +10,7 @@ use App\Models\TopScorerPublication;
 use App\Support\TopScorers;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
+use App\Support\QuarterLabel;
 
 /**
  * Every gift-token prize from every quarter and where it has got to, for the
@@ -131,7 +132,7 @@ class PrizeLedger
             'id' => self::key($prize['quarter'], $prize['year'], $prize['award_key'], $prize['winner']),
             'quarter' => $prize['quarter'],
             'year' => $prize['year'],
-            'quarter_label' => QuarterCertificateBatch::label($prize['quarter'], $prize['year']),
+            'quarter_label' => QuarterLabel::for($prize['quarter'], $prize['year']),
             'award_key' => $prize['award_key'],
             'prize' => $prize['prize'],
             'winner' => $prize['winner'],

@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
 use App\Support\PublicName;
+use App\Support\QuarterLabel;
 
 /**
  * A whole quarter's certificates, grouped by teacher into ZIPs.
@@ -41,24 +42,13 @@ class QuarterCertificateBatch
     /** Certificates drawn per step. Each one takes a second or two. */
     public const PER_STEP = 8;
 
-    public function __construct(private CertificateRenderer $renderer) {}
-
-    public static function label(int $quarter, int $year): string
-    {
-        $suffix = ['1st', '2nd', '3rd', '4th'][$quarter - 1];
-
-        return "{$suffix} Quarter {$year}";
-    }
+    public function __construct(private CertificateRenderer $renderer, private EntryCertificates $certificates) {}
 
     public static function dir(int $quarter, int $year): string
     {
         return "certificates/{$year}-Q{$quarter}";
     }
 
-    public static function safe(string $name): string
-    {
-        return preg_replace('/[^a-zA-Z0-9_-]/', '_', $name);
-    }
 
     /**
      * Every scored, non-cancelled entry sat in the quarter. A Below Pass
@@ -95,7 +85,7 @@ class QuarterCertificateBatch
             }
         }
 
-        return ['quarter_label' => self::label($quarter, $year), 'steps' => $steps];
+        return ['quarter_label' => QuarterLabel::for($quarter, $year), 'steps' => $steps];
     }
 
     /**
@@ -110,25 +100,18 @@ class QuarterCertificateBatch
         $entries = $this->entries($quarter, $year);
         $credit = $this->creditName($entries);
         $teacherEntries = $entries->groupBy($credit)->get($teacher, collect())->sortBy('id')->values();
-        $label = self::label($quarter, $year);
-        $folder = self::dir($quarter, $year).'/'.self::safe($teacher);
+        $label = QuarterLabel::for($quarter, $year);
+        $folder = self::dir($quarter, $year).'/'.EntryCertificates::safe($teacher);
         Storage::disk('local')->makeDirectory($folder);
 
         $written = 0;
         foreach ($teacherEntries->slice(($part - 1) * self::PER_STEP, self::PER_STEP) as $entry) {
-            $file = CertificateRenderer::STUDENT_TEMPLATES[$entry->certificate_name] ?? null;
-            if (! $file) {
+            $pdf = $this->certificates->pdf($entry, $label);
+            if ($pdf === null) {
                 continue;
             }
-            try {
-                $pdf = $this->renderer->pdf($this->renderer->student(
-                    $file, $entry->candidate_name, $entry->instrument?->name ?? '', (string) ($entry->grade ?? ''), $label,
-                ));
-                Storage::disk('local')->put("{$folder}/".self::certFile($entry->candidate_name, $entry->certificate_name), $pdf);
-                $written++;
-            } catch (\Throwable $e) {
-                Log::error("Batch cert failed for {$entry->candidate_name}: {$e->getMessage()}");
-            }
+            Storage::disk('local')->put("{$folder}/".EntryCertificates::fileName($entry->candidate_name, $entry->certificate_name), $pdf);
+            $written++;
         }
 
         if ($part === 1) {
@@ -158,13 +141,13 @@ class QuarterCertificateBatch
         $teachers = [];
         $links = [];
         foreach ($this->byTeacher($entries)->keys() as $teacher) {
-            $folder = "{$dir}/".self::safe($teacher);
+            $folder = "{$dir}/".EntryCertificates::safe($teacher);
             $files = $disk->exists($folder) ? $disk->files($folder) : [];
             $teachers[$teacher] = collect($files)->filter(fn ($f) => str_ends_with($f, '.pdf'))->count();
             if ($files === []) {
                 continue;
             }
-            $zipName = "{$dir}/zips/".self::safe($teacher)."_Q{$quarter}_{$year}.zip";
+            $zipName = "{$dir}/zips/".EntryCertificates::safe($teacher)."_Q{$quarter}_{$year}.zip";
             if ($this->zip($zipName, $files)) {
                 $links[$teacher] = $zipName;
             }
@@ -181,7 +164,7 @@ class QuarterCertificateBatch
 
         return [
             'total' => array_sum($teachers),
-            'quarter_label' => self::label($quarter, $year),
+            'quarter_label' => QuarterLabel::for($quarter, $year),
             'teachers' => $teachers,
             'download_links' => $links,
             'master_zip' => $masterMade ? $master : null,
@@ -251,33 +234,61 @@ class QuarterCertificateBatch
         return $this->inQuarter(ExamEntry::where('teacher_name', $teacher), $quarter, $year)->count();
     }
 
+    /**
+     * The appreciation certificate a teacher earns for a quarter, or null
+     * below 10. $scoredCount is how many of the quarter's scored entries are
+     * credited to them, the fallback when no entry names them directly. The
+     * batch and the dashboard's Rewards card both ask here, so the badge a
+     * teacher sees is the certificate they are given.
+     */
+    public function teacherTierFor(int $quarter, int $year, string $teacher, int $scoredCount): ?string
+    {
+        return CertificateRenderer::teacherTier($this->teacherCandidateCount($quarter, $year, $teacher) ?: $scoredCount);
+    }
+
+    /**
+     * A teacher's appreciation certificate for a quarter, or null if drawing
+     * fails. The one place it is drawn: the batch and the teacher's own
+     * dashboard download both ask here. A teacher linked to a school gets the
+     * school's name on it (existing rule).
+     */
+    public function teacherCertificatePdf(string $teacher, string $tier, int $quarter, int $year): ?string
+    {
+        try {
+            $school = ExamContact::withType('teacher')
+                ->with('schools')
+                ->whereRaw('LOWER(name) = ?', [mb_strtolower($teacher)])
+                ->first()?->schools->first()?->name;
+
+            return $this->renderer->pdf($this->renderer->teacher(
+                CertificateRenderer::TEACHER_TEMPLATES[$tier], $school ?? $teacher, QuarterLabel::for($quarter, $year),
+            ));
+        } catch (\Throwable $e) {
+            Log::error("Badge cert failed for {$teacher}: {$e->getMessage()}");
+
+            return null;
+        }
+    }
+
     private function teacherAward(int $quarter, int $year, string $teacher, int $scoredCount, string $folder): int
     {
         if ($teacher === 'Unassigned') {
             return 0;
         }
 
-        $tier = CertificateRenderer::teacherTier($this->teacherCandidateCount($quarter, $year, $teacher) ?: $scoredCount);
+        $tier = $this->teacherTierFor($quarter, $year, $teacher, $scoredCount);
         if (! $tier) {
             return 0;
         }
 
-        $safe = self::safe($teacher);
+        $safe = EntryCertificates::safe($teacher);
         $written = 0;
 
-        try {
-            $school = ExamContact::withType('teacher')
-                ->with('schools')
-                ->whereRaw('LOWER(name) = ?', [mb_strtolower($teacher)])
-                ->first()?->schools->first()?->name;
-            $pdf = $this->renderer->pdf($this->renderer->teacher(
-                CertificateRenderer::TEACHER_TEMPLATES[$tier], $school ?? $teacher, self::label($quarter, $year),
-            ));
+        $pdf = $this->teacherCertificatePdf($teacher, $tier, $quarter, $year);
+        if ($pdf !== null) {
             $short = str_replace([' Certificate', ' '], ['', '_'], $tier);
             Storage::disk('local')->put("{$folder}/{$safe}_{$short}.pdf", $pdf);
             $written++;
-        } catch (\Throwable $e) {
-            Log::error("Badge cert failed for {$teacher}: {$e->getMessage()}");
         }
 
         $badge = $this->renderer->teacherBadgePng($tier);
@@ -298,7 +309,7 @@ class QuarterCertificateBatch
 
         try {
             $pdf = $this->renderer->pdf($this->renderer->student(
-                $file, $entry->candidate_name, $entry->instrument?->name ?? '', (string) ($entry->grade ?? ''), self::label($quarter, $year),
+                $file, $entry->candidate_name, $entry->instrument?->name ?? '', (string) ($entry->grade ?? ''), QuarterLabel::for($quarter, $year),
             ));
         } catch (\Throwable $e) {
             Log::error("Top-scorer cert failed for {$entry->candidate_name}: {$e->getMessage()}");
@@ -306,7 +317,7 @@ class QuarterCertificateBatch
             return false;
         }
 
-        $name = self::certFile($entry->candidate_name, $certName);
+        $name = EntryCertificates::fileName($entry->candidate_name, $certName);
         Storage::disk('local')->makeDirectory(self::dir($quarter, $year).'/top-scorers');
         Storage::disk('local')->put(self::dir($quarter, $year)."/top-scorers/{$name}", $pdf);
         if ($teacherFolder) {
@@ -320,7 +331,7 @@ class QuarterCertificateBatch
     {
         $entry = $award['entry'];
         $certName = $award['certificate'].' Certificate';
-        $path = self::dir($quarter, $year).'/top-scorers/'.self::certFile($entry->candidate_name, $certName);
+        $path = self::dir($quarter, $year).'/top-scorers/'.EntryCertificates::fileName($entry->candidate_name, $certName);
 
         return [
             'name' => $entry->candidate_name,
@@ -338,10 +349,6 @@ class QuarterCertificateBatch
 
     /** GDPR display name: "Anna M". */
 
-    private static function certFile(string $candidate, string $certName): string
-    {
-        return self::safe($candidate).'_'.str_replace([' Certificate', ' '], ['', '_'], $certName).'.pdf';
-    }
 
     /**
      * @param  Collection<int,ExamEntry>  $entries

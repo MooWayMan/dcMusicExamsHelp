@@ -9,6 +9,7 @@ import {
 import PageHeader from '@/components/reusables/PageHeader.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
+import { quarterLabel as formatQuarter } from '@/lib/quarterLabel'
 import { useQuarterCertificateBatch } from '@/composables/useQuarterCertificateBatch'
 import { recipientGreetingName } from '@/lib/quarterEndEmails'
 import { formatGrade } from '@/lib/grades'
@@ -513,9 +514,8 @@ function getQuarterFromDate(dateStr: string): string {
   const monthIdx = months.findIndex(m => parts.some(p => p.startsWith(m)))
   if (monthIdx === -1) return ''
   const q = Math.ceil((monthIdx + 1) / 3)
-  const suffix = ['1st','2nd','3rd','4th'][q - 1]
   const year = parts.find(p => /^\d{4}$/.test(p)) || new Date().getFullYear()
-  return `${suffix} Quarter ${year}`
+  return formatQuarter(q, year)
 }
 
 // Filtered + sorted student list. Search filters first, then sort runs
@@ -604,8 +604,7 @@ function selectTeacherRow(teacher: TeacherEntry) {
   teacherTemplate.value = tierMap[teacher.tier ?? ''] ?? ''
   teacherCustomName.value = ''
   // Default to the quarter selected at the top of the page, not "now"
-  const suffix = ['1st','2nd','3rd','4th'][batchQuarter.value - 1]
-  teacherQuarter.value = `${suffix} Quarter ${batchYear.value}`
+  teacherQuarter.value = formatQuarter(batchQuarter.value, batchYear.value)
 }
 
 // Preview state

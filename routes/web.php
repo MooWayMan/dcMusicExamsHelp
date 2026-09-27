@@ -157,6 +157,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('throttle:20,1')
         ->name('dashboard.export.pdf');
 
+    // A teacher's own candidates' certificates: one, or every one in the
+    // chosen dates as a ZIP. Like the exports, no contact in the URL — whose
+    // candidates these are comes from the signed-in user.
+    Route::get('dashboard/certificates/{entry}', [DashboardController::class, 'certificate'])
+        ->middleware('throttle:60,1')
+        ->name('dashboard.certificate');
+    Route::get('dashboard/certificates', [DashboardController::class, 'certificatesZip'])
+        ->middleware('throttle:10,1')
+        ->name('dashboard.certificates');
+
     Route::post('dashboard/link-request', [DashboardController::class, 'linkRequest'])
         ->name('dashboard.link-request');
     Route::post('dashboard/entries/{entry}/correction-request', [DashboardController::class, 'correctionRequest'])

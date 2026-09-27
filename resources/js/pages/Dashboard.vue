@@ -88,6 +88,7 @@ const canVote = computed(() => ['teacher', 'admin'].includes(user.value?.role))
 // hides the very reports we're trying to preview.
 const showAdminQuickLinks = computed(() => isAdmin.value && !props.preview)
 const flashSuccess = computed(() => (page.props.flash as any)?.success)
+const flashError = computed(() => (page.props.flash as any)?.error)
 
 const showLinkForm = ref(false)
 const entries = computed<ExamEntryRow[]>(() => props.examEntries ?? [])
@@ -138,6 +139,21 @@ function resetRange() {
 const exportBase = computed(() =>
     props.preview ? `/admin/contacts/${props.preview.contact_id}/export` : '/dashboard/export',
 )
+
+// Certificates follow the same rule as the exports: a teacher's own routes
+// take no contact, and a preview uses the admin routes for that contact.
+const certificateBase = computed(() =>
+    props.preview ? `/admin/contacts/${props.preview.contact_id}/certificates` : '/dashboard/certificates',
+)
+const hasCertificates = computed(() => entries.value.some((e) => e.score !== null && e.score !== undefined))
+
+// A download, not a page: the browser saves the file and stays here.
+function downloadCertificate(entryId: number) {
+    window.location.href = `${certificateBase.value}/${entryId}`
+}
+function downloadAllCertificates() {
+    window.location.href = `${certificateBase.value}${exportQuery.value}`
+}
 
 const exportQuery = computed(
     () => `?from=${encodeURIComponent(rangeFrom.value)}&to=${encodeURIComponent(rangeTo.value)}`,
@@ -487,6 +503,12 @@ defineOptions({
             >
                 {{ flashSuccess }}
             </div>
+            <div
+                v-if="flashError"
+                class="mb-6 rounded-lg border border-brand-danger bg-brand-danger-soft px-4 py-3 text-base text-brand-danger"
+            >
+                {{ flashError }}
+            </div>
 
             <!-- Banner — sets expectations before the table -->
             <div v-if="hasEntries" class="mb-4 flex items-start gap-3 rounded-xl border border-brand-border bg-brand-surface-soft px-4 py-3 text-sm text-brand-text">
@@ -613,10 +635,13 @@ defineOptions({
                             class="inline-flex items-center gap-2 rounded-lg border border-brand-border px-4 py-2 text-sm font-semibold text-brand-text transition-colors hover:border-brand-accent hover:text-brand-accent">
                             <FileText class="h-4 w-4" /> Download PDF
                         </a>
+                        <MyButtonConstructor v-if="hasCertificates" size="small" variant="outline" :icon="Award" @click="downloadAllCertificates">
+                            Download certificates (ZIP)
+                        </MyButtonConstructor>
                     </div>
                 </div>
                 <p class="mt-3 text-xs text-brand-text-soft">
-                    Showing exams from {{ rangeFrom }} to {{ rangeTo }}. Downloads cover the same range, and include candidates still awaiting a result.
+                    Showing exams from {{ rangeFrom }} to {{ rangeTo }}. Downloads cover the same range. The CSV and PDF include candidates still awaiting a result; certificates are for results that are in.
                 </p>
             </MyCardConstructor>
 
@@ -788,6 +813,15 @@ defineOptions({
                                     </td>
                                     <td class="px-4 py-3 text-right">
                                         <div class="flex flex-col items-end gap-1.5">
+                                            <MyButtonConstructor
+                                                v-if="group.entries.length === 1 && group.entries[0].score !== null && group.entries[0].score !== undefined"
+                                                size="small"
+                                                variant="outline"
+                                                :icon="Award"
+                                                @click.stop="downloadCertificate(group.entries[0].id)"
+                                            >
+                                                Certificate
+                                            </MyButtonConstructor>
                                             <button
                                                 v-if="group.entries[0].report"
                                                 type="button"
@@ -924,6 +958,15 @@ defineOptions({
                                             </td>
                                             <td class="px-4 py-3 text-right">
                                                 <div class="flex flex-col items-end gap-1.5">
+                                                    <MyButtonConstructor
+                                                        v-if="row.score !== null && row.score !== undefined"
+                                                        size="small"
+                                                        variant="outline"
+                                                        :icon="Award"
+                                                        @click.stop="downloadCertificate(row.id)"
+                                                    >
+                                                        Certificate
+                                                    </MyButtonConstructor>
                                                     <button
                                                         v-if="row.report"
                                                         type="button"
