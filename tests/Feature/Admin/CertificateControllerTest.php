@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\ExamContact;
 use App\Models\ExamEntry;
 use App\Models\Order;
 use App\Models\User;
@@ -235,6 +236,26 @@ test('weeklyGroups payload only includes scored, unsent, non-cancelled entries f
             ->where('weeklyGroups.0.unsent_count', 2)
             ->has('weeklyGroups.0.students', 2)
         );
+});
+
+test('a parent booking is its own weekly group with the parent\'s email, not the unassigned bucket', function () {
+    // 27 Sep 2026: Wilfred Morris, booked by Alexandra King as a parent,
+    // sat in "Parent Bookings (no teacher assigned)" with no email buttons
+    // while Quarter End named her. Both now ask App\Services\EntryCredit.
+    $parent = ExamContact::create(['name' => 'Alexandra King', 'email' => 'alexi@example.test']);
+    $parent->addType('parent');
+    makeCertEntry('', 2026, 2, ['teacher_name' => null, 'booking_role' => 'parent', 'submitter_contact_id' => $parent->id]);
+    makeCertEntry('', 2026, 2, ['teacher_name' => null]);
+
+    $this->actingAs(certsAdmin())
+        ->get('/admin/certificates?quarter=1&year=2026')
+        ->assertInertia(fn ($page) => $page
+            ->has('weeklyGroups', 2)
+            ->where('weeklyGroups', fn ($groups) => collect($groups)->contains(fn ($g) => $g['teacher_name'] === 'Alexandra King'
+                && $g['applicant_email'] === 'alexi@example.test'
+                && $g['is_parent_booking'] === true
+                && $g['is_unassigned'] === false)
+                && collect($groups)->contains(fn ($g) => $g['is_unassigned'] === true && $g['applicant_email'] === null)));
 });
 
 test('weeklyGroups is an empty array when nothing is queued', function () {

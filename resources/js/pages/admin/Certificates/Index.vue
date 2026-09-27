@@ -50,6 +50,8 @@ interface WeeklyGroup {
   teacher_name: string
   applicant_email: string | null
   is_parent_booking: boolean
+  /** Booked with no teacher or parent linked (EntryCredit::UNASSIGNED). */
+  is_unassigned: boolean
   booking_role: string | null
   unsent_count: number
   students: WeeklyStudent[]
@@ -922,9 +924,13 @@ async function generateTeacherCert(mode: 'preview' | 'download' = 'preview') {
               </div>
 
               <!-- Orphaned bucket guidance -->
-              <div v-if="!group.applicant_email" class="rounded-lg border border-dashed border-amber-400 bg-amber-50 p-3 text-sm text-amber-900">
-                <p class="font-semibold mb-1">No contact linked yet</p>
-                <p>These candidates were booked without a named teacher or parent. Look up the correspondence email on Trinity's candidate page and link the contact before emailing.</p>
+              <div v-if="!group.applicant_email" class="rounded-lg border border-dashed border-brand-accent bg-brand-accent/5 p-3 text-sm">
+                <MyTextConstructor bodyVariant="inherit" spacing="tight">
+                  <template #myTitle><span class="text-sm font-semibold">No email to send to yet</span></template>
+                  {{ group.is_unassigned
+                    ? 'These candidates were booked without a named teacher or parent. Look up the correspondence email on Trinity\'s candidate page and link the contact before emailing.'
+                    : 'No email address is saved for this contact. Look it up on Trinity\'s candidate page and add it to the contact before emailing.' }}
+                </MyTextConstructor>
               </div>
 
               <!-- Action buttons -->

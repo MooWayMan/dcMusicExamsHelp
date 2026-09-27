@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ExamContact;
 use App\Models\ExamEntry;
 use App\Services\CertificateRenderer;
+use App\Services\EntryCredit;
 use App\Services\QuarterCertificateBatch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -119,11 +120,13 @@ class CertificateController extends Controller
      * Build the Weekly Send accordion payload.
      *
      * Scope: scored entries in the selected quarter whose
-     * certificate_sent_at is still NULL. Grouped by teacher_name (or
-     * "Parent Bookings (no teacher assigned)" for orphans), with the
-     * applicant_email resolved via the same ExamContact lookup the
-     * QuarterEnd Step 2 page uses — so the Open in Gmail button routes
-     * to the teacher's real address, not Paul's submitter email.
+     * certificate_sent_at is still NULL. Grouped by who each entry is
+     * credited to, decided by App\Services\EntryCredit exactly as Quarter
+     * End does: a school's bookings under the school, a teacher's under
+     * them, a parent booking under the parent who submitted it (so it gets
+     * its own email and buttons), and only a booking with nobody linked in
+     * the UNASSIGNED bucket. The email is resolved the same way Quarter End
+     * resolves it, so Open in Gmail goes to the real recipient.
      *
      * Returns an array of teacher groups, each with:
      *   - teacher_name, applicant_email, is_parent_booking, booking_role
@@ -161,12 +164,10 @@ class CertificateController extends Controller
             ->get()
             ->keyBy(fn ($c) => mb_strtolower(trim($c->name)));
 
-        $grouped = $unsentEntries->groupBy(function ($e) {
-            $name = trim((string) ($e->teacher_name ?? ''));
-            return $name === '' ? 'Parent Bookings (no teacher assigned)' : $e->teacher_name;
-        });
+        $credit = EntryCredit::for($unsentEntries);
+        $grouped = $unsentEntries->groupBy(fn ($e) => $credit->group($e));
 
-        return $grouped->map(function ($entries, $teacherName) use ($parentOrSelfLookup) {
+        return $grouped->map(function ($entries, $teacherName) use ($parentOrSelfLookup, $credit) {
             // Resolve booking role — explicit per-entry override wins, else
             // infer from the contact type. Same precedence as QuarterEnd.
             $parentContact = $parentOrSelfLookup->get(mb_strtolower(trim($teacherName)));
@@ -178,7 +179,8 @@ class CertificateController extends Controller
                 $parentContact->isCandidate() => 'self',
                 default                     => null,
             };
-            $bookingRole = $explicitRole ?? $contactInferredRole;
+            $schoolMeta = $credit->schoolMeta($teacherName);
+            $bookingRole = $schoolMeta ? 'school_admin' : ($explicitRole ?? $contactInferredRole);
             $isParentBooking = $bookingRole === 'parent' || $bookingRole === 'self';
 
             $firstOrder = $entries->first()?->order;
@@ -198,9 +200,15 @@ class CertificateController extends Controller
                     ?? $firstOrder?->applicant_email;
             }
 
+            // A school's group goes to the school's own email or its admin; a
+            // lookup by the school's NAME would not match a person.
+            if ($schoolMeta) {
+                $teacherEmail = $schoolMeta['email'] ?? $teacherEmail;
+            }
+
             // Orphaned bucket has no real recipient — null the email so the
             // UI hides the Copy / Open Gmail buttons.
-            if ($teacherName === 'Parent Bookings (no teacher assigned)') {
+            if ($teacherName === EntryCredit::UNASSIGNED) {
                 $teacherEmail = null;
             }
 
@@ -208,6 +216,7 @@ class CertificateController extends Controller
                 'teacher_name'      => $teacherName,
                 'applicant_email'   => $teacherEmail,
                 'is_parent_booking' => $isParentBooking,
+                'is_unassigned'     => $teacherName === EntryCredit::UNASSIGNED,
                 'booking_role'      => $bookingRole,
                 'unsent_count'      => $entries->count(),
                 'students'          => $entries->map(fn ($e) => [

@@ -10,6 +10,7 @@ use App\Models\PrizeDraw;
 use App\Models\TopScorerPublication;
 use App\Models\PrizeWorkflow;
 use App\Services\CertificateRenderer;
+use App\Services\EntryCredit;
 use App\Support\TopScorers;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -60,17 +61,11 @@ class QuarterEndController extends Controller
         // When no school_admin-with-school entries exist these maps are empty
         // and every credit name falls straight through to teacher_name, so the
         // existing teacher behaviour is byte-for-byte unchanged.
-        [$schoolNameByContactId, $schoolMetaByNameLower] = $this->schoolCreditMaps();
-
-        // Parent/self bookings carry no teacher_name, but once the parent is
-        // linked at results-import (submitter_contact_id) we can name their
-        // group after them instead of dumping them in the catch-all bucket.
-        $submitterNameById = ExamContact::whereIn(
-            'id',
-            $allEntries->pluck('submitter_contact_id')->filter()->unique()->values()
-        )->pluck('name', 'id')->all();
-
-        $creditName = fn ($e) => $this->creditNameFor($e, $schoolNameByContactId, $submitterNameById);
+        // Who each entry is credited to (school rollup, teacher, or the parent
+        // who submitted it) is decided once, in App\Services\EntryCredit.
+        $credit = EntryCredit::for($allEntries);
+        $schoolMetaByNameLower = $credit->schools();
+        $creditName = fn ($e) => $credit->name($e);
 
         // Parents and self-bookers stamped as teacher_name during import need
         // the same Copy Email + Open Gmail workflow as teachers — they just
@@ -100,10 +95,7 @@ class QuarterEndController extends Controller
         // teacher_name at all (NULL or empty/whitespace string) stay in the
         // catch-all bucket — empty strings used to slip through and create
         // a phantom blank-name card with Paul's applicant_email attached.
-        $teacherGroups = $allEntries->groupBy(function ($e) use ($creditName) {
-            $name = trim((string) ($creditName($e) ?? ''));
-            return $name === '' ? 'Parent Bookings (no teacher assigned)' : $creditName($e);
-        });
+        $teacherGroups = $allEntries->groupBy(fn ($e) => $credit->group($e));
 
         $teachers = $teacherGroups->map(function ($entries, $teacherName) use ($parentOrSelfLookup, $schoolMetaByNameLower) {
             // Is this group a SCHOOL (school_admin entries rolled up)? If so the
@@ -174,7 +166,7 @@ class QuarterEndController extends Controller
             // Orphaned bucket has no real recipient — null the email so the UI
             // can hide the Copy Email / Open Gmail buttons rather than prefill
             // a junk draft addressed to Paul himself.
-            if ($teacherName === 'Parent Bookings (no teacher assigned)') {
+            if ($teacherName === EntryCredit::UNASSIGNED) {
                 $teacherEmail = null;
             }
 
@@ -744,25 +736,13 @@ class QuarterEndController extends Controller
         // School-admin rollup: credit the school, and treat school names as
         // registered (always eligible). Empty when no school entries exist,
         // so the plain-teacher path is unchanged.
-        [$schoolNameByContactId, $schoolMetaByNameLower] = $this->schoolCreditMaps();
-
-        // ⚠️ This map is why the draw and the page it sits on used to disagree.
-        // index() credits a parent/self booking to its submitter; runDraw()
-        // called creditNameFor() WITHOUT this third argument, so it defaulted
-        // to [] and the submitter fallback never fired. Those entries returned
-        // an empty teacher_name and were then discarded by the "credit name is
-        // not blank" filter below — so a teacher could be listed as holding
-        // tickets and yet have none in the pool that actually gets drawn.
-        // Built from $paidEntries, not $allEntries — the teacher pool below is
-        // the paid set, so a no-show or withdrawal credited only by submitter
-        // would otherwise be missing a name and get filtered out.
-        $submitterNameById = ExamContact::whereIn(
-            'id',
-            $paidEntries->pluck('submitter_contact_id')->filter()->unique()->values()
-        )->pluck('name', 'id')->all();
-
-        $creditName = fn ($e) => $this->creditNameFor($e, $schoolNameByContactId, $submitterNameById);
-        $schoolCreditNamesLower = array_keys($schoolMetaByNameLower);
+        // Built from $paidEntries, not $allEntries: the teacher pool below is
+        // the paid set. EntryCredit is the same decision the page above makes,
+        // so the draw and its page cannot disagree (they once did, when this
+        // was a second copy that skipped the parent-submitter step).
+        $credit = EntryCredit::for($paidEntries);
+        $creditName = fn ($e) => $credit->name($e);
+        $schoolCreditNamesLower = array_keys($credit->schools());
 
         $registeredTeacherNames = ExamContact::withType('teacher')
             ->get()
@@ -996,70 +976,6 @@ class QuarterEndController extends Controller
      * Mirrors ThankYouController::displayName() so the admin UI and the public
      * Recognition page never disagree on a candidate's display label.
      */
-    /**
-     * Build the school-admin rollup maps (Phase 2).
-     *
-     * @return array{0: array<int,string>, 1: array<string,array{name:string,email:?string}>}
-     *   [0] teacher_contact_id => school name (for crediting entries)
-     *   [1] lowercased school name => ['name','email'] (display + routing)
-     *
-     * A school_admin contact's linked school is the entity its entries roll
-     * up to in the draw and the volume badges. When a contact admins more
-     * than one school we take the first (admins map to one school in practice
-     * — Clare/Emily → Learn Music Ltd).
-     */
-    private function schoolCreditMaps(): array
-    {
-        $byContactId = [];
-        $metaByNameLower = [];
-
-        $admins = ExamContact::withType('school_admin')
-            ->with(['schools:id,name,email', 'emails'])
-            ->get();
-
-        foreach ($admins as $admin) {
-            $school = $admin->schools->first();
-            if (! $school) {
-                continue;
-            }
-            $byContactId[$admin->id] = $school->name;
-            $key = strtolower(trim($school->name));
-            if (! isset($metaByNameLower[$key])) {
-                $metaByNameLower[$key] = [
-                    'name' => $school->name,
-                    'email' => $school->email ?: $admin->primary_email,
-                ];
-            }
-        }
-
-        return [$byContactId, $metaByNameLower];
-    }
-
-    /**
-     * The name an entry is credited to for the draw + badges: the linked
-     * school for a school_admin entry, otherwise the teacher_name string.
-     *
-     * @param  array<int,string>  $schoolNameByContactId
-     */
-    private function creditNameFor(ExamEntry $e, array $schoolNameByContactId, array $submitterNameById = []): ?string
-    {
-        if ($e->booking_role === 'school_admin'
-            && $e->teacher_contact_id
-            && isset($schoolNameByContactId[$e->teacher_contact_id])) {
-            return $schoolNameByContactId[$e->teacher_contact_id];
-        }
-
-        // Parent/self booking with no teacher_name but a linked submitter:
-        // credit the submitter (the parent) so they get their own named group
-        // rather than falling into "Parent Bookings (no teacher assigned)".
-        if (trim((string) $e->teacher_name) === ''
-            && $e->submitter_contact_id
-            && isset($submitterNameById[$e->submitter_contact_id])) {
-            return $submitterNameById[$e->submitter_contact_id];
-        }
-
-        return $e->teacher_name;
-    }
 
 
     /**
