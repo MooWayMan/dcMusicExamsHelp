@@ -2,6 +2,7 @@
 import { Head, Link, Form, router, usePage } from '@inertiajs/vue3'
 import { computed, ref, watch } from 'vue'
 import { ListMusic, LayoutDashboard, ClipboardList, Users, GraduationCap, CheckSquare, Award, AlertCircle, Home, LogOut, Mail, MessageCircle, Info, ChevronDown, ChevronRight, Gift, Ticket, Trophy, Search, FileText, Eye, Download, CalendarRange } from 'lucide-vue-next'
+import MyCardConstructor from '@/components/reusables/MyCardConstructor.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyInputConstructor from '@/components/reusables/MyInputConstructor.vue'
@@ -503,7 +504,7 @@ defineOptions({
                  name. Individual teachers default to "First L" until they
                  opt in to full-name display via show_full_name on their
                  exam_contacts row (set when Paul confirms by email). -->
-            <div v-if="hasPrizeDraw" class="mb-6 rounded-xl border border-brand-border bg-brand-surface">
+            <MyCardConstructor v-if="hasPrizeDraw" padding="none" class="mb-6">
                 <div class="flex flex-wrap items-start justify-between gap-3 border-b border-brand-border px-5 py-4">
                     <div class="flex items-center gap-2.5">
                         <Gift class="h-5 w-5 text-brand-accent" />
@@ -572,13 +573,13 @@ defineOptions({
                         </span>
                     </div>
                 </div>
-            </div>
+            </MyCardConstructor>
 
             <!-- Date range + downloads.
                  Sits OUTSIDE the candidates card on purpose: if a range comes
                  back empty the table is hidden, and the controls have to stay
                  reachable so the user can widen it again. -->
-            <div v-if="hasLinkedContact" class="mb-4 rounded-xl border border-brand-border bg-brand-surface p-5">
+            <MyCardConstructor v-if="hasLinkedContact" class="mb-4">
                 <div class="flex flex-wrap items-end justify-between gap-4">
                     <div class="flex flex-wrap items-end gap-3">
                         <div>
@@ -617,7 +618,7 @@ defineOptions({
                 <p class="mt-3 text-xs text-brand-text-soft">
                     Showing exams from {{ rangeFrom }} to {{ rangeTo }}. Downloads cover the same range, and include candidates still awaiting a result.
                 </p>
-            </div>
+            </MyCardConstructor>
 
             <!-- Charts. Same range as the table below and the downloads above,
                  so all three always agree. Rendered from the entries already
@@ -630,7 +631,7 @@ defineOptions({
             />
 
             <!-- Candidates table — when the user is linked and has entries -->
-            <div v-if="hasEntries" class="rounded-xl border border-brand-border bg-brand-surface">
+            <MyCardConstructor v-if="hasEntries" padding="none">
                 <div class="border-b border-brand-border px-5 py-4">
                     <div class="flex flex-wrap items-start justify-between gap-3">
                         <div>
@@ -1006,21 +1007,21 @@ defineOptions({
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </MyCardConstructor>
 
             <!-- Linked, but the chosen range is empty. Must come BEFORE the
                  linkage card below, or narrowing the dates would wrongly tell
                  a linked teacher we can't find their account. -->
-            <div v-else-if="hasLinkedContact" class="rounded-xl border border-brand-border bg-brand-surface p-6 text-center sm:p-8">
+            <MyCardConstructor v-else-if="hasLinkedContact" padding="large" class="text-center">
                 <MyTextConstructor variant="subheading">No candidates in this date range</MyTextConstructor>
                 <p class="mt-2 text-sm text-brand-text-soft">
                     Nothing between {{ rangeFrom }} and {{ rangeTo }}. Try widening the dates, or use
                     <button type="button" class="font-semibold text-brand-accent underline" @click="resetRange">All time</button>.
                 </p>
-            </div>
+            </MyCardConstructor>
 
             <!-- Linkage path — when no entries match the user's email -->
-            <div v-else class="rounded-xl border border-brand-border bg-brand-surface p-6 sm:p-8">
+            <MyCardConstructor v-else padding="large">
                 <div class="flex flex-col items-start gap-4">
                     <h2 class="text-2xl font-semibold text-brand-text">No candidates linked yet</h2>
                     <p class="text-base text-brand-text-soft">
@@ -1099,7 +1100,7 @@ defineOptions({
                         </MyButtonConstructor>
                     </Form>
                 </div>
-            </div>
+            </MyCardConstructor>
         </div>
 
         <!-- Correction view modal — shows the user the note they previously submitted -->

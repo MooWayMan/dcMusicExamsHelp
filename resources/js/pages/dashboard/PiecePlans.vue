@@ -6,9 +6,11 @@ import { computed, reactive, ref } from 'vue'
 import PiecePlanCard from '@/components/pieceplans/PiecePlanCard.vue'
 import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
+import MyCardConstructor from '@/components/reusables/MyCardConstructor.vue'
 import MyInputConstructor from '@/components/reusables/MyInputConstructor.vue'
 import MySearchPickConstructor from '@/components/reusables/MySearchPickConstructor.vue'
 import type {PickItem} from '@/components/reusables/MySearchPickConstructor.vue';
+import MyTableConstructor from '@/components/reusables/MyTableConstructor.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import PageHeader from '@/components/reusables/PageHeader.vue'
 import SyllabusFilterSelects from '@/components/syllabus/SyllabusFilterSelects.vue'
@@ -39,12 +41,23 @@ const facets = computed<SyllabusFacetLists>(() => ({
   gradeOrder: props.gradeOrder,
 }))
 
-const candidateItems = computed<PickItem<string>[]>(() =>
-  props.candidates.map((c) => ({ value: c.name, label: c.last_exam ? `${c.name} (last exam: ${c.last_exam})` : c.name })),
-)
+// Names only in the picker. Picking (or typing) a candidate's name shows
+// their previous exams below it, so the teacher can choose the next one.
+const candidateItems = computed<PickItem<string>[]>(() => props.candidates.map((c) => ({ value: c.name, label: c.name })))
 
 const form = reactive({ pupil_name: '', exam_stream: '', instrument: '', grade: '', target_date: '' })
 const adding = ref(false)
+const pickedExams = computed(() => {
+  const name = form.pupil_name.trim().toLowerCase()
+
+  return name ? (props.candidates.find((c) => c.name.toLowerCase() === name)?.exams ?? []) : []
+})
+const examColumns = [
+  { key: 'date', title: 'Date' },
+  { key: 'instrument', title: 'Instrument' },
+  { key: 'grade', title: 'Grade' },
+]
+
 const canAdd = computed(() => form.pupil_name.trim() !== '' && form.exam_stream !== '' && form.instrument !== '' && form.grade !== '')
 
 // One closed row per pupil; opening it shows their plan. Each card reports
@@ -102,10 +115,7 @@ return
         <MyTextConstructor bodyVariant="inherit" textColor="text-brand-danger" spacing="none">{{ firstError }}</MyTextConstructor>
       </div>
 
-      <section class="flex flex-col gap-4">
-        <MyTextConstructor variant="button-lg" spacing="none">
-          <template #myTitle>Add a pupil</template>
-        </MyTextConstructor>
+      <MyCardConstructor title="Add a pupil">
 
         <div v-if="candidateItems.length" class="w-full max-w-xl">
           <MySearchPickConstructor
@@ -137,6 +147,19 @@ return
           </div>
         </div>
 
+        <div v-if="pickedExams.length" class="flex w-full max-w-xl flex-col gap-1">
+          <MyTextConstructor variant="button-sm" textColor="text-brand-text-soft" spacing="none">
+            <template #myTitle>Previous exams</template>
+          </MyTextConstructor>
+          <MyTableConstructor
+            :data="pickedExams"
+            :columns="examColumns"
+            size="small"
+            :sortable="false"
+            bare
+          />
+        </div>
+
         <SyllabusFilterSelects
           v-model:stream="form.exam_stream"
           v-model:instrument="form.instrument"
@@ -152,27 +175,30 @@ return
             Add pupil
           </MyButtonConstructor>
         </div>
-      </section>
+      </MyCardConstructor>
 
-      <div v-if="!plans.length">
-        <MyTextConstructor bodyVariant="muted" spacing="none">
-          No pupils yet. Add one above, then choose their pieces and mark how ready each part is.
-        </MyTextConstructor>
-      </div>
+      <MyCardConstructor title="Your pupils">
 
-      <MyAccordionConstructor v-if="plans.length" :items="planRows" size="small">
-        <template v-for="plan in plans" :key="plan.id" #[`content-${plan.id}`]>
-          <PiecePlanCard
-            :plan="plan"
-            :facets="facets"
-            :section-labels="sectionLabels"
-            :suggestions="suggestions"
-            :max-items="maxItems"
-            :max-score="maxScore"
-            @summary="(s) => setSummary(plan.id, s)"
-          />
-        </template>
-      </MyAccordionConstructor>
+        <div v-if="!plans.length">
+          <MyTextConstructor bodyVariant="muted" spacing="none">
+            No pupils yet. Add one above, then choose their pieces and mark how ready each part is.
+          </MyTextConstructor>
+        </div>
+
+        <MyAccordionConstructor v-if="plans.length" :items="planRows" size="small" title-variant="button">
+          <template v-for="plan in plans" :key="plan.id" #[`content-${plan.id}`]>
+            <PiecePlanCard
+              :plan="plan"
+              :facets="facets"
+              :section-labels="sectionLabels"
+              :suggestions="suggestions"
+              :max-items="maxItems"
+              :max-score="maxScore"
+              @summary="(s) => setSummary(plan.id, s)"
+            />
+          </template>
+        </MyAccordionConstructor>
+      </MyCardConstructor>
     </div>
   </div>
 </template>

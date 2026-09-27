@@ -285,13 +285,13 @@ test('the candidate list never carries an exam result, because pupils can see it
             $sent = json_encode($candidates);
 
             expect($candidates)->toHaveCount(2)
-                ->and($candidates[0]['last_exam'])->toContain('Grade 3')
+                ->and($candidates[0]['exams'][0]['grade'])->toBe('Grade 3')
                 ->and($sent)->not->toContain('Below Pass')
                 ->and($sent)->not->toContain('Distinction');
         });
 });
 
-test('a teacher can start a plan from their own candidates, and a planned pupil drops off the list', function () {
+test('a teacher sees their own candidates by name with previous exams, and a planned pupil stays listed', function () {
     ppPiece();
     $teacher = ppTeacher(['email' => 'tina@example.com']);
     $contact = ExamContact::create(['name' => 'Tina Teacher', 'email' => 'tina@example.com', 'source' => 'trinity_csv']);
@@ -339,9 +339,18 @@ test('a teacher can start a plan from their own candidates, and a planned pupil 
 
     expect($names())->toBe(['Amy Jones', 'Freddie Smith']);
 
+    $this->actingAs($teacher)->get('/dashboard/pieces')
+        ->assertInertia(function ($page) {
+            $freddie = collect($page->toArray()['props']['candidates'])->firstWhere('name', 'Freddie Smith');
+
+            expect($freddie['exams'])->toHaveCount(2)
+                ->and($freddie['exams'][0])->toMatchArray(['date' => '10 Mar 2026', 'grade' => 'Grade 2']);
+        });
+
+    // A second instrument is a second plan, so a planned pupil stays in the picker.
     $this->actingAs($teacher)->post('/dashboard/pieces', ppPlanData(['pupil_name' => 'freddie smith']));
 
-    expect($names())->toBe(['Amy Jones']);
+    expect($names())->toBe(['Amy Jones', 'Freddie Smith']);
 });
 
 // ──────────────────────────────────────────

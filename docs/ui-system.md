@@ -184,6 +184,9 @@ A slider with its value printed beside it. `v-model` (number), `min` (0), `max` 
 ### MyCheckboxConstructor.vue
 A tick box with an optional label. `v-model` (boolean), `label`, `ariaLabel` (give one when there is no label, e.g. in a table column headed by the question), `disabled`. Seven older files still draw a raw checkbox; they are listed as a shrink-only baseline in `SyllabusPickerGuardTest`.
 
+### MyCardConstructor.vue
+A page section on its own card: surface, border, rounding, padding. `title` (optional, drawn with MyTextConstructor `button-lg`), `padding`: none | small (p-4) | medium (p-5, default) | large (p-6, p-8 from sm). `none` is for content that brings its own padding, e.g. a card holding a headed table. Margin or `text-center` can be passed as a class. 50 older admin cards are still hand-typed; they are a shrink-only baseline in `CardConstructorGuardTest`, and any new hand-typed card fails it.
+
 ### SyllabusFilterSelects.vue (components/syllabus)
 Exam type → instrument → grade, cascading, built from `App\Services\SyllabusFacets::forDropdowns()`. `v-model:stream`, `v-model:instrument`, `v-model:grade`, `facets`, `tone`, `size`, `allowAll` ("All …" vs "Choose …"), `labelled`. The cascade itself lives in `composables/useSyllabusFacets.ts` (guard-tested).
 
@@ -216,6 +219,7 @@ Always apply these exact props — universal across all pages and all apps.
   content-bg-color="bg-brand-surface"
 />
 ```
+`titleVariant`: button-sm | button | button-lg (default, what every FAQ uses). A list of records rather than questions, like the Piece tracker's pupils, passes `title-variant="button"`. Panels open to their content's full height (no max-height cap) and a closed panel is `inert`.
 
 ### MyTableConstructor (data tables)
 ```vue
@@ -282,7 +286,7 @@ Manual fallback pattern: `border-4 border-brand-accent rounded-2xl bg-white/10 b
 
 ### 5. Card text sizing
 - Titles: `variant="subheading"` or `text-lg sm:text-xl md:text-2xl font-bold`
-- Descriptions: plain `<p>` with `text-base sm:text-base md:text-lg leading-relaxed text-white/80`
+- Descriptions: MyTextConstructor with `bodyVariant="inherit"` inside a wrapper that sets the size and colour (e.g. `text-base md:text-lg text-white/80`), never a bare `<p>`
 - NEVER `muted` or `body` variants inside cards
 
 ### 6. Bullet lists

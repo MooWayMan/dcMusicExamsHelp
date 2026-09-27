@@ -232,19 +232,20 @@ final class PiecePlans
     }
 
     /**
-     * The user's centre 120 candidates not already on a plan, one row per
-     * name, newest exam first, so a teacher can start a plan from them.
-     * The last exam is shown as a hint only: exam-entry instrument names
-     * ("Guitar (Rock/Pop)") are not the syllabus's ("Guitar"), so nothing
-     * is carried across automatically.
+     * The user's centre 120 candidates, one row per name, each with their
+     * previous exams newest first. The picker lists names only; picking one
+     * shows that pupil's exams so the teacher can see what they took last.
+     * Pupils already on a plan stay listed: a second instrument is a second
+     * plan. Nothing is carried across automatically, because exam-entry
+     * instrument names ("Guitar (Rock/Pop)") are not the syllabus's
+     * ("Guitar").
      *
-     * The hint is instrument and grade ONLY, never the result. Pupils see
-     * this list when the teacher opens it in a lesson, and one pupil must
-     * not see another's mark, least of all a fail (GDPR). The result is
-     * left out here, not hidden on the page, so it never reaches the
-     * browser at all.
+     * Date, instrument and grade ONLY, never the result. Pupils see this
+     * screen when the teacher opens it in a lesson, and one pupil must not
+     * see another's mark, least of all a fail (GDPR). The result is left out
+     * here, not hidden on the page, so it never reaches the browser at all.
      *
-     * @return list<array{name: string, last_exam: string}>
+     * @return list<array{name: string, exams: list<array{date: ?string, instrument: string, grade: string}>}>
      */
     public function candidates(User $user): array
     {
@@ -254,25 +255,19 @@ final class PiecePlans
             Carbon::now()->addYear(),
         );
 
-        $planned = PiecePlan::query()
-            ->where('user_id', $user->id)
-            ->pluck('pupil_name')
-            ->map(fn ($n) => mb_strtolower(trim($n)))
-            ->all();
-
         return $entries
             ->filter(fn (ExamEntry $e) => trim((string) $e->candidate_name) !== '')
             ->sortByDesc(fn (ExamEntry $e) => $e->exam_date?->toDateString() ?? '9999')
-            ->unique(fn (ExamEntry $e) => mb_strtolower(trim($e->candidate_name)))
-            ->reject(fn (ExamEntry $e) => in_array(mb_strtolower(trim($e->candidate_name)), $planned, true))
-            ->sortBy(fn (ExamEntry $e) => mb_strtolower($e->candidate_name))
-            ->map(fn (ExamEntry $e) => [
-                'name' => trim($e->candidate_name),
-                'last_exam' => collect([
-                    $e->instrument?->name,
-                    Grade::label($e->grade),
-                ])->filter()->implode(' · '),
+            ->groupBy(fn (ExamEntry $e) => mb_strtolower(trim($e->candidate_name)))
+            ->map(fn ($exams) => [
+                'name' => trim($exams->first()->candidate_name),
+                'exams' => $exams->map(fn (ExamEntry $e) => [
+                    'date' => $e->exam_date?->format('d M Y'),
+                    'instrument' => (string) ($e->instrument?->name ?? ''),
+                    'grade' => Grade::label($e->grade),
+                ])->values()->all(),
             ])
+            ->sortBy(fn (array $c) => mb_strtolower($c['name']))
             ->values()
             ->all();
     }

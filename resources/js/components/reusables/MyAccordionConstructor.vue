@@ -13,6 +13,8 @@ interface Props {
   items?: AccordionItem[]
   allowMultiple?: boolean
   size?: 'small' | 'medium' | 'large'
+  /** Title text size. Defaults to button-lg, what every FAQ uses; a list of records wants button. */
+  titleVariant?: 'button-sm' | 'button' | 'button-lg'
   headerBgColor?: string
   headerTextColor?: string
   headerHoverBgColor?: string
@@ -24,6 +26,7 @@ const props = withDefaults(defineProps<Props>(), {
   items: () => [] as AccordionItem[],
   allowMultiple: false,
   size: 'medium',
+  titleVariant: 'button-lg',
   headerBgColor: 'bg-brand-surface',
   headerTextColor: 'text-brand-primary',
   headerHoverBgColor: 'hover:bg-brand-bg',
@@ -96,7 +99,7 @@ const chevronSize = computed(() => {
         @click="toggleItem(item.id)"
       >
         <MyTextConstructor
-          variant="button-lg"
+          :variant="props.titleVariant"
           alignment="left"
           textColor="inherit"
           spacing="none"

@@ -40,9 +40,16 @@ export interface PlanSummary {
   ready: number
 }
 
+/** One of the pupil's previous exams. Never carries the result (GDPR). */
+export interface CandidateExam {
+  date: string | null
+  instrument: string
+  grade: string
+}
+
 export interface PlanCandidate {
   name: string
-  last_exam: string
+  exams: CandidateExam[]
 }
 
 export type SectionLabels = Record<string, Record<PlanSection, string>>
