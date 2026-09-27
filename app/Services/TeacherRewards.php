@@ -98,7 +98,7 @@ final class TeacherRewards
     private function ownEntriesByQuarter(ExamContact $contact): Collection
     {
         $ids = $this->teacherEntries
-            ->forContact($contact, Carbon::parse(TeacherEntries::HISTORY_START), now()->addYear())
+            ->forContact($contact, Carbon::parse(TeacherEntries::HISTORY_START), Carbon::now()->addYear())
             ->pluck('exam_entries.id');
 
         return ExamEntry::with('order:id,requested_start_date')

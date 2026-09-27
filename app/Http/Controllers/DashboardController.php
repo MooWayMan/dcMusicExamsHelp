@@ -13,6 +13,7 @@ use App\Models\ExamEntry;
 use App\Models\PrizeDraw;
 use App\Models\Task;
 use App\Services\TeacherEntries;
+use App\Services\TeacherRewards;
 use App\Support\EntryCredit;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -79,7 +80,7 @@ class DashboardController extends Controller
         return [$from, $to];
     }
 
-    public function index(Request $request): Response
+    public function index(Request $request, TeacherRewards $rewards): Response
     {
         $user = $request->user();
 
@@ -127,6 +128,7 @@ class DashboardController extends Controller
             'examEntries' => $entries,
             'hasLinkedContact' => $contact !== null || $entries->isNotEmpty(),
             'teacherPrizeDraw' => $this->buildTeacherPrizeDrawPayload($contact),
+            'rewards' => $rewards->forContact($contact),
             'filters' => [
                 'from' => $from->toDateString(),
                 'to' => $to->toDateString(),
@@ -175,7 +177,7 @@ class DashboardController extends Controller
      * no throwaway accounts to create and delete. Guarded by admin middleware
      * in routes/admin.php.
      */
-    public function previewForContact(Request $request, ExamContact $contact): Response
+    public function previewForContact(Request $request, ExamContact $contact, TeacherRewards $rewards): Response
     {
         [$from, $to] = $this->dateRange($request);
 
@@ -186,6 +188,7 @@ class DashboardController extends Controller
             'examEntries' => $entries,
             'hasLinkedContact' => $entries->isNotEmpty(),
             'teacherPrizeDraw' => $this->buildTeacherPrizeDrawPayload($contact),
+            'rewards' => $rewards->forContact($contact),
             'filters' => [
                 'from' => $from->toDateString(),
                 'to' => $to->toDateString(),

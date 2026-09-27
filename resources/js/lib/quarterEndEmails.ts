@@ -214,7 +214,7 @@ What's on musicExams.help
 
 musicExams.help is a free resource for teachers, parents and students booking Trinity exams through centre 120. If parents ever ask things like "what's the difference between digital and face-to-face?" — point them straight to the site.
 
-  • Your own teacher dashboard: all your students' bookings and results in one place, with their certificates to download (free, sign up at https://musicexams.help/register)
+  • Your own teacher dashboard: all your students' bookings, results and awards in one place, with their certificates to download (free, sign up at https://musicexams.help/register)
   • Student recognition — Hall of Fame, certificates and quarterly prize draws
   • Teacher awards — Bronze, Silver, Gold and Top Award badges
   • Faber music book discounts for teachers

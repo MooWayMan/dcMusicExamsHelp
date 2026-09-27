@@ -61,6 +61,9 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
             ->name('contacts.certificate');
         Route::get('contacts/{contact}/certificates', [\App\Http\Controllers\DashboardController::class, 'certificatesZipForContact'])
             ->name('contacts.certificates');
+        Route::get('contacts/{contact}/rewards/{year}/{quarter}/certificate', [\App\Http\Controllers\DashboardRewardsController::class, 'certificateForContact'])
+            ->whereNumber(['year', 'quarter'])
+            ->name('contacts.rewards.certificate');
 
         Route::get('contacts/{contact}', [ContactController::class, 'show'])->name('contacts.show');
 

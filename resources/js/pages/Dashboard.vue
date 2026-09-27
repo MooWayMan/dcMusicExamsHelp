@@ -8,6 +8,8 @@ import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyInputConstructor from '@/components/reusables/MyInputConstructor.vue'
 import DashboardCharts from '@/components/dashboard/DashboardCharts.vue'
 import DashboardLinkCard from '@/components/dashboard/DashboardLinkCard.vue'
+import RewardsCard from '@/components/dashboard/RewardsCard.vue'
+import type { RewardQuarter } from '@/types/rewards'
 import { Spinner } from '@/components/ui/spinner'
 import { dashboard, logout } from '@/routes'
 
@@ -67,6 +69,7 @@ const props = defineProps<{
     examEntries?: ExamEntryRow[]
     hasLinkedContact?: boolean
     teacherPrizeDraw?: TeacherPrizeDrawPayload
+    rewards?: RewardQuarter[]
     // Set only when an admin is previewing this dashboard AS a contact
     // (read-only). Drives the amber "preview" banner.
     preview?: { contact_id: number; contact_name: string }
@@ -151,6 +154,9 @@ const hasCertificates = computed(() => entries.value.some((e) => e.score !== nul
 function downloadCertificate(entryId: number) {
     window.location.href = `${certificateBase.value}/${entryId}`
 }
+const rewardsBase = computed(() =>
+    props.preview ? `/admin/contacts/${props.preview.contact_id}/rewards` : '/dashboard/rewards',
+)
 function downloadAllCertificates() {
     window.location.href = `${certificateBase.value}${exportQuery.value}`
 }
@@ -596,6 +602,8 @@ defineOptions({
                     </div>
                 </div>
             </MyCardConstructor>
+
+            <RewardsCard v-if="rewards?.length" :rewards="rewards" :certificate-base="rewardsBase" />
 
             <!-- Date range + downloads.
                  Sits OUTSIDE the candidates card on purpose: if a range comes

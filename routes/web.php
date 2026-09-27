@@ -166,6 +166,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard/certificates', [DashboardController::class, 'certificatesZip'])
         ->middleware('throttle:10,1')
         ->name('dashboard.certificates');
+    Route::get('dashboard/rewards/{year}/{quarter}/certificate', [\App\Http\Controllers\DashboardRewardsController::class, 'certificate'])
+        ->whereNumber(['year', 'quarter'])
+        ->middleware('throttle:20,1')
+        ->name('dashboard.rewards.certificate');
 
     Route::post('dashboard/link-request', [DashboardController::class, 'linkRequest'])
         ->name('dashboard.link-request');
