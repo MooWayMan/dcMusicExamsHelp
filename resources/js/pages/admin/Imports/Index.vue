@@ -22,7 +22,7 @@ const props = defineProps<{
 }>()
 
 // ──────────────────────────────────────────────────────────────────
-// Section 1 — Bulk Orders
+// Box 1 — Orders (Trinity order list)
 // ──────────────────────────────────────────────────────────────────
 
 const ordersFile = ref<File | null>(null)
@@ -137,7 +137,7 @@ function commitOrders() {
 }
 
 // ──────────────────────────────────────────────────────────────────
-// Section 3 — Enrolment list (pre-results)
+// Box 2 — Candidates before results (Generate Summary of Entries)
 // ──────────────────────────────────────────────────────────────────
 
 const enrolFile = ref<File | null>(null)
@@ -236,7 +236,7 @@ function commitEnrolList() {
 }
 
 // ──────────────────────────────────────────────────────────────────
-// Section 2 — Per-candidate triple
+// Box 3 — Results, one candidate at a time (Enrolment + Summary + Marksheet)
 // ──────────────────────────────────────────────────────────────────
 
 const enrolmentFile = ref<File | null>(null)
@@ -765,17 +765,17 @@ function formatRunSummary(run: { type: string; summary: Record<string, unknown> 
             <div>
                 <p class="text-sm font-semibold uppercase tracking-wider text-brand-text-soft">Admin</p>
                 <h1 class="text-2xl font-bold text-brand-text">Import</h1>
-                <p class="mt-1 text-sm text-brand-text-soft">Bulk-load Trinity CSV exports — quarter orders or per-candidate triples.</p>
+                <p class="mt-1 text-sm text-brand-text-soft">Load Trinity&rsquo;s exports in this order: 1 the orders, 2 each order&rsquo;s candidates, 3 each candidate&rsquo;s results once they are out.</p>
             </div>
         </div>
 
-        <!-- ───────── Section 1: Bulk Orders ───────── -->
+        <!-- ───────── Box 1: Orders ───────── -->
         <section class="mt-6 rounded-xl border border-brand-border bg-brand-surface p-5">
             <div class="mb-4 flex items-center gap-3">
                 <Database class="h-6 w-6 text-brand-accent" />
                 <div>
-                    <h2 class="text-xl font-semibold text-brand-text">1. Bulk Orders CSV</h2>
-                    <p class="text-sm text-brand-text-soft">Upload a Trinity orders export and pick the quarter. Filters by Requested Start Date. Idempotent on Order #.</p>
+                    <h2 class="text-xl font-semibold text-brand-text">1. Orders</h2>
+                    <p class="text-sm text-brand-text-soft">Trinity&rsquo;s order list: one row per order (Requested Start Date, Order #, Candidates, Venue, Order Status). Pick the quarter; orders starting in it are added. Loading the same file again changes nothing.</p>
                 </div>
             </div>
 
@@ -883,13 +883,13 @@ function formatRunSummary(run: { type: string; summary: Record<string, unknown> 
             </div>
         </section>
 
-        <!-- ───────── Section 3: Enrolment List (pre-results) ───────── -->
+        <!-- ───────── Box 2: Candidates, before results ───────── -->
         <section class="mt-6 rounded-xl border border-brand-border bg-brand-surface p-5">
             <div class="mb-4 flex items-center gap-3">
                 <FileText class="h-6 w-6 text-brand-accent" />
                 <div>
-                    <h2 class="text-xl font-semibold text-brand-text">3. Enrolment List (pre-results)</h2>
-                    <p class="text-sm text-brand-text-soft">Trinity's "Generate Summary of Entries" export. Loads all candidates + the submitter against an order before results — paste the order number from the Trinity page header. Scores fill in later from the triple.</p>
+                    <h2 class="text-xl font-semibold text-brand-text">2. Candidates, before results</h2>
+                    <p class="text-sm text-brand-text-soft">For one order: open it on Trinity Online and use <span class="font-semibold text-brand-text">Generate Summary of Entries</span>. One row per candidate (Examination, Candidate Number, Candidate Name, Price, Applicant). Type that order&rsquo;s number. Results are added later in box 3.</p>
                 </div>
             </div>
 
@@ -972,13 +972,13 @@ function formatRunSummary(run: { type: string; summary: Record<string, unknown> 
             </div>
         </section>
 
-        <!-- ───────── Section 2: Per-candidate Triple ───────── -->
+        <!-- ───────── Box 3: Results, one candidate at a time ───────── -->
         <section class="mt-6 rounded-xl border border-brand-border bg-brand-surface p-5">
             <div class="mb-4 flex items-center gap-3">
                 <FileText class="h-6 w-6 text-brand-accent" />
                 <div>
-                    <h2 class="text-xl font-semibold text-brand-text">2. Per-Candidate Triple</h2>
-                    <p class="text-sm text-brand-text-soft">Upload Enrolment + Summary + Marksheet CSVs for a single candidate. Auto-derives booking role, instrument, grade, score.</p>
+                    <h2 class="text-xl font-semibold text-brand-text">3. Results, one candidate at a time</h2>
+                    <p class="text-sm text-brand-text-soft">Once results are out: that candidate&rsquo;s three Trinity files, Enrolment, Summary and Marksheet. Drop them together; they are sorted by their columns. Adds the score, result, instrument and grade.</p>
                 </div>
             </div>
 
