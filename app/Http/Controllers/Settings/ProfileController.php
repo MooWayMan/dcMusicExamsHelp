@@ -64,7 +64,7 @@ class ProfileController extends Controller
         // Mirror the change into HubSpot — opt-in adds them to the marketing
         // list, opt-out removes them. The job self-guards (only touches HubSpot
         // when there's something to sync).
-        SyncSubscriberToHubSpot::dispatch($subscriber);
+        SyncSubscriberToHubSpot::dispatchAfterResponse($subscriber);
 
         return to_route('profile.edit');
     }

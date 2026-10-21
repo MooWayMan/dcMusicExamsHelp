@@ -126,7 +126,7 @@ class SubscriberController extends Controller
         $subscriber->save();
 
         if ($marketingConsent) {
-            SyncSubscriberToHubSpot::dispatch($subscriber);
+            SyncSubscriberToHubSpot::dispatchAfterResponse($subscriber);
         }
 
         // Deliver the PDF. Failure is logged but doesn't block the

@@ -5,7 +5,7 @@ use App\Models\Subscriber;
 use App\Models\User;
 use App\Services\HubSpot\HubSpotClient;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Bus;
 use Laravel\Fortify\Features;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
@@ -14,9 +14,9 @@ uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 // Dispatch wiring — the consent moments that should push to HubSpot.
 // ──────────────────────────────────────────
 
-test('registering with the opt-in ticked queues a HubSpot sync', function () {
+test('registering with the opt-in ticked syncs to HubSpot after the response', function () {
     $this->skipUnlessFortifyHas(Features::registration());
-    Queue::fake();
+    Bus::fake();
 
     $this->post(route('register.store'), [
         'name' => 'Connie Consent',
@@ -27,12 +27,12 @@ test('registering with the opt-in ticked queues a HubSpot sync', function () {
         'marketing_consent' => true,
     ])->assertRedirect();
 
-    Queue::assertPushed(SyncSubscriberToHubSpot::class, fn ($job) => $job->subscriber->email === 'connie@example.com');
+    Bus::assertDispatchedAfterResponse(SyncSubscriberToHubSpot::class, fn ($job) => $job->subscriber->email === 'connie@example.com');
 });
 
-test('registering without the opt-in still queues a HubSpot sync as service-eligible (no marketing consent)', function () {
+test('registering without the opt-in still syncs to HubSpot as service-eligible (no marketing consent)', function () {
     $this->skipUnlessFortifyHas(Features::registration());
-    Queue::fake();
+    Bus::fake();
 
     $this->post(route('register.store'), [
         'name' => 'Nora NoThanks',
@@ -42,7 +42,7 @@ test('registering without the opt-in still queues a HubSpot sync as service-elig
         'password_confirmation' => 'password123',
     ])->assertRedirect();
 
-    Queue::assertPushed(
+    Bus::assertDispatchedAfterResponse(
         SyncSubscriberToHubSpot::class,
         fn ($job) => $job->subscriber->email === 'nora@example.com'
             && $job->serviceEligible === true
@@ -50,19 +50,19 @@ test('registering without the opt-in still queues a HubSpot sync as service-elig
     );
 });
 
-test('opting in from the profile page queues a HubSpot sync', function () {
-    Queue::fake();
+test('opting in from the profile page syncs to HubSpot after the response', function () {
+    Bus::fake();
     $user = User::factory()->create(['role' => 'teacher']);
 
     $this->actingAs($user)
         ->patch(route('email-preferences.update'), ['marketing_consent' => true])
         ->assertRedirect(route('profile.edit'));
 
-    Queue::assertPushed(SyncSubscriberToHubSpot::class);
+    Bus::assertDispatchedAfterResponse(SyncSubscriberToHubSpot::class);
 });
 
-test('withdrawing consent from the profile page still queues a sync so the opt-out propagates', function () {
-    Queue::fake();
+test('withdrawing consent from the profile page still syncs so the opt-out propagates', function () {
+    Bus::fake();
     $user = User::factory()->create(['role' => 'teacher']);
     Subscriber::create([
         'name' => $user->name,
@@ -76,7 +76,7 @@ test('withdrawing consent from the profile page still queues a sync so the opt-o
         ->patch(route('email-preferences.update'), [])
         ->assertRedirect(route('profile.edit'));
 
-    Queue::assertPushed(SyncSubscriberToHubSpot::class);
+    Bus::assertDispatchedAfterResponse(SyncSubscriberToHubSpot::class);
 });
 
 // ──────────────────────────────────────────
@@ -217,8 +217,8 @@ test('withdrawal for a contact never synced to HubSpot does nothing', function (
     Http::assertNothingSent();
 });
 
-test('the backfill queues a service sync for every account holder, creating a subscriber row where none exists', function () {
-    Queue::fake();
+test('the backfill syncs every account holder at once, creating a subscriber row where none exists', function () {
+    Bus::fake();
 
     // Account holder who already has a subscriber row (from an earlier flow).
     User::factory()->create(['email' => 'ben@example.com', 'role' => 'teacher']);
@@ -230,7 +230,7 @@ test('the backfill queues a service sync for every account holder, creating a su
     ]);
 
     // Account holder with NO subscriber row yet — the backfill must create one
-    // and still queue the service sync (this is the case the old query missed).
+    // and still run the service sync (this is the case the old query missed).
     User::factory()->create(['name' => 'Dan Dashboard', 'email' => 'dan@example.com', 'role' => 'teacher']);
 
     // Internal admin — must be skipped, they send the notices, not receive them.
@@ -247,26 +247,71 @@ test('the backfill queues a service sync for every account holder, creating a su
     $this->artisan('hubspot:backfill-service-contacts')->assertSuccessful();
 
     // Ben + Dan only — admin and the marketing-only subscriber are excluded.
-    Queue::assertPushed(SyncSubscriberToHubSpot::class, 2);
-    Queue::assertPushed(
+    Bus::assertDispatchedSync(SyncSubscriberToHubSpot::class, 2);
+    Bus::assertDispatchedSync(
         SyncSubscriberToHubSpot::class,
         fn ($job) => $job->subscriber->email === 'ben@example.com' && $job->serviceEligible === true
     );
-    Queue::assertPushed(
+    Bus::assertDispatchedSync(
         SyncSubscriberToHubSpot::class,
         fn ($job) => $job->subscriber->email === 'dan@example.com' && $job->serviceEligible === true
     );
-    Queue::assertNotPushed(
+    Bus::assertNotDispatchedSync(
         SyncSubscriberToHubSpot::class,
         fn ($job) => $job->subscriber->email === 'paul@example.com'
     );
-    Queue::assertNotPushed(
+    Bus::assertNotDispatchedSync(
         SyncSubscriberToHubSpot::class,
         fn ($job) => $job->subscriber->email === 'cara@example.com'
     );
 
     // The account holder who lacked a subscriber row now has one.
     expect(Subscriber::where('email', 'dan@example.com')->exists())->toBeTrue();
+});
+
+// ──────────────────────────────────────────
+// No queue worker (21 Oct 2026). The sync runs in the same request, after the
+// page has gone back, because a worker polling the database every 10 seconds
+// for about two signups a month kept the serverless database awake and billed
+// around the clock. These prove it still reaches HubSpot with no worker, and
+// that nothing can quietly go back onto a queue nobody is reading.
+// ──────────────────────────────────────────
+
+test('a signup reaches HubSpot with no queue worker running, and leaves nothing on the queue', function () {
+    $this->skipUnlessFortifyHas(Features::registration());
+    config([
+        'services.hubspot.token' => 'test-token',
+        'services.hubspot.base_url' => 'https://api.hubapi.com',
+        'services.hubspot.consent_property' => 'app_marketing_consent',
+        // The real queue, not the test default — if anything were queued it
+        // would sit in the jobs table, which is what this checks.
+        'queue.default' => 'database',
+    ]);
+    Http::fake([
+        'api.hubapi.com/*' => Http::response(['results' => [['id' => '99100']]], 200),
+    ]);
+
+    $this->post(route('register.store'), [
+        'name' => 'Wendy Workerless',
+        'email' => 'wendy@example.com',
+        'role' => 'teacher',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+        'marketing_consent' => true,
+    ])->assertRedirect();
+
+    expect(Subscriber::where('email', 'wendy@example.com')->value('hubspot_contact_id'))->toBe('99100')
+        ->and(\Illuminate\Support\Facades\DB::table('jobs')->count())->toBe(0);
+});
+
+test('the HubSpot sync is never put on a queue', function () {
+    // Two ways it could drift back: the job becoming queueable again, or a
+    // caller using plain dispatch(). guardOffenders strips comments first.
+    expect(is_subclass_of(SyncSubscriberToHubSpot::class, \Illuminate\Contracts\Queue\ShouldQueue::class))->toBeFalse();
+
+    $offenders = guardOffenders('/SyncSubscriberToHubSpot::dispatch\s*\(/', []);
+
+    expect($offenders)->toBe([]);
 });
 
 // ──────────────────────────────────────────

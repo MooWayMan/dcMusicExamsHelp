@@ -17,7 +17,8 @@ use Illuminate\Console\Command;
  * holder. Reaching them via the `subscribers` table (the old approach) missed
  * anyone who registered before the live sync existed and so never got a
  * subscriber row. For each user we find-or-create their subscriber row, then
- * queue SyncSubscriberToHubSpot with serviceEligible = true: that upserts the
+ * run SyncSubscriberToHubSpot (directly — there is no queue worker since
+ * 21 Oct 2026) with serviceEligible = true: that upserts the
  * contact and stamps the service flag without touching marketing consent.
  * Idempotent (upsert + firstOrCreate) — safe to run more than once.
  *
@@ -30,12 +31,12 @@ use Illuminate\Console\Command;
  *
  * Run AFTER activation: the HubSpot `service_admin_updates` property + list
  * exist and `HUBSPOT_SERVICE_PROPERTY` is set on the environment. Without the
- * token/property the queued jobs simply no-op, so an early run is harmless.
+ * token/property the syncs simply no-op, so an early run is harmless.
  */
 class BackfillServiceContacts extends Command
 {
     protected $signature = 'hubspot:backfill-service-contacts
-        {--dry-run : Count who would be synced without queueing anything}';
+        {--dry-run : Count who would be synced without syncing anything}';
 
     protected $description = 'Backfill existing account holders onto the HubSpot service/admin list (legitimate interest).';
 
@@ -44,11 +45,11 @@ class BackfillServiceContacts extends Command
         $dry = (bool) $this->option('dry-run');
 
         if ($dry) {
-            $this->info('DRY RUN — nothing will be queued.');
+            $this->info('DRY RUN — nothing will be synced.');
         }
 
         if (blank(config('services.hubspot.service_property'))) {
-            $this->warn('HUBSPOT_SERVICE_PROPERTY is not set — the service flag will not be written until it is. Queued jobs no-op safely in the meantime.');
+            $this->warn('HUBSPOT_SERVICE_PROPERTY is not set — the service flag will not be written until it is. Syncs no-op safely in the meantime.');
         }
 
         $total = 0;
@@ -75,13 +76,13 @@ class BackfillServiceContacts extends Command
                         ],
                     );
 
-                    SyncSubscriberToHubSpot::dispatch($subscriber, serviceEligible: true);
+                    SyncSubscriberToHubSpot::dispatchSync($subscriber, serviceEligible: true);
                 }
             });
 
         $this->info($dry
-            ? "Dry run complete — {$total} account holder(s) would be queued for the service list."
-            : "Done — queued {$total} account holder(s) for the HubSpot service list.");
+            ? "Dry run complete — {$total} account holder(s) would be synced to the service list."
+            : "Done — synced {$total} account holder(s) to the HubSpot service list.");
 
         return self::SUCCESS;
     }

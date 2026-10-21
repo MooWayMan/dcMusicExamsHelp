@@ -4,7 +4,6 @@ namespace App\Jobs;
 
 use App\Models\Subscriber;
 use App\Services\HubSpot\HubSpotClient;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Str;
 
@@ -29,8 +28,19 @@ use Illuminate\Support\Str;
  *
  * No-ops entirely when no HubSpot token is configured (staging/local/test),
  * matching the blank-Mailchimp-keys convention.
+ *
+ * NOT QUEUED (21 Oct 2026). Callers use dispatchAfterResponse(): it runs in
+ * the same request, after the page has gone back to the visitor, so nobody
+ * waits on HubSpot and no worker is needed. The site sees about two signups a
+ * month, and the `queue:work` process that used to run this polled the
+ * database every 10 seconds — which kept the serverless database awake (and
+ * billed) around the clock. It deliberately does not implement ShouldQueue,
+ * so even a plain dispatch() runs at once instead of waiting for a worker
+ * that no longer exists. What was given up: three automatic retries. A failed
+ * sync is logged, and hubspot:backfill-service-contacts re-sends it.
+ * Guarded in HubSpotSyncTest.
  */
-class SyncSubscriberToHubSpot implements ShouldQueue
+class SyncSubscriberToHubSpot
 {
     use Queueable;
 

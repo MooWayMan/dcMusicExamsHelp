@@ -109,6 +109,6 @@ class CreateNewUser implements CreatesNewUsers
         // to HubSpot regardless of the marketing tick: service-eligible so the
         // legitimate-interest service list catches them, while the marketing
         // consent property still reflects whether they opted in.
-        SyncSubscriberToHubSpot::dispatch($subscriber, serviceEligible: true);
+        SyncSubscriberToHubSpot::dispatchAfterResponse($subscriber, serviceEligible: true);
     }
 }
