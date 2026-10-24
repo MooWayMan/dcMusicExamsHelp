@@ -188,22 +188,6 @@ class TaskController extends Controller
     }
 
     /**
-     * AJAX: trigger GCal sync and return fresh active task count.
-     * Called by frontend polling (e.g. sidebar refreshing every few minutes).
-     * The actual sync is handled by the SyncCalendarTasks middleware,
-     * so this just returns the current counts.
-     */
-    public function sync(): JsonResponse
-    {
-        // Middleware already ran the throttled sync, so just return fresh counts
-        return response()->json([
-            'pending' => Task::where('status', 'pending')->count(),
-            'in_progress' => Task::where('status', 'in_progress')->count(),
-            'total_active' => Task::where('status', '!=', 'completed')->count(),
-        ]);
-    }
-
-    /**
      * AJAX: save notes inline from the index page expandable textarea.
      */
     public function updateNotes(Request $request, Task $task): JsonResponse

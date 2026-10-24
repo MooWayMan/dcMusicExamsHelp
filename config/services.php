@@ -39,13 +39,6 @@ return [
         'token' => env('TASK_API_TOKEN'),
     ],
 
-    'google_calendar' => [
-        'client_id' => env('GOOGLE_CALENDAR_CLIENT_ID'),
-        'client_secret' => env('GOOGLE_CALENDAR_CLIENT_SECRET'),
-        'refresh_token' => env('GOOGLE_CALENDAR_REFRESH_TOKEN'),
-        'calendar_id' => env('GOOGLE_CALENDAR_ID', 'primary'),
-    ],
-
     /*
     | HubSpot — Private App token used to auto-sync consented subscribers into
     | the CRM (App\Services\HubSpot\HubSpotClient + App\Jobs\SyncSubscriberToHubSpot).

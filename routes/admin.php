@@ -28,10 +28,9 @@ use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\SubscriberController;
 use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\UserController;
-use App\Http\Middleware\SyncCalendarTasks;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
+Route::middleware(['auth', 'verified', 'admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
@@ -119,9 +118,6 @@ Route::middleware(['auth', 'verified', 'admin', SyncCalendarTasks::class])
         Route::resource('tasks', TaskController::class)->except(['show']);
         Route::patch('tasks/{task}/toggle', [TaskController::class, 'toggle'])->name('tasks.toggle');
         Route::patch('tasks/{task}/notes', [TaskController::class, 'updateNotes'])->name('tasks.notes');
-
-        // AJAX: sync calendar + return fresh active task count (for sidebar polling)
-        Route::post('tasks/sync', [TaskController::class, 'sync'])->name('tasks.sync');
 
         // Imports — Trinity CSV exports → Orders + Exam Entries
         Route::get('imports', [ImportController::class, 'index'])->name('imports.index');

@@ -142,18 +142,6 @@ test('admin can update task notes via AJAX', function () {
     expect($task->fresh()->notes)->toBe('Updated notes from Spider-Man');
 });
 
-// ── AJAX Sync ──
-
-test('admin can sync task counts via AJAX', function () {
-    Task::factory()->count(3)->create(['status' => 'pending']);
-    Task::factory()->count(2)->completed()->create();
-
-    $response = $this->actingAs($this->admin)
-        ->postJson('/admin/tasks/sync');
-
-    $response->assertOk();
-});
-
 // ── Filters ──
 
 test('admin can filter tasks by status', function () {
