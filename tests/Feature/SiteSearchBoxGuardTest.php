@@ -15,10 +15,10 @@ test('a search address is built in one place', function () {
     expect(guardOffenders("#'/search'\s*\+#", ['resources/js/composables/useSiteSearch.ts']))->toBe([]);
 });
 
-test('the home page, FAQ, search page and phone menu all use it', function () {
+test('the home page, FAQ, search page, phone menu and breadcrumb bar all use it', function () {
     $sources = guardSources();
 
-    foreach (['resources/js/pages/Welcome.vue', 'resources/js/pages/Faq.vue', 'resources/js/pages/Search.vue', 'resources/js/components/layouts/Navbar.vue'] as $path) {
+    foreach (['resources/js/pages/Welcome.vue', 'resources/js/pages/Faq.vue', 'resources/js/pages/Search.vue', 'resources/js/components/layouts/Navbar.vue', 'resources/js/components/layouts/Breadcrumbs.vue'] as $path) {
         expect($sources[$path])->toContain('<SiteSearchBox');
     }
 });

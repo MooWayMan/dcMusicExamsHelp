@@ -46,7 +46,7 @@ const hasQuery = computed(() => query.value.trim().length > 0)
     <section class="bg-brand-surface pt-36 pb-10 md:pt-40 lg:pt-40">
       <div class="mx-auto max-w-4xl px-4 sm:px-6">
         <div class="mb-6">
-          <Breadcrumbs :pages="breadcrumbPages" home-href="/" />
+          <Breadcrumbs :pages="breadcrumbPages" home-href="/" :show-search="false" />
         </div>
 
         <div :class="animClass('fade-up', 0)">

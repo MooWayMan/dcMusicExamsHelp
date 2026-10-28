@@ -3,7 +3,9 @@
 import { computed, onMounted, ref } from 'vue'
 import { ChevronRightIcon, HomeIcon } from '@heroicons/vue/20/solid'
 import { Link, router } from '@inertiajs/vue3'
+import { Search } from 'lucide-vue-next'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
+import SiteSearchBox from '@/components/SiteSearchBox.vue'
 
 interface BreadcrumbItem {
   name: string
@@ -14,10 +16,15 @@ interface BreadcrumbItem {
 interface Props {
   pages: BreadcrumbItem[]
   homeHref?: string
+  // Site search sits on the right of this bar on every page, so it is always
+  // in view (Paul, 28 Oct 2026: "not everyone knows" the menu magnifier).
+  // Off on the search page, which has its own box.
+  showSearch?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   homeHref: '/',
+  showSearch: true,
 })
 
 /* ── Dynamic parent page from ?from= query parameter ── */
@@ -77,8 +84,9 @@ function handleBreadcrumbClick(e: MouseEvent, page: BreadcrumbItem) {
   <!-- Fixed bar sits directly below the h-20 navbar -->
   <div class="fixed left-0 right-0 top-20 z-40 border-b border-brand-border/50 bg-white">
     <div class="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
-      <nav class="flex items-center text-brand-text-soft" aria-label="Breadcrumb">
-        <ol role="list" class="flex items-center space-x-2">
+      <div class="flex items-center justify-between gap-4">
+      <nav class="min-w-0 flex items-center text-brand-text-soft" aria-label="Breadcrumb">
+        <ol role="list" class="flex min-w-0 flex-wrap items-center space-x-2">
 
           <!-- Home -->
           <li>
@@ -122,6 +130,22 @@ function handleBreadcrumbClick(e: MouseEvent, page: BreadcrumbItem) {
 
         </ol>
       </nav>
+
+      <!-- Site search. The negative margin keeps the bar its usual height, so
+           nothing below it moves. Phones and tablets get a labelled link to
+           the search page instead, as a box does not fit beside the trail. -->
+      <template v-if="props.showSearch">
+        <div class="-my-1.5 hidden w-72 shrink-0 lg:block">
+          <SiteSearchBox placeholder="Search the site" />
+        </div>
+        <Link href="/search" class="flex shrink-0 items-center gap-1.5 text-brand-accent lg:hidden">
+          <Search class="h-5 w-5" aria-hidden="true" />
+          <MyTextConstructor variant="button-sm" spacing="none" textColor="text-brand-accent">
+            <template #myTitle>Search</template>
+          </MyTextConstructor>
+        </Link>
+      </template>
+      </div>
     </div>
   </div>
 </template>
