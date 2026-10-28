@@ -16,11 +16,23 @@ import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructo
 import MyFooter from '@/components/layouts/MyFooter.vue'
 // EmailCapture import removed 2026-05-04 — superseded by LeadMagnetCapture.
 import LeadMagnetCapture from '@/components/LeadMagnetCapture.vue'
+import SiteSearchBox from '@/components/SiteSearchBox.vue'
+import { searchUrl } from '@/composables/useSiteSearch'
+import { GUITAR_EXAMS_ANCHOR } from '@/lib/guitarExams'
 import { useAccordionHashOpen } from '@/composables/useAccordionHashOpen'
 import faqPage from '@/data/faqs/welcome'
 import { faqAccordionItems } from '@/lib/faqs'
 
 useAccordionHashOpen()
+
+// Under the hero search box: the things a worried teacher or parent most often
+// comes looking for, one tap away (Paul, 28 Oct 2026).
+const quickLinks = [
+  { label: 'Exam dates', url: '/exam-fees#dates' },
+  { label: 'Fees', url: '/exam-fees' },
+  { label: 'Missed an exam', url: searchUrl('missed exam') },
+  { label: 'Which guitar exam', url: GUITAR_EXAMS_ANCHOR },
+]
 
 const { isSubscribed } = useSubscription()
 const { showBookingModal } = useBookingModal()
@@ -237,6 +249,22 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
                   Why use this page
                 </MyButtonConstructor>
               </a>
+            </div>
+
+            <!-- Site search, big and up front: a worried teacher or parent can
+                 just type what they need -->
+            <div class="mt-8 w-full max-w-xl">
+              <MyTextConstructor variant="button-lg" spacing="none">
+                <template #myTitle>What do you need to know?</template>
+              </MyTextConstructor>
+              <div class="mt-3">
+                <SiteSearchBox placeholder="Try &quot;missed exam&quot; or &quot;results&quot;" />
+              </div>
+              <div class="mt-3 flex flex-wrap gap-2">
+                <a v-for="link in quickLinks" :key="link.label" :href="link.url">
+                  <MyButtonConstructor variant="outline" size="small">{{ link.label }}</MyButtonConstructor>
+                </a>
+              </div>
             </div>
 
             <!-- Hero email capture removed 2026-05-04 — superseded by the

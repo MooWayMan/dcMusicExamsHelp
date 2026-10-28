@@ -7,6 +7,7 @@ import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MySocials from '@/components/layouts/MySocials.vue'
 import BookingModal from '@/components/BookingModal.vue'
+import SiteSearchBox from '@/components/SiteSearchBox.vue'
 
 interface Props {
   fixed?: boolean
@@ -29,15 +30,11 @@ const handleLogout = () => {
 
 const isOpen = ref(false)
 
-const searchQuery = ref('')
-
-const submitSearch = () => {
-  const q = searchQuery.value.trim()
+// Close every menu once a search from the phone menu has been sent.
+const closeMenus = () => {
   isOpen.value = false
   openDropdown.value = null
   openMobileDropdown.value = null
-  router.visit('/search' + (q ? '?q=' + encodeURIComponent(q) : ''))
-  searchQuery.value = ''
 }
 
 /* Lock body scroll when mobile nav is open */
@@ -326,16 +323,9 @@ const navClasses = computed(() =>
     <div v-if="isOpen" class="max-h-[calc(100vh-5rem)] overflow-y-auto border-t border-slate-200 bg-white lg:hidden">
       <div class="space-y-1 px-4 py-4 sm:px-6">
         <!-- Site search (mobile) -->
-        <form class="relative mb-3" role="search" @submit.prevent="submitSearch">
-          <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-          <input
-            v-model="searchQuery"
-            type="search"
-            placeholder="Search…"
-            aria-label="Search the site"
-            class="h-11 w-full rounded-xl border border-brand-border bg-brand-surface-soft pl-10 pr-3 text-base text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-accent"
-          />
-        </form>
+        <div class="mb-3">
+          <SiteSearchBox placeholder="Search…" @submitted="closeMenus" />
+        </div>
 
         <template v-for="item in navigation" :key="item.name">
           <!-- Item WITH children — accordion style -->

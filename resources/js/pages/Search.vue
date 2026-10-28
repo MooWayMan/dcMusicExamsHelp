@@ -1,8 +1,7 @@
 <!-- resources/js/pages/Search.vue -->
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { usePage, router } from '@inertiajs/vue3'
-import { MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
+import { usePage } from '@inertiajs/vue3'
 import { usePageAnimation } from '@/composables/usePageAnimation'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
@@ -10,6 +9,7 @@ import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
 import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
 import { runSearch } from '@/data/searchIndex'
+import SiteSearchBox from '@/components/SiteSearchBox.vue'
 
 const { animClass } = usePageAnimation()
 
@@ -35,14 +35,6 @@ const query = ref(initialQuery)
 const results = computed(() => runSearch(query.value))
 const hasQuery = computed(() => query.value.trim().length > 0)
 
-const submit = () => {
-  const q = query.value.trim()
-  router.visit('/search' + (q ? '?q=' + encodeURIComponent(q) : ''), {
-    preserveState: true,
-    preserveScroll: true,
-    replace: true,
-  })
-}
 </script>
 
 <template>
@@ -76,17 +68,9 @@ const submit = () => {
           </MyTextConstructor>
         </div>
 
-        <form class="relative mt-6" @submit.prevent="submit">
-          <MagnifyingGlassIcon class="pointer-events-none absolute left-4 top-1/2 h-6 w-6 -translate-y-1/2 text-slate-400" />
-          <input
-            v-model="query"
-            type="search"
-            autofocus
-            placeholder="Search"
-            aria-label="Search the site"
-            class="h-14 w-full rounded-2xl border border-brand-border bg-white pl-12 pr-4 text-lg text-slate-800 shadow-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-accent"
-          />
-        </form>
+        <div class="mt-6">
+          <SiteSearchBox v-model="query" stay-on-page autofocus placeholder="Search" />
+        </div>
       </div>
     </section>
 

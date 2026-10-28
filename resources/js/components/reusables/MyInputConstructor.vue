@@ -1,6 +1,6 @@
 <!-- resources/js/components/reusables/MyInputConstructor.vue -->
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, type Component } from 'vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 
 defineOptions({ inheritAttrs: false })
@@ -22,6 +22,10 @@ interface Props {
   labelSize?: 'large' | 'small'
   error?: string
   success?: string
+  /** An icon drawn inside the box on the left, e.g. a magnifying glass. */
+  icon?: Component
+  /** Names the box for screen readers when there is no visible label. */
+  ariaLabel?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -40,6 +44,8 @@ const props = withDefaults(defineProps<Props>(), {
   labelSize: 'large',
   error: '',
   success: '',
+  icon: undefined,
+  ariaLabel: '',
 })
 
 const emit = defineEmits<{
@@ -64,9 +70,20 @@ const sizeClasses = computed(() => {
   }
 })
 
+// Room for the icon, sized to match each box size.
+const iconPad = computed(() => {
+  if (!props.icon) return ''
+  return { small: '!pl-10', medium: '!pl-12', large: '!pl-14' }[props.size]
+})
+
+const iconClasses = computed(() => {
+  const size = { small: 'left-3 h-5 w-5', medium: 'left-4 h-6 w-6', large: 'left-5 h-7 w-7' }[props.size]
+  return `pointer-events-none absolute top-1/2 -translate-y-1/2 text-brand-accent ${size}`
+})
+
 const inputClasses = computed(() => {
   const base =
-    'w-full rounded-xl border transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2'
+    `w-full rounded-xl border transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${iconPad.value}`
 
   if (props.error) {
     return [
@@ -145,6 +162,8 @@ const handleKeydown = (event: KeyboardEvent) => emit('keydown', event)
       </MyTextConstructor>
     </label>
 
+    <div :class="icon ? 'relative' : ''">
+    <component :is="icon" v-if="icon" :class="iconClasses" aria-hidden="true" />
     <input
       :id="inputId"
       :type="type"
@@ -157,6 +176,7 @@ const handleKeydown = (event: KeyboardEvent) => emit('keydown', event)
       :autofocus="autofocus"
       :autocomplete="autocomplete || undefined"
       :class="inputClasses"
+      :aria-label="ariaLabel || undefined"
       :aria-invalid="!!error"
       :aria-describedby="error || success ? `${inputId}-message` : undefined"
       @input="handleInput"
@@ -165,6 +185,7 @@ const handleKeydown = (event: KeyboardEvent) => emit('keydown', event)
       @keyup="handleKeyup"
       @keydown="handleKeydown"
     />
+    </div>
 
     <div v-if="error || success" :id="`${inputId}-message`" class="mt-2">
       <MyTextConstructor

@@ -1,14 +1,12 @@
 <!-- resources/js/pages/Faq.vue -->
 <script setup lang="ts">
-import { ref } from 'vue'
-import { router } from '@inertiajs/vue3'
-import { MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
 import { useAccordionHashOpen } from '@/composables/useAccordionHashOpen'
 import { usePageAnimation } from '@/composables/usePageAnimation'
 import { useBookingModal } from '@/composables/useBookingModal'
 import Head from '@/components/layouts/Head.vue'
 import Navbar from '@/components/layouts/Navbar.vue'
 import BookingModal from '@/components/BookingModal.vue'
+import SiteSearchBox from '@/components/SiteSearchBox.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
@@ -35,11 +33,6 @@ const faqs = faqPage.items
 
 useAccordionHashOpen()
 
-const searchQuery = ref('')
-const submitSearch = () => {
-  const q = searchQuery.value.trim()
-  router.visit('/search' + (q ? '?q=' + encodeURIComponent(q) : ''))
-}
 
 const faqJsonLd = JSON.stringify({
   '@context': 'https://schema.org',
@@ -96,16 +89,7 @@ const faqJsonLd = JSON.stringify({
         </div>
 
         <div :class="animClass('fade-up', 3)" class="mx-auto mt-6 max-w-xl">
-          <form class="relative" role="search" @submit.prevent="submitSearch">
-            <MagnifyingGlassIcon class="pointer-events-none absolute left-4 top-1/2 h-6 w-6 -translate-y-1/2 text-slate-400" />
-            <input
-              v-model="searchQuery"
-              type="search"
-              placeholder="Search"
-              aria-label="Search the site"
-              class="h-14 w-full rounded-2xl border border-brand-border bg-white pl-12 pr-4 text-lg text-slate-800 shadow-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-accent"
-            />
-          </form>
+          <SiteSearchBox placeholder="Search" />
         </div>
         </div>
       </div>
