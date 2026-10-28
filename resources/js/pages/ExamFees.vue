@@ -167,17 +167,24 @@ const diplomaDigitalData = [
   { diploma: 'FTCL Recital', fee: '£576.00' },
 ]
 
-/* ── Exam dates ── */
+/* ── Exam dates ──
+   One row per exam DAY, because each venue and exam type is its own Trinity
+   session with its own closing date (they differ by a day or two). "Best to
+   book by" is Paul's own date, deliberately ahead of Trinity's. "Trinity
+   closes" is what Trinity's booking systems showed, checked 28 Oct 2026.
+   Past sessions come off; add the next session's rows when Trinity opens it. */
 const dateColumns = [
-  { key: 'session', title: 'Exam Week', sortable: false },
-  { key: 'closing', title: 'Booking Closes', sortable: false },
-  { key: 'note', title: 'Note', sortable: false },
+  { key: 'exam', title: 'Exam', sortable: false },
+  { key: 'day', title: 'Exam Day', sortable: false },
+  { key: 'venue', title: 'Venue', sortable: false },
+  { key: 'bookBy', title: 'Best to Book By', sortable: false },
+  { key: 'closes', title: 'Trinity Closes', sortable: false },
 ]
 
 const dateData = [
-  { session: 'Week of 2nd March 2026', closing: '2nd February 2026 — or when full', note: 'Rock & Pop usually Saturday' },
-  { session: 'Week of 6th July 2026', closing: '6th June 2026 — or when full', note: 'Rock & Pop usually Saturday' },
-  { session: 'Week of 30th November 2026', closing: '30th October 2026 — or when full', note: 'Rock & Pop usually Saturday' },
+  { exam: 'Classical & Jazz', day: 'Thu 3 December 2026', venue: 'Liverpool — Learn Music', bookBy: '30 October 2026', closes: 'Thu 5 November 2026 — or when full' },
+  { exam: 'Classical & Jazz', day: 'Fri 4 December 2026', venue: 'Wirral — Wirral School of Music / Tafelmusik', bookBy: '30 October 2026', closes: 'Fri 6 November 2026 — or when full' },
+  { exam: 'Rock & Pop', day: 'Sat 5 December 2026', venue: 'Liverpool — Learn Music', bookBy: '30 October 2026', closes: 'Sat 7 November 2026 — or when full' },
 ]
 
 const bookingWindowColumns = [
@@ -558,18 +565,22 @@ const faqs = [
           >
             <template #myTitle>Face-to-face exam dates 2026</template>
           </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/80 sm:text-base md:text-lg lg:text-xl">
-            Liverpool and Wirral — three sessions per year for both Classical &amp; Jazz and Rock &amp; Pop.
-            Digital exams can be booked and submitted at any time.
-          </p>
+          <div class="mx-auto mt-3 max-w-2xl text-base md:text-lg lg:text-xl">
+            <MyTextConstructor bodyVariant="inherit" alignment="center" textColor="text-white/80">
+              Liverpool and Wirral — three sessions per year for both Classical &amp; Jazz and Rock &amp; Pop.
+              Digital exams can be booked and submitted at any time.
+            </MyTextConstructor>
+          </div>
         </div>
 
         <div :class="animClass('fade-up', 2)" class="mt-8">
-          <p class="mb-3 text-lg font-semibold text-white">Exam weeks and closing dates</p>
+          <div class="mb-3 text-lg font-semibold">
+            <MyTextConstructor bodyVariant="inherit" textColor="text-white">Next exam days and closing dates</MyTextConstructor>
+          </div>
           <MyTableConstructor
             :data="dateData"
             :columns="dateColumns"
-            rowKey="session"
+            rowKey="day"
             :sortable="false"
             :striped="true"
             :bordered="true"
@@ -578,7 +589,9 @@ const faqs = [
         </div>
 
         <div :class="animClass('fade-up', 3)" class="mt-10">
-          <p class="mb-3 text-lg font-semibold text-white">Online booking windows</p>
+          <div class="mb-3 text-lg font-semibold">
+            <MyTextConstructor bodyVariant="inherit" textColor="text-white">Online booking windows</MyTextConstructor>
+          </div>
           <MyTableConstructor
             :data="bookingWindowData"
             :columns="bookingWindowColumns"
@@ -588,9 +601,11 @@ const faqs = [
             :bordered="true"
             size="large"
           />
-          <p class="mt-3 text-sm text-white/60">
-            These booking windows are for face-to-face Classical &amp; Jazz exams. Rock &amp; Pop face-to-face exams are booked through a different system (MyTrinity) — sessions are published when available, so check our site or get in touch for the latest dates.
-          </p>
+          <div class="mt-3 text-sm">
+            <MyTextConstructor bodyVariant="inherit" textColor="text-white/60">
+              These booking windows are for face-to-face Classical &amp; Jazz exams. Rock &amp; Pop face-to-face exams are booked on MyTrinity, where each session opens on its own — the Rock &amp; Pop day above is the current one.
+            </MyTextConstructor>
+          </div>
         </div>
       </div>
     </section>

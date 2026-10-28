@@ -10,8 +10,10 @@ import BookingModal from '@/components/BookingModal.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
+import MyGlassCardConstructor from '@/components/reusables/MyGlassCardConstructor.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
-import { BookOpen, ChevronDown, ExternalLink } from 'lucide-vue-next'
+import { BookOpen, ChevronDown, ExternalLink, Guitar } from 'lucide-vue-next'
+import { GUITAR_EXAMS, SYLLABUS_URL } from '@/lib/guitarExams'
 
 const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
@@ -54,12 +56,12 @@ const classicalJazz: SyllabusLink[] = [
   {
     title: 'Classical Guitar',
     subtitle: 'Nylon string — Initial to Grade 8',
-    url: 'https://www.trinitycollege.com/qualifications/music/grade-exams/classical-guitar',
+    url: SYLLABUS_URL.classicalGuitar,
   },
   {
     title: 'Acoustic Guitar',
     subtitle: 'Steel string, fingerstyle and plectrum — Initial to Grade 8',
-    url: 'https://www.trinitycollege.com/qualifications/music/grade-exams/acoustic-guitar',
+    url: SYLLABUS_URL.acousticGuitar,
   },
   {
     title: 'Brass',
@@ -87,7 +89,7 @@ const rockPop: SyllabusLink[] = [
   {
     title: 'Rock & Pop Grades',
     subtitle: 'Guitar, Bass, Drums, Vocals, Keys — Initial to Grade 8',
-    url: 'https://www.trinitycollege.com/qualifications/music/rock-and-pop/grades',
+    url: SYLLABUS_URL.rockPopGrades,
   },
 ]
 
@@ -103,6 +105,16 @@ const diplomas: SyllabusLink[] = [
     url: 'https://www.trinitycollege.com/qualifications/music/rock-and-pop/diplomas',
   },
 ]
+
+/* ── Which guitar exam ── */
+const guitarCards = GUITAR_EXAMS.map((exam) => ({
+  icon: Guitar,
+  title: exam.title,
+  subtitle: exam.bookedOn,
+  detail: exam.detail,
+  link: exam.syllabusUrl,
+  linkText: 'View the syllabus',
+}))
 
 /* ── Dropdown state ── */
 const selectedCategory = ref<'classical' | 'rockpop' | 'diplomas'>('classical')
@@ -188,6 +200,33 @@ const faqs = [
           <p class="mx-auto mt-4 max-w-2xl text-center text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
             Find the right Trinity College London syllabus for your instrument. Each link takes you straight to Trinity's official syllabus page — no searching required.
           </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- WHICH GUITAR EXAM -->
+    <section id="guitar" class="scroll-mt-36 bg-black">
+      <div class="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:py-16">
+        <div :class="animClass('fade-up', 1)">
+          <MyTextConstructor
+            variant="subheading"
+            fontFamily="display"
+            alignment="center"
+            spacing="tight"
+            textColor="text-white"
+            class="md:!text-2xl lg:!text-3xl"
+          >
+            <template #myTitle>Teaching guitar? There are three different exams</template>
+          </MyTextConstructor>
+          <div class="mx-auto mt-3 max-w-2xl text-base md:text-lg">
+            <MyTextConstructor bodyVariant="inherit" alignment="center" textColor="text-white/80">
+              Each has its own pieces, and face-to-face they are booked in two different places, so check which one your pupil is doing before you book. Digital exams for all three are booked through Digital Exam.
+            </MyTextConstructor>
+          </div>
+        </div>
+
+        <div :class="animClass('fade-up', 2)" class="mt-8">
+          <MyGlassCardConstructor :cards="guitarCards" :columns="3" />
         </div>
       </div>
     </section>

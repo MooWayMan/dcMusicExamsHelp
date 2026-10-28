@@ -14,6 +14,7 @@ import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
 import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
+import { GUITAR_EXAMS_SUMMARY, ROCK_POP_ACOUSTIC_RULE } from '@/lib/guitarExams'
 
 const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
@@ -109,6 +110,11 @@ const faqs = [
     question: 'My child was ill and missed their exam — what happens?',
     answer:
       'Let me know as soon as you can. Trinity can issue a <strong>re-entry permit</strong>, which lets your child sit the same exam at the same level again. I will need a medical certificate covering the date of the exam, and the application has to reach Trinity <strong>within 30 days of the exam date</strong>. Send it to me rather than to Trinity — I deal with them on your behalf. The permit is valid for 12 months from the date it is issued, and a re-entry costs 50% of the entry fee current at that time. If a candidate simply wants to postpone rather than having been ill, the original fee cannot be refunded — the permit route applies to illness and other genuine exceptional circumstances.',
+  },
+  {
+    question: 'Which guitar exam should my pupil take?',
+    answer:
+      `Trinity has three guitar exams: Rock &amp; Pop Guitar, Acoustic Guitar and Classical Guitar. ${GUITAR_EXAMS_SUMMARY} For Rock &amp; Pop: ${ROCK_POP_ACOUSTIC_RULE} See <a href="/exam-guide/syllabuses?from=faq#guitar" class="font-semibold text-brand-accent underline hover:opacity-70">which guitar exam</a> for what each one covers and its syllabus.`,
   },
 ]
 

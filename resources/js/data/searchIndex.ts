@@ -1,6 +1,7 @@
 // resources/js/data/searchIndex.ts
 
 import { GIFT_TOKEN_REDEEM_RULE } from '@/lib/prizeRules'
+import { GUITAR_EXAMS_ANCHOR, GUITAR_EXAMS_SUMMARY } from '@/lib/guitarExams'
 
 export interface SearchEntry {
   id: string
@@ -177,6 +178,14 @@ export const searchEntries: SearchEntry[] = [
     keywords: ['syllabus', 'syllabuses', 'scales', 'arpeggios', 'pieces', 'technical work', 'instruments'],
   },
   {
+    id: 'topic-guitar-exams',
+    title: 'Which guitar exam? Rock & Pop, Acoustic or Classical',
+    snippet: GUITAR_EXAMS_SUMMARY,
+    url: GUITAR_EXAMS_ANCHOR,
+    section: 'Exam Guide',
+    keywords: ['guitar', 'guitar exam', 'which guitar exam', 'acoustic guitar', 'acoustic', 'electric guitar', 'electric', 'electro-acoustic', 'classical guitar', 'rock and pop guitar', 'rock & pop guitar', 'steel string', 'nylon string', 'plectrum', 'fingerstyle'],
+  },
+  {
     id: 'fees-overview',
     title: 'Fees & Dates',
     snippet: 'Trinity exam fees and booking dates. All fees include a free digital certificate; a printed paper certificate is £5 (UK delivery).',
@@ -337,10 +346,10 @@ export const searchEntries: SearchEntry[] = [
     keywords: ['face to face', 'in person', 'liverpool', 'wirral', 'venue', 'practical exam'],
   },
   {
-    id: 'faq-17',
+    id: 'faq-16',
     title: 'My child was ill and missed their exam — what happens?',
     snippet: 'Trinity can issue a re-entry permit to sit the same exam again. Tell us as soon as you can — a medical certificate covering the exam date has to reach Trinity within 30 days.',
-    url: '/faq#faq-17',
+    url: '/faq#faq-16',
     section: 'FAQ',
     // Deliberately wide: a worried parent types any of these, and until now
     // every one of them returned "No matches found".
