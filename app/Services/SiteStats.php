@@ -31,6 +31,22 @@ class SiteStats
 
     public const DEFAULT_RANGE = 28;
 
+    // A site search, counted by the words searched for (28 Oct 2026), so Paul
+    // can see what people look for and, above all, what finds nothing.
+    public const EVENT_SEARCH = 'search';
+
+    public const EVENT_SEARCH_NO_RESULTS = 'search_no_results';
+
+    // Words of the site's own that are often capitalised in a search, so a
+    // pair of them ("Rock Pop", "Learn Music") is not mistaken for a name.
+    private const SITE_WORDS = [
+        'trinity', 'mytrinity', 'rock', 'pop', 'classical', 'jazz', 'grade', 'grades', 'initial',
+        'digital', 'theory', 'acoustic', 'electric', 'guitar', 'piano', 'drums', 'bass', 'vocals',
+        'keyboard', 'singing', 'violin', 'trumpet', 'flute', 'clarinet', 'saxophone', 'centre',
+        'liverpool', 'wirral', 'learn', 'music', 'ucas', 'abrsm', 'lcm', 'rsl', 'faq', 'exam',
+        'exams', 'face', 'to', 'certificate', 'hall', 'fame', 'top', 'ten', 'school', 'tafelmusik',
+    ];
+
     public function __construct(private Impersonation $impersonation) {}
 
     public function shouldCount(Request $request): bool
@@ -89,6 +105,14 @@ class SiteStats
 
         $isEvent = $kind === self::KIND_EVENT;
 
+        if ($isEvent && in_array($event, [self::EVENT_SEARCH, self::EVENT_SEARCH_NO_RESULTS], true)) {
+            $detail = $this->cleanSearchTerm((string) $detail);
+
+            if ($detail === null) {
+                return false;
+            }
+        }
+
         $this->record(
             $kind,
             $path,
@@ -97,6 +121,40 @@ class SiteStats
         );
 
         return true;
+    }
+
+    /**
+     * What is kept of a search: trimmed, lower case, at most 60 characters.
+     * Null (not kept at all) when it may identify someone: an email address,
+     * a run of digits (a phone or candidate number), or two capitalised
+     * words in a row that are not the site's own words, which is how a
+     * person's name is usually typed. A name typed all in lower case cannot
+     * be told apart from ordinary words and would be kept.
+     */
+    public function cleanSearchTerm(string $raw): ?string
+    {
+        $term = trim((string) preg_replace('/\s+/u', ' ', $raw));
+
+        if ($term === '' || str_contains($term, '@') || preg_match('/\d[\d\s\-]{4,}\d/', $term)) {
+            return null;
+        }
+
+        $words = explode(' ', $term);
+        for ($i = 0; $i < count($words) - 1; $i++) {
+            if ($this->isUnknownCapitalised($words[$i]) && $this->isUnknownCapitalised($words[$i + 1])) {
+                return null;
+            }
+        }
+
+        return mb_substr(mb_strtolower($term), 0, 60);
+    }
+
+    private function isUnknownCapitalised(string $word): bool
+    {
+        $word = trim($word, " \t.,!?'\"()");
+
+        return preg_match('/^\p{Lu}\p{Ll}+$/u', $word) === 1
+            && ! in_array(mb_strtolower($word), self::SITE_WORDS, true);
     }
 
     public function record(string $kind, string $path, string $event = '', string $detail = '', ?CarbonInterface $day = null): void
@@ -125,6 +183,7 @@ class SiteStats
      *     totals: array{pages: int, events: int},
      *     pages: array<int, array{path: string, hits: int}>,
      *     events: array<int, array{path: string, event: string, detail: string, hits: int}>,
+     *     searches: array<int, array{term: string, hits: int, noResults: int}>,
      *     daily: array<int, array{day: string, pages: int, events: int}>,
      *     chart: array{unit: string, bars: array<int, array{label: string, full: string, pages: int, events: int}>}
      * }
@@ -146,8 +205,11 @@ class SiteStats
             ->map(fn ($row) => ['path' => $row->path, 'hits' => (int) $row->hits])
             ->all();
 
+        $searchEvents = [self::EVENT_SEARCH, self::EVENT_SEARCH_NO_RESULTS];
+
         $events = $base()
             ->where('kind', self::KIND_EVENT)
+            ->whereNotIn('event', $searchEvents)
             ->groupBy('path', 'event', 'detail')
             ->selectRaw('path, event, detail, SUM(hits) AS hits')
             ->orderByDesc('hits')
@@ -159,6 +221,25 @@ class SiteStats
                 'detail' => $row->detail,
                 'hits' => (int) $row->hits,
             ])
+            ->all();
+
+        // Searches get their own list: what was searched for, how often, and
+        // how often it found nothing. Those that found nothing come first,
+        // because they are the answers the site is missing.
+        $searches = $base()
+            ->where('kind', self::KIND_EVENT)
+            ->whereIn('event', $searchEvents)
+            ->groupBy('detail', 'event')
+            ->selectRaw('detail, event, SUM(hits) AS hits')
+            ->get()
+            ->groupBy('detail')
+            ->map(fn ($rows, $term) => [
+                'term' => (string) $term,
+                'hits' => (int) $rows->sum('hits'),
+                'noResults' => (int) $rows->where('event', self::EVENT_SEARCH_NO_RESULTS)->sum('hits'),
+            ])
+            ->sortBy([['noResults', 'desc'], ['hits', 'desc'], ['term', 'asc']])
+            ->values()
             ->all();
 
         $byDay = $base()
@@ -183,10 +264,11 @@ class SiteStats
             'from' => $from,
             'totals' => [
                 'pages' => array_sum(array_column($pages, 'hits')),
-                'events' => array_sum(array_column($events, 'hits')),
+                'events' => array_sum(array_column($events, 'hits')) + array_sum(array_column($searches, 'hits')),
             ],
             'pages' => $pages,
             'events' => $events,
+            'searches' => $searches,
             'daily' => $daily,
             'chart' => $this->chartBuckets($daily, $days),
         ];

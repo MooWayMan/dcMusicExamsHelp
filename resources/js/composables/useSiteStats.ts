@@ -28,8 +28,11 @@ function pathOf(url: string): string {
     }
 }
 
-function send(body: Record<string, string>): void {
-    if (typeof window === 'undefined' || isAdminViewer || !currentPath) return
+// anyPage: send even before the first page has been counted. A search is
+// recorded as the search page mounts, which can be before Inertia's first
+// navigate event has set currentPath.
+function send(body: Record<string, string>, anyPage = false): void {
+    if (typeof window === 'undefined' || isAdminViewer || (!currentPath && !anyPage)) return
 
     try {
         void fetch(siteStatsStore.url(), {
@@ -67,6 +70,20 @@ export function installSiteStats(): void {
 
 export function recordSiteEvent(event: string, detail = ''): void {
     send({ kind: 'event', event, detail: detail.slice(0, MAX_DETAIL) })
+}
+
+// A search, by the words typed and whether anything was found. The server
+// (SiteStats::cleanSearchTerm) drops anything that may identify a person.
+export function recordSearch(query: string, found: boolean): void {
+    const words = query.replace(/\s+/g, ' ').trim()
+    if (!words) return
+
+    send({
+        kind: 'event',
+        url: '/search',
+        event: found ? 'search' : 'search_no_results',
+        detail: words.slice(0, MAX_DETAIL),
+    }, true)
 }
 
 // Button presses are counted on the public pages only: those labels are

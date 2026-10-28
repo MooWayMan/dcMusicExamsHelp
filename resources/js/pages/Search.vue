@@ -1,6 +1,6 @@
 <!-- resources/js/pages/Search.vue -->
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import { usePageAnimation } from '@/composables/usePageAnimation'
 import Head from '@/components/layouts/Head.vue'
@@ -10,6 +10,7 @@ import MyFooter from '@/components/layouts/MyFooter.vue'
 import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
 import { runSearch } from '@/data/searchIndex'
 import SiteSearchBox from '@/components/SiteSearchBox.vue'
+import { recordSearch } from '@/composables/useSiteStats'
 
 const { animClass } = usePageAnimation()
 
@@ -34,6 +35,14 @@ const query = ref(initialQuery)
 
 const results = computed(() => runSearch(query.value))
 const hasQuery = computed(() => query.value.trim().length > 0)
+
+// Count a search once it is settled (arrived here with words, or Enter
+// pressed on this page), never on every key while typing.
+const countSearch = () => recordSearch(query.value, results.value.length > 0)
+
+onMounted(() => {
+  if (hasQuery.value) countSearch()
+})
 
 </script>
 
@@ -69,7 +78,7 @@ const hasQuery = computed(() => query.value.trim().length > 0)
         </div>
 
         <div class="mt-6">
-          <SiteSearchBox v-model="query" stay-on-page autofocus placeholder="Search" />
+          <SiteSearchBox v-model="query" stay-on-page autofocus placeholder="Search" @submitted="countSearch" />
         </div>
       </div>
     </section>

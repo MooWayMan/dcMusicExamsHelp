@@ -13,6 +13,7 @@ import { usePagination } from '@/composables/usePagination'
 interface PageRow { path: string; hits: number }
 interface EventRow { path: string; event: string; detail: string; hits: number }
 interface DayRow { day: string; pages: number; events: number }
+interface SearchRow { term: string; hits: number; noResults: number }
 interface ChartBar { label: string; full: string; pages: number; events: number }
 
 const props = defineProps<{
@@ -22,6 +23,7 @@ const props = defineProps<{
         totals: { pages: number; events: number }
         pages: PageRow[]
         events: EventRow[]
+        searches: SearchRow[]
         daily: DayRow[]
         chart: { unit: 'day' | 'week' | 'month'; bars: ChartBar[] }
     }
@@ -76,6 +78,12 @@ const chartUnit = computed(() => CHART_UNIT[props.stats.chart.unit] ?? 'day')
 // table constructor would only sort the page on screen, not the whole list.
 const PER_PAGE = 14
 
+const searchRows = computed(() => props.stats.searches.map((row) => ({
+    ...row,
+    nothingFound: row.noResults > 0 ? row.noResults : '—',
+})))
+
+const searchPager = usePagination(() => searchRows.value, { perPage: PER_PAGE, scrollToTop: false })
 const eventPager = usePagination(() => eventRows.value, { perPage: PER_PAGE, scrollToTop: false })
 const dayPager = usePagination(() => dailyRows.value, { perPage: PER_PAGE, scrollToTop: false })
 
@@ -91,6 +99,12 @@ const eventColumns = [
     { key: 'hits', title: 'Times', sortable: false, align: 'right' as const },
 ]
 
+const searchColumns = [
+    { key: 'term', title: 'Searched for', sortable: false },
+    { key: 'hits', title: 'Times', sortable: false, align: 'right' as const },
+    { key: 'nothingFound', title: 'Found nothing', sortable: false, align: 'right' as const },
+]
+
 const dailyColumns = [
     { key: 'dayLabel', title: 'Day', sortable: false },
     { key: 'pages', title: 'Page opens', sortable: false, align: 'right' as const },
@@ -102,7 +116,7 @@ const dailyColumns = [
     <div>
         <PageHeader
             title="Site stats"
-            subtitle="Page opens and button presses on the site. Anonymous: no cookies and nothing about the visitor is stored, so everyone is counted. Your own visits as admin are not."
+            subtitle="Page opens, button presses and searches on the site. Anonymous: no cookies and nothing about the visitor is stored, so everyone is counted. Your own visits as admin are not."
             eyebrow="Admin"
             size="compact"
         />
@@ -162,6 +176,26 @@ const dailyColumns = [
                     :total="eventPager.total.value"
                     noun="row"
                     @update:page="eventPager.goToPage"
+                />
+            </div>
+
+            <div>
+                <MyTableConstructor
+                    title="Searches"
+                    subtitle="What people typed into site search. Those that found nothing come first: they are answers the site is missing. Anything that looks like a name, email address or phone number is never kept."
+                    :data="searchPager.paged.value"
+                    :columns="searchColumns"
+                    row-key="term"
+                    :sortable="false"
+                />
+                <MyPaginationConstructor
+                    :page="searchPager.page.value"
+                    :page-count="searchPager.pageCount.value"
+                    :showing-from="searchPager.showingFrom.value"
+                    :showing-to="searchPager.showingTo.value"
+                    :total="searchPager.total.value"
+                    noun="search"
+                    @update:page="searchPager.goToPage"
                 />
             </div>
 

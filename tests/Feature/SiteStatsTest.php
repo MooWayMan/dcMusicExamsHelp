@@ -164,3 +164,46 @@ test('a week bar starts on a Monday', function () {
         ['label' => '21 Sep', 'full' => 'Week of 21 Sep', 'pages' => 2, 'events' => 0],
     ]);
 });
+
+test('a search comes back on the admin page, with what found nothing first', function () {
+    postStat(['kind' => 'event', 'url' => '/search', 'event' => 'search', 'detail' => 'Missed  exam'])->assertNoContent();
+    postStat(['kind' => 'event', 'url' => '/search', 'event' => 'search', 'detail' => 'missed exam'])->assertNoContent();
+    postStat(['kind' => 'event', 'url' => '/search', 'event' => 'search_no_results', 'detail' => 'deferral'])->assertNoContent();
+
+    $stats = statsPage();
+
+    expect($stats['searches'])->toBe([
+        ['term' => 'deferral', 'hits' => 1, 'noResults' => 1],
+        ['term' => 'missed exam', 'hits' => 2, 'noResults' => 0],
+    ])
+        ->and($stats['events'])->toBe([])
+        ->and($stats['totals']['events'])->toBe(3);
+});
+
+test('a search that may identify someone is never kept', function () {
+    foreach (['Emily Bates results', 'paul@example.com', 'candidate 1-18155075732', '07123 456789'] as $search) {
+        postStat(['kind' => 'event', 'url' => '/search', 'event' => 'search', 'detail' => $search])->assertNoContent();
+    }
+
+    expect(statsPage()['searches'])->toBe([]);
+});
+
+test('the site’s own words are not mistaken for a name', function () {
+    $stats = app(SiteStats::class);
+
+    expect($stats->cleanSearchTerm('Rock Pop Grade 3'))->toBe('rock pop grade 3')
+        ->and($stats->cleanSearchTerm('Learn Music Liverpool'))->toBe('learn music liverpool')
+        ->and($stats->cleanSearchTerm('Missed exam'))->toBe('missed exam')
+        ->and($stats->cleanSearchTerm('Jenny Capstick'))->toBeNull()
+        ->and($stats->cleanSearchTerm('   '))->toBeNull();
+});
+
+test('an admin searching is not counted', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+
+    test()->actingAs($admin)
+        ->postJson('/stats', ['kind' => 'event', 'url' => '/search', 'event' => 'search', 'detail' => 'fees'])
+        ->assertNoContent();
+
+    expect(DB::table('site_stats')->count())->toBe(0);
+});
