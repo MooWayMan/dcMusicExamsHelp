@@ -168,23 +168,36 @@ const diplomaDigitalData = [
 ]
 
 /* ── Exam dates ──
-   One row per exam DAY, because each venue and exam type is its own Trinity
-   session with its own closing date (they differ by a day or two). "Best to
-   book by" is Paul's own date, deliberately ahead of Trinity's. "Trinity
-   closes" is what Trinity's booking systems showed, checked 28 Oct 2026.
-   Past sessions come off; add the next session's rows when Trinity opens it. */
+   One table per VENUE (Paul, 28 Oct 2026: make the two venues clear), one row
+   per exam day, because each venue and exam type is its own Trinity session
+   with its own closing date. "Book by" is Paul's own date, deliberately ahead
+   of Trinity's. "Trinity closes" is what Trinity's booking systems showed,
+   checked 28 Oct 2026. Kept to four short columns so the table fits a phone
+   without stacking into cards. Past sessions come off; add the next session's
+   rows when Trinity opens it. */
 const dateColumns = [
   { key: 'exam', title: 'Exam', sortable: false },
-  { key: 'day', title: 'Exam Day', sortable: false },
-  { key: 'venue', title: 'Venue', sortable: false },
-  { key: 'bookBy', title: 'Best to Book By', sortable: false },
+  { key: 'day', title: 'Day', sortable: false },
+  { key: 'bookBy', title: 'Book By', sortable: false },
   { key: 'closes', title: 'Trinity Closes', sortable: false },
 ]
 
-const dateData = [
-  { exam: 'Classical & Jazz', day: 'Thu 3 December 2026', venue: 'Liverpool — Learn Music', bookBy: '30 October 2026', closes: 'Thu 5 November 2026 — or when full' },
-  { exam: 'Classical & Jazz', day: 'Fri 4 December 2026', venue: 'Wirral — Wirral School of Music / Tafelmusik', bookBy: '30 October 2026', closes: 'Fri 6 November 2026 — or when full' },
-  { exam: 'Rock & Pop', day: 'Sat 5 December 2026', venue: 'Liverpool — Learn Music', bookBy: '30 October 2026', closes: 'Sat 7 November 2026 — or when full' },
+const examVenues = [
+  {
+    name: 'Liverpool — Learn Music',
+    area: 'Stoneycroft, L13',
+    days: [
+      { exam: 'Classical & Jazz', day: 'Thu 3 Dec 2026', bookBy: 'Fri 30 Oct', closes: 'Thu 5 Nov' },
+      { exam: 'Rock & Pop', day: 'Sat 5 Dec 2026', bookBy: 'Fri 30 Oct', closes: 'Sat 7 Nov' },
+    ],
+  },
+  {
+    name: 'Wirral — Wirral School of Music / Tafelmusik',
+    area: 'CH43',
+    days: [
+      { exam: 'Classical & Jazz', day: 'Fri 4 Dec 2026', bookBy: 'Fri 30 Oct', closes: 'Fri 6 Nov' },
+    ],
+  },
 ]
 
 const bookingWindowColumns = [
@@ -577,15 +590,28 @@ const faqs = [
           <div class="mb-3 text-lg font-semibold">
             <MyTextConstructor bodyVariant="inherit" textColor="text-white">Next exam days and closing dates</MyTextConstructor>
           </div>
-          <MyTableConstructor
-            :data="dateData"
-            :columns="dateColumns"
-            rowKey="day"
-            :sortable="false"
-            :striped="true"
-            :bordered="true"
-            size="large"
-          />
+          <div v-for="venue in examVenues" :key="venue.name" class="mt-6">
+            <MyTextConstructor variant="button-lg" spacing="none" textColor="text-white">
+              <template #myTitle>{{ venue.name }}</template>
+            </MyTextConstructor>
+            <div class="mt-1 text-sm md:text-base">
+              <MyTextConstructor bodyVariant="inherit" textColor="text-white/60">{{ venue.area }}</MyTextConstructor>
+            </div>
+            <MyTableConstructor
+              :data="venue.days"
+              :columns="dateColumns"
+              rowKey="day"
+              :sortable="false"
+              :striped="true"
+              :bordered="true"
+              size="medium"
+            />
+          </div>
+          <div class="text-sm md:text-base">
+            <MyTextConstructor bodyVariant="inherit" textColor="text-white/80">
+              Book by is our recommended date. Trinity's own booking closes a few days later, or sooner if the session fills.
+            </MyTextConstructor>
+          </div>
         </div>
 
         <div :class="animClass('fade-up', 3)" class="mt-10">
