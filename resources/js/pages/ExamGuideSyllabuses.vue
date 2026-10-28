@@ -14,6 +14,11 @@ import MyGlassCardConstructor from '@/components/reusables/MyGlassCardConstructo
 import MyFooter from '@/components/layouts/MyFooter.vue'
 import { BookOpen, ChevronDown, ExternalLink, Guitar } from 'lucide-vue-next'
 import { GUITAR_EXAMS, SYLLABUS_URL } from '@/lib/guitarExams'
+import { useAccordionHashOpen } from '@/composables/useAccordionHashOpen'
+import faqPage from '@/data/faqs/examGuideSyllabuses'
+import { faqAccordionItems } from '@/lib/faqs'
+
+useAccordionHashOpen()
 
 const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
@@ -140,28 +145,7 @@ const selectCategory = (key: 'classical' | 'rockpop' | 'diplomas') => {
 }
 
 /* ── FAQ ── */
-const faqs = [
-  {
-    question: 'What is a syllabus?',
-    answer:
-      'The syllabus is Trinity\'s official document listing everything you need to know about an exam — the pieces you can choose, the scales and technical work required, the supporting tests and how the exam is marked. It\'s your roadmap for preparing.',
-  },
-  {
-    question: 'Do I need to buy the syllabus?',
-    answer:
-      'No — the syllabus information is free to view on Trinity\'s website. The links on this page take you straight to the right place for your instrument. You may need to buy the sheet music for your chosen pieces, but the syllabus itself is free.',
-  },
-  {
-    question: 'How often does the syllabus change?',
-    answer:
-      'Both Classical & Jazz and Rock & Pop syllabuses have no fixed end date — new pieces are added regularly and the list keeps growing. Occasionally a piece may be removed due to licensing or permissions, so always check the current syllabus before choosing your pieces.',
-  },
-  {
-    question: 'Can I play pieces from an older syllabus?',
-    answer:
-      'Yes — for both Classical & Jazz and Rock & Pop, the repertoire lists are cumulative. Pieces from previous lists are usually still valid, and new pieces are added over time. Always check the Trinity website for the latest information.',
-  },
-]
+
 </script>
 
 <template>
@@ -434,7 +418,7 @@ const faqs = [
 
         <div :class="animClass('fade-up', 2)" class="mt-8">
           <MyAccordionConstructor
-            :items="faqs.map((f, i) => ({ id: i + 1, question: f.question, answer: f.answer }))"
+            :items="faqAccordionItems(faqPage)"
             size="small"
             header-bg-color="bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary"
             header-text-color="text-brand-text-inverse"

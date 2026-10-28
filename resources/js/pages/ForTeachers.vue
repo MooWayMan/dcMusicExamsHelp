@@ -15,6 +15,11 @@ import MyGlassCardConstructor from '@/components/reusables/MyGlassCardConstructo
 import MyBanner from '@/components/reusables/MyBanner.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
 import { Award, ArrowRight, BookOpen, Gift, GraduationCap, CheckCircle, ChevronRight, Trophy } from 'lucide-vue-next'
+import { useAccordionHashOpen } from '@/composables/useAccordionHashOpen'
+import faqPage from '@/data/faqs/forTeachers'
+import { faqAccordionItems } from '@/lib/faqs'
+
+useAccordionHashOpen()
 
 const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
@@ -104,24 +109,6 @@ const everythingCard = {
   detail: '<span class="inline-block rounded-full bg-brand-accent/20 px-4 py-1 -ml-3 mb-3 text-base font-bold text-white sm:text-lg">Save yourself time answering the same questions over and over</span><br />All the exam guidance, booking information, fees, dates and procedures your students and parents need — in one place on musicExams.help. Just point parents and students to the site. You can even subscribe to our <a href="https://calendar.google.com/calendar/embed?src=c_e2838a8ba69325aa5dec7a4eec7051f23bf8f2e307a9c7e48435382a05c4a7ee%40group.calendar.google.com&ctz=Europe%2FLondon" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand-accent underline hover:opacity-80">shared Google Calendar</a> with all the important Trinity dates and closing dates — so nothing gets missed.',
 }
 
-const faqs = [
-  {
-    question: 'Do my students pay more through centre 120?',
-    answer: 'No. Exam fees are exactly the same as booking directly with Trinity. Centre 120 simply connects your entries to additional benefits and recognition.',
-  },
-  {
-    question: 'Can I still use a different centre code?',
-    answer: 'If you already have a different centre code, you can keep using it. But your students will miss out on our certificates (Bravo, Take a Bow, Standing Ovation), the Recognition page, the <strong>Hall of Fame</strong>, prize draws and other incentives that come with centre 120.',
-  },
-  {
-    question: 'How does the teacher badge system work?',
-    answer: 'Every entry through centre 120 counts — regardless of result. That includes face-to-face exams, digital practical exams and digital theory exams. Totals refresh every quarter. At 10 entries you earn the <strong>Bronze Award</strong>, at 20 the <strong>Silver Award</strong>, at 30 the <strong>Gold Award</strong>, and at 40+ the <strong>Top Award</strong>. Badges are digital — display them on your website, email signature or social media and call yourself an award-winning music teacher.',
-  },
-  {
-    question: 'Do you offer face-to-face, digital and theory exams?',
-    answer: 'Yes, all three. Face-to-face sessions run at venues in Liverpool and Wirral throughout the year. Digital practical exams can be recorded anywhere — at home, school or studio — and submitted online through Trinity. Digital theory exams (Grades 1–8) are taken online through the MusicGurus platform. All exam types are available through our Book Your Exam button.',
-  },
-]
 </script>
 
 <template>
@@ -508,11 +495,7 @@ const faqs = [
 
         <div :class="animClass('fade-up', 2)" class="mt-8">
           <MyAccordionConstructor
-            :items="faqs.map((faq, index) => ({
-              id: index + 1,
-              question: faq.question,
-              answer: faq.answer,
-            }))"
+            :items="faqAccordionItems(faqPage)"
             size="small"
             header-bg-color="bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary"
             header-text-color="text-brand-text-inverse"

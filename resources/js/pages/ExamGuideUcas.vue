@@ -12,6 +12,11 @@ import MyTableConstructor from '@/components/reusables/MyTableConstructor.vue'
 import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
 import { GraduationCap, AlertCircle, CheckCircle, ArrowRight } from 'lucide-vue-next'
+import { useAccordionHashOpen } from '@/composables/useAccordionHashOpen'
+import faqPage from '@/data/faqs/examGuideUcas'
+import { faqAccordionItems } from '@/lib/faqs'
+
+useAccordionHashOpen()
 
 const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
@@ -57,28 +62,6 @@ const keyFacts = [
   'UCAS points from music exams count alongside A-levels, BTECs and other qualifications',
 ]
 
-const faqs = [
-  {
-    question: 'Do I need to tell UCAS about my music exam?',
-    answer:
-      'No. Trinity sends eligible results to UCAS automatically. You just need to make sure your exam happens before the June deadline.',
-  },
-  {
-    question: 'Can I count UCAS points from more than one music exam?',
-    answer:
-      'Yes, but only from different subjects. For example, you could count Grade 8 Piano and Grade 7 Music Theory — both count because they\'re different subjects. You cannot count Grade 7 Piano and Grade 8 Piano — only the result with the most UCAS points counts. In practice, a higher grade always earns equal or more points than the grade below it, even at a lower result band.',
-  },
-  {
-    question: 'Do Rock & Pop exams earn the same UCAS points as Classical & Jazz?',
-    answer:
-      'Yes, exactly the same. A Grade 8 Distinction in Rock & Pop Guitar earns 30 UCAS points, the same as a Grade 8 Distinction in Classical Guitar.',
-  },
-  {
-    question: 'What if I miss the June deadline?',
-    answer:
-      'Your result will still count for the following year\'s UCAS cycle. The qualification doesn\'t expire — it\'s just about when the result reaches UCAS.',
-  },
-]
 </script>
 
 <template>
@@ -266,7 +249,7 @@ const faqs = [
 
         <div :class="animClass('fade-up', 2)" class="mt-8">
           <MyAccordionConstructor
-            :items="faqs.map((f, i) => ({ id: i + 1, question: f.question, answer: f.answer }))"
+            :items="faqAccordionItems(faqPage)"
             size="small"
             header-bg-color="bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary"
             header-text-color="text-brand-text-inverse"

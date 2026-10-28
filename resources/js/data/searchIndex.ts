@@ -2,6 +2,9 @@
 
 import { GIFT_TOKEN_REDEEM_RULE } from '@/lib/prizeRules'
 import { GUITAR_EXAMS_ANCHOR, GUITAR_EXAMS_SUMMARY } from '@/lib/guitarExams'
+import { FAQ_PAGES } from '@/data/faqs'
+import { faqLink, plainText } from '@/lib/faqs'
+import { hasPhrase, hasTerm, queryTerms, words } from '@/lib/searchMatch'
 
 export interface SearchEntry {
   id: string
@@ -10,13 +13,17 @@ export interface SearchEntry {
   url: string
   section: string
   keywords: string[]
+  // The full text, searched but not shown. FAQ answers carry it.
+  body?: string
 }
 
 export interface ScoredEntry extends SearchEntry {
   score: number
 }
 
-export const searchEntries: SearchEntry[] = [
+// Pages and topics. FAQ answers are NOT listed here: they are read from
+// data/faqs (see faqEntries below), so never hand-write a '#faq-N' link.
+const topicEntries: SearchEntry[] = [
   {
     id: 'page-home',
     title: 'Home',
@@ -193,229 +200,89 @@ export const searchEntries: SearchEntry[] = [
     section: 'Fees',
     keywords: ['fees', 'cost', 'price', 'how much', 'dates', 'booking dates', 'when', 'exam dates', 'deadlines', 'closing date', 'theory'],
   },
-  {
-    id: 'faq-15',
-    title: 'Can I order a paper certificate, and how much?',
-    snippet: 'Every exam includes a free digital certificate. A printed paper certificate is £5 (UK delivery) and can only be ordered by the parent — using the email they gave on the entry — from Trinity at mycertificates.trinitycollege.com.',
-    url: '/faq#faq-15',
-    section: 'FAQ',
-    keywords: ['paper certificate', 'printed certificate', 'physical certificate', 'certificate cost', 'order certificate', 'order a certificate', 'lost certificate', 'damaged certificate', 'replacement certificate', 'reprint certificate', 'get a certificate', 'parent order certificate', 'teacher order certificate', '£5'],
-  },
-  {
-    id: 'topic-results-timing',
-    title: 'How long until I get my results?',
-    snippet: 'Digital exam results normally arrive within 14 days by email. Face-to-face results through centre 120 are checked and posted within days of the exam.',
-    url: '/for-parents#faq-5',
-    section: 'FAQ',
-    keywords: ['results', 'when are results', 'how long for results', 'result turnaround', 'when do i get results', 'how long until results', 'get my results', 'exam report', 'when results'],
-  },
-  {
-    id: 'topic-gift-token-expiry',
-    title: 'How long do I have to use a gift token?',
-    snippet: GIFT_TOKEN_REDEEM_RULE,
-    url: '/incentives#faq-7',
-    section: 'FAQ',
-    keywords: ['gift token', 'gift card', 'expire', 'expiry', 'redeem', 'claim prize', 'prize draw', '12 months'],
-  },
-  {
-    id: 'topic-late-entry',
-    title: 'Are there late entry surcharges?',
-    snippet: 'Trinity applies surcharges for late entries. Booking well ahead of the closing date avoids them.',
-    url: '/exam-fees#faq-4',
-    section: 'Fees',
-    keywords: ['late entry', 'surcharge', 'late fee', 'deadline', 'closing date', 'late booking', 'missed deadline'],
-  },
-  {
-    id: 'topic-enter-exam',
-    title: 'How do I enter (book) an exam?',
-    snippet: 'Click Book Your Exam to open a short menu, choose your exam type, and you are taken to the correct Trinity booking system — check the referral code box says 120.',
-    url: '/faq#faq-1',
-    section: 'FAQ',
-    keywords: ['enter', 'entry', 'entering', 'enter an exam', 'enter a candidate', 'enter a student', 'make an entry', 'book', 'booking', 'how to book', 'sign up for an exam', 'sign up', 'put in for an exam', 'register for an exam', 'apply for an exam', 'how do i enter'],
-  },
-  {
-    id: 'faq-1',
-    title: 'Do I book through this website?',
-    snippet: 'No — Book Your Exam opens a short menu that takes you to the correct Trinity booking system. Always check the referral code box says 120.',
-    url: '/faq#faq-1',
-    section: 'FAQ',
-    keywords: ['book', 'how to book', 'booking', 'enter', 'entry', 'enter an exam', 'referral code', '120', 'where to book', 'sign up for an exam'],
-  },
-  {
-    id: 'faq-2',
-    title: 'Who is this for?',
-    snippet: 'Anyone involved in music exams — teachers wanting smoother booking and recognition, parents wanting clear guidance, students preparing for their next grade.',
-    url: '/faq#faq-2',
-    section: 'FAQ',
-    keywords: ['who is this for', 'teachers', 'parents', 'students'],
-  },
-  {
-    id: 'faq-3',
-    title: 'What is centre 120?',
-    snippet: 'Our registered Trinity centre code, covering our digital centre and face-to-face centres in Liverpool and Wirral, connecting your entry to musicExams.help.',
-    url: '/faq#faq-3',
-    section: 'FAQ',
-    keywords: ['centre 120', 'what is 120', 'centre code', 'liverpool', 'wirral'],
-  },
-  {
-    id: 'faq-4',
-    title: 'Does it cost anything extra?',
-    snippet: 'No. Exam fees are the same regardless of centre. Centre 120 simply gives you the extra benefits and support of musicExams.help.',
-    url: '/faq#faq-4',
-    section: 'FAQ',
-    keywords: ['extra cost', 'does it cost', 'free', 'fees', 'price'],
-  },
-  {
-    id: 'faq-5',
-    title: 'Can I use this if I already have a teacher?',
-    snippet: 'Absolutely — this site supports your existing teacher, not replaces them. It just makes booking and admin easier for everyone.',
-    url: '/faq#faq-5',
-    section: 'FAQ',
-    keywords: ['existing teacher', 'already have a teacher', 'my teacher'],
-  },
-  {
-    id: 'faq-6',
-    title: 'What are digital exams?',
-    snippet: 'Record your performance anywhere and submit it online through Trinity — no travel to a venue. Anyone can submit the recording.',
-    url: '/faq#faq-6',
-    section: 'FAQ',
-    keywords: ['digital exams', 'recorded exam', 'online', 'submit recording', 'video exam'],
-  },
-  {
-    id: 'faq-7',
-    title: 'What instruments can I take exams on?',
-    snippet: 'A wide range — Classical & Jazz (piano, brass, woodwind, strings, singing, guitar, percussion) and Rock & Pop (guitar, bass, drums, keyboards, vocals).',
-    url: '/faq#faq-7',
-    section: 'FAQ',
-    keywords: ['instruments', 'what instruments', 'piano', 'guitar', 'brass', 'drums', 'singing', 'rock and pop'],
-  },
-  {
-    id: 'faq-8',
-    title: 'How do I prepare for my exam?',
-    snippet: 'Start with the syllabus for your instrument and grade — pieces, technical work and supporting tests. Your teacher will guide you.',
-    url: '/faq#faq-8',
-    section: 'FAQ',
-    keywords: ['prepare', 'preparation', 'how to prepare', 'practice', 'get ready'],
-  },
-  {
-    id: 'faq-9',
-    title: 'Do I have to do scales and arpeggios?',
-    snippet: 'For most Classical & Jazz instruments you can choose scales & arpeggios OR exercises — not both. Always check your syllabus.',
-    url: '/faq#faq-9',
-    section: 'FAQ',
-    keywords: ['scales', 'arpeggios', 'exercises', 'technical work', 'from memory'],
-  },
-  {
-    id: 'faq-10',
-    title: 'What results can I achieve?',
-    snippet: 'Marked out of 100 — Pass 60–74, Merit 75–86, Distinction 87–100. Every candidate gets at least a Bravo Certificate and Recognition listing.',
-    url: '/faq#faq-10',
-    section: 'FAQ',
-    keywords: ['results', 'marks', 'pass', 'merit', 'distinction', 'grades', 'score'],
-  },
-  {
-    id: 'faq-11',
-    title: 'Do I need to provide sheet music for the examiner?',
-    snippet: 'Trinity-published pieces are on the examiner’s laptop, but bring the original book for copyright. For non-Trinity pieces, provide a copy.',
-    url: '/faq#faq-11',
-    section: 'FAQ',
-    keywords: ['sheet music', 'examiner', 'copy', 'original book', 'copyright', 'photocopy'],
-  },
-  {
-    id: 'faq-12',
-    title: 'How do teachers benefit from using centre 120?',
-    snippet: 'Recognition badges (10+, 20+, 30+ candidates), Certificates of Appreciation and entry into the quarterly £50 teacher prize draw.',
-    url: '/faq#faq-12',
-    section: 'FAQ',
-    keywords: ['teacher benefits', 'badges', 'appreciation', 'prize draw', 'teachers'],
-  },
-  {
-    id: 'faq-13',
-    title: 'What is the Hall of Fame?',
-    snippet: 'Merit earns a Take a Bow certificate and Distinction a Standing Ovation, plus a Hall of Fame place. Top quarterly scores earn a gift token.',
-    url: '/faq#faq-13',
-    section: 'FAQ',
-    keywords: ['hall of fame', 'take a bow', 'standing ovation', 'showstopper', 'centre stage', 'gift token'],
-  },
-  {
-    id: 'faq-14',
-    title: 'Can I book face-to-face exams through centre 120?',
-    snippet: 'Yes — face-to-face sessions in Liverpool and Wirral, plus digital practical and theory exams taken anywhere. Centre 120 covers all three.',
-    url: '/faq#faq-14',
-    section: 'FAQ',
-    keywords: ['face to face', 'in person', 'liverpool', 'wirral', 'venue', 'practical exam'],
-  },
-  {
-    id: 'faq-16',
-    title: 'My child was ill and missed their exam — what happens?',
-    snippet: 'Trinity can issue a re-entry permit to sit the same exam again. Tell us as soon as you can — a medical certificate covering the exam date has to reach Trinity within 30 days.',
-    url: '/faq#faq-16',
-    section: 'FAQ',
-    // Deliberately wide: a worried parent types any of these, and until now
-    // every one of them returned "No matches found".
-    keywords: [
-      'ill', 'illness', 'unwell', 'sick', 'poorly', 'missed exam', 'missed the exam',
-      'not well', 'cannot attend', 'could not attend', 'did not attend', 'absent',
-      'absence', 're-entry', 're entry', 'reentry', 'permit', 'voucher',
-      'medical certificate', 'doctors note', 'doctor note', 'sick note',
-      'cancel', 'cancelled', 'cancellation', 'postpone', 'reschedule', 'refund',
-      'emergency', 'exceptional circumstances',
-    ],
-  },
-]
+];
 
-const STOP_WORDS = new Set([
-  'the', 'a', 'an', 'to', 'of', 'for', 'and', 'or', 'is', 'are', 'do', 'does',
-  'i', 'my', 'me', 'can', 'you', 'your', 'what', 'how', 'in', 'on', 'it', 'this',
-  'that', 'with', 'at', 'be', 'if', 'get', 'have', 'has',
-])
-
-function tokenize(value: string): string[] {
-  return (value.toLowerCase().match(/[a-z0-9£]+/g) ?? [])
+// The opening of an answer, for the results list: whole sentences up to about
+// 220 characters, or the first 220 cut at a word.
+function opening(text: string): string {
+  if (text.length <= 220) return text
+  const sentences = text.match(/[^.!?]+[.!?]+(\s|$)/g) ?? []
+  let out = ''
+  for (const sentence of sentences) {
+    if ((out + sentence).length > 220) break
+    out += sentence
+  }
+  if (out.trim()) return out.trim()
+  return text.slice(0, 220).replace(/\s+\S*$/, '') + '…'
 }
 
+// Every FAQ answer on the site, one entry each. When two pages ask the same
+// question, the first page in FAQ_PAGES (the main FAQ) wins.
+const faqEntries: SearchEntry[] = (() => {
+  const seen = new Set<string>()
+  const entries: SearchEntry[] = []
+  for (const page of FAQ_PAGES) {
+    page.items.forEach((item, index) => {
+      const key = words(item.question).join(' ')
+      if (seen.has(key)) return
+      seen.add(key)
+      const body = plainText(item.answer)
+      entries.push({
+        id: `faq:${page.path}#${index + 1}`,
+        title: item.question,
+        snippet: item.snippet ?? opening(body),
+        url: faqLink(page, index),
+        section: page.label,
+        keywords: item.keywords ?? [],
+        body,
+      })
+    })
+  }
+  return entries
+})()
+
+export const searchEntries: SearchEntry[] = [...topicEntries, ...faqEntries]
+
 export function runSearch(query: string): ScoredEntry[] {
-  const trimmed = query.trim().toLowerCase()
+  const trimmed = query.trim()
   if (!trimmed) return []
 
-  const allTerms = tokenize(trimmed)
-  const terms = allTerms.filter((t) => !STOP_WORDS.has(t) && t.length > 1)
-  const effectiveTerms = terms.length ? terms : allTerms
-  if (!effectiveTerms.length) return []
+  const terms = queryTerms(trimmed)
+  if (!terms.length) return []
 
   const results: ScoredEntry[] = []
 
   for (const entry of searchEntries) {
-    const title = entry.title.toLowerCase()
-    const keywords = entry.keywords.join(' ').toLowerCase()
-    const body = entry.snippet.toLowerCase()
+    const title = words(entry.title)
+    const keywords = words(entry.keywords.join(' '))
+    const text = words(`${entry.snippet} ${entry.body ?? ''}`)
 
     let score = 0
     let matched = 0
 
-    for (const term of effectiveTerms) {
+    for (const term of terms) {
       let hit = false
-      if (title.includes(term)) {
+      if (hasTerm(title, term)) {
         score += 10
         hit = true
       }
-      if (keywords.includes(term)) {
+      if (hasTerm(keywords, term)) {
         score += 6
         hit = true
       }
-      if (body.includes(term)) {
+      if (hasTerm(text, term)) {
         score += 2
         hit = true
       }
       if (hit) matched += 1
     }
 
-    if (title.includes(trimmed) || keywords.includes(trimmed)) {
+    if (hasPhrase(title, trimmed) || entry.keywords.some((keyword) => hasPhrase(words(keyword), trimmed))) {
       score += 15
     }
 
     if (matched === 0) continue
-    if (matched < Math.ceil(effectiveTerms.length / 2)) continue
+    if (matched < Math.ceil(terms.length / 2)) continue
 
     results.push({ ...entry, score })
   }

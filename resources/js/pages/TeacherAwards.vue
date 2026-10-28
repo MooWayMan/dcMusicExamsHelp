@@ -12,6 +12,11 @@ import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructo
 import MyGlassCardConstructor from '@/components/reusables/MyGlassCardConstructor.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
 import { Award, Trophy, Star, Shield, Crown, CheckCircle, Globe } from 'lucide-vue-next'
+import { useAccordionHashOpen } from '@/composables/useAccordionHashOpen'
+import faqPage from '@/data/faqs/teacherAwards'
+import { faqAccordionItems } from '@/lib/faqs'
+
+useAccordionHashOpen()
 
 const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
@@ -105,38 +110,6 @@ const mockUpCards = [
   },
 ]
 
-const faqs = [
-  {
-    id: 'what-counts',
-    question: 'What counts as an entry?',
-    answer: 'Every student entered through centre 120 counts towards your total — whether digital, face-to-face or theory, and regardless of whether they pass, get a merit, distinction or any other result. The entry itself is what matters. If a parent books the exam directly, just let us know which teacher the student belongs to so we can link it to the right person.',
-  },
-  {
-    id: 'who-books',
-    question: 'Does it matter who books the exam?',
-    answer: 'No. Parents, teachers and schools can all book exams. As long as we know which teacher or school the student is linked to, it counts. If a parent books directly, either the parent or the teacher can get in touch to let us know — it only takes a moment.',
-  },
-  {
-    id: 'school-or-teacher',
-    question: 'Can a school earn an award, or just individual teachers?',
-    answer: 'Either teachers or schools can earn awards. By default, entries are linked to the teacher. If you\'d prefer the recognition to go to your school instead, just let us know — it\'s your choice. The key thing is that every entry counts, regardless of who actually books the exam.',
-  },
-  {
-    id: 'display',
-    question: 'How do I display my badge?',
-    answer: 'You will receive a digital badge image file that you can add to your website, social media profiles, email signature or printed materials. It is yours to use however you like.',
-  },
-  {
-    id: 'how-tracked',
-    question: 'How are my entries tracked?',
-    answer: 'We track entries through Trinity\'s centre 120 booking records. For digital exams, our link pre-fills centre 120 automatically when you use the Book Your Exam button — but if you refresh the page or use the back button the code can disappear. Always check the referral code box says 120 before you book. For face-to-face exams in Liverpool or Wirral, your entry is automatically connected to centre 120 — no code needed.',
-  },
-  {
-    id: 'cumulative',
-    question: 'Do entries reset or carry over?',
-    answer: 'Entries reset each quarter. This means you can earn a new award every quarter — so a teacher or school could receive the Top Award in Q1, Q2, Q3 and Q4 of the same year. The more quarters you hit a tier, the more awards you collect.',
-  },
-]
 </script>
 
 <template>
@@ -403,7 +376,7 @@ const faqs = [
 
         <div :class="animClass('fade-up', 2)" class="mt-8">
           <MyAccordionConstructor
-            :items="faqs"
+            :items="faqAccordionItems(faqPage)"
             size="small"
             header-bg-color="bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary"
             header-text-color="text-brand-text-inverse"

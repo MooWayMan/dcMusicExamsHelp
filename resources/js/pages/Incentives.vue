@@ -14,7 +14,8 @@ import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructo
 import MyFooter from '@/components/layouts/MyFooter.vue'
 import PageMaintenance from '@/components/reusables/PageMaintenance.vue'
 import { Trophy, Award, Star, Gift, Users, CheckCircle } from 'lucide-vue-next'
-import { GIFT_TOKEN_REDEEM_RULE } from '@/lib/prizeRules'
+import faqPage from '@/data/faqs/incentives'
+import { faqAccordionItems } from '@/lib/faqs'
 
 const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
@@ -96,43 +97,7 @@ const howItWorks = [
 ]
 
 /* ── FAQs ── */
-const faqs = [
-  {
-    id: 1,
-    question: 'Does it cost anything extra to get these incentives?',
-    answer: 'No. Everything on this page is included at no extra cost when you book through centre 120. The exam fees are the standard Trinity prices.',
-  },
-  {
-    id: 2,
-    question: 'What are the certificates?',
-    answer: 'Every student entered through centre 120 receives at least a Bravo Certificate. Score a Merit and you receive a Take a Bow Certificate instead. Score a Distinction and you receive a Standing Ovation Certificate instead. The highest scorers each quarter earn the top awards in two grade groups (Initial–5 and 6–8) — a Showstopper Certificate for the highest Distinction in each group and a Centre Stage Certificate for the highest Merit in each group. These are digital certificates you can print at home, display on a tablet or iPad for photos, or share straight to social media. No colour printer needed — just hold it up on the screen and snap a photo. These are in addition to the official Trinity certificate that every Pass, Merit and Distinction receives.',
-  },
-  {
-    id: 3,
-    question: 'How does the prize draw work?',
-    answer: 'We run two separate quarterly prize draws — one for students and one for teachers. Every exam entry through centre 120 — face-to-face, digital or theory — earns the student an automatic entry. Teachers also get one entry for every exam booked through centre 120 — the more students entered, the more chances to win. Winners are drawn at the end of each quarter and receive a <strong>£50 gift token</strong>. You don\'t need to do anything extra — entries are automatic.',
-  },
-  {
-    id: 4,
-    question: 'Can I opt out of the Recognition page?',
-    answer: 'Yes. If you\'d prefer not to be listed, just let us know and we\'ll remove your entry. By default, only your first name and initial are shown — full names are only displayed with permission.',
-  },
-  {
-    id: 5,
-    question: 'How do teacher badges work?',
-    answer: 'Every exam entry through centre 120 counts towards a teacher\'s award — regardless of the result and regardless of who booked it. There are four tiers: Bronze (10+), Silver (20+), Gold (30+) and Top Award (40+). Totals refresh every quarter.',
-  },
-  {
-    id: 6,
-    question: 'Do digital exams qualify?',
-    answer: 'Yes. Every incentive on this page applies to both face-to-face and digital exams booked through centre 120. Digital exams count exactly the same.',
-  },
-  {
-    id: 7,
-    question: 'How long do I have to use a gift token?',
-    answer: GIFT_TOKEN_REDEEM_RULE,
-  },
-]
+
 </script>
 
 <template>
@@ -335,7 +300,7 @@ const faqs = [
 
         <div :class="animClass('fade-up', 2)" class="mt-8">
           <MyAccordionConstructor
-            :items="faqs"
+            :items="faqAccordionItems(faqPage)"
             size="small"
             header-bg-color="bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary"
             header-text-color="text-brand-text-inverse"

@@ -10,10 +10,10 @@ test('the gift token deadline is written down once', function () {
     expect(guardOffenders('/redeemed within \d+ months/', ['resources/js/lib/prizeRules.ts']))->toBe([]);
 });
 
-test('the Incentives page and the winner emails use the shared rule', function () {
+test('the Incentives FAQ and the winner emails use the shared rule', function () {
     $sources = guardSources();
 
-    expect($sources['resources/js/pages/Incentives.vue'])->toContain('GIFT_TOKEN_REDEEM_RULE')
+    expect($sources['resources/js/data/faqs/incentives.ts'])->toContain('answer: GIFT_TOKEN_REDEEM_RULE')
         ->and(substr_count($sources['resources/js/pages/admin/QuarterEnd/Index.vue'], '${redeemRule()}'))->toBe(6);
 });
 

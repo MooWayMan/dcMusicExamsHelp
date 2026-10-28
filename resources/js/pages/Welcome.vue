@@ -16,6 +16,11 @@ import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructo
 import MyFooter from '@/components/layouts/MyFooter.vue'
 // EmailCapture import removed 2026-05-04 — superseded by LeadMagnetCapture.
 import LeadMagnetCapture from '@/components/LeadMagnetCapture.vue'
+import { useAccordionHashOpen } from '@/composables/useAccordionHashOpen'
+import faqPage from '@/data/faqs/welcome'
+import { faqAccordionItems } from '@/lib/faqs'
+
+useAccordionHashOpen()
 
 const { isSubscribed } = useSubscription()
 const { showBookingModal } = useBookingModal()
@@ -137,37 +142,6 @@ const incentives = [
     borderColor: 'border-l-brand-success',
   },
 ]
-
-const faqs = [
-  {
-    question: 'Do I book through this website?',
-    answer:
-      'No — when you click Book Your Exam, you will see a short menu asking which type of exam you want. Each option takes you to the correct Trinity booking system. For digital exams, our link pre-fills centre 120 automatically, but if you refresh or go back it can disappear — always check the referral code box says 120 before you book. For face-to-face exams, your entry is automatically connected to centre 120.',
-  },
-  {
-    question: 'Who is this for?',
-    answer:
-      'Anyone involved in music exams. Teachers looking for a smoother booking process and recognition. Parents wanting clear guidance on how exams work. Students preparing for their next grade.',
-  },
-  {
-    question: 'What is centre 120?',
-    answer:
-      'Centre 120 is our registered Trinity College London exam centre. It covers digital exams, face-to-face exams in Liverpool and Wirral, and digital theory exams. When your entry is connected to centre 120, you unlock access to incentives, recognition and ongoing support.',
-  },
-  {
-    question: 'Does it cost anything extra?',
-    answer:
-      'No. The exam fees are the same regardless of which centre you use. Centre 120 simply gives you access to the extra benefits and support offered through musicExams.help.',
-  },
-  {
-    question: 'Can I use this if I already have a teacher?',
-    answer:
-      'Absolutely. This site supports your existing teacher, not replaces them. Your teacher stays central to everything — we just make the booking and admin side easier for everyone.',
-  },
-]
-
-const landingFaqCount = 4
-const landingFaqs = faqs.slice(0, landingFaqCount)
 
 const usefulLinks = [
   {
@@ -880,11 +854,7 @@ const handleRunnerClick = (card: { url?: string; isExternal?: boolean }) => {
 
             <div class="mt-8">
               <MyAccordionConstructor
-                :items="landingFaqs.map((faq, index) => ({
-                  id: index + 1,
-                  question: faq.question,
-                  answer: faq.answer,
-                }))"
+                :items="faqAccordionItems(faqPage)"
                 size="small"
                 header-bg-color="bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary"
                 header-text-color="text-brand-text-inverse"

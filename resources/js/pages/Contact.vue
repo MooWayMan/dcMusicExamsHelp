@@ -13,6 +13,11 @@ import MyTextareaConstructor from '@/components/reusables/MyTextareaConstructor.
 import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
 import { Mail, Clock, MessageCircle } from 'lucide-vue-next'
+import { useAccordionHashOpen } from '@/composables/useAccordionHashOpen'
+import faqPage from '@/data/faqs/contact'
+import { faqAccordionItems } from '@/lib/faqs'
+
+useAccordionHashOpen()
 
 const { animClass } = usePageAnimation()
 
@@ -72,23 +77,7 @@ function submitForm() {
 }
 
 /* ── FAQs ── */
-const faqs = [
-  {
-    id: 1,
-    question: 'How quickly will I get a reply?',
-    answer: 'We aim to respond to all enquiries within 24 hours during term time. During school holidays it may take a little longer, but we\'ll always get back to you.',
-  },
-  {
-    id: 2,
-    question: 'Can I call instead?',
-    answer: 'We don\'t currently offer phone support, but email is the quickest way to reach us. If your question is urgent, mention it in the subject line and we\'ll prioritise it.',
-  },
-  {
-    id: 3,
-    question: 'I need help booking an exam — can you walk me through it?',
-    answer: 'Absolutely. Drop us a message with the instrument, grade and whether you want face-to-face, digital or theory, and we\'ll guide you through the process step by step.',
-  },
-]
+
 </script>
 
 <template>
@@ -279,7 +268,7 @@ const faqs = [
 
         <div :class="animClass('fade-up', 2)" class="mt-8">
           <MyAccordionConstructor
-            :items="faqs"
+            :items="faqAccordionItems(faqPage)"
             size="small"
             header-bg-color="bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary"
             header-text-color="text-brand-text-inverse"
