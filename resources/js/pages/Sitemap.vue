@@ -69,6 +69,7 @@ const sections: SitemapSection[] = [
       { name: 'What to Expect', href: '/exam-guide/what-to-expect' },
       { name: 'UCAS Points', href: '/exam-guide/ucas-points' },
       { name: 'Own-Choice Songs (Rock & Pop)', href: '/exam-guide/own-choice-songs' },
+      { name: 'Special Needs & Access Arrangements', href: '/exam-guide/special-needs' },
       { name: 'Exam Fees', href: '/exam-fees' },
     ],
   },

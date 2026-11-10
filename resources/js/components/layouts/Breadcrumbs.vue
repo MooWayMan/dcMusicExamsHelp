@@ -50,6 +50,7 @@ const parentPages: Record<string, { name: string; href: string }> = {
   'ucas-points': { name: 'UCAS Points', href: '/exam-guide/ucas-points' },
   'syllabuses': { name: 'Syllabuses', href: '/exam-guide/syllabuses' },
   'own-choice-songs': { name: 'Own-Choice Songs', href: '/exam-guide/own-choice-songs' },
+  'special-needs': { name: 'Special Needs', href: '/exam-guide/special-needs' },
 }
 
 const resolvedPages = computed(() => {

@@ -11,7 +11,7 @@
 $publicPages = [
     'Welcome', 'Syllabus', 'TopTen', 'ForParents', 'ForTeachers', 'ForStudents',
     'About', 'Faq', 'ExamGuide', 'ExamGuideGrades', 'ExamGuideDigital',
-    'ExamGuideExpect', 'ExamGuideUcas', 'ExamGuideSyllabuses', 'ExamGuideOwnChoice', 'Books',
+    'ExamGuideExpect', 'ExamGuideUcas', 'ExamGuideSyllabuses', 'ExamGuideOwnChoice', 'ExamGuideSpecialNeeds', 'Books',
     'TrinityExamInformation', 'SwitchToCentre120', 'TeacherAwards', 'Incentives',
     'ExamFees', 'Contact', 'ThankYou', 'PrivacyPolicy', 'TermsOfUse',
     'CookiePolicy', 'Sitemap',

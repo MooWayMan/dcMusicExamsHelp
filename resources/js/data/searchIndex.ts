@@ -3,6 +3,7 @@
 import { GIFT_TOKEN_REDEEM_RULE } from '@/lib/prizeRules'
 import { GUITAR_EXAMS_ANCHOR, GUITAR_EXAMS_SUMMARY } from '@/lib/guitarExams'
 import { OWN_CHOICE_PATH } from '@/data/ownChoiceSongs'
+import { SPECIAL_NEEDS_PATH } from '@/data/specialNeeds'
 import { FAQ_PAGES } from '@/data/faqs'
 import { faqLink, plainText } from '@/lib/faqs'
 import { hasPhrase, hasTerm, queryTerms, words } from '@/lib/searchMatch'
@@ -192,6 +193,14 @@ const topicEntries: SearchEntry[] = [
     url: OWN_CHOICE_PATH,
     section: 'Exam Guide',
     keywords: ['own choice', 'own-choice', 'own choice song', 'song 2', 'rock and pop', 'rock & pop', 'parameters', 'requirements', 'prerequisites', 'cover', 'backing track', 'guitar', 'bass', 'drums', 'keyboards', 'vocals'],
+  },
+  {
+    id: 'guide-special-needs',
+    title: 'Special Needs & Access Arrangements (SEN)',
+    snippet: 'Which form to send for special needs adjustments, where it goes, the 28-day deadline, what evidence is needed and what Trinity can adjust.',
+    url: SPECIAL_NEEDS_PATH,
+    section: 'Exam Guide',
+    keywords: ['special needs', 'sen', 'send', 'sen form', 'access arrangements', 'reasonable adjustments', 'disability', 'dyslexia', 'autism', 'adhd', 'extra time', 'additional needs', 'learning difficulty', 'wheelchair', 'visually impaired', 'hearing'],
   },
   {
     id: 'topic-guitar-exams',

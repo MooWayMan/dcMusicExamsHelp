@@ -25,6 +25,7 @@ export const PUBLIC_PAGES: readonly string[] = [
     'ExamGuideDigital',
     'ExamGuideGrades',
     'ExamGuideOwnChoice',
+    'ExamGuideSpecialNeeds',
     'ExamGuideSyllabuses',
     'ExamFees',
     'Incentives',

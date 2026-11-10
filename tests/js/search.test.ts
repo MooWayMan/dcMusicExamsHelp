@@ -48,6 +48,9 @@ test('the topics people actually search for come first', () => {
   assert.match(top('how long for results')?.title ?? '', /result/i)
   assert.equal(top('gift token expire')?.url, '/incentives#faq-7')
   assert.ok(top('own choice song')?.url.startsWith('/exam-guide/own-choice-songs'), top('own choice song')?.url)
+  for (const words of ['special needs', 'sen form', 'send form', 'access arrangements', 'dyslexia extra time']) {
+    assert.ok(top(words)?.url.startsWith('/exam-guide/special-needs'), `${words}: ${top(words)?.url}`)
+  }
 })
 
 test('nothing for nonsense, nothing for an empty box', () => {

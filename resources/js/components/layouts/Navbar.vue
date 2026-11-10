@@ -87,6 +87,7 @@ const navigation = computed<NavItem[]>(() => {
         { name: 'UCAS Points', href: '/exam-guide/ucas-points' },
         { name: 'Syllabuses', href: '/exam-guide/syllabuses' },
         { name: 'Own-Choice Songs', href: '/exam-guide/own-choice-songs' },
+        { name: 'Special Needs (SEN)', href: '/exam-guide/special-needs' },
         { name: '---', href: '#divider-2' },
         { name: 'Fees & Dates', href: '/exam-fees' },
         { name: 'About', href: '/about' },

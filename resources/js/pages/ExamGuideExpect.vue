@@ -10,10 +10,22 @@ import BookingModal from '@/components/BookingModal.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
+import MyGlassCardConstructor from '@/components/reusables/MyGlassCardConstructor.vue'
+import { SEN_FACE_TO_FACE_DEADLINE, SPECIAL_NEEDS_PATH } from '@/data/specialNeeds'
 import MyFooter from '@/components/layouts/MyFooter.vue'
-import { Clock, CheckCircle, AlertCircle, Music, ArrowRight } from 'lucide-vue-next'
+import { Clock, CheckCircle, Accessibility, Music, ArrowRight } from 'lucide-vue-next'
 import faqPage from '@/data/faqs/examGuideExpect'
 import { faqAccordionItems } from '@/lib/faqs'
+
+const specialNeedsCards = [
+  {
+    icon: Accessibility,
+    title: 'Special needs and access arrangements',
+    detail: `If a candidate has a disability, health condition or specific learning need, Trinity can make adjustments, but only if they are asked for in writing beforehand. ${SEN_FACE_TO_FACE_DEADLINE}`,
+    link: `${SPECIAL_NEEDS_PATH}?from=what-to-expect`,
+    linkText: 'Which form, where to send it and what can be adjusted',
+  },
+]
 
 const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
@@ -434,19 +446,8 @@ const afterBookingF2F = [
           </div>
         </div>
 
-        <div :class="animClass('fade-up', 3)" class="mt-8 overflow-hidden rounded-2xl border-4 border-brand-accent bg-white/10 shadow-2xl backdrop-blur-sm">
-          <div class="flex items-center gap-3 bg-black px-5 py-3 sm:px-6">
-            <AlertCircle class="h-5 w-5 shrink-0 text-brand-accent sm:h-6 sm:w-6" />
-            <p class="text-base font-semibold text-white sm:text-lg">Special needs provisions</p>
-          </div>
-          <div class="p-6">
-            <p class="text-base leading-snug text-white/80 sm:text-base md:text-lg">
-              If a candidate has a specific educational need or disability, Trinity offers access arrangements to support them. Visit <a href="https://www.trinitycollege.com/qualifications/music/special-needs" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand-accent underline hover:text-white">Trinity's special needs page</a> for full details and to download the application form.
-            </p>
-            <p class="mt-4 inline-block rounded-full bg-white px-5 py-2 text-sm font-bold text-red-600 sm:text-base">
-              A new form must be submitted for every exam — at least 28 days before the exam date. This cannot be arranged verbally through your teacher or the centre.
-            </p>
-          </div>
+        <div :class="animClass('fade-up', 3)" class="mt-8">
+          <MyGlassCardConstructor :cards="specialNeedsCards" :columns="1" />
         </div>
       </div>
     </section>

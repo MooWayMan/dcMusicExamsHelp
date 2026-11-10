@@ -12,7 +12,7 @@ import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
 import MyRunnerConstructor from '@/components/reusables/MyRunnerConstructor.vue'
 import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
-import { Music, Guitar, CheckCircle, ArrowRight, GraduationCap, BookOpen, Clock, Award } from 'lucide-vue-next'
+import { Music, Guitar, CheckCircle, ArrowRight, GraduationCap, BookOpen, Clock, Award, Accessibility } from 'lucide-vue-next'
 import { useAccordionHashOpen } from '@/composables/useAccordionHashOpen'
 import faqPage from '@/data/faqs/examGuide'
 import { faqAccordionItems } from '@/lib/faqs'
@@ -119,6 +119,15 @@ const guidePages = [
     descript: 'What an own-choice song can be, how long and how hard, and what to bring, for every instrument and grade.',
     url: '/exam-guide/own-choice-songs',
     icon: Guitar,
+    showIcon: true,
+  },
+  {
+    id: 7,
+    title: 'Special Needs (SEN)',
+    subTitle: 'Adjustments and the form',
+    descript: 'Which form to send, where it goes and the deadline, plus what Trinity can adjust for a candidate.',
+    url: '/exam-guide/special-needs',
+    icon: Accessibility,
     showIcon: true,
   },
 ]
