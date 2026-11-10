@@ -95,6 +95,7 @@ Route::inertia('/exam-guide/what-to-expect', 'ExamGuideExpect')->name('exam-guid
 Route::inertia('/exam-guide/digital-exams', 'ExamGuideDigital')->name('exam-guide.digital');
 Route::inertia('/exam-guide/grades-explained', 'ExamGuideGrades')->name('exam-guide.grades');
 Route::inertia('/exam-guide/syllabuses', 'ExamGuideSyllabuses')->name('exam-guide.syllabuses');
+Route::inertia('/exam-guide/own-choice-songs', 'ExamGuideOwnChoice')->name('exam-guide.own-choice');
 Route::inertia('/exam-fees', 'ExamFees')->name('exam-fees');
 /**
  * Short redirect targets for print QR codes (exam-day poster, thank-you card).

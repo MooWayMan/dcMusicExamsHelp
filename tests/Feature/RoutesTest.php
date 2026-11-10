@@ -124,6 +124,11 @@ test('GET /exam-guide/syllabuses returns 200', function () {
         ->assertStatus(200);
 });
 
+test('GET /exam-guide/own-choice-songs returns 200', function () {
+    $this->get('/exam-guide/own-choice-songs')
+        ->assertStatus(200);
+});
+
 test('GET /exam-fees returns 200', function () {
     $this->get('/exam-fees')
         ->assertStatus(200);

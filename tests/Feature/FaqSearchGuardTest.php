@@ -32,7 +32,7 @@ test('every page with an FAQ draws it from its file and opens #faq-N links', fun
     $pages = collect(guardSources())
         ->filter(fn ($code, $path) => str_starts_with($path, 'resources/js/pages/') && str_contains($code, "from '@/data/faqs/"));
 
-    expect($pages)->toHaveCount(15);
+    expect($pages)->toHaveCount(16);
     foreach ($pages as $path => $code) {
         expect($code)->toContain('faqAccordionItems(faqPage)')
             ->and($code)->toContain('useAccordionHashOpen()');

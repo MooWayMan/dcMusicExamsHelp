@@ -47,6 +47,7 @@ test('the topics people actually search for come first', () => {
   assert.equal(top('paper certificate')?.title, 'Can I order a paper certificate, and how much?')
   assert.match(top('how long for results')?.title ?? '', /result/i)
   assert.equal(top('gift token expire')?.url, '/incentives#faq-7')
+  assert.ok(top('own choice song')?.url.startsWith('/exam-guide/own-choice-songs'), top('own choice song')?.url)
 })
 
 test('nothing for nonsense, nothing for an empty box', () => {

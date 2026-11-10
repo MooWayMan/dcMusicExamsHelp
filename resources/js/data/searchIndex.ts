@@ -2,6 +2,7 @@
 
 import { GIFT_TOKEN_REDEEM_RULE } from '@/lib/prizeRules'
 import { GUITAR_EXAMS_ANCHOR, GUITAR_EXAMS_SUMMARY } from '@/lib/guitarExams'
+import { OWN_CHOICE_PATH } from '@/data/ownChoiceSongs'
 import { FAQ_PAGES } from '@/data/faqs'
 import { faqLink, plainText } from '@/lib/faqs'
 import { hasPhrase, hasTerm, queryTerms, words } from '@/lib/searchMatch'
@@ -183,6 +184,14 @@ const topicEntries: SearchEntry[] = [
     url: '/exam-guide/syllabuses',
     section: 'Exam Guide',
     keywords: ['syllabus', 'syllabuses', 'scales', 'arpeggios', 'pieces', 'technical work', 'instruments'],
+  },
+  {
+    id: 'guide-own-choice',
+    title: 'Own-Choice Songs (Rock & Pop)',
+    snippet: 'What a Rock & Pop own-choice song can be, how long and how hard it must be at every grade, and what to bring, for guitar, bass, drums, keyboards and vocals.',
+    url: OWN_CHOICE_PATH,
+    section: 'Exam Guide',
+    keywords: ['own choice', 'own-choice', 'own choice song', 'song 2', 'rock and pop', 'rock & pop', 'parameters', 'requirements', 'prerequisites', 'cover', 'backing track', 'guitar', 'bass', 'drums', 'keyboards', 'vocals'],
   },
   {
     id: 'topic-guitar-exams',

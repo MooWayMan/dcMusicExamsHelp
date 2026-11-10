@@ -68,6 +68,7 @@ const sections: SitemapSection[] = [
       { name: 'Digital Exams', href: '/exam-guide/digital-exams' },
       { name: 'What to Expect', href: '/exam-guide/what-to-expect' },
       { name: 'UCAS Points', href: '/exam-guide/ucas-points' },
+      { name: 'Own-Choice Songs (Rock & Pop)', href: '/exam-guide/own-choice-songs' },
       { name: 'Exam Fees', href: '/exam-fees' },
     ],
   },

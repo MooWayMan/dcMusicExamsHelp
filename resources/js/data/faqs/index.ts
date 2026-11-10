@@ -17,6 +17,7 @@ import examGuideExpect from '@/data/faqs/examGuideExpect'
 import examGuideDigital from '@/data/faqs/examGuideDigital'
 import examGuideUcas from '@/data/faqs/examGuideUcas'
 import examGuideSyllabuses from '@/data/faqs/examGuideSyllabuses'
+import examGuideOwnChoice from '@/data/faqs/examGuideOwnChoice'
 import switchToCentre120 from '@/data/faqs/switchToCentre120'
 import contact from '@/data/faqs/contact'
 import welcome from '@/data/faqs/welcome'
@@ -34,6 +35,7 @@ export const FAQ_PAGES: FaqPage[] = [
   examGuideDigital,
   examGuideUcas,
   examGuideSyllabuses,
+  examGuideOwnChoice,
   switchToCentre120,
   contact,
   welcome,

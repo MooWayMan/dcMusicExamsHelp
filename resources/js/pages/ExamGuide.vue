@@ -112,6 +112,15 @@ const guidePages = [
     icon: BookOpen,
     showIcon: true,
   },
+  {
+    id: 6,
+    title: 'Own-Choice Songs',
+    subTitle: 'Rock & Pop song 2, every grade',
+    descript: 'What an own-choice song can be, how long and how hard, and what to bring, for every instrument and grade.',
+    url: '/exam-guide/own-choice-songs',
+    icon: Guitar,
+    showIcon: true,
+  },
 ]
 
 /* ── FAQ ── */

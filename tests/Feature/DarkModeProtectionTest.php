@@ -40,6 +40,7 @@ dataset('public_pages', [
     '/exam-guide/digital-exams',
     '/exam-guide/grades-explained',
     '/exam-guide/syllabuses',
+    '/exam-guide/own-choice-songs',
 ]);
 
 test('public page declares color-scheme=light via meta tag', function (string $url) {
