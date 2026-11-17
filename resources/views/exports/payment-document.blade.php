@@ -134,7 +134,7 @@
             <tr class="{{ $i % 2 === 1 ? 'alt' : '' }}">
                 <td>{{ $line->description }}</td>
                 <td>{{ $line->line_date?->format('d/m/Y') }}</td>
-                <td>{{ $line->detail }}</td>
+                <td>@if ($line->start_time && $line->end_time){{ $line->start_time }}–{{ $line->end_time }}@if ($line->detail)<br>@endif @endif{{ $line->detail }}</td>
                 <td class="num">{{ $qty($line->quantity) }}</td>
                 <td class="num">{{ $money((int) round((float) $line->unit_price * 100)) }}</td>
                 <td class="num">{{ $money($service->linePence($line->quantity, $line->unit_price)) }}</td>

@@ -63,6 +63,8 @@ class PaymentDocuments
                     'position' => $position,
                     'description' => $line['description'],
                     'line_date' => $line['line_date'] ?? null,
+                    'start_time' => $line['start_time'] ?? null,
+                    'end_time' => $line['end_time'] ?? null,
                     'detail' => $line['detail'] ?? null,
                     'quantity' => $line['quantity'],
                     'unit_price' => $line['unit_price'],
@@ -132,7 +134,7 @@ class PaymentDocuments
      * One line per candidate on a Trinity order, at the fee stored on the
      * entry. Used to fill a receipt.
      *
-     * @return list<array{description: string, line_date: string|null, detail: string|null, quantity: string, unit_price: string}>
+     * @return list<array{description: string, line_date: string|null, start_time: null, end_time: null, detail: string|null, quantity: string, unit_price: string}>
      */
     public function linesFromOrder(Order $order): array
     {
@@ -146,6 +148,8 @@ class PaymentDocuments
                     trim(($entry->instrument?->name ?? '').' '.Grade::label($entry->grade)),
                 ]))),
                 'line_date' => $entry->exam_date?->format('Y-m-d'),
+                'start_time' => null,
+                'end_time' => null,
                 'detail' => null,
                 'quantity' => '1.00',
                 'unit_price' => number_format((float) ($entry->fee ?? 0), 2, '.', ''),
@@ -181,6 +185,8 @@ class PaymentDocuments
             'lines' => $document->lines->map(fn ($line) => [
                 'description' => $line->description,
                 'line_date' => $line->line_date?->format('Y-m-d'),
+                'start_time' => $line->start_time,
+                'end_time' => $line->end_time,
                 'detail' => $line->detail,
                 'quantity' => $line->quantity,
                 'unit_price' => $line->unit_price,

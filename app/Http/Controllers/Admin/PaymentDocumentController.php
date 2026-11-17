@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\PaymentDocument;
+use App\Services\MinimumWage;
 use App\Services\PaymentDocumentPdf;
 use App\Services\PaymentDocuments;
 use Illuminate\Http\JsonResponse;
@@ -26,6 +27,7 @@ class PaymentDocumentController extends Controller
     public function __construct(
         private PaymentDocuments $documents = new PaymentDocuments(),
         private PaymentDocumentPdf $pdf = new PaymentDocumentPdf(),
+        private MinimumWage $minimumWage = new MinimumWage(),
     ) {}
 
     public function index(): InertiaResponse
@@ -112,6 +114,7 @@ class PaymentDocumentController extends Controller
     {
         return [
             'methods' => PaymentDocuments::METHODS,
+            'minimumWages' => $this->minimumWage->rates(),
             'orders' => Order::orderByDesc('requested_start_date')
                 ->limit(100)
                 ->get(['id', 'trinity_order_number', 'venue', 'requested_start_date', 'candidates'])
@@ -143,6 +146,13 @@ class PaymentDocumentController extends Controller
             'lines' => ['required', 'array', 'min:1'],
             'lines.*.description' => ['required', 'string', 'max:255'],
             'lines.*.line_date' => ['nullable', 'date'],
+            'lines.*.start_time' => ['nullable', 'date_format:H:i'],
+            'lines.*.end_time' => ['nullable', 'date_format:H:i', function (string $attribute, mixed $value, \Closure $fail) use ($request) {
+                $start = $request->input(str_replace('.end_time', '.start_time', $attribute));
+                if ($value && $start && $value <= $start) {
+                    $fail('The end time must be after the start time.');
+                }
+            }],
             'lines.*.detail' => ['nullable', 'string', 'max:255'],
             'lines.*.quantity' => ['required', 'numeric', 'min:0'],
             'lines.*.unit_price' => ['required', 'numeric'],

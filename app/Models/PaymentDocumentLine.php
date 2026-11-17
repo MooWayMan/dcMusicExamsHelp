@@ -14,6 +14,8 @@ class PaymentDocumentLine extends Model
         'position',
         'description',
         'line_date',
+        'start_time',
+        'end_time',
         'detail',
         'quantity',
         'unit_price',

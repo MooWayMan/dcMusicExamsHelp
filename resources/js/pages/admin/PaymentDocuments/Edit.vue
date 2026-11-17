@@ -10,10 +10,14 @@ import MySelectConstructor from '@/components/reusables/MySelectConstructor.vue'
 import MyTextareaConstructor from '@/components/reusables/MyTextareaConstructor.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyCardConstructor from '@/components/reusables/MyCardConstructor.vue'
+import { TIME_OPTIONS, hoursBetween } from '@/lib/workTimes'
+import { minimumWageOn, type WageRate } from '@/lib/minimumWage'
 
 interface Line {
     description: string
     line_date: string
+    start_time: string
+    end_time: string
     detail: string
     quantity: string | number
     unit_price: string | number
@@ -22,6 +26,8 @@ interface Line {
 interface LinePayload {
     description: string
     line_date: string | null
+    start_time: string | null
+    end_time: string | null
     detail: string | null
     quantity: string | number
     unit_price: string | number
@@ -58,17 +64,42 @@ const props = defineProps<{
     suggestedNumber: string
     methods: string[]
     orders: { id: number; label: string }[]
+    minimumWages: WageRate[]
 }>()
 
 const isReceipt = computed(() => props.kind === 'receipt')
 const today = new Date().toISOString().slice(0, 10)
 
 function blankLine(): Line {
-    return { description: '', line_date: '', detail: '', quantity: '1', unit_price: '' }
+    return { description: '', line_date: '', start_time: '', end_time: '', detail: '', quantity: '1', unit_price: '' }
 }
 
 function toLine(l: LinePayload): Line {
-    return { ...l, line_date: l.line_date ?? '', detail: l.detail ?? '' }
+    return { ...l, line_date: l.line_date ?? '', start_time: l.start_time ?? '', end_time: l.end_time ?? '', detail: l.detail ?? '' }
+}
+
+function hasTimes(line: Line): boolean {
+    return hoursBetween(line.start_time, line.end_time) !== null
+}
+
+function wageFor(line: Line): string | null {
+    return minimumWageOn(props.minimumWages, line.line_date)
+}
+
+function wageDay(line: Line): string {
+    return line.line_date ? `on ${line.line_date.split('-').reverse().join('/')}` : 'today'
+}
+
+function useMinimumWage(line: Line) {
+    const rate = wageFor(line)
+    if (rate) line.unit_price = rate
+}
+
+function timesChanged(line: Line) {
+    const hours = hoursBetween(line.start_time, line.end_time)
+    if (!hours) return
+    line.quantity = hours
+    if (!line.unit_price || Number(line.unit_price) === 0) useMinimumWage(line)
 }
 
 const form = useForm({
@@ -214,23 +245,62 @@ function destroy() {
             <MyCardConstructor title="Lines" padding="large">
                 <div class="flex flex-col gap-4">
                     <div v-for="(line, i) in form.lines" :key="i" class="grid grid-cols-2 gap-3 rounded-lg border border-brand-border p-3 sm:grid-cols-12">
-                        <div class="col-span-2 sm:col-span-12">
-                            <MyInputConstructor v-model="line.description" size="small" label="Description" :error="form.errors[`lines.${i}.description`]" />
+                        <div class="col-span-2 sm:col-span-8">
+                            <MyInputConstructor v-model="line.description" size="small" label-size="small" label="Description" :error="form.errors[`lines.${i}.description`]" />
                         </div>
-                        <div class="sm:col-span-3">
-                            <MyInputConstructor v-model="line.line_date" type="date" size="small" label="Date" />
+                        <div class="col-span-2 sm:col-span-4">
+                            <MyInputConstructor v-model="line.detail" size="small" label-size="small" label="Note (optional)" />
                         </div>
-                        <div class="sm:col-span-3">
-                            <MyInputConstructor v-model="line.detail" size="small" label="Detail (e.g. 8:30–5:30)" />
+                        <div class="col-span-2 sm:col-span-3">
+                            <MyInputConstructor v-model="line.line_date" type="date" size="small" label-size="small" label="Date" />
                         </div>
                         <div class="sm:col-span-2">
-                            <MyInputConstructor v-model="line.quantity" type="number" size="small" label="Qty / hours" :error="form.errors[`lines.${i}.quantity`]" />
+                            <MySelectConstructor v-model="line.start_time" :options="TIME_OPTIONS" size="small" label="Start" placeholder="–" @update:model-value="timesChanged(line)" />
                         </div>
-                        <div class="sm:col-span-3">
-                            <MyInputConstructor v-model="line.unit_price" type="number" size="small" label="Unit price (£)" :error="form.errors[`lines.${i}.unit_price`]" />
+                        <div class="sm:col-span-2">
+                            <MySelectConstructor v-model="line.end_time" :options="TIME_OPTIONS" size="small" label="End" placeholder="–" @update:model-value="timesChanged(line)" />
+                        </div>
+                        <div class="sm:col-span-2">
+                            <MyInputConstructor
+                                v-model="line.quantity"
+                                type="number"
+                                size="small"
+                                label-size="small"
+                                :label="hasTimes(line) ? 'Hours' : 'Qty / hours'"
+                                :readonly="hasTimes(line)"
+                                :error="form.errors[`lines.${i}.quantity`]"
+                            />
+                        </div>
+                        <div class="sm:col-span-2">
+                            <MyInputConstructor v-model="line.unit_price" type="number" size="small" label-size="small" label="Rate (£)" :error="form.errors[`lines.${i}.unit_price`]" />
                         </div>
                         <div class="flex items-end sm:col-span-1">
                             <MyButtonConstructor type="button" variant="outline" size="small" :icon="Trash2" :disabled="form.lines.length === 1" aria-label="Remove line" @click="removeLine(i)" />
+                        </div>
+                        <div v-if="form.errors[`lines.${i}.end_time`]" class="col-span-2 sm:col-span-12">
+                            <MyTextConstructor textColor="text-brand-danger" spacing="none">
+                                <template #myPara>{{ form.errors[`lines.${i}.end_time`] }}</template>
+                            </MyTextConstructor>
+                        </div>
+                        <div v-if="line.start_time || line.end_time" class="col-span-2 flex flex-wrap items-center gap-3 sm:col-span-12">
+                            <div class="text-sm">
+                                <MyTextConstructor bodyVariant="inherit" textColor="text-brand-text-soft" spacing="none">
+                                    <template #myPara>
+                                        <template v-if="wageFor(line)">Minimum wage for 21 and over {{ wageDay(line) }}: £{{ wageFor(line) }} (GOV.UK)</template>
+                                        <template v-else>No minimum wage found {{ wageDay(line) }}.</template>
+                                    </template>
+                                </MyTextConstructor>
+                            </div>
+                            <MyButtonConstructor
+                                v-if="wageFor(line)"
+                                type="button"
+                                variant="outline"
+                                size="small"
+                                :disabled="Number(line.unit_price) === Number(wageFor(line))"
+                                @click="useMinimumWage(line)"
+                            >
+                                Use minimum wage
+                            </MyButtonConstructor>
                         </div>
                     </div>
                     <div>

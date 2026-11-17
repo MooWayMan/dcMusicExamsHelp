@@ -12,10 +12,29 @@ use App\Models\Instrument;
 use App\Models\Order;
 use App\Models\PaymentDocument;
 use App\Models\User;
+use App\Services\MinimumWage;
 use App\Services\PaymentDocuments;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Symfony\Component\Process\Process;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+
+function govUkRatesPage(string $rows): string
+{
+    return '<html><body><h2>Current rates</h2><table><thead><tr><th></th><th>21 and over</th><th>18 to 20</th>'
+        .'<th>Under 18</th><th>Apprentice</th></tr></thead><tbody>'.$rows.'</tbody></table></body></html>';
+}
+
+beforeEach(function () {
+    $this->govUk = fn () => Http::response(govUkRatesPage(
+        '<tr><th>April 2026</th><td>£12.71</td><td>£10.85</td><td>£8</td><td>£8</td></tr>'
+        .'<tr><th>April 2027</th><td>£13.21</td><td>£11.27</td><td>£8.31</td><td>£8.31</td></tr>'
+    ));
+
+    Http::fake(['www.gov.uk/*' => fn () => ($this->govUk)()]);
+});
 
 function paymentDocAdmin(): User
 {
@@ -179,4 +198,100 @@ test('payment documents are numbered and totalled only by the service', function
     expect(guardOffenders('/PaymentDocument(Line)?::(create|query|where)\(|->lines\(\)->create\(/', [
         'app/Services/PaymentDocuments.php',
     ]))->toBe([]);
+});
+
+test('a line keeps its start and end times', function () {
+    $this->actingAs(paymentDocAdmin())
+        ->post('/admin/payment-documents', stewardPayload(['lines' => [
+            ['description' => 'Exam steward C&J', 'line_date' => '2026-12-03', 'start_time' => '08:30', 'end_time' => '15:00',
+                'detail' => 'Lunch on site', 'quantity' => '6.50', 'unit_price' => '12.71'],
+        ]]))
+        ->assertRedirect();
+
+    $doc = PaymentDocument::firstOrFail();
+
+    $this->get("/admin/payment-documents/{$doc->id}/edit")
+        ->assertInertia(fn ($page) => $page
+            ->where('document.lines.0.start_time', '08:30')
+            ->where('document.lines.0.end_time', '15:00')
+            ->where('document.lines.0.detail', 'Lunch on site')
+            ->where('document.lines.0.quantity', '6.50')
+            ->where('document.totals.total', '£82.62')
+        );
+
+    $this->get("/admin/payment-documents/{$doc->id}/pdf")->assertOk();
+});
+
+test('an end time before the start time is refused', function () {
+    $this->actingAs(paymentDocAdmin())
+        ->post('/admin/payment-documents', stewardPayload(['lines' => [
+            ['description' => 'Steward', 'line_date' => '2026-12-03', 'start_time' => '17:00', 'end_time' => '08:30',
+                'detail' => '', 'quantity' => '1', 'unit_price' => '12.71'],
+        ]]))
+        ->assertSessionHasErrors('lines.0.end_time');
+
+    expect(PaymentDocument::count())->toBe(0);
+});
+
+test('the edit page is handed the minimum wage read from GOV.UK', function () {
+    $this->actingAs(paymentDocAdmin())
+        ->get('/admin/payment-documents/create')
+        ->assertInertia(fn ($page) => $page
+            ->where('minimumWages', [
+                ['from' => '2024-04-01', 'rate' => '11.44'],
+                ['from' => '2025-04-01', 'rate' => '12.21'],
+                ['from' => '2026-04-01', 'rate' => '12.71'],
+                ['from' => '2027-04-01', 'rate' => '13.21'],
+            ])
+        );
+
+    Http::assertSent(fn ($request) => $request->url() === MinimumWage::SOURCE);
+});
+
+test('a new rate on GOV.UK is picked up and the history is kept', function () {
+    $this->govUk = fn () => Http::response(govUkRatesPage(
+        '<tr><th>April 2027</th><td>£13.21</td><td>£11.27</td><td>£8.31</td><td>£8.31</td></tr>'
+        .'<tr><th>April 2028</th><td>£13.70</td><td>£12.00</td><td>£8.60</td><td>£8.60</td></tr>'
+    ));
+
+    $rates = app(MinimumWage::class)->rates();
+
+    expect(collect($rates)->pluck('rate', 'from')->all())->toMatchArray([
+        '2026-04-01' => '12.71',
+        '2027-04-01' => '13.21',
+        '2028-04-01' => '13.70',
+    ]);
+});
+
+test('if GOV.UK cannot be read the last rates are still used', function () {
+    $this->govUk = fn () => Http::response('Service unavailable', 503);
+
+    expect(app(MinimumWage::class)->refresh())->toBe(0)
+        ->and(collect(app(MinimumWage::class)->rates())->pluck('rate', 'from')->get('2026-04-01'))->toBe('12.71');
+
+    $this->govUk = fn () => Http::response('<html><body><p>A page with no table</p></body></html>');
+
+    expect(app(MinimumWage::class)->refresh())->toBe(0)
+        ->and(DB::table('minimum_wage_rates')->count())->toBe(4);
+});
+
+test('hours worked and the minimum wage on a line are worked out correctly', function () {
+    $process = new Process(
+        ['node', '--import', './tests/js/register-alias.mjs', '--test', 'tests/js/paymentDocumentLines.test.ts'],
+        base_path(),
+    );
+    $process->setTimeout(120);
+    $process->run();
+
+    expect($process->isSuccessful())->toBeTrue($process->getOutput().$process->getErrorOutput());
+});
+
+test('minimum wage figures are never written into the code', function () {
+    expect(guardOffenders('/11\\.44|12\\.21|12\\.71|13\\.21/', []))->toBe([])
+        ->and(guardOffenders('/national-minimum-wage-rates/', ['app/Services/MinimumWage.php']))->toBe([]);
+});
+
+test('hours and the minimum wage for a date are worked out in one place each', function () {
+    expect(guardOffenders('/function hoursBetween\\b/', ['resources/js/lib/workTimes.ts']))->toBe([])
+        ->and(guardOffenders('/function minimumWageOn\\b/', ['resources/js/lib/minimumWage.ts']))->toBe([]);
 });
