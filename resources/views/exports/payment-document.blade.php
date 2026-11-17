@@ -69,6 +69,9 @@
                     @if ($document->order)
                         <strong>Trinity order:</strong> {{ $document->order->trinity_order_number }}<br>
                     @endif
+                    @if ($document->reference && ! $isReceipt)
+                        <strong>Reference:</strong> {{ $document->reference }}<br>
+                    @endif
                     <strong>To:</strong> {{ $document->to_name }}
                     @if ($document->to_detail)<br>{!! nl2br(e($document->to_detail)) !!}@endif
                 </div>
