@@ -295,3 +295,24 @@ test('hours and the minimum wage for a date are worked out in one place each', f
     expect(guardOffenders('/function hoursBetween\\b/', ['resources/js/lib/workTimes.ts']))->toBe([])
         ->and(guardOffenders('/function minimumWageOn\\b/', ['resources/js/lib/minimumWage.ts']))->toBe([]);
 });
+
+test('What for offers the defaults, then every type already used on a document or a line, and a new type joins the list once saved', function () {
+    $admin = paymentDocAdmin();
+
+    $this->actingAs($admin)
+        ->get('/admin/payment-documents/create?kind=payment')
+        ->assertInertia(fn ($page) => $page->where('types', ['Exam steward', 'Venue rent']));
+
+    $this->post('/admin/payment-documents', stewardPayload(['title' => 'Piano tuning']))->assertRedirect();
+    $this->post('/admin/payment-documents', stewardPayload(['number' => 'PAY-2026-002', 'title' => 'exam steward']))->assertRedirect();
+
+    $this->get('/admin/payment-documents/create?kind=payment')
+        ->assertInertia(fn ($page) => $page->where('types', ['Exam steward', 'Venue rent', 'Piano tuning', 'Steward exams LM']));
+
+    $this->get('/admin/payment-documents/create?kind=receipt')
+        ->assertInertia(fn ($page) => $page->where('types', ['Exam fees']));
+});
+
+test('the What for dropdown is built once and shared by the document and its lines', function () {
+    expect(guardOffenders('/__new_type__/', ['resources/js/components/paymentdocuments/WhatForPicker.vue']))->toBe([]);
+});

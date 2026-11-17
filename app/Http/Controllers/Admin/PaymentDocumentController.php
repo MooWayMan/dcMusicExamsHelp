@@ -59,7 +59,7 @@ class PaymentDocumentController extends Controller
             'document' => null,
             'kind' => $kind,
             'suggestedNumber' => $this->documents->nextNumber($kind, now()),
-            ...$this->formOptions(),
+            ...$this->formOptions($kind),
         ]);
     }
 
@@ -77,7 +77,7 @@ class PaymentDocumentController extends Controller
             'document' => $this->documents->payload($paymentDocument),
             'kind' => $paymentDocument->kind,
             'suggestedNumber' => $paymentDocument->number,
-            ...$this->formOptions(),
+            ...$this->formOptions($paymentDocument->kind),
         ]);
     }
 
@@ -110,10 +110,11 @@ class PaymentDocumentController extends Controller
     }
 
     /** @return array<string, mixed> */
-    private function formOptions(): array
+    private function formOptions(string $kind): array
     {
         return [
             'methods' => PaymentDocuments::METHODS,
+            'types' => $this->documents->types($kind),
             'minimumWages' => $this->minimumWage->rates(),
             'orders' => Order::orderByDesc('requested_start_date')
                 ->limit(100)

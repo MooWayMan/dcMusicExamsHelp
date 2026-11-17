@@ -35,6 +35,8 @@ const columns = [
     <div class="mx-auto w-full max-w-screen-xl px-4 py-6 sm:px-6 lg:px-8">
         <PageHeader
             title="Payment Documents"
+            eyebrow="Admin"
+            size="compact"
             subtitle="Payment advices for money you pay out on Trinity's behalf (venue rent, stewards), and receipts for exam fees paid to you."
         >
             <template #actions>
@@ -49,23 +51,25 @@ const columns = [
             </template>
         </PageHeader>
 
-        <MyCardConstructor v-if="documents.length === 0" padding="large">
-            <MyTextConstructor variant="muted">
-                <template #myPara>No payment documents yet.</template>
-            </MyTextConstructor>
-        </MyCardConstructor>
+        <div class="mt-6">
+            <MyCardConstructor v-if="documents.length === 0" padding="large">
+                <MyTextConstructor variant="muted">
+                    <template #myPara>No payment documents yet.</template>
+                </MyTextConstructor>
+            </MyCardConstructor>
 
-        <MyTableConstructor v-else :data="documents" :columns="columns" rowKey="id" defaultSortKey="issued_on" defaultSortDir="desc">
-            <template #cell-actions="{ row }">
-                <div class="flex flex-wrap justify-end gap-2">
-                    <Link :href="`/admin/payment-documents/${row.id}/edit`">
-                        <MyButtonConstructor variant="outline" size="small">Edit</MyButtonConstructor>
-                    </Link>
-                    <a :href="`/admin/payment-documents/${row.id}/pdf`" target="_blank" rel="noopener">
-                        <MyButtonConstructor variant="outline" size="small" :icon="FileText">PDF</MyButtonConstructor>
-                    </a>
-                </div>
-            </template>
-        </MyTableConstructor>
+            <MyTableConstructor v-else :data="documents" :columns="columns" rowKey="id" defaultSortKey="issued_on" defaultSortDir="desc">
+                <template #cell-actions="{ row }">
+                    <div class="flex flex-wrap justify-end gap-2">
+                        <Link :href="`/admin/payment-documents/${row.id}/edit`">
+                            <MyButtonConstructor variant="outline" size="small">Edit</MyButtonConstructor>
+                        </Link>
+                        <a :href="`/admin/payment-documents/${row.id}/pdf`" target="_blank" rel="noopener">
+                            <MyButtonConstructor variant="outline" size="small" :icon="FileText">PDF</MyButtonConstructor>
+                        </a>
+                    </div>
+                </template>
+            </MyTableConstructor>
+        </div>
     </div>
 </template>

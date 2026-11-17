@@ -2,6 +2,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
+import { COMPACT_CONTROL } from '@/lib/formControlSize'
 
 interface Props {
   modelValue?: string
@@ -12,7 +13,8 @@ interface Props {
   disabled?: boolean
   readonly?: boolean
   rows?: number
-  size?: 'small' | 'medium' | 'large'
+  /** 'compact' is the admin-form size, matching MyInputConstructor and MySelectConstructor, with a small label. */
+  size?: 'compact' | 'small' | 'medium' | 'large'
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -29,6 +31,8 @@ const props = withDefaults(defineProps<Props>(), {
 
 const sizeClass = computed(() => {
   switch (props.size) {
+    case 'compact':
+      return COMPACT_CONTROL
     case 'small':
       return 'px-3 py-2 text-lg sm:text-xl'
     case 'large':
@@ -37,6 +41,8 @@ const sizeClass = computed(() => {
       return 'px-4 py-3 text-xl sm:text-2xl md:text-3xl'
   }
 })
+
+const compact = computed(() => props.size === 'compact')
 
 const emit = defineEmits(['update:modelValue'])
 
@@ -50,13 +56,13 @@ const stateClass = computed(() => {
 </script>
 
 <template>
-  <div class="space-y-2">
+  <div :class="compact ? 'space-y-1' : 'space-y-2'">
     <!-- LABEL -->
     <label v-if="label" :for="textareaId" class="block">
       <MyTextConstructor
-        variant="button-lg"
+        :variant="compact ? 'button-sm' : 'button-lg'"
         alignment="left"
-        textColor="text-brand-text"
+        :textColor="compact ? 'text-brand-text-soft' : 'text-brand-text'"
         spacing="none"
       >
         <template #myTitle>{{ label }}</template>

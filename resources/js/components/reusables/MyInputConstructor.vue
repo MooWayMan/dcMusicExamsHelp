@@ -2,13 +2,15 @@
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
+import { COMPACT_CONTROL } from '@/lib/formControlSize'
 
 defineOptions({ inheritAttrs: false })
 
 interface Props {
   modelValue?: string | number
   type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date'
-  size?: 'small' | 'medium' | 'large'
+  /** 'compact' is the admin-form size: same height and text as MySelectConstructor size="small", with its small label. */
+  size?: 'compact' | 'small' | 'medium' | 'large'
   variant?: 'solid' | 'outline' | 'ghost'
   placeholder?: string
   disabled?: boolean
@@ -57,10 +59,14 @@ const emit = defineEmits<{
   enter: [event: KeyboardEvent]
 }>()
 
+const smallLabel = computed(() => props.labelSize === 'small' || props.size === 'compact')
+
 const inputId = `input-${Math.random().toString(36).slice(2, 11)}`
 
 const sizeClasses = computed(() => {
   switch (props.size) {
+    case 'compact':
+      return COMPACT_CONTROL
     case 'small':
       return 'min-h-9 px-3 py-2 text-lg sm:text-xl'
     case 'large':
@@ -73,11 +79,11 @@ const sizeClasses = computed(() => {
 // Room for the icon, sized to match each box size.
 const iconPad = computed(() => {
   if (!props.icon) return ''
-  return { small: '!pl-10', medium: '!pl-12', large: '!pl-14' }[props.size]
+  return { compact: '!pl-9', small: '!pl-10', medium: '!pl-12', large: '!pl-14' }[props.size]
 })
 
 const iconClasses = computed(() => {
-  const size = { small: 'left-3 h-5 w-5', medium: 'left-4 h-6 w-6', large: 'left-5 h-7 w-7' }[props.size]
+  const size = { compact: 'left-3 h-4 w-4', small: 'left-3 h-5 w-5', medium: 'left-4 h-6 w-6', large: 'left-5 h-7 w-7' }[props.size]
   return `pointer-events-none absolute top-1/2 -translate-y-1/2 text-brand-accent ${size}`
 })
 
@@ -148,11 +154,11 @@ const handleKeydown = (event: KeyboardEvent) => emit('keydown', event)
 
 <template>
   <div class="w-full">
-    <label v-if="label" :for="inputId" :class="labelSize === 'small' ? 'mb-1 block' : 'mb-2 block'">
+    <label v-if="label" :for="inputId" :class="smallLabel ? 'mb-1 block' : 'mb-2 block'">
       <MyTextConstructor
-        :variant="labelSize === 'small' ? 'button-sm' : 'button-lg'"
+        :variant="smallLabel ? 'button-sm' : 'button-lg'"
         alignment="left"
-        :textColor="labelSize === 'small' ? 'text-brand-text-soft' : 'text-brand-text'"
+        :textColor="smallLabel ? 'text-brand-text-soft' : 'text-brand-text'"
         spacing="none"
       >
         <template #myTitle>

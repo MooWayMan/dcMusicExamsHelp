@@ -1,6 +1,6 @@
 <!-- resources/js/pages/admin/PaymentDocuments/Edit.vue -->
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { Link, router, useForm } from '@inertiajs/vue3'
 import { ArrowLeft, FileText, Plus, Save, Trash2, ListPlus } from 'lucide-vue-next'
 import PageHeader from '@/components/reusables/PageHeader.vue'
@@ -10,6 +10,7 @@ import MySelectConstructor from '@/components/reusables/MySelectConstructor.vue'
 import MyTextareaConstructor from '@/components/reusables/MyTextareaConstructor.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyCardConstructor from '@/components/reusables/MyCardConstructor.vue'
+import WhatForPicker from '@/components/paymentdocuments/WhatForPicker.vue'
 import { TIME_OPTIONS, hoursBetween } from '@/lib/workTimes'
 import { minimumWageOn, type WageRate } from '@/lib/minimumWage'
 
@@ -63,6 +64,7 @@ const props = defineProps<{
     kind: 'payment' | 'receipt'
     suggestedNumber: string
     methods: string[]
+    types: string[]
     orders: { id: number; label: string }[]
     minimumWages: WageRate[]
 }>()
@@ -70,8 +72,8 @@ const props = defineProps<{
 const isReceipt = computed(() => props.kind === 'receipt')
 const today = new Date().toISOString().slice(0, 10)
 
-function blankLine(): Line {
-    return { description: '', line_date: '', start_time: '', end_time: '', detail: '', quantity: '1', unit_price: '' }
+function blankLine(description = ''): Line {
+    return { description, line_date: '', start_time: '', end_time: '', detail: '', quantity: '1', unit_price: '' }
 }
 
 function toLine(l: LinePayload): Line {
@@ -119,6 +121,20 @@ const form = useForm({
 })
 
 const methodOptions = computed(() => props.methods.map((m) => ({ value: m, label: m })))
+
+// A payment line starts as whatever the document is for, and follows it when
+// "What for" changes, unless the line has been given its own type.
+const lineTypes = computed(() => (form.title && !props.types.includes(form.title) ? [...props.types, form.title] : props.types))
+
+watch(
+    () => form.title,
+    (now, before) => {
+        if (isReceipt.value) return
+        for (const line of form.lines) {
+            if (line.description === '' || line.description === before) line.description = now
+        }
+    },
+)
 const orderOptions = computed(() => props.orders.map((o) => ({ value: o.id, label: o.label })))
 
 const heading = computed(() => {
@@ -127,7 +143,7 @@ const heading = computed(() => {
 })
 
 function addLine() {
-    form.lines.push(blankLine())
+    form.lines.push(blankLine(isReceipt.value ? '' : form.title))
 }
 
 function removeLine(index: number) {
@@ -182,6 +198,8 @@ function destroy() {
 
         <PageHeader
             :title="heading"
+            eyebrow="Admin"
+            size="compact"
             :subtitle="isReceipt ? 'Money paid to you for exam fees, what it covered, and the balance either way.' : 'Money you paid out on Trinity\'s behalf, such as venue rent or a steward.'"
         >
             <template v-if="document" #actions>
@@ -191,46 +209,44 @@ function destroy() {
             </template>
         </PageHeader>
 
-        <form class="flex flex-col gap-6" @submit.prevent="save">
+        <form class="mt-6 flex flex-col gap-6" @submit.prevent="save">
             <MyCardConstructor title="Details" padding="large">
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <MyInputConstructor v-model="form.number" label="Number" :error="form.errors.number" required />
-                    <MyInputConstructor v-model="form.issued_on" type="date" label="Date of this document" :error="form.errors.issued_on" required />
-                    <MyInputConstructor
-                        v-model="form.title"
-                        :label="isReceipt ? 'What for (e.g. Exam fees, 3 Dec 2026)' : 'What for (e.g. Exam steward, Venue rent)'"
-                        :error="form.errors.title"
-                    />
+                    <MyInputConstructor v-model="form.number" size="compact" label="Number" :error="form.errors.number" required />
+                    <MyInputConstructor v-model="form.issued_on" type="date" size="compact" label="Date" :error="form.errors.issued_on" required />
+                    <WhatForPicker v-model="form.title" :types="types" label="What for" :error="form.errors.title" />
                     <MyInputConstructor
                         v-model="form.to_name"
+                        size="compact"
                         :label="isReceipt ? 'Received from' : 'Paid to'"
                         :error="form.errors.to_name"
                         required
                     />
                     <div class="sm:col-span-2">
-                        <MyTextareaConstructor v-model="form.to_detail" label="Their address or email (optional)" :rows="2" :error="form.errors.to_detail" />
+                        <MyTextareaConstructor v-model="form.to_detail" size="compact" label="Address or email (optional)" :rows="2" :error="form.errors.to_detail" />
                     </div>
                 </div>
             </MyCardConstructor>
 
             <MyCardConstructor :title="isReceipt ? 'Payment received' : 'How it was paid'" padding="large">
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <MySelectConstructor v-model="form.method" :options="methodOptions" label="Method" placeholder="Choose…" />
-                    <MyInputConstructor v-model="form.paid_on" type="date" :label="isReceipt ? 'Received on' : 'Paid on'" :error="form.errors.paid_on" />
+                    <MySelectConstructor v-model="form.method" :options="methodOptions" size="small" label="Method" placeholder="Choose…" />
+                    <MyInputConstructor v-model="form.paid_on" type="date" size="compact" :label="isReceipt ? 'Received on' : 'Paid on'" :error="form.errors.paid_on" />
                     <MyInputConstructor
                         v-if="isReceipt"
                         v-model="form.amount_received"
                         type="number"
+                        size="compact"
                         label="Amount received (£)"
                         :error="form.errors.amount_received"
                     />
-                    <MyInputConstructor v-model="form.reference" label="Reference (optional)" :error="form.errors.reference" />
+                    <MyInputConstructor v-model="form.reference" size="compact" label="Reference (optional)" :error="form.errors.reference" />
                 </div>
             </MyCardConstructor>
 
             <MyCardConstructor v-if="isReceipt" title="Trinity order" padding="large">
                 <div class="flex flex-col gap-3">
-                    <MySelectConstructor v-model="form.order_id" :options="orderOptions" label="Order this receipt is for (optional)" placeholder="No order" />
+                    <MySelectConstructor v-model="form.order_id" :options="orderOptions" size="small" label="Order this receipt is for (optional)" placeholder="No order" />
                     <div>
                         <MyButtonConstructor type="button" variant="outline" size="small" :icon="ListPlus" :disabled="!form.order_id || filling" @click="fillFromOrder">
                             Fill lines from this order
@@ -246,13 +262,20 @@ function destroy() {
                 <div class="flex flex-col gap-4">
                     <div v-for="(line, i) in form.lines" :key="i" class="grid grid-cols-2 gap-3 rounded-lg border border-brand-border p-3 sm:grid-cols-12">
                         <div class="col-span-2 sm:col-span-8">
-                            <MyInputConstructor v-model="line.description" size="small" label-size="small" label="Description" :error="form.errors[`lines.${i}.description`]" />
+                            <WhatForPicker
+                                v-if="!isReceipt"
+                                v-model="line.description"
+                                :types="lineTypes"
+                                label="Description"
+                                :error="form.errors[`lines.${i}.description`]"
+                            />
+                            <MyInputConstructor v-else v-model="line.description" size="compact" label="Description" :error="form.errors[`lines.${i}.description`]" />
                         </div>
                         <div class="col-span-2 sm:col-span-4">
-                            <MyInputConstructor v-model="line.detail" size="small" label-size="small" label="Note (optional)" />
+                            <MyInputConstructor v-model="line.detail" size="compact" label="Note (optional)" placeholder="e.g. C&J, R&P" />
                         </div>
                         <div class="col-span-2 sm:col-span-3">
-                            <MyInputConstructor v-model="line.line_date" type="date" size="small" label-size="small" label="Date" />
+                            <MyInputConstructor v-model="line.line_date" type="date" size="compact" label="Date" />
                         </div>
                         <div class="sm:col-span-2">
                             <MySelectConstructor v-model="line.start_time" :options="TIME_OPTIONS" size="small" label="Start" placeholder="–" @update:model-value="timesChanged(line)" />
@@ -264,15 +287,14 @@ function destroy() {
                             <MyInputConstructor
                                 v-model="line.quantity"
                                 type="number"
-                                size="small"
-                                label-size="small"
+                                size="compact"
                                 :label="hasTimes(line) ? 'Hours' : 'Qty / hours'"
                                 :readonly="hasTimes(line)"
                                 :error="form.errors[`lines.${i}.quantity`]"
                             />
                         </div>
                         <div class="sm:col-span-2">
-                            <MyInputConstructor v-model="line.unit_price" type="number" size="small" label-size="small" label="Rate (£)" :error="form.errors[`lines.${i}.unit_price`]" />
+                            <MyInputConstructor v-model="line.unit_price" type="number" size="compact" label="Rate (£)" :error="form.errors[`lines.${i}.unit_price`]" />
                         </div>
                         <div class="flex items-end sm:col-span-1">
                             <MyButtonConstructor type="button" variant="outline" size="small" :icon="Trash2" :disabled="form.lines.length === 1" aria-label="Remove line" @click="removeLine(i)" />
@@ -310,7 +332,7 @@ function destroy() {
             </MyCardConstructor>
 
             <MyCardConstructor title="Notes (printed on the document)" padding="large">
-                <MyTextareaConstructor v-model="form.notes" :rows="3" :error="form.errors.notes" />
+                <MyTextareaConstructor v-model="form.notes" size="compact" :rows="3" :error="form.errors.notes" />
             </MyCardConstructor>
 
             <MyCardConstructor title="Totals" padding="large">

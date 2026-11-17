@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Order;
 use App\Models\PaymentDocument;
+use App\Models\PaymentDocumentLine;
 use App\Support\Grade;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
@@ -30,6 +31,43 @@ class PaymentDocuments
     ];
 
     public const METHODS = ['Bank transfer', 'Cash', 'Cheque', 'Card', 'Other'];
+
+    /** What a document is for, offered before anything typed in by hand. */
+    public const DEFAULT_TYPES = [
+        PaymentDocument::KIND_PAYMENT => ['Exam steward', 'Venue rent'],
+        PaymentDocument::KIND_RECEIPT => ['Exam fees'],
+    ];
+
+    /**
+     * The "What for" choices for a kind: the defaults, then every other title
+     * already saved on a document of that kind, A to Z. A new type typed on
+     * the edit page joins this list as soon as that document is saved.
+     * Payment advices also offer what their lines were for; a receipt's lines
+     * are candidates, so they are never offered as types.
+     *
+     * @return list<string>
+     */
+    public function types(string $kind): array
+    {
+        $defaults = self::DEFAULT_TYPES[$kind] ?? [];
+        $taken = array_map('mb_strtolower', $defaults);
+
+        $titles = PaymentDocument::where('kind', $kind)->whereNotNull('title')->pluck('title');
+
+        $lineTypes = $kind === PaymentDocument::KIND_PAYMENT
+            ? PaymentDocumentLine::whereHas('document', fn ($q) => $q->where('kind', $kind))->pluck('description')
+            : collect();
+
+        $used = $titles->concat($lineTypes)
+            ->map(fn (string $title) => trim($title))
+            ->filter(fn (string $title) => $title !== '' && ! in_array(mb_strtolower($title), $taken, true))
+            ->unique(fn (string $title) => mb_strtolower($title))
+            ->sort(fn (string $a, string $b) => strcasecmp($a, $b))
+            ->values()
+            ->all();
+
+        return [...$defaults, ...$used];
+    }
 
     /**
      * Create or update a document from validated input.

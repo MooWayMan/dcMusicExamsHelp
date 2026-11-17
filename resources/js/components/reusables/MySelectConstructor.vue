@@ -9,6 +9,7 @@ export interface SelectOption<T extends string | number = string | number> {
 <script setup lang="ts" generic="T extends string | number">
 import { computed } from 'vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
+import { COMPACT_CONTROL } from '@/lib/formControlSize'
 
 defineOptions({ inheritAttrs: false })
 
@@ -43,7 +44,7 @@ const value = computed({
   set: (v: T | '') => emit('update:modelValue', v as T),
 })
 
-const sizeClasses = computed(() => (props.size === 'small' ? 'px-3 py-2.5 text-sm' : 'px-3 py-2.5 text-base'))
+const sizeClasses = computed(() => (props.size === 'small' ? COMPACT_CONTROL : 'px-3 py-2.5 text-base'))
 
 const toneClasses = computed(() =>
   props.tone === 'glass'
