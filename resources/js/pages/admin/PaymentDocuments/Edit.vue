@@ -92,6 +92,11 @@ function wageDay(line: Line): string {
     return line.line_date ? `on ${line.line_date.split('-').reverse().join('/')}` : 'today'
 }
 
+function paidMinimumWage(line: Line): boolean {
+    const rate = wageFor(line)
+    return rate !== null && Number(line.unit_price) === Number(rate)
+}
+
 function useMinimumWage(line: Line) {
     const rate = wageFor(line)
     if (rate) line.unit_price = rate
@@ -173,11 +178,35 @@ async function fillFromOrder() {
     }
 }
 
-function save() {
+// Save is only live when something has changed (a new document can always be
+// saved). After a save, what is on screen becomes the new "unchanged".
+const canSave = computed(() => !form.processing && (!props.document || form.isDirty))
+
+// The PDF always shows what is SAVED, so "View PDF" saves any changes first.
+// The tab is opened straight away, while the click still counts as the
+// person's own (a tab opened after the save would be blocked as a pop-up),
+// and pointed at the PDF once the save has gone through.
+function save(viewPdf = false) {
+    if (viewPdf && props.document && !form.isDirty) {
+        window.open(`/admin/payment-documents/${props.document.id}/pdf`, '_blank')
+        return
+    }
+
+    const tab = viewPdf ? window.open('', '_blank') : null
+    const options = {
+        preserveScroll: true,
+        onSuccess: (page: { props: Record<string, unknown> }) => {
+            form.defaults()
+            const saved = page.props.document as DocumentPayload | null
+            if (tab && saved) tab.location.href = `/admin/payment-documents/${saved.id}/pdf`
+        },
+        onError: () => tab?.close(),
+    }
+
     if (props.document) {
-        form.put(`/admin/payment-documents/${props.document.id}`, { preserveScroll: true })
+        form.put(`/admin/payment-documents/${props.document.id}`, options)
     } else {
-        form.post('/admin/payment-documents')
+        form.post('/admin/payment-documents', options)
     }
 }
 
@@ -209,7 +238,7 @@ function destroy() {
             </template>
         </PageHeader>
 
-        <form class="mt-6 flex flex-col gap-6" @submit.prevent="save">
+        <form class="mt-6 flex flex-col gap-6" @submit.prevent="save()">
             <MyCardConstructor title="Details" padding="large">
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <MyInputConstructor v-model="form.number" size="compact" label="Number" :error="form.errors.number" required />
@@ -252,9 +281,9 @@ function destroy() {
                             Fill lines from this order
                         </MyButtonConstructor>
                     </div>
-                    <MyTextConstructor v-if="fillError" variant="muted">
-                        <template #myPara>{{ fillError }}</template>
-                    </MyTextConstructor>
+                    <div v-if="fillError" class="text-sm">
+                        <MyTextConstructor bodyVariant="inherit" textColor="text-brand-text-soft" spacing="none">{{ fillError }}</MyTextConstructor>
+                    </div>
                 </div>
             </MyCardConstructor>
 
@@ -272,53 +301,49 @@ function destroy() {
                             <MyInputConstructor v-else v-model="line.description" size="compact" label="Description" :error="form.errors[`lines.${i}.description`]" />
                         </div>
                         <div class="col-span-2 sm:col-span-4">
-                            <MyInputConstructor v-model="line.detail" size="compact" label="Note (optional)" placeholder="e.g. C&J, R&P" />
+                            <MyInputConstructor v-model="line.detail" size="compact" label="Note (optional)" :placeholder="isReceipt ? '' : 'e.g. C&J, R&P'" />
                         </div>
-                        <div class="col-span-2 sm:col-span-3">
+                        <div :class="isReceipt ? 'col-span-2 sm:col-span-4' : 'col-span-2 sm:col-span-3'">
                             <MyInputConstructor v-model="line.line_date" type="date" size="compact" label="Date" />
                         </div>
-                        <div class="sm:col-span-2">
+                        <div v-if="!isReceipt" class="sm:col-span-2">
                             <MySelectConstructor v-model="line.start_time" :options="TIME_OPTIONS" size="small" label="Start" placeholder="–" @update:model-value="timesChanged(line)" />
                         </div>
-                        <div class="sm:col-span-2">
+                        <div v-if="!isReceipt" class="sm:col-span-2">
                             <MySelectConstructor v-model="line.end_time" :options="TIME_OPTIONS" size="small" label="End" placeholder="–" @update:model-value="timesChanged(line)" />
                         </div>
-                        <div class="sm:col-span-2">
+                        <div :class="isReceipt ? 'sm:col-span-3' : 'sm:col-span-2'">
                             <MyInputConstructor
                                 v-model="line.quantity"
                                 type="number"
                                 size="compact"
-                                :label="hasTimes(line) ? 'Hours' : 'Qty / hours'"
+                                :label="isReceipt ? 'Qty' : hasTimes(line) ? 'Hours' : 'Qty / hours'"
                                 :readonly="hasTimes(line)"
                                 :error="form.errors[`lines.${i}.quantity`]"
                             />
                         </div>
-                        <div class="sm:col-span-2">
-                            <MyInputConstructor v-model="line.unit_price" type="number" size="compact" label="Rate (£)" :error="form.errors[`lines.${i}.unit_price`]" />
+                        <div :class="isReceipt ? 'sm:col-span-4' : 'sm:col-span-2'">
+                            <MyInputConstructor v-model="line.unit_price" type="number" size="compact" :label="isReceipt ? 'Amount (£)' : 'Rate (£)'" :error="form.errors[`lines.${i}.unit_price`]" />
                         </div>
                         <div class="flex items-end sm:col-span-1">
                             <MyButtonConstructor type="button" variant="outline" size="small" :icon="Trash2" :disabled="form.lines.length === 1" aria-label="Remove line" @click="removeLine(i)" />
                         </div>
-                        <div v-if="form.errors[`lines.${i}.end_time`]" class="col-span-2 sm:col-span-12">
-                            <MyTextConstructor textColor="text-brand-danger" spacing="none">
-                                <template #myPara>{{ form.errors[`lines.${i}.end_time`] }}</template>
-                            </MyTextConstructor>
+                        <div v-if="form.errors[`lines.${i}.end_time`]" class="col-span-2 text-sm sm:col-span-12">
+                            <MyTextConstructor bodyVariant="inherit" textColor="text-brand-danger" spacing="none">{{ form.errors[`lines.${i}.end_time`] }}</MyTextConstructor>
                         </div>
                         <div v-if="line.start_time || line.end_time" class="col-span-2 flex flex-wrap items-center gap-3 sm:col-span-12">
                             <div class="text-sm">
                                 <MyTextConstructor bodyVariant="inherit" textColor="text-brand-text-soft" spacing="none">
-                                    <template #myPara>
-                                        <template v-if="wageFor(line)">Minimum wage for 21 and over {{ wageDay(line) }}: £{{ wageFor(line) }} (GOV.UK)</template>
-                                        <template v-else>No minimum wage found {{ wageDay(line) }}.</template>
-                                    </template>
+                                    <template v-if="!wageFor(line)">No minimum wage found {{ wageDay(line) }}.</template>
+                                    <template v-else-if="paidMinimumWage(line)">Paid at the minimum wage for 21 and over {{ wageDay(line) }}: £{{ wageFor(line) }} (GOV.UK)</template>
+                                    <template v-else>Minimum wage for 21 and over {{ wageDay(line) }}: £{{ wageFor(line) }} (GOV.UK)</template>
                                 </MyTextConstructor>
                             </div>
                             <MyButtonConstructor
-                                v-if="wageFor(line)"
+                                v-if="wageFor(line) && !paidMinimumWage(line)"
                                 type="button"
                                 variant="outline"
                                 size="small"
-                                :disabled="Number(line.unit_price) === Number(wageFor(line))"
                                 @click="useMinimumWage(line)"
                             >
                                 Use minimum wage
@@ -353,8 +378,21 @@ function destroy() {
             </MyCardConstructor>
 
             <div class="flex flex-wrap items-center gap-3">
-                <MyButtonConstructor type="submit" variant="primary" :icon="Save" :disabled="form.processing">Save</MyButtonConstructor>
+                <MyButtonConstructor type="submit" variant="primary" :icon="Save" :disabled="!canSave">Save</MyButtonConstructor>
+                <MyButtonConstructor type="button" variant="outline" :icon="FileText" :disabled="form.processing" @click="save(true)">View PDF</MyButtonConstructor>
                 <MyButtonConstructor v-if="document" type="button" variant="outline" :icon="Trash2" :disabled="confirmingDelete" @click="confirmingDelete = true">Delete</MyButtonConstructor>
+                <div v-if="form.processing" class="text-sm">
+                    <MyTextConstructor bodyVariant="inherit" textColor="text-brand-text-soft" spacing="none">Saving…</MyTextConstructor>
+                </div>
+                <div v-else-if="form.hasErrors" class="text-sm">
+                    <MyTextConstructor bodyVariant="inherit" textColor="text-brand-danger" spacing="none">Not saved: check the boxes marked in red.</MyTextConstructor>
+                </div>
+                <div v-else-if="form.isDirty && document" class="text-sm">
+                    <MyTextConstructor bodyVariant="inherit" textColor="text-brand-text-soft" spacing="none">Unsaved changes</MyTextConstructor>
+                </div>
+                <div v-else-if="form.recentlySuccessful" class="text-sm">
+                    <MyTextConstructor bodyVariant="inherit" textColor="text-brand-success" spacing="none">Saved</MyTextConstructor>
+                </div>
             </div>
             <div v-if="document && confirmingDelete" class="flex flex-wrap items-center gap-3">
                 <MyButtonConstructor type="button" variant="danger" :icon="Trash2" @click="destroy">Yes, delete {{ document.number }}</MyButtonConstructor>

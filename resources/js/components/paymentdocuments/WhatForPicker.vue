@@ -57,8 +57,8 @@ const choice = computed({
             :error="error"
             @update:model-value="(v) => emit('update:modelValue', String(v))"
         />
-        <MyTextConstructor v-else-if="error" textColor="text-brand-danger" spacing="none">
-            <template #myPara>{{ error }}</template>
-        </MyTextConstructor>
+        <div v-else-if="error" class="text-sm">
+            <MyTextConstructor bodyVariant="inherit" textColor="text-brand-danger" spacing="none">{{ error }}</MyTextConstructor>
+        </div>
     </div>
 </template>
