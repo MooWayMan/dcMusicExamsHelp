@@ -23,6 +23,7 @@ import {
     Mail as MailIcon,
     Upload,
     Receipt,
+    FileText,
     Tags,
     ClipboardCheck,
     TicketCheck,
@@ -117,6 +118,11 @@ const adminExamsNavItems: NavItem[] = [
         title: 'Reconciliation',
         href: '/admin/reconciliation',
         icon: Receipt,
+    },
+    {
+        title: 'Payment Documents',
+        href: '/admin/payment-documents',
+        icon: FileText,
     },
     {
         title: 'Re-entry Permits',

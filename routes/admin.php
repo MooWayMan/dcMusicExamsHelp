@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PageMaintenanceController;
+use App\Http\Controllers\Admin\PaymentDocumentController;
 use App\Http\Controllers\Admin\PendingResultsController;
 use App\Http\Controllers\Admin\QuarterComparisonController;
 use App\Http\Controllers\Admin\QuarterEndController;
@@ -136,6 +137,17 @@ Route::middleware(['auth', 'verified', 'admin'])
         Route::get('reconciliation', [ReconciliationController::class, 'index'])->name('reconciliation.index');
         Route::post('reconciliation/preview', [ReconciliationController::class, 'preview'])->name('reconciliation.preview');
         Route::post('reconciliation/commit', [ReconciliationController::class, 'commit'])->name('reconciliation.commit');
+
+        // Payment documents — payment advices (venue rent, stewards) and receipts
+        // (exam fees paid to Paul). Documents only: no effect on commission.
+        Route::get('payment-documents', [PaymentDocumentController::class, 'index'])->name('payment-documents.index');
+        Route::get('payment-documents/create', [PaymentDocumentController::class, 'create'])->name('payment-documents.create');
+        Route::post('payment-documents', [PaymentDocumentController::class, 'store'])->name('payment-documents.store');
+        Route::get('payment-documents/order-lines/{order}', [PaymentDocumentController::class, 'orderLines'])->name('payment-documents.order-lines');
+        Route::get('payment-documents/{paymentDocument}/edit', [PaymentDocumentController::class, 'edit'])->name('payment-documents.edit');
+        Route::put('payment-documents/{paymentDocument}', [PaymentDocumentController::class, 'update'])->name('payment-documents.update');
+        Route::delete('payment-documents/{paymentDocument}', [PaymentDocumentController::class, 'destroy'])->name('payment-documents.destroy');
+        Route::get('payment-documents/{paymentDocument}/pdf', [PaymentDocumentController::class, 'pdf'])->name('payment-documents.pdf');
 
         // Address Labels — turn Trinity's messy 8-up label PDFs/CSV into a
         // clean, de-duplicated, print-ready Avery L7173 10-up sheet.
