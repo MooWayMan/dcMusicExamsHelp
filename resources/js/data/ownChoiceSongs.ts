@@ -11,13 +11,12 @@
 // Initial 4/4, 2/2, 3/4; Grade 2 adds 2/4; Grade 3 adds 6/8, 12/8.
 
 import { ROCK_POP_ACOUSTIC_RULE } from '@/lib/guitarExams'
-import { formatGrade } from '@/lib/grades'
+import { TRINITY_GRADES } from '@/lib/grades'
 
 export const OWN_CHOICE_PATH = '/exam-guide/own-choice-songs'
 
-// Labels come from the shared formatter, so this is not a second hand-typed
-// grade list (SyllabusPickerGuardTest).
-export const OWN_CHOICE_GRADES: string[] = ['Initial', 1, 2, 3, 4, 5, 6, 7, 8].map(formatGrade)
+// The shared grade list (SyllabusPickerGuardTest).
+export const OWN_CHOICE_GRADES: string[] = TRINITY_GRADES
 
 // Length and tempo are the same on all five instruments, so they live here
 // and not in each instrument's rows. One entry per grade, in grade order.

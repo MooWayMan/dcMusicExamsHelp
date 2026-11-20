@@ -11,3 +11,8 @@ export function formatGrade(g: unknown): string {
   if (bare.toLowerCase() === 'initial') return 'Initial'
   return `Grade ${bare}`
 }
+
+// Every Trinity graded level in order, Initial to Grade 8, as display labels.
+// The one list for the front end (the PHP list is SyllabusFacets::GRADE_ORDER);
+// built from formatGrade so the labels can never drift from it.
+export const TRINITY_GRADES: string[] = ['Initial', 1, 2, 3, 4, 5, 6, 7, 8].map(formatGrade)

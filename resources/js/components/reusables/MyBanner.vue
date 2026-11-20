@@ -47,10 +47,16 @@ const buttonVariant: Record<NonNullable<Props['variant']>, 'primary' | 'light' |
   primary: 'primary',
 }
 
+// A button with a link opens it in a new tab; a button without one tells the
+// page through `action`, so the page decides what it does.
+const emit = defineEmits<{ action: [] }>()
+
 const handleButtonClick = () => {
   if (props.buttonLink) {
     window.open(props.buttonLink, '_blank', 'noopener,noreferrer')
+    return
   }
+  emit('action')
 }
 </script>
 

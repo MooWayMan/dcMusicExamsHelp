@@ -1,9 +1,11 @@
 // resources/js/data/faqs/examFees.ts
 
 import type { FaqPage } from '@/lib/faqs'
+import { feesChangeAnswer } from '@/data/examFees'
 
 // The FAQ on /exam-fees. The page draws its accordion from this list and site
-// search reads it too, so an answer is written here once.
+// search reads it too, so an answer is written here once. The fee dates come
+// from data/examFees.ts.
 const page: FaqPage = {
   path: '/exam-fees',
   label: 'Exam Fees FAQ',
@@ -31,7 +33,7 @@ const page: FaqPage = {
     },
     {
       question: 'When do exam fees change?',
-      answer: 'Trinity sets fees on a calendar year basis — the current fees run from 1 January to 31 December 2026. Any changes are announced by Trinity ahead of the new year.',
+      answer: feesChangeAnswer(new Date()),
     },
   ],
 }

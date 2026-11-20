@@ -1,6 +1,9 @@
 <!-- resources/js/pages/ExamFees.vue -->
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, nextTick, Transition } from 'vue'
+// /exam-fees: Trinity's fees and exam dates on two tabs. The page holds the
+// state (tab, fee year) and the header, CTA and FAQ; each tab is its own
+// component in components/examfees/.
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { usePageAnimation } from '@/composables/usePageAnimation'
 import { useAccordionHashOpen } from '@/composables/useAccordionHashOpen'
 import { useBookingModal } from '@/composables/useBookingModal'
@@ -10,21 +13,44 @@ import Breadcrumbs from '@/components/layouts/Breadcrumbs.vue'
 import BookingModal from '@/components/BookingModal.vue'
 import MyTextConstructor from '@/components/reusables/MyTextConstructor.vue'
 import MyButtonConstructor from '@/components/reusables/MyButtonConstructor.vue'
-import MyTableConstructor from '@/components/reusables/MyTableConstructor.vue'
 import MyAccordionConstructor from '@/components/reusables/MyAccordionConstructor.vue'
+import MyBanner from '@/components/reusables/MyBanner.vue'
 import MyFooter from '@/components/layouts/MyFooter.vue'
 import PageMaintenance from '@/components/reusables/PageMaintenance.vue'
-import { PoundSterling, Calendar, FileText } from 'lucide-vue-next'
+import ExamFeesTabNav, { type ExamFeesTab as Tab } from '@/components/examfees/ExamFeesTabNav.vue'
+import ExamFeesTab from '@/components/examfees/ExamFeesTab.vue'
+import ExamDatesTab from '@/components/examfees/ExamDatesTab.vue'
 import faqPage from '@/data/faqs/examFees'
 import { faqAccordionItems } from '@/lib/faqs'
+import { currentSchedule, schedulesOnShow, scheduleForYear, formatDay } from '@/data/examFees'
 
 const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
 useAccordionHashOpen()
-const activeTab = ref<'fees' | 'dates'>('fees')
+const activeTab = ref<Tab>('fees')
 const crossRefVisible = ref(true)
 const headerVisible = ref(true)
 const tabContentVisible = ref(true)
+
+/* ── Fee year: opens on this year's fees, switches itself on 1 January.
+   ?year=2027 opens a published future year (the link used in emails). ── */
+const today = new Date()
+const current = currentSchedule(today)
+const feeYears = schedulesOnShow(today)
+const feeYear = ref(current.year)
+const fees = computed(() => scheduleForYear(feeYear.value, today))
+const nextYear = feeYears.find((s) => s.year > current.year)
+
+/* ── "2027 fees are out" banner: opens the fees tab on the new year and
+   scrolls to the tables. Gone by itself once that year has started. ── */
+function showNextYear() {
+  if (!nextYear) return
+  feeYear.value = nextYear.year
+  activeTab.value = 'fees'
+  nextTick(() => {
+    document.getElementById('fee-years')?.scrollIntoView({ behavior: 'smooth' })
+  })
+}
 
 /* ── Reactive header text based on active tab ── */
 const pageTitle = computed(() =>
@@ -34,7 +60,7 @@ const pageTitle = computed(() =>
 )
 const pageSubtitle = computed(() =>
   activeTab.value === 'fees'
-    ? 'Official Trinity College London fees for 2026. The fees are set by Trinity and are exactly the same whether you use centre 120 or book directly — no extra cost.'
+    ? `Official Trinity College London fees for ${fees.value.year}. The fees are set by Trinity and are exactly the same whether you use centre 120 or book directly — no extra cost.`
     : 'Face-to-face exam sessions for 2026 in Liverpool and Wirral, plus booking window dates. Digital exams can be booked and submitted at any time.'
 )
 
@@ -42,10 +68,12 @@ const pageSubtitle = computed(() =>
 onMounted(() => {
   if (window.location.hash === '#dates') activeTab.value = 'dates'
   if (window.location.hash === '#fees') activeTab.value = 'fees'
+  const asked = Number(new URLSearchParams(window.location.search).get('year'))
+  if (feeYears.some((s) => s.year === asked)) feeYear.value = asked
 })
 
 /* ── Switch tab and scroll to top ── */
-function switchTab(tab: 'fees' | 'dates') {
+function switchTab(tab: Tab) {
   activeTab.value = tab
   nextTick(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -74,9 +102,9 @@ watch(activeTab, (tab) => {
 })
 
 const pageMeta = {
-  title: 'Trinity Exam Fees & Dates 2026',
+  title: `Trinity Exam Fees & Dates ${current.year}`,
   description:
-    'Trinity College London exam fees for 2026 — face-to-face, digital and theory prices for every grade from Initial to Grade 8, plus diplomas and exam dates.',
+    `Trinity College London exam fees for ${current.year} — face-to-face, digital and theory prices for every grade from Initial to Grade 8, plus diplomas and exam dates.`,
   canonicalUrl: 'https://musicexams.help/exam-fees',
 }
 
@@ -84,138 +112,10 @@ const breadcrumbPages = computed(() => [
   { name: activeTab.value === 'dates' ? 'Exam Dates' : 'Exam Fees', href: '/exam-fees', current: true },
 ])
 
-/* ── Face-to-face fees ── */
-const f2fColumns = [
-  { key: 'grade', title: 'Grade', sortable: false },
-  { key: 'fee', title: 'Fee (GBP)', sortable: false, align: 'right' as const },
-]
-
-const f2fData = [
-  { grade: 'Initial', fee: '£55.00' },
-  { grade: 'Grade 1', fee: '£61.00' },
-  { grade: 'Grade 2', fee: '£68.00' },
-  { grade: 'Grade 3', fee: '£76.00' },
-  { grade: 'Grade 4', fee: '£86.00' },
-  { grade: 'Grade 5', fee: '£99.00' },
-  { grade: 'Grade 6', fee: '£109.00' },
-  { grade: 'Grade 7', fee: '£122.00' },
-  { grade: 'Grade 8', fee: '£138.00' },
-]
-
-/* ── Digital fees ── */
-const digitalColumns = [
-  { key: 'grade', title: 'Grade', sortable: false },
-  { key: 'fee', title: 'Fee (GBP)', sortable: false, align: 'right' as const },
-]
-
-const digitalData = [
-  { grade: 'Initial', fee: '£49.00' },
-  { grade: 'Grade 1', fee: '£55.00' },
-  { grade: 'Grade 2', fee: '£61.00' },
-  { grade: 'Grade 3', fee: '£68.00' },
-  { grade: 'Grade 4', fee: '£78.00' },
-  { grade: 'Grade 5', fee: '£88.00' },
-  { grade: 'Grade 6', fee: '£98.00' },
-  { grade: 'Grade 7', fee: '£109.00' },
-  { grade: 'Grade 8', fee: '£120.00' },
-]
-
-/* ── Theory fees ── */
-const theoryColumns = [
-  { key: 'grade', title: 'Grade', sortable: false },
-  { key: 'fee', title: 'Fee (GBP)', sortable: false, align: 'right' as const },
-]
-
-const theoryData = [
-  { grade: 'Grade 1', fee: '£42.00' },
-  { grade: 'Grade 2', fee: '£44.00' },
-  { grade: 'Grade 3', fee: '£48.00' },
-  { grade: 'Grade 4', fee: '£52.00' },
-  { grade: 'Grade 5', fee: '£57.00' },
-  { grade: 'Grade 6', fee: '£62.00' },
-  { grade: 'Grade 7', fee: '£69.00' },
-  { grade: 'Grade 8', fee: '£74.00' },
-]
-
-/* ── Diploma fees ── */
-const diplomaF2fColumns = [
-  { key: 'diploma', title: 'Diploma', sortable: false },
-  { key: 'unit', title: 'Unit', sortable: false },
-  { key: 'fee', title: 'Fee (GBP)', sortable: false, align: 'right' as const },
-]
-
-const diplomaF2fData = [
-  { diploma: 'ATCL Recital', unit: '—', fee: '£333.00' },
-  { diploma: 'ATCL Principles (Instrumental/Vocal Teaching)', unit: 'Unit 1', fee: '£197.00' },
-  { diploma: 'ATCL Principles (Instrumental/Vocal Teaching)', unit: 'Unit 2', fee: '£215.00' },
-  { diploma: 'AMusTCL (Theory)', unit: '—', fee: '£149.00' },
-  { diploma: 'LTCL Recital', unit: '—', fee: '£468.00' },
-  { diploma: 'LTCL Music Teaching', unit: 'Unit 1', fee: '£277.00' },
-  { diploma: 'LTCL Music Teaching', unit: 'Unit 2', fee: '£542.00' },
-  { diploma: 'LTCL Principles (Instrumental/Vocal Teaching)', unit: 'Unit 1', fee: '£277.00' },
-  { diploma: 'LTCL Principles (Instrumental/Vocal Teaching)', unit: 'Unit 2', fee: '£507.00' },
-  { diploma: 'LMusTCL (Theory)', unit: '—', fee: '£200.00' },
-  { diploma: 'FTCL Recital', unit: '—', fee: '£660.00' },
-]
-
-const diplomaDigitalColumns = [
-  { key: 'diploma', title: 'Diploma', sortable: false },
-  { key: 'fee', title: 'Fee (GBP)', sortable: false, align: 'right' as const },
-]
-
-const diplomaDigitalData = [
-  { diploma: 'ATCL Recital', fee: '£292.00' },
-  { diploma: 'LTCL Recital', fee: '£379.00' },
-  { diploma: 'FTCL Recital', fee: '£576.00' },
-]
-
-/* ── Exam dates ──
-   One table per VENUE (Paul, 28 Oct 2026: make the two venues clear), one row
-   per exam day, because each venue and exam type is its own Trinity session
-   with its own closing date. "Book by" is Paul's own date, deliberately ahead
-   of Trinity's. "Trinity closes" is what Trinity's booking systems showed,
-   checked 28 Oct 2026. Kept to four short columns so the table fits a phone
-   without stacking into cards. Past sessions come off; add the next session's
-   rows when Trinity opens it. */
-const dateColumns = [
-  { key: 'exam', title: 'Exam', sortable: false },
-  { key: 'day', title: 'Day', sortable: false },
-  { key: 'bookBy', title: 'Book By', sortable: false },
-  { key: 'closes', title: 'Trinity Closes', sortable: false },
-]
-
-const examVenues = [
-  {
-    name: 'Liverpool — Learn Music',
-    area: 'Stoneycroft, L13',
-    days: [
-      { exam: 'Classical & Jazz', day: 'Thu 3 Dec 2026', bookBy: 'Fri 30 Oct', closes: 'Thu 5 Nov' },
-      { exam: 'Rock & Pop', day: 'Sat 5 Dec 2026', bookBy: 'Fri 30 Oct', closes: 'Sat 7 Nov' },
-    ],
-  },
-  {
-    name: 'Wirral — Wirral School of Music / Tafelmusik',
-    area: 'CH43',
-    days: [
-      { exam: 'Classical & Jazz', day: 'Fri 4 Dec 2026', bookBy: 'Fri 30 Oct', closes: 'Fri 6 Nov' },
-    ],
-  },
-]
-
-const bookingWindowColumns = [
-  { key: 'session', title: 'Session Period', sortable: false },
-  { key: 'opens', title: 'Booking Opens', sortable: false },
-]
-
-const bookingWindowData = [
-  { session: 'March 2026 – May 2026', opens: 'Wed 14 January 2026 at 2pm' },
-  { session: 'June 2026 – October 2026', opens: 'Wed 15 April 2026 at 2pm' },
-  { session: 'November 2026 – February 2027', opens: 'Wed 2 September 2026 at 2pm' },
-  { session: 'March 2027 – May 2027', opens: 'Wed 13 January 2027 at 2pm' },
-]
-
-/* ── FAQs ── */
-
+const tabStyle = computed(() => ({
+  opacity: tabContentVisible.value ? 1 : 0,
+  transform: tabContentVisible.value ? 'translateY(0)' : 'translateY(12px)',
+}))
 </script>
 
 <template>
@@ -260,10 +160,20 @@ const bookingWindowData = [
             class="transition-all duration-700 ease-in-out delay-150"
             :style="{ opacity: headerVisible ? 1 : 0, transform: headerVisible ? 'translateY(0)' : 'translateY(10px)' }"
           >
-            <p class="mx-auto mt-4 max-w-2xl text-base text-brand-text-soft sm:text-base md:text-lg lg:text-xl">
-              {{ pageSubtitle }}
-            </p>
+            <div class="mx-auto mt-4 max-w-2xl text-base md:text-lg lg:text-xl">
+              <MyTextConstructor bodyVariant="inherit" alignment="center" textColor="text-brand-text-soft">{{ pageSubtitle }}</MyTextConstructor>
+            </div>
           </div>
+        </div>
+
+        <div v-if="nextYear" class="mt-8" :class="animClass('fade-up', 3)">
+          <MyBanner
+            :text="`Trinity's ${nextYear.year} fees are out`"
+            :button-text="`See ${nextYear.year} fees`"
+            variant="dark"
+            rounded
+            @action="showNextYear"
+          />
         </div>
       </div>
     </section>
@@ -272,368 +182,32 @@ const bookingWindowData = [
     <section class="bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary">
       <div class="mx-auto max-w-4xl px-4 py-5 sm:px-6 sm:py-6">
         <div :class="animClass('fade-up', 3)">
-          <p class="text-center text-base leading-snug text-white sm:text-base md:text-lg lg:text-xl">
-            <span class="font-semibold">Digital exams are generally lower in cost than face-to-face</span>
-            and carry the same Ofqual-regulated certificate and UCAS points. Both options are fully supported through centre 120.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- TAB NAVIGATION -->
-    <section class="sticky top-0 z-30 border-b border-brand-border bg-brand-surface shadow-sm">
-      <div class="mx-auto flex max-w-4xl items-center justify-center gap-2 px-4 py-3 sm:px-6">
-        <button
-          @click="activeTab = 'fees'"
-          :class="[
-            'flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold transition-all duration-200 sm:text-base',
-            activeTab === 'fees'
-              ? 'bg-gradient-to-r from-brand-primary to-brand-accent text-white shadow-md'
-              : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text hover:bg-brand-border'
-          ]"
-        >
-          <PoundSterling class="h-4 w-4" />
-          Exam Fees
-        </button>
-        <button
-          @click="activeTab = 'dates'"
-          :class="[
-            'flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold transition-all duration-200 sm:text-base',
-            activeTab === 'dates'
-              ? 'bg-gradient-to-r from-brand-primary to-brand-accent text-white shadow-md'
-              : 'bg-brand-surface-soft text-brand-text-soft hover:text-brand-text hover:bg-brand-border'
-          ]"
-        >
-          <Calendar class="h-4 w-4" />
-          Exam Dates
-        </button>
-      </div>
-    </section>
-
-    <!-- ═══ FEES TAB ═══ -->
-    <div
-      v-show="activeTab === 'fees'"
-      class="transition-all duration-700 ease-in-out"
-      :style="{ opacity: tabContentVisible ? 1 : 0, transform: tabContentVisible ? 'translateY(0)' : 'translateY(12px)' }"
-    >
-
-    <!-- FACE-TO-FACE FEES -->
-    <section
-      class="relative bg-cover bg-center bg-no-repeat"
-      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_5.jpg')"
-    >
-      <div class="absolute inset-0 bg-black/50"></div>
-      <div class="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
-        <div :class="animClass('fade-up', 1)">
-          <MyTextConstructor
-            variant="subheading"
-            fontFamily="display"
-            alignment="center"
-            spacing="tight"
-            textColor="text-white"
-            class="md:!text-2xl lg:!text-3xl"
-          >
-            <template #myTitle>Face-to-face exam fees</template>
-          </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/80 sm:text-base md:text-lg lg:text-xl">
-            Classical &amp; Jazz and Rock &amp; Pop — same fees for both.
-            Exams take place at our centres in Liverpool and Wirral.
-          </p>
-        </div>
-
-        <div :class="animClass('fade-up', 2)" class="mt-8">
-          <MyTableConstructor
-            :data="f2fData"
-            :columns="f2fColumns"
-            rowKey="grade"
-            :sortable="false"
-            :striped="true"
-            :bordered="true"
-            size="large"
-          />
-        </div>
-      </div>
-    </section>
-
-    <!-- DIGITAL FEES -->
-    <section
-      class="relative bg-cover bg-center bg-no-repeat"
-      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_8.jpg')"
-    >
-      <div class="absolute inset-0 bg-black/50"></div>
-      <div class="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
-        <div :class="animClass('fade-up', 1)">
-          <MyTextConstructor
-            variant="subheading"
-            fontFamily="display"
-            alignment="center"
-            spacing="tight"
-            textColor="text-white"
-            class="md:!text-2xl lg:!text-3xl"
-          >
-            <template #myTitle>Digital exam fees</template>
-          </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/80 sm:text-base md:text-lg lg:text-xl">
-            Classical &amp; Jazz and Rock &amp; Pop — same fees for both.
-            Record anywhere and submit online.
-          </p>
-        </div>
-
-        <div :class="animClass('fade-up', 2)" class="mt-8">
-          <MyTableConstructor
-            :data="digitalData"
-            :columns="digitalColumns"
-            rowKey="grade"
-            :sortable="false"
-            :striped="true"
-            :bordered="true"
-            size="large"
-          />
-        </div>
-
-      </div>
-    </section>
-
-    <!-- THEORY FEES -->
-    <section
-      class="relative bg-cover bg-center bg-no-repeat"
-      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_10.jpg')"
-    >
-      <div class="absolute inset-0 bg-black/50"></div>
-      <div class="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
-        <div :class="animClass('fade-up', 1)">
-          <MyTextConstructor
-            variant="subheading"
-            fontFamily="display"
-            alignment="center"
-            spacing="tight"
-            textColor="text-white"
-            class="md:!text-2xl lg:!text-3xl"
-          >
-            <template #myTitle>Theory exam fees</template>
-          </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/80 sm:text-base md:text-lg lg:text-xl">
-            Digital only. No Initial grade for theory — starts at Grade 1.
-            Trinity does not require theory for practical exams at any grade.
-          </p>
-        </div>
-
-        <div :class="animClass('fade-up', 2)" class="mt-8">
-          <MyTableConstructor
-            :data="theoryData"
-            :columns="theoryColumns"
-            rowKey="grade"
-            :sortable="false"
-            :striped="true"
-            :bordered="true"
-            size="large"
-          />
-        </div>
-      </div>
-    </section>
-
-    <!-- DIPLOMA FEES -->
-    <section
-      class="relative bg-cover bg-center bg-no-repeat"
-      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_6.jpg')"
-    >
-      <div class="absolute inset-0 bg-black/50"></div>
-      <div class="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
-        <div :class="animClass('fade-up', 1)">
-          <MyTextConstructor
-            variant="subheading"
-            fontFamily="display"
-            alignment="center"
-            spacing="tight"
-            textColor="text-white"
-            class="md:!text-2xl lg:!text-3xl"
-          >
-            <template #myTitle>Diploma fees</template>
-          </MyTextConstructor>
-          <p class="mx-auto mt-3 max-w-2xl text-center text-base text-white/80 sm:text-base md:text-lg lg:text-xl">
-            For candidates beyond Grade 8. Associate (ATCL), Licentiate (LTCL) and Fellowship (FTCL) diplomas.
-          </p>
-        </div>
-
-        <div :class="animClass('fade-up', 2)" class="mt-8">
-          <p class="mb-3 text-lg font-semibold text-white">Face-to-face diplomas</p>
-          <MyTableConstructor
-            :data="diplomaF2fData"
-            :columns="diplomaF2fColumns"
-            rowKey="diploma"
-            :sortable="false"
-            :striped="true"
-            :bordered="true"
-            size="large"
-          />
-        </div>
-
-        <div :class="animClass('fade-up', 3)" class="mt-10">
-          <p class="mb-3 text-lg font-semibold text-white">Digital diplomas <span class="text-sm font-normal text-brand-accent">(new for 2026)</span></p>
-          <MyTableConstructor
-            :data="diplomaDigitalData"
-            :columns="diplomaDigitalColumns"
-            rowKey="diploma"
-            :sortable="false"
-            :striped="true"
-            :bordered="true"
-            size="large"
-          />
-        </div>
-      </div>
-    </section>
-
-    <!-- FEES NOTE -->
-    <section class="bg-black">
-      <div class="mx-auto max-w-4xl px-4 py-6 sm:px-6">
-        <p class="text-center text-sm text-white/60">
-          All fees are set by Trinity College London and are subject to change. Late entry surcharges may apply.
-          See <a href="https://www.trinitycollege.com/qualifications/music/resources/general-resources/our-music-exams/information-regulations-from-2017" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand-accent underline hover:opacity-70">Trinity's policies and regulations</a> for full terms and conditions.
-        </p>
-      </div>
-    </section>
-
-    <!-- QUICK DATES REFERENCE (bottom of fees tab) -->
-    <section class="bg-brand-surface-soft">
-      <div class="mx-auto max-w-4xl px-4 py-10 sm:px-6">
-        <div
-          class="text-center transition-all duration-700 ease-out"
-          :class="crossRefVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'"
-        >
-          <div class="mx-auto mb-3 h-1 w-16 rounded-full bg-gradient-to-r from-brand-primary to-brand-accent"></div>
-          <p class="text-lg font-semibold text-brand-text sm:text-xl">Looking for exam dates?</p>
-          <p class="mx-auto mt-2 max-w-xl text-sm text-brand-text-soft sm:text-base">
-            Three face-to-face sessions per year: <span class="font-medium text-brand-text">March</span>,
-            <span class="font-medium text-brand-text">July</span> and
-            <span class="font-medium text-brand-text">November</span>.
-            Digital exams can be booked any time.
-          </p>
-          <button
-            @click="switchTab('dates')"
-            :disabled="!crossRefVisible"
-            class="mt-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-brand-primary to-brand-accent px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:opacity-90 sm:text-base"
-          >
-            <Calendar class="h-4 w-4" />
-            View all exam dates
-          </button>
-        </div>
-      </div>
-    </section>
-
-    </div><!-- end FEES TAB -->
-
-    <!-- ═══ DATES TAB ═══ -->
-    <div
-      v-show="activeTab === 'dates'"
-      class="transition-all duration-700 ease-in-out"
-      :style="{ opacity: tabContentVisible ? 1 : 0, transform: tabContentVisible ? 'translateY(0)' : 'translateY(12px)' }"
-    >
-
-    <!-- EXAM DATES -->
-    <section
-      id="dates"
-      class="relative bg-cover bg-center bg-no-repeat"
-      style="background-image: url('https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/blue_BG_7.jpg')"
-    >
-      <div class="absolute inset-0 bg-black/50"></div>
-      <div class="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
-        <div :class="animClass('fade-up', 1)">
-          <div class="mx-auto mb-4 h-1 w-16 rounded-full bg-white/30"></div>
-          <MyTextConstructor
-            variant="subheading"
-            fontFamily="display"
-            alignment="center"
-            spacing="tight"
-            textColor="text-white"
-            class="md:!text-2xl lg:!text-3xl"
-          >
-            <template #myTitle>Face-to-face exam dates 2026</template>
-          </MyTextConstructor>
-          <div class="mx-auto mt-3 max-w-2xl text-base md:text-lg lg:text-xl">
-            <MyTextConstructor bodyVariant="inherit" alignment="center" textColor="text-white/80">
-              Liverpool and Wirral — three sessions per year for both Classical &amp; Jazz and Rock &amp; Pop.
-              Digital exams can be booked and submitted at any time.
-            </MyTextConstructor>
-          </div>
-        </div>
-
-        <div :class="animClass('fade-up', 2)" class="mt-8">
-          <div class="mb-3 text-lg font-semibold">
-            <MyTextConstructor bodyVariant="inherit" textColor="text-white">Next exam days and closing dates</MyTextConstructor>
-          </div>
-          <div v-for="venue in examVenues" :key="venue.name" class="mt-6">
-            <MyTextConstructor variant="button-lg" spacing="none" textColor="text-white">
-              <template #myTitle>{{ venue.name }}</template>
-            </MyTextConstructor>
-            <div class="mt-1 text-sm md:text-base">
-              <MyTextConstructor bodyVariant="inherit" textColor="text-white/60">{{ venue.area }}</MyTextConstructor>
-            </div>
-            <MyTableConstructor
-              :data="venue.days"
-              :columns="dateColumns"
-              rowKey="day"
-              :sortable="false"
-              :striped="true"
-              :bordered="true"
-              size="medium"
-            />
-          </div>
-          <div class="text-sm md:text-base">
-            <MyTextConstructor bodyVariant="inherit" textColor="text-white/80">
-              Book by is our recommended date. Trinity's own booking closes a few days later, or sooner if the session fills.
-            </MyTextConstructor>
-          </div>
-        </div>
-
-        <div :class="animClass('fade-up', 3)" class="mt-10">
-          <div class="mb-3 text-lg font-semibold">
-            <MyTextConstructor bodyVariant="inherit" textColor="text-white">Online booking windows</MyTextConstructor>
-          </div>
-          <MyTableConstructor
-            :data="bookingWindowData"
-            :columns="bookingWindowColumns"
-            rowKey="session"
-            :sortable="false"
-            :striped="true"
-            :bordered="true"
-            size="large"
-          />
-          <div class="mt-3 text-sm">
-            <MyTextConstructor bodyVariant="inherit" textColor="text-white/60">
-              These booking windows are for face-to-face Classical &amp; Jazz exams. Rock &amp; Pop face-to-face exams are booked on MyTrinity, where each session opens on its own — the Rock &amp; Pop day above is the current one.
+          <div class="text-base leading-snug md:text-lg lg:text-xl">
+            <MyTextConstructor bodyVariant="inherit" alignment="center" textColor="text-white">
+              <span class="font-semibold">Digital exams are generally lower in cost than face-to-face</span>
+              and carry the same Ofqual-regulated certificate and UCAS points. Both options are fully supported through centre 120.
             </MyTextConstructor>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- QUICK FEES REFERENCE (bottom of dates tab) -->
-    <section class="bg-brand-surface-soft">
-      <div class="mx-auto max-w-4xl px-4 py-10 sm:px-6">
-        <div
-          class="text-center transition-all duration-700 ease-out"
-          :class="crossRefVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'"
-        >
-          <div class="mx-auto mb-3 h-1 w-16 rounded-full bg-gradient-to-r from-brand-primary to-brand-accent"></div>
-          <p class="text-lg font-semibold text-brand-text sm:text-xl">Looking for exam fees?</p>
-          <p class="mx-auto mt-2 max-w-xl text-sm text-brand-text-soft sm:text-base">
-            Graded exams from <span class="font-medium text-brand-text">£49</span> (digital) or
-            <span class="font-medium text-brand-text">£55</span> (face-to-face).
-            Theory from <span class="font-medium text-brand-text">£42</span>.
-          </p>
-          <button
-            @click="switchTab('fees')"
-            :disabled="!crossRefVisible"
-            class="mt-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-brand-primary to-brand-accent px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:opacity-90 sm:text-base"
-          >
-            <PoundSterling class="h-4 w-4" />
-            View all exam fees
-          </button>
-        </div>
-      </div>
-    </section>
+    <ExamFeesTabNav v-model="activeTab" />
 
-    </div><!-- end DATES TAB -->
+    <div v-show="activeTab === 'fees'" class="transition-all duration-700 ease-in-out" :style="tabStyle">
+      <ExamFeesTab
+        v-model:year="feeYear"
+        :fees="fees"
+        :years="feeYears"
+        :current-year="current.year"
+        :cross-ref-visible="crossRefVisible"
+        @show-dates="switchTab('dates')"
+      />
+    </div>
+
+    <div v-show="activeTab === 'dates'" class="transition-all duration-700 ease-in-out" :style="tabStyle">
+      <ExamDatesTab :cross-ref-visible="crossRefVisible" @show-fees="switchTab('fees')" />
+    </div>
 
     <!-- CTA -->
     <section class="bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary">
@@ -647,9 +221,11 @@ const bookingWindowData = [
           >
             <template #myTitle>Ready to book?</template>
           </MyTextConstructor>
-          <p class="mx-auto mt-2 max-w-xl text-base text-white/80 sm:text-base md:text-lg">
-            Book through centre 120 — same fees, plus incentives, recognition and support.
-          </p>
+          <div class="mx-auto mt-2 max-w-xl text-base md:text-lg">
+            <MyTextConstructor bodyVariant="inherit" alignment="center" textColor="text-white/80">
+              Book through centre 120 — same fees, plus incentives, recognition and support.
+            </MyTextConstructor>
+          </div>
         </div>
         <div :class="animClass('fade-up', 2)" class="mt-6">
           <MyButtonConstructor variant="light" size="large" @click="showBookingModal = true">
@@ -688,9 +264,11 @@ const bookingWindowData = [
         </div>
 
         <div :class="animClass('fade-up', 3)" class="mt-8 text-center">
-          <p class="text-sm text-white/60">
-            Fees shown are from the official Trinity College London fee schedule for 1 January – 31 December 2026 and may be subject to change.
-          </p>
+          <div class="text-sm">
+            <MyTextConstructor bodyVariant="inherit" alignment="center" textColor="text-white/60">
+              Fees shown are from the official Trinity College London fee schedule for {{ formatDay(fees.from) }} – {{ formatDay(fees.to) }} and may be subject to change.
+            </MyTextConstructor>
+          </div>
         </div>
       </div>
     </section>
