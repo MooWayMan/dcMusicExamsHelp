@@ -22,4 +22,20 @@ class AmazonLink
 
         return 'https://www.amazon.co.uk/dp/'.$asin.'?tag='.config('services.amazon.associates_tag');
     }
+
+    /**
+     * Amazon search link (with the Associates tag) for a book we have no ASIN
+     * for yet. Used by the Piece Finder instead of "not stocked on Amazon",
+     * because most of those books ARE on Amazon, just never matched.
+     */
+    public static function forSearch(?string $terms): ?string
+    {
+        $terms = trim(preg_replace('/\s+/', ' ', (string) $terms));
+
+        if ($terms === '') {
+            return null;
+        }
+
+        return 'https://www.amazon.co.uk/s?k='.rawurlencode($terms).'&tag='.config('services.amazon.associates_tag');
+    }
 }

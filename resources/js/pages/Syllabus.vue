@@ -19,6 +19,7 @@ interface Piece {
   technical_focus: boolean; voice_range: string | null
   buy_kind: string; buy_url: string | null; buy_edition: string | null
   buy_alt_url: string | null; buy_alt_edition: string | null; buy_ebook_url: string | null
+  buy_search_url: string | null
   curated_video_url: string | null; audio: Audio | null; also_in: string[]
 }
 
@@ -189,7 +190,11 @@ function instrumentLabel(p: Piece): string {
                 :class="p.buy_ebook_url ? 'border border-white/25 bg-white/5 hover:bg-white/10' : 'bg-brand-accent hover:opacity-90'">
                 <ShoppingCart class="h-4 w-4" /> Buy print<span v-if="p.buy_edition && p.buy_edition !== 'ISBN'"> ({{ p.buy_edition }})</span>
               </a>
-              <span v-if="p.buy_kind !== 'exact' && !p.buy_ebook_url" class="text-xs text-white/55">{{ p.publisher_code || 'Other publisher' }} — not stocked on Amazon</span>
+              <a v-if="p.buy_kind !== 'exact' && !p.buy_ebook_url && p.buy_search_url" :href="p.buy_search_url" target="_blank" rel="noopener noreferrer"
+                class="inline-flex items-center gap-1.5 rounded-lg border border-white/25 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/10">
+                <ShoppingCart class="h-4 w-4" /> Search on Amazon
+              </a>
+              <span v-if="p.buy_kind !== 'exact' && !p.buy_ebook_url && p.publisher_code" class="text-xs text-white/55">{{ p.publisher_code }}</span>
               <a v-if="p.buy_kind === 'exact' && p.buy_alt_url" :href="p.buy_alt_url" target="_blank" rel="noopener noreferrer"
                 class="text-xs text-white/70 underline hover:text-white">Also in the cheaper {{ p.buy_alt_edition }} book →</a>
             </div>

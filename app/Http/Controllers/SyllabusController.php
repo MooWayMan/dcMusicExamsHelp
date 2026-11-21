@@ -59,6 +59,7 @@ class SyllabusController extends Controller
                     'buy_url' => $p->buy_url,
                     'buy_edition' => $p->buy_edition,
                     'buy_alt_url' => $p->buy_alt_url,
+                    'buy_search_url' => $p->buy_search_url,
                     'buy_alt_edition' => $p->buy_alt_edition,
                     'buy_ebook_url' => $p->buy_ebook_url,
                     'curated_video_url' => $p->curated_video_url,

@@ -63,6 +63,25 @@ class SyllabusPiece extends Model
         return AmazonLink::forAsin($this->buy_alt_asin);
     }
 
+    /**
+     * Amazon search for the book when there is no exact ASIN: the book title
+     * only, with bracketed notes such as "(accomp available separately)"
+     * removed. Publisher codes are left out on purpose: Amazon returned NO
+     * results for "Scaley Winners Brass Wind 6025" but found the book for
+     * "Scaley Winners" (checked 21 Nov 2026). Null when there is an exact
+     * link or no book.
+     */
+    public function getBuySearchUrlAttribute(): ?string
+    {
+        if ($this->buy_kind === 'exact' || blank($this->book_title)) {
+            return null;
+        }
+
+        $strip = fn (?string $s) => trim(preg_replace('/\([^)]*\)/', '', (string) $s));
+
+        return AmazonLink::forSearch($strip($this->book_title));
+    }
+
     public function book(): BelongsTo
     {
         // Explicit FK: the column is syllabus_book_id, not the belongsTo default (book_id).

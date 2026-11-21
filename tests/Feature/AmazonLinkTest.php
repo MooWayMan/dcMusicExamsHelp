@@ -42,9 +42,34 @@ test('the Piece Finder builds both buy links from stored ASINs with the configur
         ->and($pieces['Jupiter Storm No Link']['buy_alt_url'])->toBeNull();
 });
 
+test('a piece with no ASIN gets a tagged Amazon search for its book instead of "not stocked"', function () {
+    config()->set('services.amazon.associates_tag', 'search-21');
+
+    SyllabusPiece::factory()->create([
+        'title' => 'Jupiter Storm Search',
+        'book_title' => 'Easy Winners for Treble Brass (accomp available separately)',
+        'publisher_code' => 'Brass Wind 0124TC',
+        'buy_kind' => 'none',
+        'buy_asin' => null,
+    ]);
+    SyllabusPiece::factory()->create([
+        'title' => 'Jupiter Storm Exact',
+        'buy_kind' => 'exact',
+        'buy_asin' => '1804903388',
+    ]);
+
+    $pieces = collect($this->get('/syllabus?q=Jupiter%20Storm')->viewData('page')['props']['pieces'])->keyBy('title');
+
+    expect($pieces['Jupiter Storm Search']['buy_search_url'])
+        ->toBe('https://www.amazon.co.uk/s?k=Easy%20Winners%20for%20Treble%20Brass&tag=search-21')
+        ->and($pieces['Jupiter Storm Exact']['buy_search_url'])->toBeNull();
+});
+
 test('a missing ASIN gives no link rather than a broken one', function () {
     expect(AmazonLink::forAsin(null))->toBeNull()
-        ->and(AmazonLink::forAsin(''))->toBeNull();
+        ->and(AmazonLink::forAsin(''))->toBeNull()
+        ->and(AmazonLink::forSearch(null))->toBeNull()
+        ->and(AmazonLink::forSearch('  '))->toBeNull();
 });
 
 test('no Amazon product link is written out anywhere except AmazonLink', function () {
