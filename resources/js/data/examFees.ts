@@ -35,6 +35,14 @@ export interface MoreFees {
   musicalDevelopment: GradeFee[]
 }
 
+// A printable wall poster for the year: the PDF teachers download and the PNG
+// shown as its preview on /exam-fees. Both live in the S3 bucket beside the
+// site's other images (POSTER_BASE).
+export interface FeePoster {
+  pdf: string
+  preview: string
+}
+
 export interface FeeSchedule {
   year: number
   from: string
@@ -46,7 +54,10 @@ export interface FeeSchedule {
   diplomasDigital: DiplomaFee[]
   diplomasDigitalTag?: string
   more?: MoreFees
+  poster?: FeePoster
 }
+
+const POSTER_BASE = 'https://moowaymusicbucket.s3.eu-west-2.amazonaws.com/musicexamshelp/'
 
 const GRADES = TRINITY_GRADES
 const THEORY_GRADES = GRADES.slice(1)
@@ -120,6 +131,10 @@ export const FEE_SCHEDULES: FeeSchedule[] = [
         [19, 24, 30, 34, 35, 43],
       ),
     },
+    poster: {
+      pdf: `${POSTER_BASE}wall-poster-2027-fees.pdf`,
+      preview: `${POSTER_BASE}wall-poster-2027-fees.png`,
+    },
   },
 ]
 
@@ -158,6 +173,12 @@ export function currentSchedule(today: Date, schedules: FeeSchedule[] = FEE_SCHE
 
 export function scheduleForYear(year: number, today: Date, schedules: FeeSchedule[] = FEE_SCHEDULES): FeeSchedule {
   return schedulesOnShow(today, schedules).find((s) => s.year === year) ?? currentSchedule(today, schedules)
+}
+
+// The newest year on show that has a poster: the 2027 poster appears as soon
+// as the 2027 fees are published and stays through 2027.
+export function posterOnShow(today: Date, schedules: FeeSchedule[] = FEE_SCHEDULES): FeeSchedule | undefined {
+  return [...schedulesOnShow(today, schedules)].reverse().find((s) => s.poster)
 }
 
 export function gradeRows(rows: GradeFee[]): { grade: string; fee: string }[] {

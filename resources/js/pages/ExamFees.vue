@@ -20,9 +20,10 @@ import PageMaintenance from '@/components/reusables/PageMaintenance.vue'
 import ExamFeesTabNav, { type ExamFeesTab as Tab } from '@/components/examfees/ExamFeesTabNav.vue'
 import ExamFeesTab from '@/components/examfees/ExamFeesTab.vue'
 import ExamDatesTab from '@/components/examfees/ExamDatesTab.vue'
+import FeePosterDownload from '@/components/examfees/FeePosterDownload.vue'
 import faqPage from '@/data/faqs/examFees'
 import { faqAccordionItems } from '@/lib/faqs'
-import { currentSchedule, schedulesOnShow, scheduleForYear, formatDay } from '@/data/examFees'
+import { currentSchedule, schedulesOnShow, scheduleForYear, posterOnShow, formatDay } from '@/data/examFees'
 
 const { animClass } = usePageAnimation()
 const { showBookingModal } = useBookingModal()
@@ -40,6 +41,7 @@ const feeYears = schedulesOnShow(today)
 const feeYear = ref(current.year)
 const fees = computed(() => scheduleForYear(feeYear.value, today))
 const nextYear = feeYears.find((s) => s.year > current.year)
+const posterYear = posterOnShow(today)
 
 /* ── "2027 fees are out" banner: opens the fees tab on the new year and
    scrolls to the tables. Gone by itself once that year has started. ── */
@@ -174,6 +176,10 @@ const tabStyle = computed(() => ({
             rounded
             @action="showNextYear"
           />
+        </div>
+
+        <div v-if="posterYear" class="mt-6" :class="animClass('fade-up', 4)">
+          <FeePosterDownload :schedule="posterYear" />
         </div>
       </div>
     </section>

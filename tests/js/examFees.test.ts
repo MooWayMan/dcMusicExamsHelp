@@ -15,6 +15,7 @@ import {
   diplomaRows,
   lowestFee,
   feesChangeAnswer,
+  posterOnShow,
 } from '@/data/examFees'
 
 const day = (iso: string) => {
@@ -92,4 +93,13 @@ test('the FAQ names the current dates, and the new year once published', () => {
   const later = feesChangeAnswer(day('2027-03-01'))
   assert.match(later, /1 January 2027 to 31 December 2027/)
   assert.doesNotMatch(later, /published the/)
+})
+
+test('the 2027 wall poster shows from now and through 2027; a year without one shows none', () => {
+  assert.equal(posterOnShow(day('2026-11-21'))?.year, 2027)
+  assert.equal(posterOnShow(day('2027-06-01'))?.year, 2027)
+  const p = FEE_SCHEDULES[1].poster
+  assert.match(p?.pdf ?? '', /^https:\/\/moowaymusicbucket\.s3\.eu-west-2\.amazonaws\.com\/musicexamshelp\/wall-poster-2027-fees\.pdf$/)
+  assert.match(p?.preview ?? '', /wall-poster-2027-fees\.png$/)
+  assert.equal(posterOnShow(day('2026-11-21'), [FEE_SCHEDULES[0]]), undefined)
 })

@@ -48,3 +48,15 @@ test('the new-year banner is wired to the year switch', function () {
 test('the 2027 link opens the fees page', function () {
     $this->get('/exam-fees?year=2027')->assertOk();
 });
+
+test('the wall poster card sits under the banner and reads its files from the shared data', function () {
+    $sources = guardSources();
+    $page = $sources['resources/js/pages/ExamFees.vue'];
+    $card = $sources['resources/js/components/examfees/FeePosterDownload.vue'];
+
+    expect($page)->toContain('posterOnShow(today)')
+        ->and($page)->toContain('<FeePosterDownload :schedule="posterYear"')
+        ->and($card)->toContain('props.schedule.poster.pdf')
+        ->and($card)->toContain('props.schedule.poster.preview')
+        ->and($card)->not->toContain('wall-poster-');
+});
